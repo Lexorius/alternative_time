@@ -16,7 +16,8 @@
           "enable_hexadecimal": "Hexadezimalzeit aktivieren",
           "enable_maya": "Maya-Kalender aktivieren",
           "enable_nato": "NATO-Zeit aktivieren",
-          "enable_nato_zone": "NATO-Zeit mit Zonenindikator aktivieren"
+          "enable_nato_zone": "NATO-Zeit mit Zonenindikator aktivieren",
+          "enable_nato_rescue": "NATO-Zeit Rettungsdienst aktivieren"
         }
       }
     },

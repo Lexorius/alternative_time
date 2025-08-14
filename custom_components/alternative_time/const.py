@@ -12,15 +12,6 @@ CONF_ENABLE_HEXADECIMAL = "enable_hexadecimal"
 CONF_ENABLE_MAYA = "enable_maya"
 CONF_ENABLE_NATO = "enable_nato"
 CONF_ENABLE_NATO_ZONE = "enable_nato_zone"
+CONF_ENABLE_NATO_RESCUE = "enable_nato_rescue"
 
 DEFAULT_NAME = "Alternative Time"
-
-SENSOR_TYPES = {
-    "timezone": "Zeitzone",
-    "stardate": "Sternzeit",
-    "swatch": "Swatch Internet Time",
-    "unix": "Unix Timestamp",
-    "julian": "Julianisches Datum",
-    "decimal": "Dezimalzeit",
-    "hexadecimal": "Hexadezimalzeit"
-}

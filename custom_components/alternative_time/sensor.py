@@ -24,6 +24,7 @@ from .const import (
     CONF_ENABLE_MAYA,
     CONF_ENABLE_NATO,
     CONF_ENABLE_NATO_ZONE,
+    CONF_ENABLE_NATO_RESCUE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,6 +77,9 @@ async def async_setup_entry(
     
     if config.get(CONF_ENABLE_NATO_ZONE, False):
         sensors.append(NatoTimeZoneSensor(base_name))
+    
+    if config.get(CONF_ENABLE_NATO_RESCUE, False):
+        sensors.append(NatoTimeRescueSensor(base_name))
 
     async_add_entities(sensors, True)
 
@@ -390,10 +394,10 @@ class NatoTimeSensor(AlternativeTimeSensorBase):
         self._update_interval = timedelta(seconds=1)  # Update every second
 
     def calculate_time(self) -> str:
-        """Calculate current NATO/Military Time."""
+        """Calculate current NATO/Military Date-Time Group."""
         now = datetime.now()
-        # NATO time format: HHMM (24-hour format without separator)
-        return now.strftime("%H%M")
+        # NATO DTG format: DDHHMM (day, hour, minute)
+        return now.strftime("%d%H%M")
 
 
 class NatoTimeZoneSensor(AlternativeTimeSensorBase):
@@ -435,9 +439,16 @@ class NatoTimeZoneSensor(AlternativeTimeSensorBase):
             -11: 'X', # X-ray
             -12: 'Y', # Yankee
         }
+        
+        # NATO month abbreviations
+        self.nato_months = {
+            1: 'JAN', 2: 'FEB', 3: 'MAR', 4: 'APR',
+            5: 'MAY', 6: 'JUN', 7: 'JUL', 8: 'AUG',
+            9: 'SEP', 10: 'OCT', 11: 'NOV', 12: 'DEC'
+        }
 
     def calculate_time(self) -> str:
-        """Calculate current NATO/Military Time with zone indicator."""
+        """Calculate current NATO/Military Date-Time Group with zone indicator."""
         import time
         
         # Get local time and UTC offset
@@ -454,6 +465,37 @@ class NatoTimeZoneSensor(AlternativeTimeSensorBase):
         # Get NATO zone letter
         zone_letter = self.nato_zones.get(utc_offset_hours, 'J')  # J for local/unknown
         
-        # Format: HHMM followed by zone letter
-        # Example: 1430Z (14:30 Zulu/UTC) or 1430A (14:30 Alpha/UTC+1)
-        return f"{now.strftime('%H%M')}{zone_letter}"
+        # Get month abbreviation
+        month_abbr = self.nato_months[now.month]
+        
+        # Full NATO DTG format: DDHHMM[Zone] MON YY
+        # Example: 151430Z JAN 25 (15th day, 14:30 Zulu time, January 2025)
+        return f"{now.strftime('%d%H%M')}{zone_letter} {month_abbr} {now.strftime('%y')}"
+
+
+class NatoTimeRescueSensor(AlternativeTimeSensorBase):
+    """Sensor for displaying NATO/Military Time as used by German rescue services."""
+
+    def __init__(self, base_name: str) -> None:
+        """Initialize the NATO rescue time sensor."""
+        super().__init__(base_name, "nato_rescue", "NATO-Zeit Rettungsdienst")
+        self._attr_icon = "mdi:ambulance"
+        self._update_interval = timedelta(seconds=1)  # Update every second
+        
+        # German month abbreviations as used in rescue services
+        self.rescue_months = {
+            1: 'JAN', 2: 'FEB', 3: 'MÄR', 4: 'APR',
+            5: 'MAI', 6: 'JUN', 7: 'JUL', 8: 'AUG',
+            9: 'SEP', 10: 'OKT', 11: 'NOV', 12: 'DEZ'
+        }
+
+    def calculate_time(self) -> str:
+        """Calculate current NATO Time for rescue services (without zone indicator)."""
+        now = datetime.now()
+        
+        # Get month abbreviation
+        month_abbr = self.rescue_months[now.month]
+        
+        # German rescue service format: DD HHMM MONAT YY
+        # Example: 15 1430 JAN 25 (15th day, 14:30, January 2025)
+        return f"{now.strftime('%d %H%M')} {month_abbr} {now.strftime('%y')}"

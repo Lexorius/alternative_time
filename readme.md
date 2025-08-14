@@ -1,4 +1,21 @@
-# Alternative Time Systems for Home Assistant
+#### Beispiel: Rettungsdienst-Protokoll
+```yaml
+automation:
+  - alias: "Einsatz-Zeitstempel"
+    trigger:
+      - platform: state
+        entity_id: input_boolean.einsatz_aktiv
+        to: 'on'
+    action:
+      - service: notify.logfile
+        data:
+          message: >
+            Einsatzbeginn: {{ states('sensor.alternative_time_nato_zeit_rettungsdienst') }}
+      - service: input_text.set_value
+        data:
+          entity_id: input_text.einsatz_start
+          value: "{{ states('sensor.alternative_time_nato_zeit_rettungsdienst') }}"
+```# Alternative Time Systems for Home Assistant
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
 [![GitHub Release](https://img.shields.io/github/release/Lexorius/alternative_time.svg)](https://github.com/Lexorius/alternative_time/releases)
@@ -60,17 +77,26 @@ Diese Integration bietet folgende Zeitsysteme:
 - Komplette Maya-Datumsangabe in einem Sensor
 - Update-Intervall: 1 Stunde
 
-### 🎖️ **NATO-Zeit (ohne Zonenindikator)**
-- Militärische Zeitangabe im Format `HHMM`
-- 24-Stunden-Format ohne Trennzeichen
-- Standard in militärischen und Luftfahrt-Kontexten
+### 🎖️ **NATO-Zeit (Basis)**
+- NATO Date-Time Group im Format `DDHHMM`
+- Tag, Stunde und Minute in militärischer Notation
+- Beispiel: `151430` für 15. Tag des Monats, 14:30 Uhr
 - Update-Intervall: 1 Sekunde
 
-### 🌐 **NATO-Zeit mit Zonenindikator**
-- Format: `HHMM[Zone]` (z.B. `1430Z` für UTC)
-- Inkludiert NATO-Zeitzonenbuchstaben (A-Z außer J)
-- Z = Zulu (UTC), A = Alpha (UTC+1), B = Bravo (UTC+2), etc.
+### 🌐 **NATO-Zeit mit Zonenindikator (DTG)**
+- Vollständige NATO Date-Time Group
+- Format: `DDHHMM[Zone] MON YY`
+- Beispiel: `151430Z JAN 25` (15. Januar 2025, 14:30 UTC)
+- Inkludiert NATO-Zeitzonenbuchstaben und Monat
 - Automatische Erkennung der lokalen Zeitzone
+- Update-Intervall: 1 Sekunde
+
+### 🚑 **NATO-Zeit Rettungsdienst**
+- Deutsche Rettungsdienst-Notation
+- Format: `DD HHMM MONAT YY` (mit Leerzeichen)
+- Beispiel: `15 1430 JAN 25` (15. Januar 2025, 14:30 Uhr)
+- Deutsche Monatsabkürzungen (MÄR, MAI, OKT, DEZ)
+- Standard bei Feuerwehr, Rettungsdienst und THW
 - Update-Intervall: 1 Sekunde
 
 ## 📦 Installation
@@ -121,6 +147,7 @@ Diese Integration bietet folgende Zeitsysteme:
 | Maya-Kalender | Maya-Datumsangabe | ✗ |
 | NATO-Zeit | Militärzeit ohne Zone | ✗ |
 | NATO-Zeit mit Zone | Militärzeit mit Zonenindikator | ✗ |
+| NATO-Zeit Rettungsdienst | Deutsche Rettungsdienst-Notation | ✗ |
 
 ## 🎯 Verwendung
 
@@ -138,6 +165,7 @@ Nach der Konfiguration werden folgende Sensoren erstellt (je nach Auswahl):
 - `sensor.[name]_maya_kalender` - Maya-Datum
 - `sensor.[name]_nato_zeit` - NATO-Zeit
 - `sensor.[name]_nato_zeit_mit_zone` - NATO-Zeit mit Zone
+- `sensor.[name]_nato_zeit_rettungsdienst` - NATO-Zeit Rettungsdienst
 
 ### Dashboard-Beispiele
 
@@ -213,7 +241,7 @@ automation:
     trigger:
       - platform: template
         value_template: >
-          {{ states('sensor.alternative_time_nato_zeit') == '1200' }}
+          {{ states('sensor.alternative_time_nato_zeit')[2:6] == '1200' }}
     action:
       - service: notify.mobile_app
         data:
@@ -241,7 +269,40 @@ Du kannst beliebig viele Instanzen der Integration hinzufügen, um verschiedene 
 2. **Thematische Gruppen**: Eine Instanz für Sci-Fi-Zeiten, eine für historische Zeiten, eine für militärische Zeiten
 3. **Raum-basiert**: Verschiedene Zeitsysteme für verschiedene Räume
 
-## 📊 NATO-Zeitzonentabelle
+## 📊 NATO Date-Time Group (DTG) Formate
+
+### Standard NATO DTG (Militär):
+```
+DDHHMM[Zone] MON YY
+```
+Beispiel: `151430Z JAN 25`
+
+### Deutsche Rettungsdienst-Notation:
+```
+DD HHMM MONAT YY
+```
+Beispiel: `15 1430 JAN 25`
+
+Die Rettungsdienst-Notation wird in Deutschland bei Feuerwehr, Rettungsdienst, THW und Katastrophenschutz verwendet. Sie unterscheidet sich durch:
+- **Leerzeichen** zwischen Tag und Zeit
+- **Keine Zeitzone** (immer lokale Zeit)
+- **Deutsche Monatsabkürzungen**: MÄR (März), MAI (Mai), OKT (Oktober), DEZ (Dezember)
+
+### Komponenten:
+- **DD**: Tag des Monats (01-31)
+- **HH**: Stunde (00-23)
+- **MM**: Minute (00-59)
+- **Zone**: NATO-Zeitzonenbuchstabe (A-Z, außer J)
+- **MON**: Monatsabkürzung (JAN, FEB, MAR, etc.)
+- **YY**: Jahr (zweistellig)
+
+### Beispiele:
+- **Militär**: `151430Z JAN 25` - 15. Januar 2025, 14:30 UTC
+- **Rettungsdienst**: `15 1430 JAN 25` - 15. Januar 2025, 14:30 lokale Zeit
+- **Mit Zone**: `031200B MAR 25` - 3. März 2025, 12:00 UTC+2 (Bravo)
+- **Einsatzprotokoll**: `25 1800 DEZ 25` - 25. Dezember 2025, 18:00 Uhr
+
+### NATO-Zeitzonentabelle
 
 | Buchstabe | Name | UTC-Offset | Beispielregion |
 |-----------|------|------------|----------------|
@@ -341,7 +402,12 @@ Dieses Projekt ist unter der MIT-Lizenz lizenziert - siehe [LICENSE](LICENSE) f�
 
 ## 📈 Version History
 
-### v1.1.0 (Latest)
+### v1.2.0 (Latest)
+- ✨ NATO-Zeit Rettungsdienst-Format hinzugefügt
+- 🔧 NATO-Zeit korrigiert (jetzt mit Datum)
+- 📝 Erweiterte Dokumentation für alle NATO-Formate
+
+### v1.1.0
 - ✨ Maya-Kalender hinzugefügt
 - ✨ NATO-Zeit (mit und ohne Zonenindikator) hinzugefügt
 - 🐛 Async-Zeitzoneninitialisierung für bessere Performance
@@ -353,3 +419,4 @@ Dieses Projekt ist unter der MIT-Lizenz lizenziert - siehe [LICENSE](LICENSE) f�
 
 ---
 
+Made with ❤️ by [Lexorius](https://github.com/Lexorius)

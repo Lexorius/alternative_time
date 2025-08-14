@@ -23,6 +23,7 @@ from .const import (
     CONF_ENABLE_MAYA,
     CONF_ENABLE_NATO,
     CONF_ENABLE_NATO_ZONE,
+    CONF_ENABLE_NATO_RESCUE,
     DEFAULT_NAME,
 )
 
@@ -90,6 +91,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input.get(CONF_ENABLE_MAYA, False),
                 user_input.get(CONF_ENABLE_NATO, False),
                 user_input.get(CONF_ENABLE_NATO_ZONE, False),
+                user_input.get(CONF_ENABLE_NATO_RESCUE, False),
             ])
 
             if not time_systems_selected:
@@ -117,6 +119,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Optional(CONF_ENABLE_MAYA, default=False): bool,
             vol.Optional(CONF_ENABLE_NATO, default=False): bool,
             vol.Optional(CONF_ENABLE_NATO_ZONE, default=False): bool,
+            vol.Optional(CONF_ENABLE_NATO_RESCUE, default=False): bool,
         })
 
         return self.async_show_form(
