@@ -21,6 +21,8 @@ from .const import (
     CONF_ENABLE_DECIMAL,
     CONF_ENABLE_HEXADECIMAL,
     CONF_ENABLE_MAYA,
+    CONF_ENABLE_NATO,
+    CONF_ENABLE_NATO_ZONE,
     DEFAULT_NAME,
 )
 
@@ -86,6 +88,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input.get(CONF_ENABLE_DECIMAL, False),
                 user_input.get(CONF_ENABLE_HEXADECIMAL, False),
                 user_input.get(CONF_ENABLE_MAYA, False),
+                user_input.get(CONF_ENABLE_NATO, False),
+                user_input.get(CONF_ENABLE_NATO_ZONE, False),
             ])
 
             if not time_systems_selected:
@@ -111,6 +115,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Optional(CONF_ENABLE_DECIMAL, default=False): bool,
             vol.Optional(CONF_ENABLE_HEXADECIMAL, default=False): bool,
             vol.Optional(CONF_ENABLE_MAYA, default=False): bool,
+            vol.Optional(CONF_ENABLE_NATO, default=False): bool,
+            vol.Optional(CONF_ENABLE_NATO_ZONE, default=False): bool,
         })
 
         return self.async_show_form(

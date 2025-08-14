@@ -14,7 +14,9 @@
           "enable_julian": "Julianisches Datum aktivieren",
           "enable_decimal": "Dezimalzeit aktivieren",
           "enable_hexadecimal": "Hexadezimalzeit aktivieren",
-          "enable_maya": "Maya-Kalender aktivieren"
+          "enable_maya": "Maya-Kalender aktivieren",
+          "enable_nato": "NATO-Zeit aktivieren",
+          "enable_nato_zone": "NATO-Zeit mit Zonenindikator aktivieren"
         }
       }
     },

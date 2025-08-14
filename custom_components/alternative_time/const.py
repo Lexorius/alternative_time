@@ -10,7 +10,8 @@ CONF_ENABLE_JULIAN = "enable_julian"
 CONF_ENABLE_DECIMAL = "enable_decimal"
 CONF_ENABLE_HEXADECIMAL = "enable_hexadecimal"
 CONF_ENABLE_MAYA = "enable_maya"
-
+CONF_ENABLE_NATO = "enable_nato"
+CONF_ENABLE_NATO_ZONE = "enable_nato_zone"
 
 DEFAULT_NAME = "Alternative Time"
 

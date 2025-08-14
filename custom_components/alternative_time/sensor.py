@@ -22,6 +22,8 @@ from .const import (
     CONF_ENABLE_DECIMAL,
     CONF_ENABLE_HEXADECIMAL,
     CONF_ENABLE_MAYA,
+    CONF_ENABLE_NATO,
+    CONF_ENABLE_NATO_ZONE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,6 +70,12 @@ async def async_setup_entry(
     
     if config.get(CONF_ENABLE_MAYA, False):
         sensors.append(MayaCalendarSensor(base_name))
+    
+    if config.get(CONF_ENABLE_NATO, False):
+        sensors.append(NatoTimeSensor(base_name))
+    
+    if config.get(CONF_ENABLE_NATO_ZONE, False):
+        sensors.append(NatoTimeZoneSensor(base_name))
 
     async_add_entities(sensors, True)
 
@@ -370,3 +378,82 @@ class MayaCalendarSensor(AlternativeTimeSensorBase):
         
         # Format: Long Count | Tzolk'in | Haab
         return f"{baktun}.{katun}.{tun}.{uinal}.{kin} | {tzolkin_number} {tzolkin_day} | {haab_day} {haab_month}"
+
+
+class NatoTimeSensor(AlternativeTimeSensorBase):
+    """Sensor for displaying NATO/Military Time without zone indicator."""
+
+    def __init__(self, base_name: str) -> None:
+        """Initialize the NATO time sensor."""
+        super().__init__(base_name, "nato", "NATO-Zeit")
+        self._attr_icon = "mdi:clock-time-eight"
+        self._update_interval = timedelta(seconds=1)  # Update every second
+
+    def calculate_time(self) -> str:
+        """Calculate current NATO/Military Time."""
+        now = datetime.now()
+        # NATO time format: HHMM (24-hour format without separator)
+        return now.strftime("%H%M")
+
+
+class NatoTimeZoneSensor(AlternativeTimeSensorBase):
+    """Sensor for displaying NATO/Military Time with zone indicator."""
+
+    def __init__(self, base_name: str) -> None:
+        """Initialize the NATO time zone sensor."""
+        super().__init__(base_name, "nato_zone", "NATO-Zeit mit Zone")
+        self._attr_icon = "mdi:earth-box"
+        self._update_interval = timedelta(seconds=1)  # Update every second
+        
+        # NATO timezone letters
+        # Z = Zulu (UTC+0), A-M (skip J) = UTC+1 to UTC+12
+        # N-Y = UTC-1 to UTC-12
+        self.nato_zones = {
+            0: 'Z',  # Zulu
+            1: 'A',  # Alpha
+            2: 'B',  # Bravo
+            3: 'C',  # Charlie
+            4: 'D',  # Delta
+            5: 'E',  # Echo
+            6: 'F',  # Foxtrot
+            7: 'G',  # Golf
+            8: 'H',  # Hotel
+            9: 'I',  # India
+            10: 'K', # Kilo (J is skipped)
+            11: 'L', # Lima
+            12: 'M', # Mike
+            -1: 'N', # November
+            -2: 'O', # Oscar
+            -3: 'P', # Papa
+            -4: 'Q', # Quebec
+            -5: 'R', # Romeo
+            -6: 'S', # Sierra
+            -7: 'T', # Tango
+            -8: 'U', # Uniform
+            -9: 'V', # Victor
+            -10: 'W', # Whiskey
+            -11: 'X', # X-ray
+            -12: 'Y', # Yankee
+        }
+
+    def calculate_time(self) -> str:
+        """Calculate current NATO/Military Time with zone indicator."""
+        import time
+        
+        # Get local time and UTC offset
+        now = datetime.now()
+        
+        # Calculate UTC offset in hours
+        if time.daylight and time.localtime().tm_isdst:
+            utc_offset_seconds = -time.altzone
+        else:
+            utc_offset_seconds = -time.timezone
+        
+        utc_offset_hours = int(utc_offset_seconds / 3600)
+        
+        # Get NATO zone letter
+        zone_letter = self.nato_zones.get(utc_offset_hours, 'J')  # J for local/unknown
+        
+        # Format: HHMM followed by zone letter
+        # Example: 1430Z (14:30 Zulu/UTC) or 1430A (14:30 Alpha/UTC+1)
+        return f"{now.strftime('%H%M')}{zone_letter}"

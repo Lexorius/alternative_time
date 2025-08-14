@@ -14,7 +14,9 @@
           "enable_julian": "Enable Julian Date",
           "enable_decimal": "Enable Decimal Time",
           "enable_hexadecimal": "Enable Hexadecimal Time",
-          "enable_maya": "Enable Maya Calendar"
+          "enable_maya": "Enable Maya Calendar",
+          "enable_nato": "Enable NATO Time",
+          "enable_nato_zone": "Enable NATO Time with Zone Indicator"
         }
       }
     },
