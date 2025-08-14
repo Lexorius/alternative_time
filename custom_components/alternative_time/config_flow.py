@@ -2,14 +2,12 @@ from __future__ import annotations
 
 import logging
 from typing import Any
+
 import voluptuous as vol
-import pytz
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
 
 from .const import (
     DOMAIN,
@@ -26,6 +24,43 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+# Fallback timezone list if pytz is not available
+TIMEZONE_LIST = [
+    "Europe/Berlin",
+    "Europe/London",
+    "Europe/Paris",
+    "Europe/Zurich",
+    "Europe/Vienna",
+    "Europe/Rome",
+    "Europe/Madrid",
+    "Europe/Amsterdam",
+    "Europe/Brussels",
+    "Europe/Stockholm",
+    "America/New_York",
+    "America/Chicago",
+    "America/Denver",
+    "America/Los_Angeles",
+    "America/Toronto",
+    "America/Mexico_City",
+    "America/Sao_Paulo",
+    "Asia/Tokyo",
+    "Asia/Shanghai",
+    "Asia/Hong_Kong",
+    "Asia/Singapore",
+    "Asia/Dubai",
+    "Asia/Mumbai",
+    "Australia/Sydney",
+    "Australia/Melbourne",
+    "Pacific/Auckland",
+    "UTC",
+]
+
+try:
+    import pytz
+    TIMEZONE_LIST = sorted(pytz.all_timezones)
+except ImportError:
+    pass
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -63,13 +98,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data=user_input
                 )
 
-        # Get list of timezones for dropdown
-        timezone_list = sorted(pytz.all_timezones)
-
         data_schema = vol.Schema({
             vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
             vol.Optional(CONF_ENABLE_TIMEZONE, default=True): bool,
-            vol.Optional(CONF_TIMEZONE, default="Europe/Berlin"): vol.In(timezone_list),
+            vol.Optional(CONF_TIMEZONE, default="Europe/Berlin"): vol.In(TIMEZONE_LIST),
             vol.Optional(CONF_ENABLE_STARDATE, default=True): bool,
             vol.Optional(CONF_ENABLE_SWATCH, default=True): bool,
             vol.Optional(CONF_ENABLE_UNIX, default=False): bool,

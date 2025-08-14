@@ -1,0 +1,27 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure Alternative Time Systems",
+        "description": "Select the time systems you want to display.",
+        "data": {
+          "name": "Instance name",
+          "enable_timezone": "Enable timezone",
+          "timezone": "Select timezone",
+          "enable_stardate": "Enable Stardate",
+          "enable_swatch": "Enable Swatch Internet Time",
+          "enable_unix": "Enable Unix Timestamp",
+          "enable_julian": "Enable Julian Date",
+          "enable_decimal": "Enable Decimal Time",
+          "enable_hexadecimal": "Enable Hexadecimal Time"
+        }
+      }
+    },
+    "error": {
+      "no_time_system_selected": "Please select at least one time system."
+    },
+    "abort": {
+      "already_configured": "This instance is already configured."
+    }
+  }
+}

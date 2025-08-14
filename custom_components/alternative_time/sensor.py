@@ -1,23 +1,13 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 import math
 
-try:
-    import pytz
-    HAS_PYTZ = True
-except ImportError:
-    HAS_PYTZ = False
-
-from homeassistant.components.sensor import (
-    SensorEntity,
-    SensorStateClass,
-)
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import dt as dt_util
 
 from .const import (
     DOMAIN,
@@ -30,10 +20,16 @@ from .const import (
     CONF_ENABLE_JULIAN,
     CONF_ENABLE_DECIMAL,
     CONF_ENABLE_HEXADECIMAL,
-    SENSOR_TYPES,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+try:
+    import pytz
+    HAS_PYTZ = True
+except ImportError:
+    HAS_PYTZ = False
+    _LOGGER.warning("pytz not installed, timezone support will be limited")
 
 
 async def async_setup_entry(
@@ -48,7 +44,7 @@ async def async_setup_entry(
     base_name = config[CONF_NAME]
 
     if config.get(CONF_ENABLE_TIMEZONE, False):
-        sensors.append(TimezoneSensor(base_name, config[CONF_TIMEZONE]))
+        sensors.append(TimezoneSensor(base_name, config.get(CONF_TIMEZONE, "UTC")))
     
     if config.get(CONF_ENABLE_STARDATE, False):
         sensors.append(StardateSensor(base_name))
@@ -76,11 +72,11 @@ class AlternativeTimeSensorBase(SensorEntity):
 
     _attr_should_poll = True
 
-    def __init__(self, base_name: str, sensor_type: str) -> None:
+    def __init__(self, base_name: str, sensor_type: str, friendly_name: str) -> None:
         """Initialize the sensor."""
         self._base_name = base_name
         self._sensor_type = sensor_type
-        self._attr_name = f"{base_name} {SENSOR_TYPES[sensor_type]}"
+        self._attr_name = f"{base_name} {friendly_name}"
         self._attr_unique_id = f"{base_name}_{sensor_type}"
         self._state = None
 
@@ -103,16 +99,21 @@ class TimezoneSensor(AlternativeTimeSensorBase):
 
     def __init__(self, base_name: str, timezone: str) -> None:
         """Initialize the timezone sensor."""
-        super().__init__(base_name, "timezone")
-        if HAS_PYTZ:
-            self._timezone = pytz.timezone(timezone)
-        else:
-            self._timezone_str = timezone
+        super().__init__(base_name, "timezone", "Zeitzone")
+        self._timezone_str = timezone
         self._attr_icon = "mdi:clock-time-four-outline"
+        
+        if HAS_PYTZ:
+            try:
+                self._timezone = pytz.timezone(timezone)
+            except:
+                self._timezone = None
+        else:
+            self._timezone = None
 
     def calculate_time(self) -> str:
         """Calculate current time in specified timezone."""
-        if HAS_PYTZ:
+        if HAS_PYTZ and self._timezone:
             now = datetime.now(self._timezone)
             return now.strftime("%H:%M:%S %Z")
         else:
@@ -126,20 +127,18 @@ class StardateSensor(AlternativeTimeSensorBase):
 
     def __init__(self, base_name: str) -> None:
         """Initialize the stardate sensor."""
-        super().__init__(base_name, "stardate")
-        self._attr_icon = "mdi:star-clock"
+        super().__init__(base_name, "stardate", "Sternzeit")
+        self._attr_icon = "mdi:star-four-points"
 
     def calculate_time(self) -> str:
         """Calculate current Stardate."""
-        # TNG-style stardate calculation
         now = datetime.now()
-        base_year = 2323  # TNG era base year
+        base_year = 2323
         current_year = now.year
         day_of_year = now.timetuple().tm_yday
         
-        # Calculate stardate (simplified TNG formula)
         stardate = 1000 * (current_year - base_year) + (1000 * day_of_year / 365.25)
-        stardate += (now.hour * 60 + now.minute) / 1440 * 10  # Add time of day
+        stardate += (now.hour * 60 + now.minute) / 1440 * 10
         
         return f"{stardate:.2f}"
 
@@ -149,21 +148,20 @@ class SwatchTimeSensor(AlternativeTimeSensorBase):
 
     def __init__(self, base_name: str) -> None:
         """Initialize the Swatch time sensor."""
-        super().__init__(base_name, "swatch")
+        super().__init__(base_name, "swatch", "Swatch Internet Time")
         self._attr_icon = "mdi:web-clock"
 
     def calculate_time(self) -> str:
         """Calculate current Swatch Internet Time."""
-        # Swatch Internet Time (Biel Mean Time)
         if HAS_PYTZ:
-            bmt = pytz.timezone('Europe/Zurich')
-            now = datetime.now(bmt)
+            try:
+                bmt = pytz.timezone('Europe/Zurich')
+                now = datetime.now(bmt)
+            except:
+                now = datetime.now()
         else:
-            # Fallback: use local time and adjust for CET/CEST
             now = datetime.now()
-            # Rough approximation for Zurich time
         
-        # Calculate beats (1000 beats per day)
         seconds_since_midnight = (now.hour * 3600 + now.minute * 60 + now.second)
         beats = seconds_since_midnight / 86.4
         
@@ -175,7 +173,7 @@ class UnixTimeSensor(AlternativeTimeSensorBase):
 
     def __init__(self, base_name: str) -> None:
         """Initialize the Unix time sensor."""
-        super().__init__(base_name, "unix")
+        super().__init__(base_name, "unix", "Unix Timestamp")
         self._attr_icon = "mdi:counter"
 
     def calculate_time(self) -> str:
@@ -188,7 +186,7 @@ class JulianDateSensor(AlternativeTimeSensorBase):
 
     def __init__(self, base_name: str) -> None:
         """Initialize the Julian date sensor."""
-        super().__init__(base_name, "julian")
+        super().__init__(base_name, "julian", "Julianisches Datum")
         self._attr_icon = "mdi:calendar-clock"
 
     def calculate_time(self) -> str:
@@ -209,7 +207,7 @@ class DecimalTimeSensor(AlternativeTimeSensorBase):
 
     def __init__(self, base_name: str) -> None:
         """Initialize the decimal time sensor."""
-        super().__init__(base_name, "decimal")
+        super().__init__(base_name, "decimal", "Dezimalzeit")
         self._attr_icon = "mdi:clock-digital"
 
     def calculate_time(self) -> str:
@@ -217,7 +215,6 @@ class DecimalTimeSensor(AlternativeTimeSensorBase):
         now = datetime.now()
         seconds_since_midnight = now.hour * 3600 + now.minute * 60 + now.second
         
-        # Decimal time: 10 hours, 100 minutes per hour, 100 seconds per minute
         decimal_seconds = seconds_since_midnight * 100000 / 86400
         
         decimal_hours = int(decimal_seconds // 10000)
@@ -232,7 +229,7 @@ class HexadecimalTimeSensor(AlternativeTimeSensorBase):
 
     def __init__(self, base_name: str) -> None:
         """Initialize the hexadecimal time sensor."""
-        super().__init__(base_name, "hexadecimal")
+        super().__init__(base_name, "hexadecimal", "Hexadezimalzeit")
         self._attr_icon = "mdi:hexadecimal"
 
     def calculate_time(self) -> str:
@@ -240,7 +237,6 @@ class HexadecimalTimeSensor(AlternativeTimeSensorBase):
         now = datetime.now()
         seconds_since_midnight = now.hour * 3600 + now.minute * 60 + now.second
         
-        # Hexadecimal time: divide day into 65536 (0x10000) parts
         hex_time = int(seconds_since_midnight * 65536 / 86400)
         
         return f".{hex_time:04X}"
