@@ -136,14 +136,21 @@ class TimezoneSensor(AlternativeTimeSensorBase):
         self._timezone_str = timezone
         self._attr_icon = "mdi:clock-time-four-outline"
         self._update_interval = timedelta(seconds=1)  # Update every second
-        
+        self._timezone = None  # Will be initialized in async_added_to_hass
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        # Initialize timezone in executor to avoid blocking
         if HAS_PYTZ:
             try:
-                self._timezone = pytz.timezone(timezone)
-            except:
+                self._timezone = await self.hass.async_add_executor_job(
+                    pytz.timezone, self._timezone_str
+                )
+            except Exception:
+                _LOGGER.warning(f"Could not load timezone {self._timezone_str}")
                 self._timezone = None
-        else:
-            self._timezone = None
+        
+        await super().async_added_to_hass()
 
     def calculate_time(self) -> str:
         """Calculate current time in specified timezone."""
@@ -186,17 +193,29 @@ class SwatchTimeSensor(AlternativeTimeSensorBase):
         super().__init__(base_name, "swatch", "Swatch Internet Time")
         self._attr_icon = "mdi:web-clock"
         self._update_interval = timedelta(seconds=1)  # Update every second for smooth beats
+        self._bmt = None  # Will be initialized in async_added_to_hass
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        # Initialize timezone in executor to avoid blocking
+        if HAS_PYTZ:
+            try:
+                self._bmt = await self.hass.async_add_executor_job(
+                    pytz.timezone, 'Europe/Zurich'
+                )
+            except Exception:
+                _LOGGER.warning("Could not load timezone Europe/Zurich for Swatch time")
+                self._bmt = None
+        
+        await super().async_added_to_hass()
 
     def calculate_time(self) -> str:
         """Calculate current Swatch Internet Time."""
-        if HAS_PYTZ:
-            try:
-                bmt = pytz.timezone('Europe/Zurich')
-                now = datetime.now(bmt)
-            except:
-                now = datetime.now()
+        if HAS_PYTZ and self._bmt:
+            now = datetime.now(self._bmt)
         else:
-            now = datetime.now()
+            # Fallback: use UTC+1 as approximation for Biel Mean Time
+            now = datetime.utcnow() + timedelta(hours=1)
         
         seconds_since_midnight = (now.hour * 3600 + now.minute * 60 + now.second)
         beats = seconds_since_midnight / 86.4
