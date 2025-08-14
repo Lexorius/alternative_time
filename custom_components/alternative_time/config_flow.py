@@ -84,6 +84,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input.get(CONF_ENABLE_JULIAN, False),
                 user_input.get(CONF_ENABLE_DECIMAL, False),
                 user_input.get(CONF_ENABLE_HEXADECIMAL, False),
+                user_input.get(CONF_ENABLE_MAYA, False),
             ])
 
             if not time_systems_selected:
@@ -108,6 +109,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Optional(CONF_ENABLE_JULIAN, default=False): bool,
             vol.Optional(CONF_ENABLE_DECIMAL, default=False): bool,
             vol.Optional(CONF_ENABLE_HEXADECIMAL, default=False): bool,
+            vol.Optional(CONF_ENABLE_MAYA, default=False): bool,
         })
 
         return self.async_show_form(

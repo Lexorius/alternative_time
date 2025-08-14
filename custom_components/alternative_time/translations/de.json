@@ -13,7 +13,8 @@
           "enable_unix": "Unix Timestamp aktivieren",
           "enable_julian": "Julianisches Datum aktivieren",
           "enable_decimal": "Dezimalzeit aktivieren",
-          "enable_hexadecimal": "Hexadezimalzeit aktivieren"
+          "enable_hexadecimal": "Hexadezimalzeit aktivieren",
+          "enable_maya": "Maya-Kalender aktivieren"
         }
       }
     },

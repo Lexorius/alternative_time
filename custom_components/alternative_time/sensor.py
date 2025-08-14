@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 import math
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
     DOMAIN,
@@ -20,6 +21,7 @@ from .const import (
     CONF_ENABLE_JULIAN,
     CONF_ENABLE_DECIMAL,
     CONF_ENABLE_HEXADECIMAL,
+    CONF_ENABLE_MAYA,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,6 +65,9 @@ async def async_setup_entry(
     
     if config.get(CONF_ENABLE_HEXADECIMAL, False):
         sensors.append(HexadecimalTimeSensor(base_name))
+    
+    if config.get(CONF_ENABLE_MAYA, False):
+        sensors.append(MayaCalendarSensor(base_name))
 
     async_add_entities(sensors, True)
 
@@ -70,7 +75,7 @@ async def async_setup_entry(
 class AlternativeTimeSensorBase(SensorEntity):
     """Base class for Alternative Time sensors."""
 
-    _attr_should_poll = True
+    _attr_should_poll = False  # We'll use time-based updates instead
 
     def __init__(self, base_name: str, sensor_type: str, friendly_name: str) -> None:
         """Initialize the sensor."""
@@ -79,15 +84,43 @@ class AlternativeTimeSensorBase(SensorEntity):
         self._attr_name = f"{base_name} {friendly_name}"
         self._attr_unique_id = f"{base_name}_{sensor_type}"
         self._state = None
+        self._update_interval = timedelta(seconds=1)  # Default 1 second update
+        self._unsub_timer = None
 
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
 
-    async def async_update(self) -> None:
-        """Update the sensor."""
+    @property
+    def update_interval(self) -> timedelta:
+        """Return the update interval."""
+        return self._update_interval
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        
+        # Set up the update interval
+        self._unsub_timer = async_track_time_interval(
+            self.hass,
+            self._async_update_time,
+            self._update_interval
+        )
+        
+        # Initial update
+        await self._async_update_time(None)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """When entity will be removed from hass."""
+        if self._unsub_timer:
+            self._unsub_timer()
+        await super().async_will_remove_from_hass()
+
+    async def _async_update_time(self, now) -> None:
+        """Update the time."""
         self._state = self.calculate_time()
+        self.async_write_ha_state()
 
     def calculate_time(self) -> str:
         """Calculate the time value. To be overridden by subclasses."""
@@ -102,6 +135,7 @@ class TimezoneSensor(AlternativeTimeSensorBase):
         super().__init__(base_name, "timezone", "Zeitzone")
         self._timezone_str = timezone
         self._attr_icon = "mdi:clock-time-four-outline"
+        self._update_interval = timedelta(seconds=1)  # Update every second
         
         if HAS_PYTZ:
             try:
@@ -129,6 +163,7 @@ class StardateSensor(AlternativeTimeSensorBase):
         """Initialize the stardate sensor."""
         super().__init__(base_name, "stardate", "Sternzeit")
         self._attr_icon = "mdi:star-four-points"
+        self._update_interval = timedelta(seconds=10)  # Update every 10 seconds
 
     def calculate_time(self) -> str:
         """Calculate current Stardate."""
@@ -150,6 +185,7 @@ class SwatchTimeSensor(AlternativeTimeSensorBase):
         """Initialize the Swatch time sensor."""
         super().__init__(base_name, "swatch", "Swatch Internet Time")
         self._attr_icon = "mdi:web-clock"
+        self._update_interval = timedelta(seconds=1)  # Update every second for smooth beats
 
     def calculate_time(self) -> str:
         """Calculate current Swatch Internet Time."""
@@ -175,6 +211,7 @@ class UnixTimeSensor(AlternativeTimeSensorBase):
         """Initialize the Unix time sensor."""
         super().__init__(base_name, "unix", "Unix Timestamp")
         self._attr_icon = "mdi:counter"
+        self._update_interval = timedelta(seconds=1)  # Update every second
 
     def calculate_time(self) -> str:
         """Calculate current Unix timestamp."""
@@ -188,6 +225,7 @@ class JulianDateSensor(AlternativeTimeSensorBase):
         """Initialize the Julian date sensor."""
         super().__init__(base_name, "julian", "Julianisches Datum")
         self._attr_icon = "mdi:calendar-clock"
+        self._update_interval = timedelta(seconds=60)  # Update every minute
 
     def calculate_time(self) -> str:
         """Calculate current Julian Date."""
@@ -209,6 +247,7 @@ class DecimalTimeSensor(AlternativeTimeSensorBase):
         """Initialize the decimal time sensor."""
         super().__init__(base_name, "decimal", "Dezimalzeit")
         self._attr_icon = "mdi:clock-digital"
+        self._update_interval = timedelta(seconds=1)  # Update every second
 
     def calculate_time(self) -> str:
         """Calculate current Decimal Time."""
@@ -231,6 +270,7 @@ class HexadecimalTimeSensor(AlternativeTimeSensorBase):
         """Initialize the hexadecimal time sensor."""
         super().__init__(base_name, "hexadecimal", "Hexadezimalzeit")
         self._attr_icon = "mdi:hexadecimal"
+        self._update_interval = timedelta(seconds=5)  # Update every 5 seconds
 
     def calculate_time(self) -> str:
         """Calculate current Hexadecimal Time."""
@@ -240,3 +280,74 @@ class HexadecimalTimeSensor(AlternativeTimeSensorBase):
         hex_time = int(seconds_since_midnight * 65536 / 86400)
         
         return f".{hex_time:04X}"
+
+
+class MayaCalendarSensor(AlternativeTimeSensorBase):
+    """Sensor for displaying Maya Calendar dates."""
+
+    def __init__(self, base_name: str) -> None:
+        """Initialize the Maya calendar sensor."""
+        super().__init__(base_name, "maya", "Maya-Kalender")
+        self._attr_icon = "mdi:pyramid"
+        self._update_interval = timedelta(hours=1)  # Update every hour (date changes daily)
+        
+        # Maya calendar constants
+        # Correlation constant (GMT): Julian Day Number for Maya date 0.0.0.0.0
+        self.maya_epoch_jdn = 584283
+        
+        # Tzolk'in day names (20 days)
+        self.tzolkin_days = [
+            "Imix", "Ik", "Akbal", "Kan", "Chicchan",
+            "Cimi", "Manik", "Lamat", "Muluc", "Oc",
+            "Chuen", "Eb", "Ben", "Ix", "Men",
+            "Cib", "Caban", "Etznab", "Cauac", "Ahau"
+        ]
+        
+        # Haab month names (18 months + Wayeb)
+        self.haab_months = [
+            "Pop", "Wo", "Sip", "Sotz", "Tzec",
+            "Xul", "Yaxkin", "Mol", "Chen", "Yax",
+            "Sac", "Ceh", "Mac", "Kankin", "Muan",
+            "Pax", "Kayab", "Cumku", "Wayeb"
+        ]
+
+    def calculate_time(self) -> str:
+        """Calculate current Maya Calendar date."""
+        # Get current Julian Day Number
+        now = datetime.now()
+        a = (14 - now.month) // 12
+        y = now.year + 4800 - a
+        m = now.month + 12 * a - 3
+        
+        jdn = now.day + (153 * m + 2) // 5 + 365 * y + y // 4 - y // 100 + y // 400 - 32045
+        
+        # Calculate days since Maya epoch
+        days_since_epoch = jdn - self.maya_epoch_jdn
+        
+        # Calculate Long Count
+        baktun = days_since_epoch // 144000
+        days_since_epoch %= 144000
+        katun = days_since_epoch // 7200
+        days_since_epoch %= 7200
+        tun = days_since_epoch // 360
+        days_since_epoch %= 360
+        uinal = days_since_epoch // 20
+        kin = days_since_epoch % 20
+        
+        # Calculate Tzolk'in (260-day cycle)
+        tzolkin_number = ((jdn - self.maya_epoch_jdn) % 13) + 1
+        tzolkin_day = self.tzolkin_days[(jdn - self.maya_epoch_jdn) % 20]
+        
+        # Calculate Haab (365-day cycle)
+        haab_day_of_year = (jdn - self.maya_epoch_jdn + 348) % 365
+        haab_month_index = min(haab_day_of_year // 20, 18)
+        haab_day = haab_day_of_year % 20
+        
+        # Special handling for Wayeb (5-day month)
+        if haab_month_index == 18:
+            haab_day = haab_day_of_year - 360
+        
+        haab_month = self.haab_months[haab_month_index]
+        
+        # Format: Long Count | Tzolk'in | Haab
+        return f"{baktun}.{katun}.{tun}.{uinal}.{kin} | {tzolkin_number} {tzolkin_day} | {haab_day} {haab_month}"

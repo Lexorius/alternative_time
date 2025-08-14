@@ -13,7 +13,8 @@
           "enable_unix": "Enable Unix Timestamp",
           "enable_julian": "Enable Julian Date",
           "enable_decimal": "Enable Decimal Time",
-          "enable_hexadecimal": "Enable Hexadecimal Time"
+          "enable_hexadecimal": "Enable Hexadecimal Time",
+          "enable_maya": "Enable Maya Calendar"
         }
       }
     },

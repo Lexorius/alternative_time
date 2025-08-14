@@ -9,6 +9,8 @@ CONF_ENABLE_UNIX = "enable_unix"
 CONF_ENABLE_JULIAN = "enable_julian"
 CONF_ENABLE_DECIMAL = "enable_decimal"
 CONF_ENABLE_HEXADECIMAL = "enable_hexadecimal"
+CONF_ENABLE_MAYA = "enable_maya"
+
 
 DEFAULT_NAME = "Alternative Time"
 
