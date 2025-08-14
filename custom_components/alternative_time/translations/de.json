@@ -1,0 +1,27 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Alternative Zeitsysteme konfigurieren",
+        "description": "Wählen Sie die Zeitsysteme aus, die Sie anzeigen möchten.",
+        "data": {
+          "name": "Name der Instanz",
+          "enable_timezone": "Zeitzone aktivieren",
+          "timezone": "Zeitzone auswählen",
+          "enable_stardate": "Sternzeit aktivieren",
+          "enable_swatch": "Swatch Internet Time aktivieren",
+          "enable_unix": "Unix Timestamp aktivieren",
+          "enable_julian": "Julianisches Datum aktivieren",
+          "enable_decimal": "Dezimalzeit aktivieren",
+          "enable_hexadecimal": "Hexadezimalzeit aktivieren"
+        }
+      }
+    },
+    "error": {
+      "no_time_system_selected": "Bitte wählen Sie mindestens ein Zeitsystem aus."
+    },
+    "abort": {
+      "already_configured": "Diese Instanz ist bereits konfiguriert."
+    }
+  }
+}
