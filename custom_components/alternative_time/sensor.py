@@ -25,6 +25,9 @@ from .const import (
     CONF_ENABLE_NATO,
     CONF_ENABLE_NATO_ZONE,
     CONF_ENABLE_NATO_RESCUE,
+    CONF_ENABLE_ATTIC,
+    CONF_ENABLE_SURIYAKATI,
+    CONF_ENABLE_MINGUO,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -80,6 +83,15 @@ async def async_setup_entry(
     
     if config.get(CONF_ENABLE_NATO_RESCUE, False):
         sensors.append(NatoTimeRescueSensor(base_name))
+    
+    if config.get(CONF_ENABLE_ATTIC, False):
+        sensors.append(AtticCalendarSensor(base_name))
+    
+    if config.get(CONF_ENABLE_SURIYAKATI, False):
+        sensors.append(SuriyakatiCalendarSensor(base_name))
+    
+    if config.get(CONF_ENABLE_MINGUO, False):
+        sensors.append(MinguoCalendarSensor(base_name))
 
     async_add_entities(sensors, True)
 
@@ -499,3 +511,261 @@ class NatoTimeRescueSensor(AlternativeTimeSensorBase):
         # German rescue service format: DD HHMM MONAT YY
         # Example: 15 1430 JAN 25 (15th day, 14:30, January 2025)
         return f"{now.strftime('%d %H%M')} {month_abbr} {now.strftime('%y')}"
+
+
+class AtticCalendarSensor(AlternativeTimeSensorBase):
+    """Sensor for displaying the ancient Attic (Athenian) calendar."""
+
+    def __init__(self, base_name: str) -> None:
+        """Initialize the Attic calendar sensor."""
+        super().__init__(base_name, "attic", "Attischer Kalender")
+        self._attr_icon = "mdi:pillar"
+        self._update_interval = timedelta(hours=1)  # Update every hour
+        
+        # Attic months (beginning with summer solstice)
+        self.attic_months = [
+            "Hekatombaion",  # July/August
+            "Metageitnion",  # August/September
+            "Boedromion",    # September/October
+            "Pyanepsion",    # October/November
+            "Maimakterion",  # November/December
+            "Poseideon",     # December/January
+            "Gamelion",      # January/February
+            "Anthesterion",  # February/March
+            "Elaphebolion",  # March/April
+            "Mounichion",    # April/May
+            "Thargelion",    # May/June
+            "Skirophorion"   # June/July
+        ]
+        
+        # Archon years cycle (for demonstration, using modern years)
+        # In reality, archons were elected annually
+        self.archon_names = [
+            "Nikias", "Kallias", "Eukleides", "Aristion", "Alexias",
+            "Theophilos", "Lysandros", "Demokrates", "Philippos", "Sostrates"
+        ]
+        
+        # Prytany names (10 tribes of Athens)
+        self.prytanies = [
+            "Erechtheis", "Aigeis", "Pandionis", "Leontis", "Akamantis",
+            "Oineis", "Kekropis", "Hippothontis", "Aiantis", "Antiochis"
+        ]
+
+    def calculate_time(self) -> str:
+        """Calculate current Attic calendar date."""
+        now = datetime.now()
+        
+        # Calculate days since summer solstice (approximately June 21)
+        current_year = now.year
+        summer_solstice = datetime(current_year, 6, 21)
+        
+        if now < summer_solstice:
+            # Before summer solstice, we're in the previous Attic year
+            summer_solstice = datetime(current_year - 1, 6, 21)
+            attic_year = current_year - 1
+        else:
+            attic_year = current_year
+        
+        days_since_solstice = (now - summer_solstice).days
+        
+        # Attic calendar had 12 months of 29-30 days (alternating)
+        # Total: 354 days (lunar year), with periodic intercalation
+        month_lengths = [30, 29, 30, 29, 30, 29, 30, 29, 30, 29, 30, 29]
+        
+        # Find current month and day
+        current_month_index = 0
+        days_remaining = days_since_solstice
+        
+        for i, month_length in enumerate(month_lengths):
+            if days_remaining < month_length:
+                current_month_index = i
+                break
+            days_remaining -= month_length
+        else:
+            # Handle year overflow
+            current_month_index = 11
+            days_remaining = min(days_remaining, 29)
+        
+        attic_month = self.attic_months[current_month_index]
+        attic_day = days_remaining + 1
+        
+        # Determine the period of the month (dekad system)
+        if attic_day <= 10:
+            period = "ἱσταμένου"  # histamenou (waxing)
+            day_in_period = attic_day
+        elif attic_day <= 20:
+            period = "μεσοῦντος"  # mesountos (middle)
+            day_in_period = attic_day - 10
+        else:
+            period = "φθίνοντος"  # phthinontos (waning)
+            # Count backwards in the last dekad
+            month_length = month_lengths[current_month_index]
+            day_in_period = month_length - attic_day + 1
+        
+        # Calculate Olympiad (4-year cycle starting from 776 BCE)
+        years_since_776_bce = attic_year + 776
+        olympiad = years_since_776_bce // 4 + 1
+        olympiad_year = (years_since_776_bce % 4) + 1
+        
+        # Get archon name (cycling through the list)
+        archon = self.archon_names[attic_year % len(self.archon_names)]
+        
+        # Calculate prytany (each tribe presided for ~36 days)
+        prytany_index = min(days_since_solstice // 36, 9)
+        prytany = self.prytanies[prytany_index]
+        
+        # Format: Day Period Month, Archon Name, Olympiad
+        # Example: "5 ἱσταμένου Hekatombaion | Archon: Nikias | Ol. 700.2"
+        return f"{day_in_period} {period} {attic_month} | {archon} | Ol.{olympiad}.{olympiad_year}"
+
+
+class SuriyakatiCalendarSensor(AlternativeTimeSensorBase):
+    """Sensor for displaying Thai Solar Calendar (Suriyakati)."""
+
+    def __init__(self, base_name: str) -> None:
+        """Initialize the Suriyakati calendar sensor."""
+        super().__init__(base_name, "suriyakati", "Suriyakati-Kalender")
+        self._attr_icon = "mdi:temple-buddhist"
+        self._update_interval = timedelta(hours=1)  # Update every hour
+        
+        # Thai months
+        self.thai_months = [
+            "มกราคม",      # Makarakhom (January)
+            "กุมภาพันธ์",  # Kumphaphan (February)
+            "มีนาคม",      # Minakhom (March)
+            "เมษายน",      # Mesayon (April)
+            "พฤษภาคม",     # Phruetsaphakhom (May)
+            "มิถุนายน",    # Mithunayon (June)
+            "กรกฎาคม",     # Karakadakhom (July)
+            "สิงหาคม",     # Singhakhom (August)
+            "กันยายน",     # Kanyayon (September)
+            "ตุลาคม",      # Tulakhom (October)
+            "พฤศจิกายน",   # Phruetsachikayon (November)
+            "ธันวาคม"      # Thanwakhom (December)
+        ]
+        
+        # Thai numerals
+        self.thai_numerals = ['๐', '๑', '๒', '๓', '๔', '๕', '๖', '๗', '๘', '๙']
+        
+        # Thai weekdays
+        self.thai_weekdays = [
+            "วันจันทร์",    # Monday
+            "วันอังคาร",    # Tuesday
+            "วันพุธ",       # Wednesday
+            "วันพฤหัสบดี",  # Thursday
+            "วันศุกร์",     # Friday
+            "วันเสาร์",     # Saturday
+            "วันอาทิตย์"    # Sunday
+        ]
+
+    def to_thai_numerals(self, number: int) -> str:
+        """Convert number to Thai numerals."""
+        return ''.join(self.thai_numerals[int(d)] for d in str(number))
+
+    def calculate_time(self) -> str:
+        """Calculate current Thai Solar Calendar date."""
+        now = datetime.now()
+        
+        # Buddhist Era (BE) = CE + 543
+        buddhist_year = now.year + 543
+        
+        # Get Thai month
+        thai_month = self.thai_months[now.month - 1]
+        
+        # Get Thai weekday
+        thai_weekday = self.thai_weekdays[now.weekday()]
+        
+        # Convert day and year to Thai numerals
+        thai_day = self.to_thai_numerals(now.day)
+        thai_year = self.to_thai_numerals(buddhist_year)
+        
+        # Also provide romanized version for easier reading
+        romanized_month = [
+            "Makarakhom", "Kumphaphan", "Minakhom", "Mesayon",
+            "Phruetsaphakhom", "Mithunayon", "Karakadakhom", "Singhakhom",
+            "Kanyayon", "Tulakhom", "Phruetsachikayon", "Thanwakhom"
+        ][now.month - 1]
+        
+        # Format: Thai format and romanized
+        # Example: "๒๕ ธันวาคม ๒๕๖๘ | 25 Thanwakhom 2568 BE"
+        return f"{thai_day} {thai_month} {thai_year} | {now.day} {romanized_month} {buddhist_year} BE"
+
+
+class MinguoCalendarSensor(AlternativeTimeSensorBase):
+    """Sensor for displaying Republic of China (Taiwan) Calendar."""
+
+    def __init__(self, base_name: str) -> None:
+        """Initialize the Minguo calendar sensor."""
+        super().__init__(base_name, "minguo", "Minguo-Kalender")
+        self._attr_icon = "mdi:flag-variant"
+        self._update_interval = timedelta(hours=1)  # Update every hour
+        
+        # Traditional Chinese months
+        self.chinese_months = [
+            "一月", "二月", "三月", "四月",
+            "五月", "六月", "七月", "八月",
+            "九月", "十月", "十一月", "十二月"
+        ]
+        
+        # Traditional Chinese weekdays
+        self.chinese_weekdays = [
+            "星期一",  # Monday
+            "星期二",  # Tuesday
+            "星期三",  # Wednesday
+            "星期四",  # Thursday
+            "星期五",  # Friday
+            "星期六",  # Saturday
+            "星期日"   # Sunday
+        ]
+        
+        # Traditional Chinese numbers for day
+        self.chinese_numbers = [
+            "零", "一", "二", "三", "四", "五",
+            "六", "七", "八", "九", "十"
+        ]
+
+    def to_chinese_day(self, day: int) -> str:
+        """Convert day to traditional Chinese."""
+        if day <= 10:
+            if day == 10:
+                return "十"
+            return self.chinese_numbers[day]
+        elif day < 20:
+            return "十" + self.chinese_numbers[day - 10]
+        elif day == 20:
+            return "二十"
+        elif day < 30:
+            return "二十" + self.chinese_numbers[day - 20]
+        elif day == 30:
+            return "三十"
+        else:
+            return "三十" + self.chinese_numbers[day - 30]
+
+    def calculate_time(self) -> str:
+        """Calculate current Minguo (ROC) Calendar date."""
+        now = datetime.now()
+        
+        # Minguo Era starts from 1912 (founding of Republic of China)
+        # Year 1 = 1912 CE
+        minguo_year = now.year - 1911
+        
+        # Handle years before 1912 (before ROC)
+        if minguo_year < 1:
+            # Use "民前" (before Minguo)
+            years_before = abs(minguo_year) + 1
+            year_display = f"民前{years_before}年"
+            year_display_roman = f"Before Minguo {years_before}"
+        else:
+            year_display = f"民國{minguo_year}年"
+            year_display_roman = f"Minguo {minguo_year}"
+        
+        # Get Chinese month and day
+        chinese_month = self.chinese_months[now.month - 1]
+        chinese_day = self.to_chinese_day(now.day)
+        
+        # Get Chinese weekday
+        chinese_weekday = self.chinese_weekdays[now.weekday()]
+        
+        # Format: Traditional Chinese and romanized
+        # Example: "民國114年 十二月 二十五日 | Minguo 114/12/25"
+        return f"{year_display} {chinese_month} {chinese_day}日 | {year_display_roman}/{now.month}/{now.day}"

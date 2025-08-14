@@ -24,6 +24,9 @@ from .const import (
     CONF_ENABLE_NATO,
     CONF_ENABLE_NATO_ZONE,
     CONF_ENABLE_NATO_RESCUE,
+    CONF_ENABLE_ATTIC,
+    CONF_ENABLE_SURIYAKATI,
+    CONF_ENABLE_MINGUO,
     DEFAULT_NAME,
 )
 
@@ -92,6 +95,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input.get(CONF_ENABLE_NATO, False),
                 user_input.get(CONF_ENABLE_NATO_ZONE, False),
                 user_input.get(CONF_ENABLE_NATO_RESCUE, False),
+                user_input.get(CONF_ENABLE_ATTIC, False),
+                user_input.get(CONF_ENABLE_SURIYAKATI, False),
+                user_input.get(CONF_ENABLE_MINGUO, False),
             ])
 
             if not time_systems_selected:
@@ -120,6 +126,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Optional(CONF_ENABLE_NATO, default=False): bool,
             vol.Optional(CONF_ENABLE_NATO_ZONE, default=False): bool,
             vol.Optional(CONF_ENABLE_NATO_RESCUE, default=False): bool,
+            vol.Optional(CONF_ENABLE_ATTIC, default=False): bool,
+            vol.Optional(CONF_ENABLE_SURIYAKATI, default=False): bool,
+            vol.Optional(CONF_ENABLE_MINGUO, default=False): bool,
         })
 
         return self.async_show_form(

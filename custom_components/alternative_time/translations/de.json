@@ -17,7 +17,28 @@
           "enable_maya": "Maya-Kalender aktivieren",
           "enable_nato": "NATO-Zeit aktivieren",
           "enable_nato_zone": "NATO-Zeit mit Zonenindikator aktivieren",
-          "enable_nato_rescue": "NATO-Zeit Rettungsdienst aktivieren"
+          "enable_nato_rescue": "NATO-Zeit Rettungsdienst aktivieren",
+          "enable_attic": "Attischer Kalender aktivieren",
+          "enable_suriyakati": "Suriyakati-Kalender (Thai) aktivieren",
+          "enable_minguo": "Minguo-Kalender (Taiwan) aktivieren"
+        },
+        "data_description": {
+          "name": "Ein eindeutiger Name für diese Konfiguration",
+          "enable_timezone": "Zeigt die aktuelle Zeit in einer ausgewählten Zeitzone an (z.B. 14:30:45 CEST)",
+          "timezone": "Die Zeitzone, die angezeigt werden soll",
+          "enable_stardate": "Star Trek TNG-Sternzeit (z.B. 47634.44). Basiert auf dem Jahr 2323",
+          "enable_swatch": "Internet-Zeit in Beats @000-@999. Ein Tag = 1000 Beats, keine Zeitzonen",
+          "enable_unix": "Sekunden seit 1.1.1970 00:00 UTC (z.B. 1735689600). Standard in der IT",
+          "enable_julian": "Astronomische Tageszählung seit 4713 v.Chr. (z.B. 2460000.5)",
+          "enable_decimal": "Französische Revolutionszeit: 10 Stunden, 100 Minuten, 100 Sekunden pro Tag",
+          "enable_hexadecimal": "Tag in 65536 Teile geteilt, Anzeige hexadezimal (z.B. .8000 = Mittag)",
+          "enable_maya": "Lange Zählung, Tzolk'in und Haab Kalender (z.B. 13.0.12.1.15 | 8 Ahau | 3 Pop)",
+          "enable_nato": "Militärische Datum-Zeit ohne Zone: DDHHMM (z.B. 151430)",
+          "enable_nato_zone": "Vollständige militärische DTG: DDHHMM[Zone] MON YY (z.B. 151430Z JAN 25)",
+          "enable_nato_rescue": "Deutsche Rettungsdienst-Notation: DD HHMM MONAT YY (z.B. 15 1430 JAN 25)",
+          "enable_attic": "Antiker Athener Lunisolarkalender mit Archon und Olympiade (z.B. 5 ἱσταμένου Hekatombaion)",
+          "enable_suriyakati": "Thailändischer Kalender mit buddhistischer Ära, BE = CE+543 (z.B. 2568 BE)",
+          "enable_minguo": "Taiwan/ROC Kalender, Jahr 1 = 1912 CE (z.B. 民國114年)"
         }
       }
     },

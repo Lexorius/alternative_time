@@ -17,7 +17,28 @@
           "enable_maya": "Enable Maya Calendar",
           "enable_nato": "Enable NATO Time",
           "enable_nato_zone": "Enable NATO Time with Zone Indicator",
-          "enable_nato_rescue": "Enable NATO Rescue Service Time"
+          "enable_nato_rescue": "Enable NATO Rescue Service Time",
+          "enable_attic": "Enable Attic Calendar",
+          "enable_suriyakati": "Enable Suriyakati Calendar (Thai)",
+          "enable_minguo": "Enable Minguo Calendar (Taiwan)"
+        },
+        "data_description": {
+          "name": "A unique name for this configuration",
+          "enable_timezone": "Shows current time in a selected timezone (e.g., 14:30:45 CEST)",
+          "timezone": "The timezone to display",
+          "enable_stardate": "Star Trek TNG stardate (e.g., 47634.44). Based on year 2323",
+          "enable_swatch": "Internet time in beats @000-@999. One day = 1000 beats, no timezones",
+          "enable_unix": "Seconds since Jan 1, 1970 00:00 UTC (e.g., 1735689600). IT standard",
+          "enable_julian": "Astronomical day count since 4713 BCE (e.g., 2460000.5)",
+          "enable_decimal": "French Revolutionary time: 10 hours, 100 minutes, 100 seconds per day",
+          "enable_hexadecimal": "Day divided into 65536 parts, displayed in hex (e.g., .8000 = noon)",
+          "enable_maya": "Long Count, Tzolk'in and Haab calendar (e.g., 13.0.12.1.15 | 8 Ahau | 3 Pop)",
+          "enable_nato": "Military date-time without zone: DDHHMM (e.g., 151430)",
+          "enable_nato_zone": "Full military DTG: DDHHMM[Zone] MON YY (e.g., 151430Z JAN 25)",
+          "enable_nato_rescue": "German rescue service notation: DD HHMM MONTH YY (e.g., 15 1430 JAN 25)",
+          "enable_attic": "Ancient Athenian lunisolar calendar with Archon and Olympiad (e.g., 5 histamenou Hekatombaion)",
+          "enable_suriyakati": "Thai calendar with Buddhist Era, BE = CE+543 (e.g., 2568 BE)",
+          "enable_minguo": "Taiwan/ROC calendar, Year 1 = 1912 CE (e.g., Minguo 114)"
         }
       }
     },

@@ -13,5 +13,8 @@ CONF_ENABLE_MAYA = "enable_maya"
 CONF_ENABLE_NATO = "enable_nato"
 CONF_ENABLE_NATO_ZONE = "enable_nato_zone"
 CONF_ENABLE_NATO_RESCUE = "enable_nato_rescue"
+CONF_ENABLE_ATTIC = "enable_attic"
+CONF_ENABLE_SURIYAKATI = "enable_suriyakati"
+CONF_ENABLE_MINGUO = "enable_minguo"
 
 DEFAULT_NAME = "Alternative Time"

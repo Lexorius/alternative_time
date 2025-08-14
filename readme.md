@@ -1,103 +1,21 @@
-#### Beispiel: Rettungsdienst-Protokoll
-```yaml
-automation:
-  - alias: "Einsatz-Zeitstempel"
-    trigger:
-      - platform: state
-        entity_id: input_boolean.einsatz_aktiv
-        to: 'on'
-    action:
-      - service: notify.logfile
-        data:
-          message: >
-            Einsatzbeginn: {{ states('sensor.alternative_time_nato_zeit_rettungsdienst') }}
-      - service: input_text.set_value
-        data:
-          entity_id: input_text.einsatz_start
-          value: "{{ states('sensor.alternative_time_nato_zeit_rettungsdienst') }}"
-```# Alternative Time Systems for Home Assistant
+# Alternative Time Systems for Home Assistant
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
 [![GitHub Release](https://img.shields.io/github/release/Lexorius/alternative_time.svg)](https://github.com/Lexorius/alternative_time/releases)
 [![GitHub Activity](https://img.shields.io/github/commit-activity/y/Lexorius/alternative_time.svg)](https://github.com/Lexorius/alternative_time/commits/main)
 [![License](https://img.shields.io/github/license/Lexorius/alternative_time.svg)](LICENSE)
 
-Eine Home Assistant Integration, die verschiedene alternative Zeitsysteme als Sensoren bereitstellt. Perfekt für Science-Fiction-Fans, Technik-Enthusiasten, Militär-Interessierte oder alle, die gerne mit alternativen Zeitkonzepten experimentieren!
+Eine umfassende Home Assistant Integration für alternative Zeitsysteme aus Wissenschaft, Science-Fiction, Geschichte und verschiedenen Kulturen. Von der Sternzeit bis zum Maya-Kalender, vom Unix-Timestamp bis zur thailändischen Zeitrechnung - diese Integration bietet 16 verschiedene Zeitsysteme als Sensoren.
 
-## 🌟 Features
+## 🎯 Übersicht
 
-Diese Integration bietet folgende Zeitsysteme:
-
-### 🌍 **Zeitzone**
-- Zeigt die aktuelle Uhrzeit in einer beliebigen Zeitzone an
-- Wähle aus allen verfügbaren Zeitzonen weltweit
-- Ideal für internationale Teams oder Reiseplanung
-- Update-Intervall: 1 Sekunde
-
-### 🚀 **Sternzeit (Stardate)**
-- Star Trek TNG-Style Sternzeit-Berechnung
-- Basiert auf dem Jahr 2323 als Ausgangspunkt
-- Für alle Trekkies und Science-Fiction-Fans
-- Update-Intervall: 10 Sekunden
-
-### 🌐 **Swatch Internet Time**
-- Die revolutionäre Internetzeit aus den 90ern
-- Ein Tag = 1000 Beats
-- Keine Zeitzonen, überall gleich (Biel Mean Time)
-- Update-Intervall: 1 Sekunde
-
-### 🔢 **Unix Timestamp**
-- Sekunden seit dem 1. Januar 1970
-- Standard in der Informatik
-- Nützlich für Entwickler und System-Administratoren
-- Update-Intervall: 1 Sekunde
-
-### 📅 **Julianisches Datum**
-- Astronomische Zeitrechnung
-- Kontinuierliche Tageszählung seit 4713 v. Chr.
-- Verwendet in der Astronomie und Wissenschaft
-- Update-Intervall: 60 Sekunden
-
-### 🔟 **Dezimalzeit**
-- Französische Revolutionszeit
-- 10 Stunden pro Tag, 100 Minuten pro Stunde
-- Ein faszinierendes historisches Zeitkonzept
-- Update-Intervall: 1 Sekunde
-
-### 🔤 **Hexadezimalzeit**
-- Der Tag in 65536 (0x10000) Teile geteilt
-- Zeitangabe im Hexadezimalsystem
-- Für Programmierer und Technik-Begeisterte
-- Update-Intervall: 5 Sekunden
-
-### 🏛️ **Maya-Kalender**
-- Lange Zählung (Long Count): z.B. `13.0.12.1.15`
-- Tzolk'in (260-Tage-Zyklus): z.B. `8 Ahau`
-- Haab (365-Tage-Zyklus): z.B. `3 Pop`
-- Komplette Maya-Datumsangabe in einem Sensor
-- Update-Intervall: 1 Stunde
-
-### 🎖️ **NATO-Zeit (Basis)**
-- NATO Date-Time Group im Format `DDHHMM`
-- Tag, Stunde und Minute in militärischer Notation
-- Beispiel: `151430` für 15. Tag des Monats, 14:30 Uhr
-- Update-Intervall: 1 Sekunde
-
-### 🌐 **NATO-Zeit mit Zonenindikator (DTG)**
-- Vollständige NATO Date-Time Group
-- Format: `DDHHMM[Zone] MON YY`
-- Beispiel: `151430Z JAN 25` (15. Januar 2025, 14:30 UTC)
-- Inkludiert NATO-Zeitzonenbuchstaben und Monat
-- Automatische Erkennung der lokalen Zeitzone
-- Update-Intervall: 1 Sekunde
-
-### 🚑 **NATO-Zeit Rettungsdienst**
-- Deutsche Rettungsdienst-Notation
-- Format: `DD HHMM MONAT YY` (mit Leerzeichen)
-- Beispiel: `15 1430 JAN 25` (15. Januar 2025, 14:30 Uhr)
-- Deutsche Monatsabkürzungen (MÄR, MAI, OKT, DEZ)
-- Standard bei Feuerwehr, Rettungsdienst und THW
-- Update-Intervall: 1 Sekunde
+Diese Integration verwandelt Home Assistant in eine universelle Zeituhr mit Unterstützung für:
+- 🚀 **Science-Fiction Zeiten** (Star Trek Sternzeit)
+- 🌐 **Internet-Standards** (Unix, Swatch Internet Time)
+- 🏛️ **Historische Kalender** (Maya, Attisch, Französische Revolution)
+- 🎖️ **Militärische Zeitsysteme** (NATO DTG in 3 Varianten)
+- 🌏 **Kulturelle Kalender** (Thai, Taiwan)
+- 💻 **Technische Formate** (Hexadezimal, Julian Date)
 
 ## 📦 Installation
 
@@ -125,29 +43,112 @@ Diese Integration bietet folgende Zeitsysteme:
 1. Gehe zu **Einstellungen** → **Geräte & Dienste**
 2. Klicke auf **Integration hinzufügen**
 3. Suche nach **Alternative Time Systems**
-4. Folge dem Konfigurationsassistenten:
-   - Vergib einen Namen für die Instanz
-   - Wähle die gewünschten Zeitsysteme aus
-   - Bei Zeitzone: Wähle deine gewünschte Zeitzone
-5. Klicke auf **Absenden**
+4. Folge dem Konfigurationsassistenten
+5. Wähle die gewünschten Zeitsysteme aus
+6. Klicke auf **Absenden**
 
-### Konfigurationsoptionen
+### 💡 Mehrere Instanzen
 
-| Option | Beschreibung | Standard |
-|--------|--------------|----------|
-| Name | Name der Instanz | Alternative Time |
-| Zeitzone aktivieren | Zeigt Zeit in gewählter Zeitzone | ✓ |
-| Zeitzone | Gewünschte Zeitzone | Europe/Berlin |
-| Sternzeit aktivieren | Star Trek Sternzeit | ✓ |
-| Swatch Time aktivieren | Internet Beat Time | ✓ |
-| Unix Timestamp | Unix Zeitstempel | ✗ |
-| Julianisches Datum | Astronomische Zeit | ✗ |
-| Dezimalzeit | Französische Rev. Zeit | ✗ |
-| Hexadezimalzeit | Hex-Zeit | ✗ |
-| Maya-Kalender | Maya-Datumsangabe | ✗ |
-| NATO-Zeit | Militärzeit ohne Zone | ✗ |
-| NATO-Zeit mit Zone | Militärzeit mit Zonenindikator | ✗ |
-| NATO-Zeit Rettungsdienst | Deutsche Rettungsdienst-Notation | ✗ |
+Du kannst beliebig viele Instanzen mit unterschiedlichen Konfigurationen erstellen:
+- **Weltzeituhr**: Mehrere Instanzen mit verschiedenen Zeitzonen
+- **Thematische Gruppen**: Sci-Fi, Historisch, Militärisch
+- **Raum-basiert**: Verschiedene Zeitsysteme für verschiedene Räume
+
+## 🌟 Verfügbare Zeitsysteme
+
+### 🌍 **Zeitzone**
+- **Format**: `HH:MM:SS TZ` (z.B. `14:30:45 CEST`)
+- **Beschreibung**: Zeigt die aktuelle Zeit in einer beliebigen Zeitzone
+- **Verwendung**: Internationale Teams, Reiseplanung, Weltzeituhr
+- **Update**: Jede Sekunde
+
+### 🚀 **Sternzeit (Stardate)**
+- **Format**: `XXXXX.XX` (z.B. `47634.44`)
+- **Beschreibung**: Star Trek TNG-Style Sternzeit basierend auf dem Jahr 2323
+- **Besonderheit**: Berechnet nach TNG-Formel mit Tagesbruchteil
+- **Update**: Alle 10 Sekunden
+
+### 🌐 **Swatch Internet Time**
+- **Format**: `@XXX.XX` (z.B. `@750.00`)
+- **Beschreibung**: Ein Tag = 1000 Beats, keine Zeitzonen (BMT)
+- **Geschichte**: 1998 von Swatch eingeführt als universelle Internetzeit
+- **Update**: Jede Sekunde
+
+### 🔢 **Unix Timestamp**
+- **Format**: `XXXXXXXXXX` (z.B. `1735689600`)
+- **Beschreibung**: Sekunden seit 1. Januar 1970, 00:00 UTC
+- **Verwendung**: Programmierung, Datenbanken, IT-Systeme
+- **Update**: Jede Sekunde
+
+### 📅 **Julianisches Datum**
+- **Format**: `XXXXXXX.XXXXX` (z.B. `2460000.50000`)
+- **Beschreibung**: Kontinuierliche Tageszählung seit 4713 v.Chr.
+- **Verwendung**: Astronomie, Wissenschaft, historische Datierung
+- **Update**: Jede Minute
+
+### 🔟 **Dezimalzeit**
+- **Format**: `H:MM:SS` (z.B. `5:50:00`)
+- **Beschreibung**: Französische Revolutionszeit - 10 Stunden/Tag, 100 Min/Std
+- **Geschichte**: 1793-1805 in Frankreich offiziell verwendet
+- **Update**: Jede Sekunde
+
+### 🔤 **Hexadezimalzeit**
+- **Format**: `.XXXX` (z.B. `.8000`)
+- **Beschreibung**: Tag in 65536 (0x10000) Teile geteilt
+- **Besonderheit**: .0000 = Mitternacht, .8000 = Mittag, .FFFF = 23:59:59
+- **Update**: Alle 5 Sekunden
+
+### 🏛️ **Maya-Kalender**
+- **Format**: `B.K.T.U.K | TZ TN | HD HM`
+- **Beispiel**: `13.0.12.1.15 | 8 Ahau | 3 Pop`
+- **Komponenten**:
+  - Lange Zählung (Baktun.Katun.Tun.Uinal.Kin)
+  - Tzolk'in (260-Tage ritueller Kalender)
+  - Haab (365-Tage Zivilkalender)
+- **Update**: Stündlich
+
+### 🎖️ **NATO-Zeit (Basis)**
+- **Format**: `DDHHMM` (z.B. `151430`)
+- **Beschreibung**: Tag + Uhrzeit ohne Zeitzone
+- **Verwendung**: Einfache militärische Zeitangabe
+- **Update**: Jede Sekunde
+
+### 🌐 **NATO-Zeit mit Zone (DTG)**
+- **Format**: `DDHHMM[Z] MON YY` (z.B. `151430Z JAN 25`)
+- **Beschreibung**: Vollständige Date-Time Group mit Zeitzone
+- **Zeitzonen**: A-Z (außer J), Z=UTC, B=UTC+2 (CEST)
+- **Update**: Jede Sekunde
+
+### 🚑 **NATO-Zeit Rettungsdienst**
+- **Format**: `DD HHMM MONAT YY` (z.B. `15 1430 JAN 25`)
+- **Beschreibung**: Deutsche BOS-Standard Notation
+- **Besonderheit**: Mit Leerzeichen, deutsche Monatsabkürzungen
+- **Verwendung**: Feuerwehr, Rettungsdienst, THW, Katastrophenschutz
+- **Update**: Jede Sekunde
+
+### 🏛️ **Attischer Kalender**
+- **Format**: `Tag Period Monat | Archon | Ol.XXX.Y`
+- **Beispiel**: `5 ἱσταμένου Hekatombaion | Nikias | Ol.700.2`
+- **Komponenten**:
+  - Dekaden-System (3×10 Tage/Monat)
+  - 12 Lunarmonate
+  - Archon (Jahresbeamter)
+  - Olympiaden-Zählung
+- **Update**: Stündlich
+
+### 🇹🇭 **Suriyakati-Kalender (Thai)**
+- **Format**: Thai + Romanisiert
+- **Beispiel**: `๒๕ ธันวาคม ๒๕๖๘ | 25 Thanwakhom 2568 BE`
+- **Besonderheit**: Buddhistische Ära (BE = CE + 543)
+- **Zahlen**: Thai-Ziffern ๐๑๒๓๔๕๖๗๘๙
+- **Update**: Stündlich
+
+### 🇹🇼 **Minguo-Kalender (Taiwan)**
+- **Format**: Chinesisch + Romanisiert
+- **Beispiel**: `民國114年 十二月 二十五日 | Minguo 114/12/25`
+- **Besonderheit**: Jahr 1 = 1912 CE (Gründung ROC)
+- **Verwendung**: Offizielle Dokumente in Taiwan
+- **Update**: Stündlich
 
 ## 🎯 Verwendung
 
@@ -155,74 +156,66 @@ Diese Integration bietet folgende Zeitsysteme:
 
 Nach der Konfiguration werden folgende Sensoren erstellt (je nach Auswahl):
 
-- `sensor.[name]_zeitzone` - Ausgewählte Zeitzone
-- `sensor.[name]_sternzeit` - Sternzeit
-- `sensor.[name]_swatch_internet_time` - Swatch Beat Time
-- `sensor.[name]_unix_timestamp` - Unix Zeit
-- `sensor.[name]_julianisches_datum` - Julian Date
-- `sensor.[name]_dezimalzeit` - Dezimalzeit
-- `sensor.[name]_hexadezimalzeit` - Hex-Zeit
-- `sensor.[name]_maya_kalender` - Maya-Datum
-- `sensor.[name]_nato_zeit` - NATO-Zeit
-- `sensor.[name]_nato_zeit_mit_zone` - NATO-Zeit mit Zone
-- `sensor.[name]_nato_zeit_rettungsdienst` - NATO-Zeit Rettungsdienst
+| Sensor | Entitäts-ID |
+|--------|-------------|
+| Zeitzone | `sensor.[name]_zeitzone` |
+| Sternzeit | `sensor.[name]_sternzeit` |
+| Swatch Time | `sensor.[name]_swatch_internet_time` |
+| Unix Timestamp | `sensor.[name]_unix_timestamp` |
+| Julianisches Datum | `sensor.[name]_julianisches_datum` |
+| Dezimalzeit | `sensor.[name]_dezimalzeit` |
+| Hexadezimalzeit | `sensor.[name]_hexadezimalzeit` |
+| Maya-Kalender | `sensor.[name]_maya_kalender` |
+| NATO-Zeit | `sensor.[name]_nato_zeit` |
+| NATO DTG | `sensor.[name]_nato_zeit_mit_zone` |
+| NATO Rettungsdienst | `sensor.[name]_nato_zeit_rettungsdienst` |
+| Attischer Kalender | `sensor.[name]_attischer_kalender` |
+| Suriyakati | `sensor.[name]_suriyakati_kalender` |
+| Minguo | `sensor.[name]_minguo_kalender` |
 
-### Dashboard-Beispiele
+## 📊 Dashboard-Beispiele
 
-#### Einfache Entitätskarte
+### Einfache Entitätskarte
 ```yaml
 type: entities
 title: Alternative Zeitsysteme
 entities:
   - entity: sensor.alternative_time_sternzeit
-    name: Sternzeit
-  - entity: sensor.alternative_time_swatch_internet_time
-    name: Internet Time
   - entity: sensor.alternative_time_maya_kalender
-    name: Maya-Kalender
   - entity: sensor.alternative_time_nato_zeit_mit_zone
-    name: NATO-Zeit
+  - entity: sensor.alternative_time_suriyakati_kalender
 ```
 
-#### Glance Card
+### Weltzeituhr Dashboard
 ```yaml
-type: glance
-title: Zeiten
-entities:
-  - entity: sensor.alternative_time_zeitzone
-  - entity: sensor.alternative_time_sternzeit
-  - entity: sensor.alternative_time_swatch_internet_time
-  - entity: sensor.alternative_time_nato_zeit
-show_icon: true
-show_name: true
-show_state: true
+type: vertical-stack
+cards:
+  - type: markdown
+    content: |
+      ## 🌍 Weltzeiten
+      **Sternzeit:** {{ states('sensor.alternative_time_sternzeit') }}
+      **Internet Time:** {{ states('sensor.alternative_time_swatch_internet_time') }}
+      **Maya:** {{ states('sensor.alternative_time_maya_kalender') }}
+      **Athen:** {{ states('sensor.alternative_time_attischer_kalender') }}
+      **Thailand:** {{ states('sensor.alternative_time_suriyakati_kalender') }}
+      **Taiwan:** {{ states('sensor.alternative_time_minguo_kalender') }}
+  
+  - type: glance
+    entities:
+      - entity: sensor.alternative_time_nato_zeit_mit_zone
+        name: NATO DTG
+      - entity: sensor.alternative_time_unix_timestamp
+        name: Unix
+      - entity: sensor.alternative_time_dezimalzeit
+        name: Dezimal
 ```
 
-#### Markdown Card mit allen Zeiten
-```yaml
-type: markdown
-content: |
-  ## 🕐 Alternative Zeitsysteme
-  
-  **Sternzeit:** {{ states('sensor.alternative_time_sternzeit') }}
-  
-  **Internet Time:** {{ states('sensor.alternative_time_swatch_internet_time') }}
-  
-  **Maya-Kalender:** {{ states('sensor.alternative_time_maya_kalender') }}
-  
-  **NATO-Zeit:** {{ states('sensor.alternative_time_nato_zeit_mit_zone') }}
-  
-  **Unix:** {{ states('sensor.alternative_time_unix_timestamp') }}
-  
-  **Dezimal:** {{ states('sensor.alternative_time_dezimalzeit') }}
-```
+## 🤖 Automatisierungen
 
-### Automatisierungen
-
-#### Beispiel: Tägliche Sternzeit-Ansage
+### Sternzeit-Ansage
 ```yaml
 automation:
-  - alias: "Sternzeit Ansage"
+  - alias: "Sternzeit Mittag"
     trigger:
       - platform: time
         at: "12:00:00"
@@ -230,179 +223,83 @@ automation:
       - service: tts.google_say
         data:
           entity_id: media_player.wohnzimmer
-          message: >
-            Sternzeit {{ states('sensor.alternative_time_sternzeit') }}
+          message: "Sternzeit {{ states('sensor.alternative_time_sternzeit') }}"
 ```
 
-#### Beispiel: NATO-Zeit Benachrichtigung
+### Einsatz-Zeitstempel (Rettungsdienst)
 ```yaml
 automation:
-  - alias: "Zulu Zeit Mittag"
+  - alias: "Einsatz Protokoll"
     trigger:
-      - platform: template
-        value_template: >
-          {{ states('sensor.alternative_time_nato_zeit')[2:6] == '1200' }}
+      - platform: state
+        entity_id: input_boolean.einsatz_aktiv
+        to: 'on'
     action:
-      - service: notify.mobile_app
+      - service: input_text.set_value
         data:
-          message: "Es ist 1200 Zulu Zeit!"
+          entity_id: input_text.einsatz_start
+          value: "{{ states('sensor.alternative_time_nato_zeit_rettungsdienst') }}"
 ```
 
-#### Beispiel: Maya-Kalender Tageswechsel
+### Maya-Kalender Tageswechsel
 ```yaml
 automation:
-  - alias: "Maya Tageswechsel"
+  - alias: "Maya Neuer Tag"
     trigger:
       - platform: state
         entity_id: sensor.alternative_time_maya_kalender
     action:
       - service: notify.mobile_app
         data:
-          message: "Neuer Maya-Tag: {{ states('sensor.alternative_time_maya_kalender') }}"
+          title: "Maya-Kalender"
+          message: "Neuer Tag: {{ trigger.to_state.state }}"
 ```
-
-## 🌐 Mehrere Instanzen
-
-Du kannst beliebig viele Instanzen der Integration hinzufügen, um verschiedene Zeitzonen oder Konfigurationen zu haben:
-
-1. **Weltzeituhr**: Erstelle mehrere Instanzen mit verschiedenen Zeitzonen
-2. **Thematische Gruppen**: Eine Instanz für Sci-Fi-Zeiten, eine für historische Zeiten, eine für militärische Zeiten
-3. **Raum-basiert**: Verschiedene Zeitsysteme für verschiedene Räume
-
-## 📊 NATO Date-Time Group (DTG) Formate
-
-### Standard NATO DTG (Militär):
-```
-DDHHMM[Zone] MON YY
-```
-Beispiel: `151430Z JAN 25`
-
-### Deutsche Rettungsdienst-Notation:
-```
-DD HHMM MONAT YY
-```
-Beispiel: `15 1430 JAN 25`
-
-Die Rettungsdienst-Notation wird in Deutschland bei Feuerwehr, Rettungsdienst, THW und Katastrophenschutz verwendet. Sie unterscheidet sich durch:
-- **Leerzeichen** zwischen Tag und Zeit
-- **Keine Zeitzone** (immer lokale Zeit)
-- **Deutsche Monatsabkürzungen**: MÄR (März), MAI (Mai), OKT (Oktober), DEZ (Dezember)
-
-### Komponenten:
-- **DD**: Tag des Monats (01-31)
-- **HH**: Stunde (00-23)
-- **MM**: Minute (00-59)
-- **Zone**: NATO-Zeitzonenbuchstabe (A-Z, außer J)
-- **MON**: Monatsabkürzung (JAN, FEB, MAR, etc.)
-- **YY**: Jahr (zweistellig)
-
-### Beispiele:
-- **Militär**: `151430Z JAN 25` - 15. Januar 2025, 14:30 UTC
-- **Rettungsdienst**: `15 1430 JAN 25` - 15. Januar 2025, 14:30 lokale Zeit
-- **Mit Zone**: `031200B MAR 25` - 3. März 2025, 12:00 UTC+2 (Bravo)
-- **Einsatzprotokoll**: `25 1800 DEZ 25` - 25. Dezember 2025, 18:00 Uhr
-
-### NATO-Zeitzonentabelle
-
-| Buchstabe | Name | UTC-Offset | Beispielregion |
-|-----------|------|------------|----------------|
-| Z | Zulu | UTC±0 | London (Winter) |
-| A | Alpha | UTC+1 | Berlin (Winter) |
-| B | Bravo | UTC+2 | Berlin (Sommer) |
-| C | Charlie | UTC+3 | Moskau |
-| D | Delta | UTC+4 | Dubai |
-| E | Echo | UTC+5 | Pakistan |
-| F | Foxtrot | UTC+6 | Kasachstan |
-| G | Golf | UTC+7 | Thailand |
-| H | Hotel | UTC+8 | China |
-| I | India | UTC+9 | Japan |
-| K | Kilo | UTC+10 | Sydney |
-| L | Lima | UTC+11 | Salomonen |
-| M | Mike | UTC+12 | Neuseeland |
-| N | November | UTC-1 | Azoren |
-| O | Oscar | UTC-2 | Brasilien |
-| P | Papa | UTC-3 | Argentinien |
-| Q | Quebec | UTC-4 | Puerto Rico |
-| R | Romeo | UTC-5 | New York |
-| S | Sierra | UTC-6 | Chicago |
-| T | Tango | UTC-7 | Denver |
-| U | Uniform | UTC-8 | Los Angeles |
-| V | Victor | UTC-9 | Alaska |
-| W | Whiskey | UTC-10 | Hawaii |
-| X | X-ray | UTC-11 | Samoa |
-| Y | Yankee | UTC-12 | Baker Island |
-
-**Hinweis:** J (Juliet) wird übersprungen, um Verwechslungen mit I zu vermeiden.
-
-## 🐛 Fehlerbehebung
-
-### Integration wird nicht gefunden
-- Stelle sicher, dass der Ordner korrekt in `custom_components` liegt
-- Prüfe die Ordnerstruktur: `/config/custom_components/alternative_time/`
-- Starte Home Assistant komplett neu
-
-### Sensoren zeigen "unavailable"
-- Prüfe die Logs unter Einstellungen → System → Logs
-- Stelle sicher, dass mindestens ein Zeitsystem aktiviert ist
-- Lösche die Integration und füge sie neu hinzu
-
-### Zeitzone zeigt falsche Zeit
-- Überprüfe die gewählte Zeitzone in der Konfiguration
-- Stelle sicher, dass die System-Zeit deines Home Assistant korrekt ist
-
-### "Blocking call" Warnung
-- Die Integration verwendet asynchrone Zeitzoneninitialisierung
-- Falls die Warnung weiterhin auftritt, starte Home Assistant neu
 
 ## 🚀 Performance
 
 Die Integration ist optimiert für minimale Systembelastung:
-- Event-basierte Updates statt Polling
-- Individuelle Update-Intervalle pro Sensor
-- Asynchrone Operationen für Zeitzonenberechnungen
-- Ressourcenschonende Implementierung
 
-## 📝 Geplante Features
+| Zeitsystem | Update-Intervall | Grund |
+|------------|-----------------|-------|
+| Zeitzonen, Unix, Swatch | 1 Sekunde | Sekundengenaue Anzeige |
+| Hexadezimal | 5 Sekunden | Mittlere Änderungsrate |
+| Sternzeit | 10 Sekunden | Langsame Änderung |
+| Julian Date | 60 Sekunden | Sehr langsame Änderung |
+| Kalender (Maya, Attisch, etc.) | 1 Stunde | Täglicher Wechsel |
 
-- [ ] Weitere Sci-Fi Zeitsysteme (Star Wars, Stargate, etc.)
-- [ ] Historische Kalender (Römisch, Chinesisch, etc.)
-- [ ] Anpassbare Sternzeit-Formeln
-- [ ] Zeitkonvertierung zwischen Systemen
-- [ ] Grafische Uhren-Cards
-- [ ] Weltzeit-Dashboard-Template
-- [ ] Konfigurierbare Update-Intervalle
-- [ ] Sonnenzeit und Mondphasen
+## 🐛 Fehlerbehebung
 
-## 🤝 Beitragen
+### Integration wird nicht gefunden
+```bash
+# Prüfe Ordnerstruktur
+ls -la /config/custom_components/alternative_time/
 
-Contributions sind willkommen! 
+# Sollte enthalten:
+# __init__.py, manifest.json, config_flow.py, sensor.py, const.py, translations/
+```
 
-1. Fork das Repository
-2. Erstelle einen Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Committe deine Änderungen (`git commit -m 'Add some AmazingFeature'`)
-4. Push zum Branch (`git push origin feature/AmazingFeature`)
-5. Öffne einen Pull Request
+### Sensoren zeigen "unavailable"
+1. Prüfe die Logs: Einstellungen → System → Logs
+2. Stelle sicher, dass mindestens ein Zeitsystem aktiviert ist
+3. Cache löschen: `find /config -name "__pycache__" -exec rm -rf {} +`
+4. Home Assistant neu starten
 
-## 📄 Lizenz
-
-Dieses Projekt ist unter der MIT-Lizenz lizenziert - siehe [LICENSE](LICENSE) für Details.
-
-## 🙏 Danksagungen
-
-- Home Assistant Community für die großartige Plattform
-- Star Trek für die Inspiration zur Sternzeit
-- Swatch für die revolutionäre Internet Beat Time
-- Die Maya-Kultur für ihr faszinierendes Kalendersystem
-- Alle Contributor und Tester
-
-## 📧 Support
-
-- **Issues**: [GitHub Issues](https://github.com/Lexorius/alternative_time/issues)
-- **Diskussionen**: [GitHub Discussions](https://github.com/Lexorius/alternative_time/discussions)
+### "Blocking call" Warnung
+Die Integration verwendet asynchrone Operationen. Falls die Warnung auftritt:
+```bash
+ha core restart
+```
 
 ## 📈 Version History
 
-### v1.2.0 (Latest)
+### v1.3.0 (Latest)
+- ✨ Suriyakati-Kalender (Thai) hinzugefügt
+- ✨ Minguo-Kalender (Taiwan/ROC) hinzugefügt
+- ✨ Attischer Kalender (Antikes Athen) hinzugefügt
+- 📝 Detaillierte Beschreibungen im Config Flow
+- 🌏 Erweiterte Unterstützung für asiatische Kalendersysteme
+
+### v1.2.0
 - ✨ NATO-Zeit Rettungsdienst-Format hinzugefügt
 - 🔧 NATO-Zeit korrigiert (jetzt mit Datum)
 - 📝 Erweiterte Dokumentation für alle NATO-Formate
@@ -417,6 +314,81 @@ Dieses Projekt ist unter der MIT-Lizenz lizenziert - siehe [LICENSE](LICENSE) f�
 - 🎉 Erste Veröffentlichung
 - ✨ Basis-Zeitsysteme implementiert
 
+## 📝 Geplante Features
+
+- [ ] Weitere Sci-Fi Zeitsysteme (Star Wars, Stargate, Doctor Who)
+- [ ] Historische Kalender (Römisch, Ägyptisch, Chinesisch)
+- [ ] Religiöse Kalender (Islamisch, Jüdisch, Koptisch)
+- [ ] Anpassbare Update-Intervalle
+- [ ] Zeitkonvertierung zwischen Systemen
+- [ ] Grafische Uhren-Cards
+- [ ] Export-Funktionen für Kalender
+
+## 🤝 Beitragen
+
+Contributions sind willkommen! 
+
+1. Fork das Repository
+2. Erstelle einen Feature Branch (`git checkout -b feature/NeuesZeitsystem`)
+3. Committe deine Änderungen (`git commit -m 'Add: Neues Zeitsystem'`)
+4. Push zum Branch (`git push origin feature/NeuesZeitsystem`)
+5. Öffne einen Pull Request
+
+### Entwicklungsumgebung
+
+```bash
+# Repository klonen
+git clone https://github.com/Lexorius/alternative_time.git
+cd alternative_time
+
+# In Home Assistant custom_components verlinken
+ln -s $(pwd)/custom_components/alternative_time /config/custom_components/
+
+# Home Assistant neu starten
+ha core restart
+
+# Logs beobachten
+tail -f /config/home-assistant.log | grep alternative_time
+```
+
+## 📄 Lizenz
+
+Dieses Projekt ist unter der MIT-Lizenz lizenziert - siehe [LICENSE](LICENSE) für Details.
+
+## 🙏 Danksagungen
+
+- **Home Assistant Community** für die großartige Plattform
+- **Star Trek** für die Inspiration zur Sternzeit
+- **Swatch** für die revolutionäre Internet Beat Time
+- **Maya-Kultur** für ihr faszinierendes Kalendersystem
+- **NATO/Militär** für standardisierte Zeitnotation
+- **Antikes Griechenland** für den präzisen Lunisolarkalender
+- **Thailand & Taiwan** für ihre einzigartigen Kalendersysteme
+- **Alle Contributor und Tester** die zum Projekt beitragen
+
+## 📧 Support
+
+- **Issues**: [GitHub Issues](https://github.com/Lexorius/alternative_time/issues)
+- **Diskussionen**: [GitHub Discussions](https://github.com/Lexorius/alternative_time/discussions)
+- **Wiki**: [GitHub Wiki](https://github.com/Lexorius/alternative_time/wiki)
+
+## 🌐 Ressourcen
+
+### Weiterführende Links
+- [Star Trek Stardate Calculator](http://trekguide.com/Stardates.htm)
+- [Swatch Internet Time](https://www.swatch.com/en-us/internet-time.html)
+- [Maya Calendar Converter](https://maya.nmai.si.edu/calendar/maya-calendar-converter)
+- [NATO Date Time Group](https://en.wikipedia.org/wiki/Date-time_group)
+- [Buddhist Era Calendar](https://en.wikipedia.org/wiki/Buddhist_calendar)
+- [Minguo Calendar](https://en.wikipedia.org/wiki/Minguo_calendar)
+
+### Technische Dokumentation
+- [Home Assistant Developer Docs](https://developers.home-assistant.io/)
+- [HACS Integration Guide](https://hacs.xyz/docs/develop/start)
+- [Python datetime Documentation](https://docs.python.org/3/library/datetime.html)
+
 ---
 
-Made with ❤️ by [Lexorius](https://github.com/Lexorius)
+**Made with ❤️ by [Lexorius](https://github.com/Lexorius)**
+
+*"Zeit ist eine Illusion. Mittagszeit doppelt so." - Douglas Adams*
