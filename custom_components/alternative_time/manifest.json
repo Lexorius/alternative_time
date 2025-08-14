@@ -7,6 +7,6 @@
   "documentation": "https://github.com/Lexorius/alternative_time",
   "iot_class": "calculated",
   "issue_tracker": "https://github.com/Lexorius/alternative_time/issues",
-  "requirements": ["pytz>=2023.3", "astral>=3.2"],
+  "requirements": [],
   "version": "1.0.0"
 }

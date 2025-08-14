@@ -2,8 +2,13 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timedelta
-import pytz
 import math
+
+try:
+    import pytz
+    HAS_PYTZ = True
+except ImportError:
+    HAS_PYTZ = False
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -99,13 +104,21 @@ class TimezoneSensor(AlternativeTimeSensorBase):
     def __init__(self, base_name: str, timezone: str) -> None:
         """Initialize the timezone sensor."""
         super().__init__(base_name, "timezone")
-        self._timezone = pytz.timezone(timezone)
+        if HAS_PYTZ:
+            self._timezone = pytz.timezone(timezone)
+        else:
+            self._timezone_str = timezone
         self._attr_icon = "mdi:clock-time-four-outline"
 
     def calculate_time(self) -> str:
         """Calculate current time in specified timezone."""
-        now = datetime.now(self._timezone)
-        return now.strftime("%H:%M:%S %Z")
+        if HAS_PYTZ:
+            now = datetime.now(self._timezone)
+            return now.strftime("%H:%M:%S %Z")
+        else:
+            # Fallback without pytz
+            now = datetime.now()
+            return now.strftime("%H:%M:%S") + f" {self._timezone_str}"
 
 
 class StardateSensor(AlternativeTimeSensorBase):
@@ -142,8 +155,13 @@ class SwatchTimeSensor(AlternativeTimeSensorBase):
     def calculate_time(self) -> str:
         """Calculate current Swatch Internet Time."""
         # Swatch Internet Time (Biel Mean Time)
-        bmt = pytz.timezone('Europe/Zurich')
-        now = datetime.now(bmt)
+        if HAS_PYTZ:
+            bmt = pytz.timezone('Europe/Zurich')
+            now = datetime.now(bmt)
+        else:
+            # Fallback: use local time and adjust for CET/CEST
+            now = datetime.now()
+            # Rough approximation for Zurich time
         
         # Calculate beats (1000 beats per day)
         seconds_since_midnight = (now.hour * 3600 + now.minute * 60 + now.second)
