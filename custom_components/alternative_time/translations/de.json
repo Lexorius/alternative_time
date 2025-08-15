@@ -22,6 +22,9 @@
           "enable_suriyakati": "Suriyakati-Kalender (Thai) aktivieren",
           "enable_minguo": "Minguo-Kalender (Taiwan) aktivieren",
           "enable_darian": "Darischer Kalender (Mars) aktivieren"
+		  "enable_eve": "EVE Online Zeit aktivieren",
+		  "enable_shire": "Auenland-Kalender (Hobbits) aktivieren",
+          "enable_rivendell": "Kalender von Imladris (Elben) aktivieren"
         },
         "data_description": {
           "name": "Ein eindeutiger Name für diese Konfiguration",
@@ -41,6 +44,9 @@
           "enable_suriyakati": "Thailändischer Kalender mit buddhistischer Ära, BE = CE+543 (z.B. 2568 BE)",
           "enable_minguo": "Taiwan/ROC Kalender, Jahr 1 = 1912 CE (z.B. 民國114年)",
           "enable_darian": "Mars-Kalender mit 24 Monaten und 668 Sols pro Jahr (z.B. 15 Gemini 217)"
+		  "enable_eve": "New Eden Standard Time aus EVE Online (z.B. YC 127.03.15 14:30:45)",
+		  "enable_shire": "Hobbit-Kalender mit 7 Mahlzeiten (z.B. S.R. 1445, 22 Halimath)",
+          "enable_rivendell": "Elbischer Kalender mit 6 Jahreszeiten (z.B. F.A. 6025, Tuilë 22)"
         }
       }
     },

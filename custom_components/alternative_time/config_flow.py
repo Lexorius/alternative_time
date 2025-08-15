@@ -30,6 +30,9 @@ from .const import (
     CONF_ENABLE_DARIAN,
     CONF_ENABLE_MARS_TIME,
     CONF_MARS_TIMEZONE,
+    CONF_ENABLE_EVE,
+    CONF_ENABLE_SHIRE,
+    CONF_ENABLE_RIVENDELL,
     DEFAULT_NAME,
 )
 
@@ -131,6 +134,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input.get(CONF_ENABLE_MINGUO, False),
                 user_input.get(CONF_ENABLE_DARIAN, False),
                 user_input.get(CONF_ENABLE_MARS_TIME, False),
+                user_input.get(CONF_ENABLE_EVE, False),
+                user_input.get(CONF_ENABLE_SHIRE, False),
+                user_input.get(CONF_ENABLE_RIVENDELL, False),
             ])
 
             if not time_systems_selected:
@@ -165,6 +171,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Optional(CONF_ENABLE_DARIAN, default=False): bool,
             vol.Optional(CONF_ENABLE_MARS_TIME, default=False): bool,
             vol.Optional(CONF_MARS_TIMEZONE, default="MTC+0 (Airy-0)"): vol.In(MARS_TIMEZONES),
+            vol.Optional(CONF_ENABLE_EVE, default=False): bool,
+            vol.Optional(CONF_ENABLE_SHIRE, default=False): bool,
+            vol.Optional(CONF_ENABLE_RIVENDELL, default=False): bool,
         })
 
         return self.async_show_form(

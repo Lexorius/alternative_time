@@ -19,5 +19,8 @@ CONF_ENABLE_MINGUO = "enable_minguo"
 CONF_ENABLE_DARIAN = "enable_darian"
 CONF_ENABLE_MARS_TIME = "enable_mars_time"
 CONF_MARS_TIMEZONE = "mars_timezone"
+CONF_ENABLE_EVE = "enable_eve"
+CONF_ENABLE_SHIRE = "enable_shire"
+CONF_ENABLE_RIVENDELL = "enable_rivendell"
 
 DEFAULT_NAME = "Alternative Time"
