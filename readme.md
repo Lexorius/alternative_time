@@ -1,242 +1,242 @@
-# Alternative Zeitsysteme für Home Assistant
+# Alternative Time Systems for Home Assistant
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
 [![GitHub Release](https://img.shields.io/github/release/Lexorius/alternative_time.svg)](https://github.com/Lexorius/alternative_time/releases)
 [![GitHub Activity](https://img.shields.io/github/commit-activity/y/Lexorius/alternative_time.svg)](https://github.com/Lexorius/alternative_time/commits/main)
 [![License](https://img.shields.io/github/license/Lexorius/alternative_time.svg)](LICENSE)
 
-Eine umfassende Home Assistant Integration für alternative Zeitsysteme aus Wissenschaft, Science-Fiction, Geschichte und verschiedenen Kulturen. Von der Sternzeit bis zum Maya-Kalender, vom Unix-Timestamp bis zur Mars-Zeit - diese Integration bietet 18 verschiedene Zeitsysteme als Sensoren.
+A comprehensive Home Assistant integration for alternative time systems from science, science fiction, history, and various cultures. From Stardate to Maya Calendar, from Unix timestamp to Mars time - this integration provides 18 different time systems as sensors.
 
-## 🎯 Übersicht
+## 🎯 Overview
 
-Diese Integration verwandelt Home Assistant in eine universelle Zeituhr mit Unterstützung für:
-- 🚀 **Science-Fiction Zeiten** (Star Trek Sternzeit)
-- 🔴 **Mars-Zeitsysteme** (Darischer Kalender, Mars-Zeitzonen)
-- 🌐 **Internet-Standards** (Unix, Swatch Internet Time)
-- 🏛️ **Historische Kalender** (Maya, Attisch, Französische Revolution)
-- 🎖️ **Militärische Zeitsysteme** (NATO DTG in 3 Varianten)
-- 🌏 **Kulturelle Kalender** (Thai, Taiwan)
-- 💻 **Technische Formate** (Hexadezimal, Julian Date)
+This integration transforms Home Assistant into a universal time clock with support for:
+- 🚀 **Science Fiction Times** (Star Trek Stardate)
+- 🔴 **Mars Time Systems** (Darian Calendar, Mars Time Zones)
+- 🌐 **Internet Standards** (Unix, Swatch Internet Time)
+- 🏛️ **Historical Calendars** (Maya, Attic, French Revolution)
+- 🎖️ **Military Time Systems** (NATO DTG in 3 variants)
+- 🌏 **Cultural Calendars** (Thai, Taiwan)
+- 💻 **Technical Formats** (Hexadecimal, Julian Date)
 
 ## 📦 Installation
 
-### Über HACS (empfohlen)
+### Via HACS (Recommended)
 
-1. Öffne HACS in deiner Home Assistant Installation
-2. Klicke auf die drei Punkte oben rechts
-3. Wähle "Custom repositories"
-4. Füge diese URL hinzu: `https://github.com/Lexorius/alternative_time`
-5. Wähle "Integration" als Kategorie
-6. Klicke auf "Add"
-7. Suche nach "Alternative Time Systems" und installiere es
-8. Starte Home Assistant neu
+1. Open HACS in your Home Assistant installation
+2. Click the three dots in the top right
+3. Select "Custom repositories"
+4. Add this URL: `https://github.com/Lexorius/alternative_time`
+5. Select "Integration" as category
+6. Click "Add"
+7. Search for "Alternative Time Systems" and install it
+8. Restart Home Assistant
 
-### Manuelle Installation
+### Manual Installation
 
-1. Lade den `alternative_time` Ordner herunter
-2. Kopiere ihn in dein `/config/custom_components/` Verzeichnis
-3. Starte Home Assistant neu
+1. Download the `alternative_time` folder
+2. Copy it to your `/config/custom_components/` directory
+3. Restart Home Assistant
 
-## ⚙️ Konfiguration
+## ⚙️ Configuration
 
-### Über die Benutzeroberfläche
+### Via User Interface
 
-1. Gehe zu **Einstellungen** → **Geräte & Dienste**
-2. Klicke auf **Integration hinzufügen**
-3. Suche nach **Alternative Time Systems**
-4. Folge dem Konfigurationsassistenten
-5. Wähle die gewünschten Zeitsysteme aus
-6. Klicke auf **Absenden**
+1. Go to **Settings** → **Devices & Services**
+2. Click **Add Integration**
+3. Search for **Alternative Time Systems**
+4. Follow the configuration wizard
+5. Select the desired time systems
+6. Click **Submit**
 
-### 💡 Mehrere Instanzen
+### 💡 Multiple Instances
 
-Du kannst beliebig viele Instanzen mit unterschiedlichen Konfigurationen erstellen:
-- **Weltzeituhr**: Mehrere Instanzen mit verschiedenen Zeitzonen
-- **Thematische Gruppen**: Sci-Fi, Historisch, Militärisch
-- **Raum-basiert**: Verschiedene Zeitsysteme für verschiedene Räume
+You can create multiple instances with different configurations:
+- **World Clock**: Multiple instances with different time zones
+- **Thematic Groups**: Sci-Fi, Historical, Military
+- **Room-based**: Different time systems for different rooms
 
-## 🌟 Verfügbare Zeitsysteme
+## 🌟 Available Time Systems
 
-### 🌍 **Zeitzone**
-- **Format**: `HH:MM:SS TZ` (z.B. `14:30:45 CEST`)
-- **Beschreibung**: Zeigt die aktuelle Zeit in einer beliebigen Erdzeit-Zone
-- **Verwendung**: Internationale Teams, Reiseplanung, Weltzeituhr
-- **Update**: Jede Sekunde
+### 🌍 **Timezone**
+- **Format**: `HH:MM:SS TZ` (e.g., `14:30:45 CEST`)
+- **Description**: Shows current time in any Earth timezone
+- **Usage**: International teams, travel planning, world clock
+- **Update**: Every second
 
-### 🚀 **Sternzeit (Stardate)**
-- **Format**: `XXXXX.XX` (z.B. `47634.44`)
-- **Beschreibung**: Star Trek TNG-Style Sternzeit basierend auf dem Jahr 2323
-- **Besonderheit**: Berechnet nach TNG-Formel mit Tagesbruchteil
-- **Update**: Alle 10 Sekunden
+### 🚀 **Stardate**
+- **Format**: `XXXXX.XX` (e.g., `47634.44`)
+- **Description**: Star Trek TNG-style stardate based on year 2323
+- **Feature**: Calculated using TNG formula with day fraction
+- **Update**: Every 10 seconds
 
 ### 🌐 **Swatch Internet Time**
-- **Format**: `@XXX.XX` (z.B. `@750.00`)
-- **Beschreibung**: Ein Tag = 1000 Beats, keine Zeitzonen (BMT)
-- **Geschichte**: 1998 von Swatch eingeführt als universelle Internetzeit
-- **Update**: Jede Sekunde
+- **Format**: `@XXX.XX` (e.g., `@750.00`)
+- **Description**: One day = 1000 beats, no time zones (BMT)
+- **History**: Introduced by Swatch in 1998 as universal internet time
+- **Update**: Every second
 
 ### 🔢 **Unix Timestamp**
-- **Format**: `XXXXXXXXXX` (z.B. `1735689600`)
-- **Beschreibung**: Sekunden seit 1. Januar 1970, 00:00 UTC
-- **Verwendung**: Programmierung, Datenbanken, IT-Systeme
-- **Update**: Jede Sekunde
+- **Format**: `XXXXXXXXXX` (e.g., `1735689600`)
+- **Description**: Seconds since January 1, 1970, 00:00 UTC
+- **Usage**: Programming, databases, IT systems
+- **Update**: Every second
 
-### 📅 **Julianisches Datum**
-- **Format**: `XXXXXXX.XXXXX` (z.B. `2460000.50000`)
-- **Beschreibung**: Kontinuierliche Tageszählung seit 4713 v.Chr.
-- **Verwendung**: Astronomie, Wissenschaft, historische Datierung
-- **Update**: Jede Minute
+### 📅 **Julian Date**
+- **Format**: `XXXXXXX.XXXXX` (e.g., `2460000.50000`)
+- **Description**: Continuous day count since 4713 BCE
+- **Usage**: Astronomy, science, historical dating
+- **Update**: Every minute
 
-### 🔟 **Dezimalzeit**
-- **Format**: `H:MM:SS` (z.B. `5:50:00`)
-- **Beschreibung**: Französische Revolutionszeit - 10 Stunden/Tag, 100 Min/Std
-- **Geschichte**: 1793-1805 in Frankreich offiziell verwendet
-- **Update**: Jede Sekunde
+### 🔟 **Decimal Time**
+- **Format**: `H:MM:SS` (e.g., `5:50:00`)
+- **Description**: French Revolutionary time - 10 hours/day, 100 min/hour
+- **History**: Officially used in France 1793-1805
+- **Update**: Every second
 
-### 🔤 **Hexadezimalzeit**
-- **Format**: `.XXXX` (z.B. `.8000`)
-- **Beschreibung**: Tag in 65536 (0x10000) Teile geteilt
-- **Besonderheit**: .0000 = Mitternacht, .8000 = Mittag, .FFFF = 23:59:59
-- **Update**: Alle 5 Sekunden
+### 🔤 **Hexadecimal Time**
+- **Format**: `.XXXX` (e.g., `.8000`)
+- **Description**: Day divided into 65536 (0x10000) parts
+- **Feature**: .0000 = midnight, .8000 = noon, .FFFF = 23:59:59
+- **Update**: Every 5 seconds
 
-### 🏛️ **Maya-Kalender**
+### 🏛️ **Maya Calendar**
 - **Format**: `B.K.T.U.K | TZ TN | HD HM`
-- **Beispiel**: `13.0.12.1.15 | 8 Ahau | 3 Pop`
-- **Komponenten**:
-  - Lange Zählung (Baktun.Katun.Tun.Uinal.Kin)
-  - Tzolk'in (260-Tage ritueller Kalender)
-  - Haab (365-Tage Zivilkalender)
-- **Update**: Stündlich
+- **Example**: `13.0.12.1.15 | 8 Ahau | 3 Pop`
+- **Components**:
+  - Long Count (Baktun.Katun.Tun.Uinal.Kin)
+  - Tzolk'in (260-day ritual calendar)
+  - Haab (365-day civil calendar)
+- **Update**: Hourly
 
-### 🎖️ **NATO-Zeit (Basis)**
-- **Format**: `DDHHMM` (z.B. `151430`)
-- **Beschreibung**: Tag + Uhrzeit ohne Zeitzone
-- **Verwendung**: Einfache militärische Zeitangabe
-- **Update**: Jede Sekunde
+### 🎖️ **NATO Time (Basic)**
+- **Format**: `DDHHMM` (e.g., `151430`)
+- **Description**: Day + time without timezone
+- **Usage**: Simple military time notation
+- **Update**: Every second
 
-### 🌐 **NATO-Zeit mit Zone (DTG)**
-- **Format**: `DDHHMM[Z] MON YY` (z.B. `151430Z JAN 25`)
-- **Beschreibung**: Vollständige Date-Time Group mit Zeitzone
-- **Zeitzonen**: A-Z (außer J), Z=UTC, B=UTC+2 (CEST)
-- **Update**: Jede Sekunde
+### 🌐 **NATO Time with Zone (DTG)**
+- **Format**: `DDHHMM[Z] MON YY` (e.g., `151430Z JAN 25`)
+- **Description**: Complete Date-Time Group with timezone
+- **Timezones**: A-Z (except J), Z=UTC, B=UTC+2 (CEST)
+- **Update**: Every second
 
-### 🚑 **NATO-Zeit Rettungsdienst**
-- **Format**: `DD HHMM MONAT YY` (z.B. `15 1430 JAN 25`)
-- **Beschreibung**: Deutsche BOS-Standard Notation
-- **Besonderheit**: Mit Leerzeichen, deutsche Monatsabkürzungen
-- **Verwendung**: Feuerwehr, Rettungsdienst, THW, Katastrophenschutz
-- **Update**: Jede Sekunde
+### 🚑 **NATO Rescue Service Time**
+- **Format**: `DD HHMM MONTH YY` (e.g., `15 1430 JAN 25`)
+- **Description**: German emergency services standard notation
+- **Feature**: With spaces, German month abbreviations
+- **Usage**: Fire department, rescue services, THW, disaster response
+- **Update**: Every second
 
-### 🏛️ **Attischer Kalender**
-- **Format**: `Tag Period Monat | Archon | Ol.XXX.Y`
-- **Beispiel**: `5 ἱσταμένου Hekatombaion | Nikias | Ol.700.2`
-- **Komponenten**:
-  - Dekaden-System (3×10 Tage/Monat)
-  - 12 Lunarmonate
-  - Archon (Jahresbeamter)
-  - Olympiaden-Zählung
-- **Update**: Stündlich
+### 🏛️ **Attic Calendar**
+- **Format**: `Day Period Month | Archon | Ol.XXX.Y`
+- **Example**: `5 histamenou Hekatombaion | Nikias | Ol.700.2`
+- **Components**:
+  - Dekad system (3×10 days/month)
+  - 12 lunar months
+  - Archon (annual magistrate)
+  - Olympiad counting
+- **Update**: Hourly
 
-### 🇹🇭 **Suriyakati-Kalender (Thai)**
-- **Format**: Thai + Romanisiert
-- **Beispiel**: `๒๕ ธันวาคม ๒๕๖๘ | 25 Thanwakhom 2568 BE`
-- **Besonderheit**: Buddhistische Ära (BE = CE + 543)
-- **Zahlen**: Thai-Ziffern ๐๑๒๓๔๕๖๗๘๙
-- **Update**: Stündlich
+### 🇹🇭 **Suriyakati Calendar (Thai)**
+- **Format**: Thai + Romanized
+- **Example**: `๒๕ ธันวาคม ๒๕๖๘ | 25 Thanwakhom 2568 BE`
+- **Feature**: Buddhist Era (BE = CE + 543)
+- **Numbers**: Thai numerals ๐๑๒๓๔๕๖๗๘๙
+- **Update**: Hourly
 
-### 🇹🇼 **Minguo-Kalender (Taiwan)**
-- **Format**: Chinesisch + Romanisiert
-- **Beispiel**: `民國114年 十二月 二十五日 | Minguo 114/12/25`
-- **Besonderheit**: Jahr 1 = 1912 CE (Gründung ROC)
-- **Verwendung**: Offizielle Dokumente in Taiwan
-- **Update**: Stündlich
+### 🇹🇼 **Minguo Calendar (Taiwan)**
+- **Format**: Chinese + Romanized
+- **Example**: `民國114年 十二月 二十五日 | Minguo 114/12/25`
+- **Feature**: Year 1 = 1912 CE (ROC founding)
+- **Usage**: Official documents in Taiwan
+- **Update**: Hourly
 
-### 🚀 **Darischer Kalender (Mars)**
-- **Format**: `Sol Monat Jahr | Wochentag | Jahreszeit`
-- **Beispiel**: `15 Gemini 217 | Sol Martis | Summer`
-- **Besonderheiten**:
-  - 24 Monate mit je 27-28 Sols
-  - 668 Sols pro Mars-Jahr
-  - 7-Sol-Woche mit lateinischen Namen
-- **Update**: Stündlich
-
-### 🔴 **Mars-Zeit mit Zeitzone**
-- **Format**: `HH:MM:SS Location | Sol X/MYY | ☉/☽`
-- **Beispiel**: `14:25:30 Olympus Mons | Sol 234/MY36 | ☉ Tag`
-- **24 Mars-Zeitzonen**: 
-  - MTC+0 (Airy-0) bis MTC+12
-  - MTC-1 bis MTC-12
-  - Benannt nach Mars-Landmarken
+### 🚀 **Darian Calendar (Mars)**
+- **Format**: `Sol Month Year | Weekday | Season`
+- **Example**: `15 Gemini 217 | Sol Martis | Summer`
 - **Features**:
-  - Sol-Zeit (24:39:35 Erdzeit)
-  - Tag/Nacht-Indikator
-  - Mars-Jahr und Sol-Nummer
-- **Update**: Alle 30 Sekunden
+  - 24 months with 27-28 sols each
+  - 668 sols per Mars year
+  - 7-sol week with Latin names
+- **Update**: Hourly
 
-## 🎯 Verwendung
+### 🔴 **Mars Time with Timezone**
+- **Format**: `HH:MM:SS Location | Sol X/MYY | ☉/☽`
+- **Example**: `14:25:30 Olympus Mons | Sol 234/MY36 | ☉ Day`
+- **24 Mars Timezones**: 
+  - MTC+0 (Airy-0) to MTC+12
+  - MTC-1 to MTC-12
+  - Named after Mars landmarks
+- **Features**:
+  - Sol time (24:39:35 Earth time)
+  - Day/Night indicator
+  - Mars year and sol number
+- **Update**: Every 30 seconds
 
-### Sensor-Entitäten
+## 🎯 Usage
 
-Nach der Konfiguration werden folgende Sensoren erstellt (je nach Auswahl):
+### Sensor Entities
 
-| Sensor | Entitäts-ID |
-|--------|-------------|
-| Zeitzone | `sensor.[name]_zeitzone` |
-| Sternzeit | `sensor.[name]_sternzeit` |
+After configuration, the following sensors are created (depending on selection):
+
+| Sensor | Entity ID |
+|--------|-----------|
+| Timezone | `sensor.[name]_timezone` |
+| Stardate | `sensor.[name]_stardate` |
 | Swatch Time | `sensor.[name]_swatch_internet_time` |
 | Unix Timestamp | `sensor.[name]_unix_timestamp` |
-| Julianisches Datum | `sensor.[name]_julianisches_datum` |
-| Dezimalzeit | `sensor.[name]_dezimalzeit` |
-| Hexadezimalzeit | `sensor.[name]_hexadezimalzeit` |
-| Maya-Kalender | `sensor.[name]_maya_kalender` |
-| NATO-Zeit | `sensor.[name]_nato_zeit` |
-| NATO DTG | `sensor.[name]_nato_zeit_mit_zone` |
-| NATO Rettungsdienst | `sensor.[name]_nato_zeit_rettungsdienst` |
-| Attischer Kalender | `sensor.[name]_attischer_kalender` |
-| Suriyakati | `sensor.[name]_suriyakati_kalender` |
-| Minguo | `sensor.[name]_minguo_kalender` |
-| Darischer Kalender | `sensor.[name]_darischer_kalender` |
-| Mars-Zeit | `sensor.[name]_mars_zeit` |
+| Julian Date | `sensor.[name]_julian_date` |
+| Decimal Time | `sensor.[name]_decimal_time` |
+| Hexadecimal Time | `sensor.[name]_hexadecimal_time` |
+| Maya Calendar | `sensor.[name]_maya_calendar` |
+| NATO Time | `sensor.[name]_nato_time` |
+| NATO DTG | `sensor.[name]_nato_time_with_zone` |
+| NATO Rescue | `sensor.[name]_nato_rescue_time` |
+| Attic Calendar | `sensor.[name]_attic_calendar` |
+| Suriyakati | `sensor.[name]_suriyakati_calendar` |
+| Minguo | `sensor.[name]_minguo_calendar` |
+| Darian Calendar | `sensor.[name]_darian_calendar` |
+| Mars Time | `sensor.[name]_mars_time` |
 
-## 📊 Dashboard-Beispiele
+## 📊 Dashboard Examples
 
-### Einfache Entitätskarte
+### Simple Entity Card
 ```yaml
 type: entities
-title: Alternative Zeitsysteme
+title: Alternative Time Systems
 entities:
-  - entity: sensor.alternative_time_sternzeit
-  - entity: sensor.alternative_time_maya_kalender
-  - entity: sensor.alternative_time_nato_zeit_mit_zone
-  - entity: sensor.alternative_time_mars_zeit
+  - entity: sensor.alternative_time_stardate
+  - entity: sensor.alternative_time_maya_calendar
+  - entity: sensor.alternative_time_nato_time_with_zone
+  - entity: sensor.alternative_time_mars_time
 ```
 
-### Weltzeituhr Dashboard
+### World Clock Dashboard
 ```yaml
 type: vertical-stack
 cards:
   - type: markdown
     content: |
-      ## 🌍 Weltzeiten
-      **Sternzeit:** {{ states('sensor.alternative_time_sternzeit') }}
+      ## 🌍 World Times
+      **Stardate:** {{ states('sensor.alternative_time_stardate') }}
       **Internet Time:** {{ states('sensor.alternative_time_swatch_internet_time') }}
-      **Maya:** {{ states('sensor.alternative_time_maya_kalender') }}
-      **Athen:** {{ states('sensor.alternative_time_attischer_kalender') }}
-      **Thailand:** {{ states('sensor.alternative_time_suriyakati_kalender') }}
-      **Taiwan:** {{ states('sensor.alternative_time_minguo_kalender') }}
-      **Mars:** {{ states('sensor.alternative_time_mars_zeit') }}
+      **Maya:** {{ states('sensor.alternative_time_maya_calendar') }}
+      **Athens:** {{ states('sensor.alternative_time_attic_calendar') }}
+      **Thailand:** {{ states('sensor.alternative_time_suriyakati_calendar') }}
+      **Taiwan:** {{ states('sensor.alternative_time_minguo_calendar') }}
+      **Mars:** {{ states('sensor.alternative_time_mars_time') }}
   
   - type: glance
     entities:
-      - entity: sensor.alternative_time_nato_zeit_mit_zone
+      - entity: sensor.alternative_time_nato_time_with_zone
         name: NATO DTG
       - entity: sensor.alternative_time_unix_timestamp
         name: Unix
-      - entity: sensor.alternative_time_dezimalzeit
-        name: Dezimal
+      - entity: sensor.alternative_time_decimal_time
+        name: Decimal
 ```
 
-### Mars-Mission Dashboard
+### Mars Mission Dashboard
 ```yaml
 type: vertical-stack
 cards:
@@ -244,90 +244,90 @@ cards:
     content: |
       ## 🔴 Mars Mission Control
       
-      **Mars-Zeit:** {{ states('sensor.alternative_time_mars_zeit') }}
-      **Darischer Kalender:** {{ states('sensor.alternative_time_darischer_kalender') }}
+      **Mars Time:** {{ states('sensor.alternative_time_mars_time') }}
+      **Darian Calendar:** {{ states('sensor.alternative_time_darian_calendar') }}
       
   - type: entities
-    title: Mars-Zeitzonen
+    title: Mars Time Zones
     entities:
-      - entity: sensor.alternative_time_mars_zeit
-        name: Aktuelle Mars-Zeit
-      - entity: sensor.alternative_time_darischer_kalender
-        name: Mars-Datum
+      - entity: sensor.alternative_time_mars_time
+        name: Current Mars Time
+      - entity: sensor.alternative_time_darian_calendar
+        name: Mars Date
 ```
 
-## 🤖 Automatisierungen
+## 🤖 Automations
 
-### Sternzeit-Ansage
+### Stardate Announcement
 ```yaml
 automation:
-  - alias: "Sternzeit Mittag"
+  - alias: "Stardate Noon"
     trigger:
       - platform: time
         at: "12:00:00"
     action:
       - service: tts.google_say
         data:
-          entity_id: media_player.wohnzimmer
-          message: "Sternzeit {{ states('sensor.alternative_time_sternzeit') }}"
+          entity_id: media_player.living_room
+          message: "Stardate {{ states('sensor.alternative_time_stardate') }}"
 ```
 
-### Einsatz-Zeitstempel (Rettungsdienst)
+### Mission Timestamp (Rescue Service)
 ```yaml
 automation:
-  - alias: "Einsatz Protokoll"
+  - alias: "Mission Log"
     trigger:
       - platform: state
-        entity_id: input_boolean.einsatz_aktiv
+        entity_id: input_boolean.mission_active
         to: 'on'
     action:
       - service: input_text.set_value
         data:
-          entity_id: input_text.einsatz_start
-          value: "{{ states('sensor.alternative_time_nato_zeit_rettungsdienst') }}"
+          entity_id: input_text.mission_start
+          value: "{{ states('sensor.alternative_time_nato_rescue_time') }}"
 ```
 
-### Maya-Kalender Tageswechsel
+### Maya Calendar Day Change
 ```yaml
 automation:
-  - alias: "Maya Neuer Tag"
+  - alias: "Maya New Day"
     trigger:
       - platform: state
-        entity_id: sensor.alternative_time_maya_kalender
+        entity_id: sensor.alternative_time_maya_calendar
     action:
       - service: notify.mobile_app
         data:
-          title: "Maya-Kalender"
-          message: "Neuer Tag: {{ trigger.to_state.state }}"
+          title: "Maya Calendar"
+          message: "New day: {{ trigger.to_state.state }}"
 ```
 
-### Mars Sol-Alarm
+### Mars Sol Alarm
 ```yaml
 automation:
-  - alias: "Mars Sol-Wechsel"
+  - alias: "Mars Sol Change"
     trigger:
       - platform: template
         value_template: >
-          {{ 'Sol 1/' in states('sensor.alternative_time_mars_zeit') }}
+          {{ 'Sol 1/' in states('sensor.alternative_time_mars_time') }}
     action:
       - service: notify.mobile_app
         data:
-          title: "🔴 Neues Mars-Jahr"
-          message: "Ein neues Mars-Jahr hat begonnen!"
+          title: "🔴 New Mars Year"
+          message: "A new Mars year has begun!"
 ```
 
-## 🔴 Mars-Zeitsysteme
+## 🔴 Mars Time Systems
 
-### Darischer Kalender
-Der Darische Kalender wurde 1985 von Thomas Gangale für die Mars-Kolonisation entwickelt:
+### Darian Calendar
+The Darian Calendar was developed by Thomas Gangale in 1985 for Mars colonization:
 
-#### Struktur:
-- **24 Monate** (abwechselnd lateinisch/Sanskrit benannt)
-- **668 Sols** pro Mars-Jahr (≈ 687 Erdtage)
-- **27-28 Sols** pro Monat
-- **7-Sol-Woche**: Sol Solis bis Sol Saturni
+#### Structure:
+- **24 months** (alternating Latin/Sanskrit names)
+- **668 sols** per Mars year (≈ 687 Earth days)
+- **27-28 sols** per month
+- **7-sol week**: Sol Solis to Sol Saturni
 
-#### Monate:
+#### Months:
 1. Sagittarius/Dhanus
 2. Capricornus/Makara
 3. Aquarius/Kumbha
@@ -341,145 +341,54 @@ Der Darische Kalender wurde 1985 von Thomas Gangale für die Mars-Kolonisation e
 11. Libra/Tula
 12. Scorpius/Vrishchika
 
-### Mars-Zeitzonen (MTC)
-24 Zeitzonen von MTC-12 bis MTC+12, benannt nach Mars-Landmarken:
+### Mars Time Zones (MTC)
+24 time zones from MTC-12 to MTC+12, named after Mars landmarks:
 
-#### Wichtige Zeitzonen:
+#### Important Time Zones:
 - **MTC+0 (Airy-0)**: Prime Meridian
-- **MTC-1 (Olympus Mons)**: Höchster Vulkan im Sonnensystem
-- **MTC-3 (Valles Marineris)**: Größter Canyon
-- **MTC-9 (Chryse)**: Viking 1 Landeplatz
+- **MTC-1 (Olympus Mons)**: Tallest volcano in the solar system
+- **MTC-3 (Valles Marineris)**: Largest canyon
+- **MTC-9 (Chryse)**: Viking 1 landing site
 - **MTC+11 (Aeolis)**: Gale Crater (Curiosity)
 - **MTC+1 (Meridiani)**: Opportunity Rover
 
-### Sol-Zeit:
-- **1 Sol** = 24h 39m 35s (Mars-Tag)
-- **Mars-Stunde** ≈ 61.65 Minuten
-- **Mars-Minute** ≈ 61.65 Sekunden
-
-## 🏛️ Attischer Kalender Details
-
-Der attische Kalender war der Lunisolarkalender des antiken Athens, der präziseste überlieferte Kalender der griechischen Poleis.
-
-### Struktur:
-- **12 Monate** zu je 29-30 Tagen (alternierend)
-- **Beginn**: Sommersonnenwende (Hekatombaion)
-- **354 Tage** im normalen Jahr (Mondjahr)
-- **Schaltmonate** zur Synchronisation mit dem Sonnenjahr
-
-### Monate:
-1. **Hekatombaion** (Juli/August) - Monat der hundert Opfer
-2. **Metageitnion** (August/September)
-3. **Boedromion** (September/Oktober) - Monat des Hilferufs
-4. **Pyanepsion** (Oktober/November) - Bohnenmonat
-5. **Maimakterion** (November/Dezember) - Sturmmonat
-6. **Poseideon** (Dezember/Januar) - Poseidons Monat
-7. **Gamelion** (Januar/Februar) - Hochzeitsmonat
-8. **Anthesterion** (Februar/März) - Blumenmonat
-9. **Elaphebolion** (März/April) - Hirschmonat
-10. **Mounichion** (April/Mai)
-11. **Thargelion** (Mai/Juni)
-12. **Skirophorion** (Juni/Juli)
-
-### Dekaden-System:
-Jeder Monat war in drei Dekaden unterteilt:
-- **ἱσταμένου** (histamenou): Tag 1-10 - "wachsender Mond"
-- **μεσοῦντος** (mesountos): Tag 11-20 - "Monatsmitte"
-- **φθίνοντος** (phthinontos): Tag 21-29/30 - "schwindender Mond" (rückwärts gezählt)
-
-## 🌏 Asiatische Kalender Details
-
-### 🇹🇭 Suriyakati-Kalender (Thailand)
-
-Der thailändische Solarkalender basiert auf dem gregorianischen Kalender mit buddhistischer Zeitrechnung.
-
-#### Besonderheiten:
-- **Buddhistische Ära (BE)**: Jahr = CE + 543
-- **Jahr 2025 CE** = Jahr 2568 BE (พ.ศ. ๒๕๖๘)
-- **Thai-Ziffern**: ๐ ๑ ๒ ๓ ๔ ๕ ๖ ๗ ๘ ๙
-- **Neujahr**: 1. Januar (offiziell), Songkran 13.-15. April (traditionell)
-
-### 🇹🇼 Minguo-Kalender (Taiwan/ROC)
-
-Der Kalender der Republik China wird in Taiwan offiziell verwendet.
-
-#### Besonderheiten:
-- **Minguo-Ära**: Jahr 1 = 1912 CE (Gründung der Republik China)
-- **Jahr 2025 CE** = Minguo 114 (民國114年)
-- **Vor 1912**: "民前" (Vor Minguo)
-- **Datumformat**: 民國年/月/日
-
-## 📊 NATO Date-Time Group (DTG) Formate
-
-### Standard NATO DTG (Militär):
-```
-DDHHMM[Zone] MON YY
-```
-Beispiel: `151430Z JAN 25`
-
-### Deutsche Rettungsdienst-Notation:
-```
-DD HHMM MONAT YY
-```
-Beispiel: `15 1430 JAN 25`
-
-Die Rettungsdienst-Notation wird in Deutschland bei Feuerwehr, Rettungsdienst, THW und Katastrophenschutz verwendet. Sie unterscheidet sich durch:
-- **Leerzeichen** zwischen Tag und Zeit
-- **Keine Zeitzone** (immer lokale Zeit)
-- **Deutsche Monatsabkürzungen**: MÄR (März), MAI (Mai), OKT (Oktober), DEZ (Dezember)
-
-### NATO-Zeitzonentabelle
-
-| Buchstabe | Name | UTC-Offset | Beispielregion |
-|-----------|------|------------|----------------|
-| Z | Zulu | UTC±0 | London (Winter) |
-| A | Alpha | UTC+1 | Berlin (Winter) |
-| B | Bravo | UTC+2 | Berlin (Sommer) |
-| C | Charlie | UTC+3 | Moskau |
-| D | Delta | UTC+4 | Dubai |
-| E | Echo | UTC+5 | Pakistan |
-| F | Foxtrot | UTC+6 | Kasachstan |
-| G | Golf | UTC+7 | Thailand |
-| H | Hotel | UTC+8 | China |
-| I | India | UTC+9 | Japan |
-| K | Kilo | UTC+10 | Sydney |
-| L | Lima | UTC+11 | Salomonen |
-| M | Mike | UTC+12 | Neuseeland |
-
-**Hinweis:** J (Juliet) wird übersprungen, um Verwechslungen mit I zu vermeiden.
+### Sol Time:
+- **1 Sol** = 24h 39m 35s (Mars day)
+- **Mars hour** ≈ 61.65 minutes
+- **Mars minute** ≈ 61.65 seconds
 
 ## 🚀 Performance
 
-Die Integration ist optimiert für minimale Systembelastung:
+The integration is optimized for minimal system load:
 
-| Zeitsystem | Update-Intervall | Grund |
-|------------|-----------------|-------|
-| Zeitzonen, Unix, Swatch | 1 Sekunde | Sekundengenaue Anzeige |
-| Hexadezimal | 5 Sekunden | Mittlere Änderungsrate |
-| Sternzeit | 10 Sekunden | Langsame Änderung |
-| Julian Date | 60 Sekunden | Sehr langsame Änderung |
-| Kalender (Maya, Attisch, etc.) | 1 Stunde | Täglicher Wechsel |
-| Mars-Zeit | 30 Sekunden | Sol-Zeit Präzision |
+| Time System | Update Interval | Reason |
+|-------------|-----------------|--------|
+| Timezones, Unix, Swatch | 1 second | Second-accurate display |
+| Hexadecimal | 5 seconds | Medium change rate |
+| Stardate | 10 seconds | Slow change |
+| Julian Date | 60 seconds | Very slow change |
+| Calendars (Maya, Attic, etc.) | 1 hour | Daily change |
+| Mars Time | 30 seconds | Sol time precision |
 
-## 🐛 Fehlerbehebung
+## 🐛 Troubleshooting
 
-### Integration wird nicht gefunden
+### Integration Not Found
 ```bash
-# Prüfe Ordnerstruktur
+# Check folder structure
 ls -la /config/custom_components/alternative_time/
 
-# Sollte enthalten:
+# Should contain:
 # __init__.py, manifest.json, config_flow.py, sensor.py, const.py, translations/
 ```
 
-### Sensoren zeigen "unavailable"
-1. Prüfe die Logs: Einstellungen → System → Logs
-2. Stelle sicher, dass mindestens ein Zeitsystem aktiviert ist
-3. Cache löschen: `find /config -name "__pycache__" -exec rm -rf {} +`
-4. Home Assistant neu starten
+### Sensors Show "unavailable"
+1. Check logs: Settings → System → Logs
+2. Ensure at least one time system is enabled
+3. Clear cache: `find /config -name "__pycache__" -exec rm -rf {} +`
+4. Restart Home Assistant
 
-### "Blocking call" Warnung
-Die Integration verwendet asynchrone Operationen. Falls die Warnung auftritt:
+### "Blocking call" Warning
+The integration uses asynchronous operations. If warning persists:
 ```bash
 ha core restart
 ```
@@ -487,97 +396,97 @@ ha core restart
 ## 📈 Version History
 
 ### v1.4.0 (Latest)
-- ✨ Darischer Kalender (Mars) hinzugefügt
-- ✨ Mars-Zeit mit 24 wählbaren Zeitzonen
-- 🔴 Vollständige Mars-Zeitsystem-Unterstützung
-- 🚀 Bereit für Mars-Kolonisation
+- ✨ Added Darian Calendar (Mars)
+- ✨ Mars Time with 24 selectable time zones
+- 🔴 Complete Mars time system support
+- 🚀 Ready for Mars colonization
 
 ### v1.3.0
-- ✨ Suriyakati-Kalender (Thai) hinzugefügt
-- ✨ Minguo-Kalender (Taiwan/ROC) hinzugefügt
-- ✨ Attischer Kalender (Antikes Athen) hinzugefügt
-- 📝 Detaillierte Beschreibungen im Config Flow
-- 🌏 Erweiterte Unterstützung für asiatische Kalendersysteme
+- ✨ Added Suriyakati Calendar (Thai)
+- ✨ Added Minguo Calendar (Taiwan/ROC)
+- ✨ Added Attic Calendar (Ancient Athens)
+- 📝 Detailed descriptions in config flow
+- 🌏 Extended support for Asian calendar systems
 
 ### v1.2.0
-- ✨ NATO-Zeit Rettungsdienst-Format hinzugefügt
-- 🔧 NATO-Zeit korrigiert (jetzt mit Datum)
-- 📝 Erweiterte Dokumentation für alle NATO-Formate
+- ✨ Added NATO Rescue Service time format
+- 🔧 Fixed NATO time (now with date)
+- 📝 Extended documentation for all NATO formats
 
 ### v1.1.0
-- ✨ Maya-Kalender hinzugefügt
-- ✨ NATO-Zeit (mit und ohne Zonenindikator) hinzugefügt
-- 🐛 Async-Zeitzoneninitialisierung für bessere Performance
-- 🐛 Blocking call Warnung behoben
+- ✨ Added Maya Calendar
+- ✨ Added NATO time (with and without zone indicator)
+- 🐛 Async timezone initialization for better performance
+- 🐛 Fixed blocking call warning
 
 ### v1.0.0
-- 🎉 Erste Veröffentlichung
-- ✨ Basis-Zeitsysteme implementiert
+- 🎉 Initial release
+- ✨ Basic time systems implemented
 
-## 📝 Geplante Features
+## 📝 Planned Features
 
-- [ ] Weitere Sci-Fi Zeitsysteme (Star Wars, Stargate, Doctor Who, The Expanse)
-- [ ] Historische Kalender (Römisch, Ägyptisch, Chinesisch, Aztekisch)
-- [ ] Religiöse Kalender (Islamisch, Jüdisch, Koptisch, Hindu)
-- [ ] Weitere Mars-Features (Phobos/Deimos Orbits, Erdzeit-Konverter)
-- [ ] Anpassbare Update-Intervalle
-- [ ] Zeitkonvertierung zwischen Systemen
-- [ ] Grafische Uhren-Cards
-- [ ] Export-Funktionen für Kalender
+- [ ] More Sci-Fi time systems (Star Wars, Stargate, Doctor Who, The Expanse)
+- [ ] Historical calendars (Roman, Egyptian, Chinese, Aztec)
+- [ ] Religious calendars (Islamic, Jewish, Coptic, Hindu)
+- [ ] More Mars features (Phobos/Deimos orbits, Earth time converter)
+- [ ] Configurable update intervals
+- [ ] Time conversion between systems
+- [ ] Graphical clock cards
+- [ ] Calendar export functions
 
-## 🤝 Beitragen
+## 🤝 Contributing
 
-Contributions sind willkommen! 
+Contributions are welcome! 
 
-1. Fork das Repository
-2. Erstelle einen Feature Branch (`git checkout -b feature/NeuesZeitsystem`)
-3. Committe deine Änderungen (`git commit -m 'Add: Neues Zeitsystem'`)
-4. Push zum Branch (`git push origin feature/NeuesZeitsystem`)
-5. Öffne einen Pull Request
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/NewTimeSystem`)
+3. Commit your changes (`git commit -m 'Add: New time system'`)
+4. Push to the branch (`git push origin feature/NewTimeSystem`)
+5. Open a Pull Request
 
-### Entwicklungsumgebung
+### Development Environment
 
 ```bash
-# Repository klonen
+# Clone repository
 git clone https://github.com/Lexorius/alternative_time.git
 cd alternative_time
 
-# In Home Assistant custom_components verlinken
+# Link to Home Assistant custom_components
 ln -s $(pwd)/custom_components/alternative_time /config/custom_components/
 
-# Home Assistant neu starten
+# Restart Home Assistant
 ha core restart
 
-# Logs beobachten
+# Watch logs
 tail -f /config/home-assistant.log | grep alternative_time
 ```
 
-## 📄 Lizenz
+## 📄 License
 
-Dieses Projekt ist unter der MIT-Lizenz lizenziert - siehe [LICENSE](LICENSE) für Details.
+This project is licensed under the MIT License - see [LICENSE](LICENSE) for details.
 
-## 🙏 Danksagungen
+## 🙏 Acknowledgments
 
-- **Home Assistant Community** für die großartige Plattform
-- **Star Trek** für die Inspiration zur Sternzeit
-- **Swatch** für die revolutionäre Internet Beat Time
-- **Maya-Kultur** für ihr faszinierendes Kalendersystem
-- **NATO/Militär** für standardisierte Zeitnotation
-- **Antikes Griechenland** für den präzisen Lunisolarkalender
-- **Thailand & Taiwan** für ihre einzigartigen Kalendersysteme
-- **Thomas Gangale** für den Darischen Mars-Kalender
-- **NASA/ESA** für Mars-Missionen und Zeitzonenkonzepte
-- **Alle Contributor und Tester** die zum Projekt beitragen
+- **Home Assistant Community** for the amazing platform
+- **Star Trek** for the stardate inspiration
+- **Swatch** for the revolutionary Internet Beat Time
+- **Maya Culture** for their fascinating calendar system
+- **NATO/Military** for standardized time notation
+- **Ancient Greece** for the precise lunisolar calendar
+- **Thailand & Taiwan** for their unique calendar systems
+- **Thomas Gangale** for the Darian Mars Calendar
+- **NASA/ESA** for Mars missions and time zone concepts
+- **All Contributors and Testers** who contribute to the project
 
 ## 📧 Support
 
 - **Issues**: [GitHub Issues](https://github.com/Lexorius/alternative_time/issues)
-- **Diskussionen**: [GitHub Discussions](https://github.com/Lexorius/alternative_time/discussions)
+- **Discussions**: [GitHub Discussions](https://github.com/Lexorius/alternative_time/discussions)
 - **Wiki**: [GitHub Wiki](https://github.com/Lexorius/alternative_time/wiki)
 
-## 🌐 Ressourcen
+## 🌐 Resources
 
-### Weiterführende Links
+### Further Reading
 - [Star Trek Stardate Calculator](http://trekguide.com/Stardates.htm)
 - [Swatch Internet Time](https://www.swatch.com/en-us/internet-time.html)
 - [Maya Calendar Converter](https://maya.nmai.si.edu/calendar/maya-calendar-converter)
@@ -592,4 +501,4 @@ Dieses Projekt ist unter der MIT-Lizenz lizenziert - siehe [LICENSE](LICENSE) f�
 
 **Made with ❤️ by [Lexorius](https://github.com/Lexorius)**
 
-*"Zeit ist eine Illusion. Mittagszeit doppelt so. Mars-Zeit dreifach." - Frei nach Douglas Adams*
+*"Time is an illusion. Lunchtime doubly so. Mars time triply so." - After Douglas Adams*
