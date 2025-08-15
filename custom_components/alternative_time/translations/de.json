@@ -26,7 +26,10 @@
           "mars_timezone": "Mars-Zeitzone auswählen",
           "enable_eve": "EVE Online Zeit aktivieren",
           "enable_shire": "Auenland-Kalender (Hobbits) aktivieren",
-          "enable_rivendell": "Kalender von Imladris (Elben) aktivieren"
+          "enable_rivendell": "Kalender von Imladris (Elben) aktivieren",
+          "enable_tamriel": "Tamriel-Kalender (Elder Scrolls) aktivieren",
+          "enable_egyptian": "Ägyptischer Kalender aktivieren",
+          "enable_discworld": "Scheibenwelt-Kalender (Pratchett) aktivieren"
         },
         "data_description": {
           "name": "Ein eindeutiger Name für diese Konfiguration",
@@ -50,7 +53,10 @@
           "mars_timezone": "Eine der 24 Mars-Zeitzonen von MTC-12 bis MTC+12",
           "enable_eve": "New Eden Standard Time aus EVE Online (z.B. YC 127.03.15 14:30:45)",
           "enable_shire": "Hobbit-Kalender mit 7 Mahlzeiten (z.B. S.R. 1445, 22 Halimath)",
-          "enable_rivendell": "Elbischer Kalender mit 6 Jahreszeiten (z.B. F.A. 6025, Tuilë 22)"
+          "enable_rivendell": "Elbischer Kalender mit 6 Jahreszeiten (z.B. F.A. 6025, Tuilë 22)",
+          "enable_tamriel": "Kalender aus The Elder Scrolls mit 12 Monaten und 8-Tage-Woche (z.B. 4E 201, 17th of Last Seed)",
+          "enable_egyptian": "Altägyptischer Kalender mit 3 Jahreszeiten und Dekanen (z.B. Dynasty 1 Year 25, 15 Thoth)",
+          "enable_discworld": "Terry Pratchetts Scheibenwelt mit 8-Tage-Woche und Gilden (z.B. Century of the Anchovy, 32 Offle)"
         }
       }
     },

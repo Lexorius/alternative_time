@@ -5,16 +5,16 @@
 [![GitHub Activity](https://img.shields.io/github/commit-activity/y/Lexorius/alternative_time.svg)](https://github.com/Lexorius/alternative_time/commits/main)
 [![License](https://img.shields.io/github/license/Lexorius/alternative_time.svg)](LICENSE)
 
-Eine umfassende Home Assistant Integration für alternative Zeitsysteme aus Wissenschaft, Science-Fiction, Fantasy, Geschichte und verschiedenen Kulturen. Von der Sternzeit bis zum Maya-Kalender, vom Auenland bis nach Rivendell, von Unix-Timestamp bis zur Mars-Zeit - diese Integration bietet **21 verschiedene Zeitsysteme** als Sensoren.
+Eine umfassende Home Assistant Integration für alternative Zeitsysteme aus Wissenschaft, Science-Fiction, Fantasy, Geschichte und verschiedenen Kulturen. Von der Sternzeit bis zum Maya-Kalender, vom Auenland bis zur Scheibenwelt, von Tamriel bis ins alte Ägypten - diese Integration bietet 24 verschiedene Zeitsysteme als Sensoren.
 
 ## 🎯 Übersicht
 
 Diese Integration verwandelt Home Assistant in eine universelle Zeituhr mit Unterstützung für:
 - 🚀 **Science-Fiction Zeiten** (Star Trek Sternzeit, EVE Online)
-- 🧙 **Fantasy-Kalender** (Auenland/Hobbits, Rivendell/Elben)
+- 🧙 **Fantasy-Kalender** (Tolkien, Elder Scrolls, Discworld)
+- 🏺 **Historische Kalender** (Maya, Attisch, Ägyptisch, Französische Revolution)
 - 🔴 **Mars-Zeitsysteme** (Darischer Kalender, Mars-Zeitzonen)
 - 🌐 **Internet-Standards** (Unix, Swatch Internet Time)
-- 🏛️ **Historische Kalender** (Maya, Attisch, Französische Revolution)
 - 🎖️ **Militärische Zeitsysteme** (NATO DTG in 3 Varianten)
 - 🌏 **Kulturelle Kalender** (Thai, Taiwan)
 - 💻 **Technische Formate** (Hexadezimal, Julian Date)
@@ -177,12 +177,14 @@ Du kannst beliebig viele Instanzen mit unterschiedlichen Konfigurationen erstell
 ### 🚀 **EVE Online Zeit**
 - **Format**: `YC XXX.MM.DD HH:MM:SS`
 - **Beispiel**: `YC 127.03.15 14:30:45`
-- **Beschreibung**: New Eden Standard Time aus dem EVE Online Universum
-- **Besonderheit**: Yoiul Conference (YC) Kalender, UTC-basiert
-- **Geschichte**: YC 105 = 2003 (EVE Launch)
+- **Beschreibung**: New Eden Standard Time (NEST)
+- **Besonderheiten**:
+  - YC = Yoiul Conference Jahr
+  - Verwendet UTC als Basis
+  - YC 105 = 2003 (EVE Launch)
 - **Update**: Jede Sekunde
 
-### 🍃 **Auenland-Kalender (Shire Reckoning)**
+### 🍄 **Auenland-Kalender (Shire Reckoning)**
 - **Format**: `S.R. Jahr, Tag Monat (Wochentag) | Mahlzeit`
 - **Beispiel**: `S.R. 1445, 22 Halimath (Highdei) | 🍖 Luncheon`
 - **Besonderheiten**:
@@ -190,18 +192,59 @@ Du kannst beliebig viele Instanzen mit unterschiedlichen Konfigurationen erstell
   - Spezielle Tage (Yule, Lithe)
   - 7 Hobbit-Mahlzeiten täglich
   - Wichtige Ereignisse (Bilbos Geburtstag)
-- **Mahlzeiten**: First Breakfast, Second Breakfast, Elevenses, Luncheon, Afternoon Tea, Dinner, Supper
+- **Monate**: Afteryule, Solmath, Rethe, Astron, Thrimidge, Forelithe, Afterlithe, Wedmath, Halimath, Winterfilth, Blotmath, Foreyule
 - **Update**: Stündlich
 
-### 🧝 **Kalender von Imladris (Rivendell)**
+### 🍃 **Kalender von Imladris (Elben)**
 - **Format**: `F.A. Jahr, Jahreszeit Tag (Wochentag) | Tageszeit`
 - **Beispiel**: `F.A. 6025, Tuilë 22 (Elenya) | 🌞 Ára`
 - **Besonderheiten**:
   - 6 Jahreszeiten statt Monate
   - 6-Tage-Woche
-  - Elbische Tagesnamen
   - Spezielle Tage (Yestarë, Loëndë, Mettarë)
+  - Elbische Tageszeiten
 - **Jahreszeiten**: Tuilë (Frühling), Lairë (Sommer), Yávië (Herbst), Quellë (Schwinden), Hrívë (Winter), Coirë (Erwachen)
+- **Update**: Stündlich
+
+### 🎮 **Tamriel-Kalender (Elder Scrolls)**
+- **Format**: `4E Jahr, Tag Monat (Wochentag) | Zeit | Segen | Ereignis`
+- **Beispiel**: `4E 201, 17 Last Seed (Fredas) | Dusk 🌆 | Blessing: Talos | 🌕🌗`
+- **Besonderheiten**:
+  - 12 Monate mit einzigartigen Namen
+  - 8-Tage-Woche mit Octeday
+  - Göttliche Segnungen (9 Divines)
+  - Daedric Princes Einfluss
+  - Zwei Monde (Masser & Secunda)
+  - Feiertage und Festivals
+- **Monate**: Morning Star, Sun's Dawn, First Seed, Rain's Hand, Second Seed, Midyear, Sun's Height, Last Seed, Hearthfire, Frostfall, Sun's Dusk, Evening Star
+- **Update**: Stündlich
+
+### 🏺 **Ägyptischer Kalender**
+- **Format**: `Dynastie Jahr, Hieroglyphen Tag Monat (Jahreszeit) | Dekan | Stunde | Gott | Nil`
+- **Beispiel**: `Dynasty 1 Year 25, 𓏤𓏨 15 Thoth (Akhet) | Second Decan | ☀️ Sixth Hour | Thoth | 🌊`
+- **Besonderheiten**:
+  - 3 Jahreszeiten (Akhet, Peret, Shemu)
+  - 12 Monate à 30 Tage
+  - 5 Epagomenale Tage
+  - Dekaden (10-Tage-Wochen)
+  - Hieroglyphen-Zahlen
+  - 12 Tag- und 12 Nachtstunden
+  - Nil-Überschwemmungszyklus
+- **Jahreszeiten**: Akhet (Überschwemmung), Peret (Aussaat), Shemu (Ernte)
+- **Update**: Stündlich
+
+### 🐢 **Scheibenwelt-Kalender (Discworld)**
+- **Format**: `Century Jahr, Tag Monat (Wochentag) | Zeit | Ort | Gilde | Ereignis`
+- **Beispiel**: `Century of the Anchovy, UC 25, 32 Offle (Octeday) | 🌙 Dead of Night | 📍 The Shades | Thieves' Guild`
+- **Besonderheiten**:
+  - 13 Monate mit Pratchett-Humor
+  - 8-Tage-Woche mit Octeday
+  - Unmögliche Tage (32. April)
+  - Gilden von Ankh-Morpork
+  - Tod-Zitate um Mitternacht
+  - L-Space Bibliotheksverbindungen
+  - Stadtviertel-Rotation
+- **Monate**: Ick, Offle, February, March, April, May, June, Grune, August, Spune, Sektober, Ember, December
 - **Update**: Stündlich
 
 ## 🎯 Verwendung
@@ -212,7 +255,7 @@ Nach der Konfiguration werden folgende Sensoren erstellt (je nach Auswahl):
 
 | Sensor | Entitäts-ID |
 |--------|-------------|
-| Zeitzone | `sensor.[name]_zeitzone` |
+| Zeitzone | `sensor.[name]_timezone` |
 | Sternzeit | `sensor.[name]_stardate` |
 | Swatch Time | `sensor.[name]_swatch` |
 | Unix Timestamp | `sensor.[name]_unix` |
@@ -230,60 +273,61 @@ Nach der Konfiguration werden folgende Sensoren erstellt (je nach Auswahl):
 | Mars-Zeit | `sensor.[name]_mars_time` |
 | EVE Online | `sensor.[name]_eve_online` |
 | Auenland | `sensor.[name]_shire` |
-| Rivendell | `sensor.[name]_rivendell` |
+| Imladris | `sensor.[name]_rivendell` |
+| Tamriel | `sensor.[name]_tamriel` |
+| Ägyptisch | `sensor.[name]_egyptian` |
+| Scheibenwelt | `sensor.[name]_discworld` |
 
 ## 📊 Dashboard-Beispiele
 
-### Einfache Entitätskarte
-```yaml
-type: entities
-title: Alternative Zeitsysteme
-entities:
-  - entity: sensor.alternative_time_stardate
-  - entity: sensor.alternative_time_maya_calendar
-  - entity: sensor.alternative_time_shire
-  - entity: sensor.alternative_time_eve_online
-```
-
-### Fantasy-Zeiten Dashboard
+### Fantasy-Welten Dashboard
 ```yaml
 type: vertical-stack
 cards:
   - type: markdown
     content: |
-      ## 🧙 Mittelerde-Zeiten
+      ## 🧙 Fantasy & Gaming Welten
       **Auenland:** {{ states('sensor.alternative_time_shire') }}
-      **Rivendell:** {{ states('sensor.alternative_time_rivendell') }}
-      
+      **Imladris:** {{ states('sensor.alternative_time_rivendell') }}
+      **Tamriel:** {{ states('sensor.alternative_time_tamriel') }}
+      **Scheibenwelt:** {{ states('sensor.alternative_time_discworld') }}
+      **EVE Online:** {{ states('sensor.alternative_time_eve_online') }}
+  
   - type: entities
-    title: Fantasy-Kalender
+    title: Fantasy & Sci-Fi Zeiten
     entities:
       - entity: sensor.alternative_time_shire
-        name: Hobbit-Zeit
+        name: Hobbit Zeit
       - entity: sensor.alternative_time_rivendell
-        name: Elben-Zeit
+        name: Elben Zeit
+      - entity: sensor.alternative_time_tamriel
+        name: Elder Scrolls
+      - entity: sensor.alternative_time_discworld
+        name: Scheibenwelt
+      - entity: sensor.alternative_time_eve_online
+        name: New Eden Zeit
 ```
 
-### Sci-Fi Dashboard
+### Historische Kalender Dashboard
 ```yaml
 type: vertical-stack
 cards:
   - type: markdown
     content: |
-      ## 🚀 Science-Fiction Zeiten
-      **Sternzeit:** {{ states('sensor.alternative_time_stardate') }}
-      **EVE Online:** {{ states('sensor.alternative_time_eve_online') }}
-      **Mars-Zeit:** {{ states('sensor.alternative_time_mars_time') }}
-      **Darischer Kalender:** {{ states('sensor.alternative_time_darian_calendar') }}
-  
-  - type: glance
+      ## 🏺 Historische Zeitsysteme
+      **Ägypten:** {{ states('sensor.alternative_time_egyptian') }}
+      **Maya:** {{ states('sensor.alternative_time_maya_calendar') }}
+      **Athen:** {{ states('sensor.alternative_time_attic_calendar') }}
+      
+  - type: entities
+    title: Antike Kalender
     entities:
-      - entity: sensor.alternative_time_stardate
-        name: Star Trek
-      - entity: sensor.alternative_time_eve_online
-        name: New Eden
-      - entity: sensor.alternative_time_mars_time
-        name: Mars
+      - entity: sensor.alternative_time_egyptian
+        name: Ägyptischer Kalender
+      - entity: sensor.alternative_time_maya_calendar
+        name: Maya Kalender
+      - entity: sensor.alternative_time_attic_calendar
+        name: Attischer Kalender
 ```
 
 ### Weltzeituhr Dashboard
@@ -299,36 +343,108 @@ cards:
       **Athen:** {{ states('sensor.alternative_time_attic_calendar') }}
       **Thailand:** {{ states('sensor.alternative_time_suriyakati_calendar') }}
       **Taiwan:** {{ states('sensor.alternative_time_minguo_calendar') }}
-      **Auenland:** {{ states('sensor.alternative_time_shire') }}
-      **Rivendell:** {{ states('sensor.alternative_time_rivendell') }}
-      **New Eden:** {{ states('sensor.alternative_time_eve_online') }}
       **Mars:** {{ states('sensor.alternative_time_mars_time') }}
+      **Auenland:** {{ states('sensor.alternative_time_shire') }}
+      **Imladris:** {{ states('sensor.alternative_time_rivendell') }}
+  
+  - type: glance
+    entities:
+      - entity: sensor.alternative_time_nato_time_with_zone
+        name: NATO DTG
+      - entity: sensor.alternative_time_unix
+        name: Unix
+      - entity: sensor.alternative_time_eve_online
+        name: EVE
+```
+
+### Mars-Mission Dashboard
+```yaml
+type: vertical-stack
+cards:
+  - type: markdown
+    content: |
+      ## 🔴 Mars Mission Control
+      
+      **Mars-Zeit:** {{ states('sensor.alternative_time_mars_time') }}
+      **Darischer Kalender:** {{ states('sensor.alternative_time_darian_calendar') }}
+      
+  - type: entities
+    title: Mars-Zeitzonen
+    entities:
+      - entity: sensor.alternative_time_mars_time
+        name: Aktuelle Mars-Zeit
+      - entity: sensor.alternative_time_darian_calendar
+        name: Mars-Datum
 ```
 
 ## 🤖 Automatisierungen
 
-### Hobbit-Mahlzeit-Erinnerung
+### Elder Scrolls Feiertag
 ```yaml
 automation:
-  - alias: "Zweites Frühstück"
+  - alias: "Tamriel New Life Festival"
+    trigger:
+      - platform: template
+        value_template: >
+          {{ 'New Life Festival' in states('sensor.alternative_time_tamriel') }}
+    action:
+      - service: notify.mobile_app
+        data:
+          title: "🎮 Tamriel Feiertag"
+          message: "Das New Life Festival beginnt in Tamriel!"
+```
+
+### Ägyptische Epagomenale Tage
+```yaml
+automation:
+  - alias: "Geburtstag der Götter"
+    trigger:
+      - platform: template
+        value_template: >
+          {{ 'Birthday of' in states('sensor.alternative_time_egyptian') }}
+    action:
+      - service: notify.mobile_app
+        data:
+          title: "🏺 Ägyptischer Kalender"
+          message: "{{ states('sensor.alternative_time_egyptian') }}"
+```
+
+### Scheibenwelt Tod-Zitat
+```yaml
+automation:
+  - alias: "Death Says"
     trigger:
       - platform: time
-        at: "09:00:00"
+        at: "00:00:00"
     condition:
-      - condition: state
-        entity_id: sensor.alternative_time_shire
-        state: 'Second Breakfast'
+      - condition: template
+        value_template: "{{ states('sensor.alternative_time_discworld') != 'unknown' }}"
     action:
       - service: tts.google_say
         data:
-          entity_id: media_player.küche
-          message: "Zeit für das zweite Frühstück! Was ist mit Elevenses?"
+          entity_id: media_player.schlafzimmer
+          message: "Tod sagt: ES IST KEINE GERECHTIGKEIT. ES GIBT NUR MICH."
+```
+
+### EVE Online Tägliche Aufgaben
+```yaml
+automation:
+  - alias: "EVE Daily Reset"
+    trigger:
+      - platform: template
+        value_template: >
+          {{ '11:00:00' in states('sensor.alternative_time_eve_online') }}
+    action:
+      - service: notify.mobile_app
+        data:
+          title: "🚀 EVE Online"
+          message: "Daily tasks haben resettet!"
 ```
 
 ### Elbisches Neujahr
 ```yaml
 automation:
-  - alias: "Yestarë Feier"
+  - alias: "Yestarë - Elbisches Neujahr"
     trigger:
       - platform: template
         value_template: >
@@ -336,22 +452,8 @@ automation:
     action:
       - service: notify.mobile_app
         data:
-          title: "🧝 Elbisches Neujahr"
-          message: "Yestarë ist angebrochen! Ein neues Jahr in Rivendell beginnt."
-```
-
-### EVE Online Downtime Warnung
-```yaml
-automation:
-  - alias: "EVE Downtime"
-    trigger:
-      - platform: time
-        at: "10:45:00"  # 15 Min vor täglicher Downtime
-    action:
-      - service: notify.mobile_app
-        data:
-          title: "⚠️ EVE Online"
-          message: "Tägliche Downtime in 15 Minuten!"
+          title: "🍃 Elbisches Neujahr"
+          message: "Die Elben feiern Yestarë - ein neues Jahr beginnt in Mittelerde!"
 ```
 
 ### Sternzeit-Ansage
@@ -368,77 +470,115 @@ automation:
           message: "Sternzeit {{ states('sensor.alternative_time_stardate') }}"
 ```
 
-## 🧙 Fantasy-Kalender Details
+### Maya-Kalender Tageswechsel
+```yaml
+automation:
+  - alias: "Maya Neuer Tag"
+    trigger:
+      - platform: state
+        entity_id: sensor.alternative_time_maya_calendar
+    action:
+      - service: notify.mobile_app
+        data:
+          title: "Maya-Kalender"
+          message: "Neuer Tag: {{ trigger.to_state.state }}"
+```
 
-### 🍃 Auenland-Kalender (Shire Reckoning)
+## 🎮 Elder Scrolls Kalendersystem
 
-Der Kalender der Hobbits aus J.R.R. Tolkiens Mittelerde:
+### Tamriel-Kalender
+Der Kalender von Tamriel aus der Elder Scrolls Spielreihe:
 
-#### Struktur:
-- **12 Monate** mit je 30 Tagen
-- **5-6 Sondertage** außerhalb der Monate (Yule, Lithe)
-- **S.R. 1** = Gründung des Auenlandes
-- **S.R. 1420** = Ende des Ringkrieges
+#### Die 12 Monate:
+1. **Morning Star** (Januar) ❄️
+2. **Sun's Dawn** (Februar) 🌅
+3. **First Seed** (März) 🌱
+4. **Rain's Hand** (April) 🌧️
+5. **Second Seed** (Mai) 🌿
+6. **Midyear** (Juni) ☀️
+7. **Sun's Height** (Juli) 🌞
+8. **Last Seed** (August) 🌾
+9. **Hearthfire** (September) 🔥
+10. **Frostfall** (Oktober) 🍂
+11. **Sun's Dusk** (November) 🌆
+12. **Evening Star** (Dezember) ⭐
 
-#### Hobbit-Mahlzeiten (täglich):
-1. **First Breakfast** (6-8 Uhr) 🍳
-2. **Second Breakfast** (8-11 Uhr) 🥐
-3. **Elevenses** (11-13 Uhr) 🍽️
-4. **Luncheon** (13-15 Uhr) 🍖
-5. **Afternoon Tea** (15-17 Uhr) ☕
-6. **Dinner** (17-19 Uhr) 🍰
-7. **Supper** (19-21 Uhr) 🍻
+#### Features:
+- **8-Tage-Woche** mit Octeday als achtem Tag
+- **Göttliche Segnungen** der 9 Divines
+- **Daedric Princes** Einfluss an bestimmten Tagen
+- **Zwei Monde**: Masser und Secunda mit unterschiedlichen Phasen
+- **Viele Feiertage**: New Life Festival, Witches Festival, Warriors Festival
 
-#### Wichtige Ereignisse:
-- **22. Halimath**: Bilbo & Frodos Geburtstag
-- **2. Yule**: Neujahr
-- **Mid-year's Day**: Mittsommerfest
-- **1. Mai**: Maifest
+## 🏺 Altägyptisches Kalendersystem
 
-### 🧝 Kalender von Imladris (Rivendell)
+### Ägyptischer Kalender
+Der Kalender des alten Ägyptens mit seinen einzigartigen Features:
 
-Der elbische Kalender aus Rivendell:
+#### Die 3 Jahreszeiten:
+- **Akhet** (Überschwemmung) 🌊 - 4 Monate
+- **Peret** (Aussaat) 🌱 - 4 Monate
+- **Shemu** (Ernte) ☀️ - 4 Monate
 
-#### Struktur:
-- **6 Jahreszeiten** statt Monate
-- **6-Tage-Woche** (enquië)
-- **360 Tage** + Sondertage
-- **F.A.** = Fourth Age (Viertes Zeitalter)
+#### Features:
+- **365 Tage**: 12 Monate à 30 Tage + 5 Epagomenale Tage
+- **Dekaden**: 10-Tage-Wochen
+- **Hieroglyphen-Zahlen**: 𓏤𓏥𓏦𓏧𓏨
+- **12 Tag- und 12 Nachtstunden**
+- **Götter-Patronate** für jeden Monat
+- **Nil-Status** abhängig von der Jahreszeit
+- **Epagomenale Tage**: Geburtstage von Osiris, Horus, Set, Isis, Nephthys
 
-#### Jahreszeiten (jeweils 54-72 Tage):
-1. **Tuilë** 🌸 - Frühling (54 Tage)
-2. **Lairë** ☀️ - Sommer (72 Tage)
-3. **Yávië** 🍂 - Herbst (54 Tage)
-4. **Quellë** 🍁 - Schwinden (54 Tage)
-5. **Hrívë** ❄️ - Winter (72 Tage)
-6. **Coirë** 🌱 - Erwachen (54 Tage)
+## 🐢 Scheibenwelt-Kalendersystem
 
-#### Elbische Tageszeiten:
-- **Tindómë** 🌅 - Dämmerung (3-6 Uhr)
-- **Anarórë** 🌄 - Sonnenaufgang (6-9 Uhr)
-- **Ára** 🌞 - Morgen (9-12 Uhr)
-- **Endë** ☀️ - Mittag (12-15 Uhr)
-- **Undómë** 🌤️ - Nachmittag (15-18 Uhr)
-- **Andúnë** 🌇 - Sonnenuntergang (18-21 Uhr)
-- **Lómë** 🌙 - Nacht (21-24 Uhr)
-- **Fui** ⭐ - Tiefe Nacht (0-3 Uhr)
+### Discworld Kalender (Terry Pratchett)
+Der humorvolle Kalender der Scheibenwelt:
 
-## 🚀 Science-Fiction Details
+#### Die 13 Monate:
+1. **Ick** ❄️
+2. **Offle** ❄️
+3. **February** 🌨️ (ja, wirklich February!)
+4. **March** 🌬️
+5. **April** 🌧️
+6. **May** 🌸
+7. **June** ☀️
+8. **Grune** 🌿
+9. **August** 🌞
+10. **Spune** 🍂
+11. **Sektober** 🍺 (Trinkmonat!)
+12. **Ember** 🔥
+13. **December** ⭐
 
-### 🌌 EVE Online Zeit
+#### Features:
+- **8-Tage-Woche** mit Octeday
+- **Unmögliche Tage**: 32. April und 32. Dezember
+- **Gilden von Ankh-Morpork**: Täglicher Einfluss verschiedener Gilden
+- **Tod-Zitate** um Mitternacht
+- **L-Space**: Bibliotheksverbindungen um 03:33 Uhr
+- **Stadtviertel**: The Shades, Unseen University, Patrician's Palace
+- **Century of the Anchovy**: Aktuelle Ära
 
-New Eden Standard Time aus dem EVE Online Universum:
+### Tod's beste Zitate:
+- "ES GIBT KEINE GERECHTIGKEIT. ES GIBT NUR MICH."
+- "ICH KÖNNTE EINEN CURRY ERMORDEN."
+- "KATZEN. KATZEN SIND NETT."
+- "QUIETSCH." (Tod der Ratten)
 
-#### YC (Yoiul Conference) Kalender:
-- **YC 0** = 23236 AD (Spielhintergrund)
-- **YC 105** = 2003 (EVE Launch)
-- **Format**: YC Jahr.Monat.Tag Stunde:Minute:Sekunde
-- **Zeitzone**: Immer UTC (keine Zeitzonen in New Eden)
+## 🚀 EVE Online Zeitsystem
 
-#### Wichtige EVE-Ereignisse:
-- **Tägliche Downtime**: 11:00-11:15 UTC
-- **Jita Handelszeiten**: Rund um die Uhr
-- **Fleet Operations**: Primetime 19:00-23:00 UTC
+### New Eden Standard Time (NEST)
+EVE Online verwendet ein eigenes Kalendersystem:
+
+- **YC** = Yoiul Conference (Jahr)
+- **Basis**: UTC Erdzeit
+- **Epoche**: YC 0 = 23236 AD
+- **Spielstart**: YC 105 = 2003
+- **Format**: YC XXX.MM.DD HH:MM:SS
+
+Wichtige EVE-Zeiten:
+- **11:00 UTC**: Daily Downtime & Reset
+- **Jita Time**: Haupthandelszeit
+- **Fleet Ops**: Meist 19:00-23:00 UTC
 
 ## 🚀 Performance
 
@@ -449,9 +589,9 @@ Die Integration ist optimiert für minimale Systembelastung:
 | Zeitzonen, Unix, Swatch, EVE | 1 Sekunde | Sekundengenaue Anzeige |
 | Hexadezimal | 5 Sekunden | Mittlere Änderungsrate |
 | Sternzeit | 10 Sekunden | Langsame Änderung |
-| Mars-Zeit | 30 Sekunden | Sol-Zeit Präzision |
 | Julian Date | 60 Sekunden | Sehr langsame Änderung |
 | Kalender (Maya, Attisch, etc.) | 1 Stunde | Täglicher Wechsel |
+| Mars-Zeit | 30 Sekunden | Sol-Zeit Präzision |
 | Fantasy-Kalender | 1 Stunde | Ereignis-basiert |
 
 ## 🛠 Fehlerbehebung
@@ -479,13 +619,23 @@ ha core restart
 
 ## 📈 Version History
 
-### v1.5.0 (Latest) 🆕
+### v1.6.0 (Latest)
+- ✨ Tamriel-Kalender (Elder Scrolls) hinzugefügt
+- ✨ Ägyptischer Kalender hinzugefügt
+- ✨ Scheibenwelt-Kalender (Discworld) hinzugefügt
+- 🎮 Gaming-Welten erweitert
+- 🏺 Historische Kalender erweitert
+- 🐢 Terry Pratchett's Humor integriert
+- 💀 Tod-Zitate und L-Space Features
+
+### v1.5.0
 - ✨ EVE Online Zeit (New Eden Standard Time) hinzugefügt
-- ✨ Auenland-Kalender (Shire Reckoning) mit 7 Hobbit-Mahlzeiten
-- ✨ Kalender von Imladris (Rivendell) mit elbischen Jahreszeiten
-- 🧙 Komplette Mittelerde-Zeitunterstützung
-- 🚀 Erweiterte Sci-Fi-Funktionen
-- 📚 21 Zeitsysteme insgesamt
+- ✨ Auenland-Kalender (Shire Reckoning) hinzugefügt
+- ✨ Kalender von Imladris (Elben) hinzugefügt
+- 🧙 Komplette Tolkien-Zeitsysteme
+- 🚀 Sci-Fi Erweiterung mit EVE Online
+- 🍄 7 Hobbit-Mahlzeiten Integration
+- 🍃 6 Elbische Jahreszeiten
 
 ### v1.4.0
 - ✨ Darischer Kalender (Mars) hinzugefügt
@@ -515,6 +665,17 @@ ha core restart
 - 🎉 Erste Veröffentlichung
 - ✨ Basis-Zeitsysteme implementiert
 
+## 📝 Geplante Features
+
+- [ ] Weitere Sci-Fi Zeitsysteme (Star Wars, Stargate, Doctor Who, The Expanse)
+- [ ] Historische Kalender (Römisch, Ägyptisch, Chinesisch, Aztekisch)
+- [ ] Religiöse Kalender (Islamisch, Jüdisch, Koptisch, Hindu)
+- [ ] Weitere Fantasy-Kalender (Game of Thrones, Warhammer, D&D)
+- [ ] Weitere Mars-Features (Phobos/Deimos Orbits, Erdzeit-Konverter)
+- [ ] Anpassbare Update-Intervalle
+- [ ] Zeitkonvertierung zwischen Systemen
+- [ ] Grafische Uhren-Cards
+- [ ] Export-Funktionen für Kalender
 
 ## 🤝 Beitragen
 
@@ -550,9 +711,12 @@ Dieses Projekt ist unter der MIT-Lizenz lizenziert - siehe [LICENSE](LICENSE) f�
 ## 🙏 Danksagungen
 
 - **Home Assistant Community** für die großartige Plattform
+- **J.R.R. Tolkien** für die detaillierten Kalendersysteme von Mittelerde
+- **Bethesda Game Studios** für The Elder Scrolls und Tamriel
+- **Terry Pratchett** für die Scheibenwelt und ihren einzigartigen Humor
+- **Alte Ägypter** für einen der ersten präzisen Kalender der Menschheit
+- **CCP Games** für EVE Online und das New Eden Universum
 - **Star Trek** für die Inspiration zur Sternzeit
-- **J.R.R. Tolkien** für die wundervollen Mittelerde-Kalender
-- **CCP Games** für EVE Online und New Eden
 - **Swatch** für die revolutionäre Internet Beat Time
 - **Maya-Kultur** für ihr faszinierendes Kalendersystem
 - **NATO/Militär** für standardisierte Zeitnotation
@@ -572,9 +736,6 @@ Dieses Projekt ist unter der MIT-Lizenz lizenziert - siehe [LICENSE](LICENSE) f�
 
 ### Weiterführende Links
 - [Star Trek Stardate Calculator](http://trekguide.com/Stardates.htm)
-- [Tolkien Gateway - Shire Calendar](http://tolkiengateway.net/wiki/Shire_Calendar)
-- [Tolkien Gateway - Calendar of Imladris](http://tolkiengateway.net/wiki/Calendar_of_Imladris)
-- [EVE Online Time](https://wiki.eveuniversity.org/Time)
 - [Swatch Internet Time](https://www.swatch.com/en-us/internet-time.html)
 - [Maya Calendar Converter](https://maya.nmai.si.edu/calendar/maya-calendar-converter)
 - [NATO Date Time Group](https://en.wikipedia.org/wiki/Date-time_group)
@@ -582,9 +743,13 @@ Dieses Projekt ist unter der MIT-Lizenz lizenziert - siehe [LICENSE](LICENSE) f�
 - [Minguo Calendar](https://en.wikipedia.org/wiki/Minguo_calendar)
 - [Darian Calendar](https://en.wikipedia.org/wiki/Darian_calendar)
 - [Mars24 Sunclock](https://mars.nasa.gov/mars24/)
+- [Mars Time Zones](https://marsclock.com/)
+- [Tolkien Gateway - Shire Calendar](http://tolkiengateway.net/wiki/Shire_Calendar)
+- [Encyclopedia of Arda - Calendar of Imladris](https://www.glyphweb.com/arda/c/calendarofimladris.html)
+- [EVE Online Time](https://wiki.eveuniversity.org/Time)
 
 ---
 
 **Made with ❤️ by [Lexorius](https://github.com/Lexorius)**
 
-*"Zeit ist eine Illusion. Mittagszeit doppelt so. Mars-Zeit dreifach. Hobbit-Mahlzeiten sind allerdings sehr real." - Frei nach Douglas Adams*
+*"Zeit ist eine Illusion. Mittagszeit doppelt so. Zweites Frühstück dreifach. Octeday vierfach." - Frei nach Douglas Adams, Tolkien & Pratchett*

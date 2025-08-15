@@ -34,6 +34,9 @@ from .const import (
     CONF_ENABLE_EVE,
     CONF_ENABLE_SHIRE,
     CONF_ENABLE_RIVENDELL,
+    CONF_ENABLE_TAMRIEL,
+    CONF_ENABLE_EGYPTIAN,
+    CONF_ENABLE_DISCWORLD,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -113,6 +116,15 @@ async def async_setup_entry(
     
     if config.get(CONF_ENABLE_RIVENDELL, False):
         sensors.append(RivendellCalendarSensor(base_name))
+    
+    if config.get(CONF_ENABLE_TAMRIEL, False):
+        sensors.append(TamrielCalendarSensor(base_name))
+    
+    if config.get(CONF_ENABLE_EGYPTIAN, False):
+        sensors.append(EgyptianCalendarSensor(base_name))
+    
+    if config.get(CONF_ENABLE_DISCWORLD, False):
+        sensors.append(DiscworldCalendarSensor(base_name))
 
     async_add_entities(sensors, True)
 
@@ -1018,3 +1030,467 @@ class RivendellCalendarSensor(AlternativeTimeSensorBase):
         # Format: F.A. Year, Season Day (Weekday) | Time
         # Example: "F.A. 6025, Tuilë 22 (Elenya) | 🌞 Ára - Gates of Summer"
         return f"F.A. {fourth_age_year}, {season_name} {day_in_season} ({elven_day}) | {time_emoji} {time_name}{event_str}"
+
+
+class TamrielCalendarSensor(AlternativeTimeSensorBase):
+    """Sensor for displaying Tamrielic Calendar (Elder Scrolls)."""
+
+    def __init__(self, base_name: str) -> None:
+        """Initialize the Tamriel calendar sensor."""
+        super().__init__(base_name, "tamriel", "Tamriel-Kalender")
+        self._attr_icon = "mdi:sword-cross"
+        self._update_interval = timedelta(hours=1)
+        
+        # Tamrielic months (12 months)
+        self.tamriel_months = [
+            ("Morning Star", "❄️"),      # January (Winter)
+            ("Sun's Dawn", "🌅"),        # February (Winter/Spring)
+            ("First Seed", "🌱"),        # March (Spring)
+            ("Rain's Hand", "🌧️"),      # April (Spring)
+            ("Second Seed", "🌿"),       # May (Spring)
+            ("Midyear", "☀️"),          # June (Summer)
+            ("Sun's Height", "🌞"),      # July (Summer)
+            ("Last Seed", "🌾"),         # August (Summer/Autumn)
+            ("Hearthfire", "🔥"),        # September (Autumn)
+            ("Frostfall", "🍂"),         # October (Autumn)
+            ("Sun's Dusk", "🌆"),        # November (Autumn/Winter)
+            ("Evening Star", "⭐")       # December (Winter)
+        ]
+        
+        # Tamrielic weekdays (7 days)
+        self.tamriel_days = [
+            "Sundas",      # Sunday
+            "Morndas",     # Monday
+            "Tirdas",      # Tuesday
+            "Middas",      # Wednesday
+            "Turdas",      # Thursday
+            "Fredas",      # Friday
+            "Loredas"      # Saturday
+        ]
+        
+        # Tamrielic holidays/festivals
+        self.tamriel_holidays = {
+            (1, 1): "New Life Festival",
+            (1, 15): "South Wind's Prayer",
+            (2, 16): "Heart's Day",
+            (3, 9): "Day of the Dead",
+            (4, 1): "Jester's Day",
+            (4, 28): "Planting Day",
+            (5, 7): "Second Planting",
+            (5, 30): "Fishing Day",
+            (6, 16): "Mid Year Celebration",
+            (7, 10): "Merchant's Festival",
+            (7, 12): "Divad Etep't",
+            (8, 2): "Maiden Katrica",
+            (8, 11): "Koomu Alezer'i",
+            (8, 21): "Appreciation Day",
+            (9, 19): "Children's Day",
+            (10, 13): "Witches Festival",
+            (11, 2): "Gaiden Shinji",
+            (11, 8): "Moon Festival",
+            (11, 18): "Hel Anseilak",
+            (11, 20): "Warriors Festival",
+            (12, 15): "North Winds Prayer",
+            (12, 25): "Saturalia",
+            (12, 30): "Old Life Festival"
+        }
+        
+        # Divine beings for blessings
+        self.divines = [
+            "Akatosh", "Arkay", "Dibella", "Julianos", 
+            "Kynareth", "Mara", "Stendarr", "Talos", "Zenithar"
+        ]
+        
+        # Daedric Princes (for special days)
+        self.daedric = {
+            1: "Sheogorath",
+            13: "Hermaeus Mora",
+            16: "Sanguine",
+            2: "Hircine",
+            10: "Vaermina",
+            8: "Namira"
+        }
+
+    def calculate_time(self) -> str:
+        """Calculate current Tamrielic Calendar date."""
+        now = datetime.now()
+        
+        # Calculate Tamrielic Era
+        # Third Era ended in 3E 433 (Oblivion Crisis)
+        # Fourth Era began 4E 1
+        # For simplicity, we'll say 4E 1 = 2011 (Skyrim release)
+        fourth_era_year = 1 + (now.year - 2011)
+        
+        # Get month and day
+        month_index = now.month - 1
+        day = now.day
+        month_name, month_emoji = self.tamriel_months[month_index]
+        
+        # Get weekday
+        weekday_index = now.weekday()
+        if weekday_index == 6:  # Sunday
+            weekday_index = 0
+        else:
+            weekday_index += 1
+        tamriel_weekday = self.tamriel_days[weekday_index]
+        
+        # Check for holidays
+        holiday = self.tamriel_holidays.get((now.month, day), "")
+        holiday_str = f" - {holiday}" if holiday else ""
+        
+        # Divine blessing (rotates daily)
+        divine_index = (now.timetuple().tm_yday - 1) % len(self.divines)
+        divine_blessing = self.divines[divine_index]
+        
+        # Check for Daedric influence (certain days)
+        daedric_influence = self.daedric.get(day, "")
+        if daedric_influence:
+            influence_str = f" | ⚠️ {daedric_influence}'s influence"
+        else:
+            influence_str = ""
+        
+        # Determine time of day
+        hour = now.hour
+        if 5 <= hour < 8:
+            time_period = "Dawn 🌅"
+        elif 8 <= hour < 12:
+            time_period = "Morning ☀️"
+        elif 12 <= hour < 17:
+            time_period = "Afternoon 🌤️"
+        elif 17 <= hour < 20:
+            time_period = "Dusk 🌆"
+        elif 20 <= hour < 24:
+            time_period = "Night 🌙"
+        else:
+            time_period = "Midnight ⭐"
+        
+        # Moons phase (Masser and Secunda)
+        # Simplified moon calculation
+        moon_phase = (now.day + now.month) % 8
+        moon_phases = ["🌑", "🌒", "🌓", "🌔", "🌕", "🌖", "🌗", "🌘"]
+        masser = moon_phases[moon_phase]
+        secunda = moon_phases[(moon_phase + 3) % 8]  # Secunda has different phase
+        
+        # Format: 4E Year, Day of Month (Weekday) | Time | Blessing | Holiday
+        # Example: "4E 201, 17th of Last Seed (Fredas) | Dusk 🌆 | Blessing of Talos | 🌕🌗"
+        return f"4E {fourth_era_year}, {day} {month_name} ({tamriel_weekday}) | {time_period} | Blessing: {divine_blessing}{influence_str}{holiday_str} | {masser}{secunda}"
+
+
+class EgyptianCalendarSensor(AlternativeTimeSensorBase):
+    """Sensor for displaying Ancient Egyptian Calendar."""
+
+    def __init__(self, base_name: str) -> None:
+        """Initialize the Egyptian calendar sensor."""
+        super().__init__(base_name, "egyptian", "Ägyptischer Kalender")
+        self._attr_icon = "mdi:pyramid"
+        self._update_interval = timedelta(hours=1)
+        
+        # Egyptian months (3 seasons, 4 months each)
+        self.egyptian_seasons = [
+            # Akhet (Inundation/Flood)
+            ("Thoth", "𓊖", "Akhet"),
+            ("Phaophi", "𓊖", "Akhet"),
+            ("Athyr", "𓊖", "Akhet"),
+            ("Choiak", "𓊖", "Akhet"),
+            # Peret (Emergence/Winter)
+            ("Tybi", "🌱", "Peret"),
+            ("Mechir", "🌱", "Peret"),
+            ("Phamenoth", "🌱", "Peret"),
+            ("Pharmuthi", "🌱", "Peret"),
+            # Shemu (Harvest/Summer)
+            ("Pachons", "☀️", "Shemu"),
+            ("Payni", "☀️", "Shemu"),
+            ("Epiphi", "☀️", "Shemu"),
+            ("Mesore", "☀️", "Shemu")
+        ]
+        
+        # Egyptian decans (10-day weeks)
+        self.decan_names = [
+            "First Decan", "Second Decan", "Third Decan"
+        ]
+        
+        # Egyptian gods for each month
+        self.month_gods = [
+            "Thoth",     # God of wisdom
+            "Ptah",      # Creator god
+            "Hathor",    # Goddess of love
+            "Sekhmet",   # Goddess of war
+            "Min",       # God of fertility
+            "Bastet",    # Cat goddess
+            "Khnum",     # Creator of bodies
+            "Renenutet", # Harvest goddess
+            "Khonsu",    # Moon god
+            "Horus",     # Sky god
+            "Isis",      # Mother goddess
+            "Ra"         # Sun god
+        ]
+        
+        # Hieroglyphic numbers (simplified representation)
+        self.hieroglyphs = {
+            1: "𓏤", 2: "𓏥", 3: "𓏦", 4: "𓏧", 5: "𓏨",
+            6: "𓏩", 7: "𓏪", 8: "𓏫", 9: "𓏬",
+            10: "𓎆", 20: "𓎇", 30: "𓎈"
+        }
+        
+        # Egyptian hours (12 day + 12 night)
+        self.egyptian_hours = [
+            "First Hour", "Second Hour", "Third Hour", "Fourth Hour",
+            "Fifth Hour", "Sixth Hour", "Seventh Hour", "Eighth Hour",
+            "Ninth Hour", "Tenth Hour", "Eleventh Hour", "Twelfth Hour"
+        ]
+
+    def calculate_time(self) -> str:
+        """Calculate current Ancient Egyptian Calendar date."""
+        now = datetime.now()
+        
+        # Egyptian calendar: 365 days (no leap year)
+        # 12 months of 30 days + 5 epagomenal days
+        # New Year: Heliacal rising of Sirius (around July 19)
+        
+        # Shift calendar to start around July 19
+        egyptian_new_year = datetime(now.year, 7, 19)
+        if now < egyptian_new_year:
+            egyptian_new_year = datetime(now.year - 1, 7, 19)
+        
+        days_since_new_year = (now - egyptian_new_year).days
+        
+        # Calculate Egyptian year (regnal year of current "Pharaoh")
+        # Using years since 2000 as a fun "dynasty" counter
+        dynasty = (now.year - 2000) // 30 + 1  # New dynasty every 30 years
+        regnal_year = ((now.year - 2000) % 30) + 1
+        
+        # Determine if we're in epagomenal days (last 5 days)
+        if days_since_new_year >= 360:
+            # Epagomenal days (birthdays of gods)
+            epagomenal_day = days_since_new_year - 359
+            epagomenal_gods = ["Osiris", "Horus", "Set", "Isis", "Nephthys"]
+            if epagomenal_day <= 5:
+                god_birthday = epagomenal_gods[epagomenal_day - 1]
+                return f"Dynasty {dynasty}, Year {regnal_year} | Epagomenal Day {epagomenal_day} - Birthday of {god_birthday} 🎉"
+            days_since_new_year = days_since_new_year % 365
+        
+        # Calculate month and day
+        month_index = min(days_since_new_year // 30, 11)
+        day_of_month = (days_since_new_year % 30) + 1
+        
+        month_name, season_emoji, season_name = self.egyptian_seasons[month_index]
+        patron_god = self.month_gods[month_index]
+        
+        # Calculate decan (10-day week)
+        decan_index = min((day_of_month - 1) // 10, 2)
+        decan_name = self.decan_names[decan_index]
+        day_in_decan = ((day_of_month - 1) % 10) + 1
+        
+        # Get hieroglyphic representation of day
+        if day_of_month <= 9:
+            hieroglyph_day = self.hieroglyphs.get(day_of_month, str(day_of_month))
+        elif day_of_month <= 19:
+            hieroglyph_day = self.hieroglyphs[10] + self.hieroglyphs.get(day_of_month - 10, "")
+        elif day_of_month <= 29:
+            hieroglyph_day = self.hieroglyphs[20] + self.hieroglyphs.get(day_of_month - 20, "")
+        else:
+            hieroglyph_day = self.hieroglyphs[30]
+        
+        # Determine Egyptian hour
+        hour = now.hour
+        is_night = hour < 6 or hour >= 18
+        if is_night:
+            if hour >= 18:
+                egyptian_hour_index = hour - 18
+            else:
+                egyptian_hour_index = hour + 6
+            time_symbol = "🌙"
+            time_period = "Night"
+        else:
+            egyptian_hour_index = hour - 6
+            time_symbol = "☀️"
+            time_period = "Day"
+        
+        egyptian_hour = self.egyptian_hours[min(egyptian_hour_index, 11)]
+        
+        # Nile flood level (seasonal)
+        if season_name == "Akhet":
+            nile_status = "🌊 Nile Flooding"
+        elif season_name == "Peret":
+            nile_status = "🌱 Fields Emerging"
+        else:
+            nile_status = "🌾 Harvest Time"
+        
+        # Format: Dynasty X Year Y, Day Month (Season) | Decan | Hour | God | Nile
+        # Example: "Dynasty 1 Year 25, 15 Thoth (Akhet) | Second Decan | ☀️ Sixth Hour | Thoth | 🌊"
+        return f"Dynasty {dynasty} Year {regnal_year}, {hieroglyph_day} {day_of_month} {month_name} ({season_name}) | {decan_name} Day {day_in_decan} | {time_symbol} {egyptian_hour} | {patron_god} | {nile_status}"
+
+
+class DiscworldCalendarSensor(AlternativeTimeSensorBase):
+    """Sensor for displaying Discworld Calendar (Terry Pratchett)."""
+
+    def __init__(self, base_name: str) -> None:
+        """Initialize the Discworld calendar sensor."""
+        super().__init__(base_name, "discworld", "Scheibenwelt-Kalender")
+        self._attr_icon = "mdi:turtle"
+        self._update_interval = timedelta(hours=1)
+        
+        # Discworld months (13 months + special days)
+        self.discworld_months = [
+            ("Ick", "❄️"),           # January (Winter)
+            ("Offle", "❄️"),         # February
+            ("February", "🌨️"),      # Yes, February (Pratchett humor)
+            ("March", "🌬️"),         # March
+            ("April", "🌧️"),         # April
+            ("May", "🌸"),           # May
+            ("June", "☀️"),          # June
+            ("Grune", "🌿"),         # July (Summer)
+            ("August", "🌞"),        # August
+            ("Spune", "🍂"),         # September
+            ("Sektober", "🍺"),      # October (drinking month)
+            ("Ember", "🔥"),         # November
+            ("December", "⭐")       # December
+        ]
+        
+        # Discworld weekdays (8 days)
+        self.discworld_days = [
+            "Sunday",
+            "Monday", 
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Octeday"    # The eighth day!
+        ]
+        
+        # Guilds of Ankh-Morpork (for daily influence)
+        self.guilds = [
+            "Assassins' Guild",
+            "Thieves' Guild",
+            "Seamstresses' Guild",
+            "Beggars' Guild",
+            "Merchants' Guild",
+            "Alchemists' Guild",
+            "Wizards (Unseen University)",
+            "Watch (City Guard)",
+            "Fools' Guild",
+            "Musicians' Guild"
+        ]
+        
+        # Special Discworld events/holidays
+        self.discworld_events = {
+            (1, 1): "Hogswatchday 🎅",
+            (2, 14): "Day of Small Gods",
+            (3, 25): "The Rag Week",
+            (4, 1): "All Fools' Day",
+            (4, 32): "Day That Never Happens",  # Discworld joke
+            (5, 1): "May Day",
+            (5, 25): "Glorious Revolution Day",
+            (6, 21): "Midsummer's Eve",
+            (7, 15): "Patrician's Birthday",
+            (8, 12): "Thieves' Guild Day",
+            (9, 9): "Mrs. Cake Day",
+            (10, 31): "Soul Cake Night 🎃",
+            (11, 11): "Elevenses Day",
+            (12, 32): "Hogswatch Eve"  # Another impossible day
+        }
+        
+        # Death's appearances (random quotes)
+        self.death_quotes = [
+            "THERE IS NO JUSTICE. THERE IS JUST ME.",
+            "I COULD MURDER A CURRY.",
+            "CATS. CATS ARE NICE.",
+            "SQUEAK.",  # Death of Rats
+            "THE DUTY IS MINE.",
+            "WHAT CAN THE HARVEST HOPE FOR, IF NOT FOR THE CARE OF THE REAPER MAN?"
+        ]
+        
+        # Ankh-Morpork city areas
+        self.city_areas = [
+            "The Shades", "Patrician's Palace", "Unseen University",
+            "The Docks", "Treacle Mine Road", "Cable Street",
+            "The Hippo", "Isle of Gods", "Pseudopolis Yard"
+        ]
+
+    def calculate_time(self) -> str:
+        """Calculate current Discworld Calendar date."""
+        now = datetime.now()
+        
+        # Discworld year (Century of the Fruitbat, etc.)
+        # Let's use "Century of the Anchovy" as current
+        year_since_2000 = now.year - 2000
+        discworld_year = 1 + year_since_2000  # Year 1 of Century of the Anchovy = 2000
+        
+        # Get month and day
+        month_index = min(now.month - 1, 12)
+        day = now.day
+        
+        # Handle special 32nd days (Discworld has them!)
+        if day == 31 and now.month in [4, 12]:
+            day = 32  # Discworld logic!
+        
+        # Get month name
+        if month_index < len(self.discworld_months):
+            month_name, month_emoji = self.discworld_months[month_index]
+        else:
+            month_name, month_emoji = "Backspindlemonth", "🌀"  # Extra month
+        
+        # Calculate weekday (8-day week)
+        days_since_epoch = (now - datetime(2000, 1, 1)).days
+        weekday_index = days_since_epoch % 8
+        discworld_weekday = self.discworld_days[weekday_index]
+        
+        # Check for events
+        event = self.discworld_events.get((now.month, day), "")
+        event_str = f" | {event}" if event else ""
+        
+        # Guild influence (rotates daily)
+        guild_index = days_since_epoch % len(self.guilds)
+        guild_influence = self.guilds[guild_index]
+        
+        # Random Death quote (changes daily)
+        death_index = days_since_epoch % len(self.death_quotes)
+        death_says = self.death_quotes[death_index]
+        
+        # City location (changes hourly)
+        location_index = (days_since_epoch + now.hour) % len(self.city_areas)
+        current_location = self.city_areas[location_index]
+        
+        # Time of day (Discworld style)
+        hour = now.hour
+        if 0 <= hour < 3:
+            time_desc = "🌙 Dead of Night (Graveyard Shift)"
+        elif 3 <= hour < 6:
+            time_desc = "⭐ Small Hours (Thieves' Time)"
+        elif 6 <= hour < 9:
+            time_desc = "🌅 Dawn (Milkmen About)"
+        elif 9 <= hour < 12:
+            time_desc = "☀️ Morning (Shops Open)"
+        elif 12 <= hour < 13:
+            time_desc = "🍽️ Noon (Lunch at Harga's)"
+        elif 13 <= hour < 17:
+            time_desc = "🌤️ Afternoon (Siesta Time)"
+        elif 17 <= hour < 19:
+            time_desc = "🍺 Evening (Pub O'Clock)"
+        elif 19 <= hour < 21:
+            time_desc = "🌆 Dusk (Theatre Time)"
+        elif 21 <= hour < 24:
+            time_desc = "🌃 Night (Watch Patrol)"
+        else:
+            time_desc = "⏰ Temporal Anomaly"
+        
+        # L-Space probability (libraries connect)
+        l_space = "📚 L-Space detected!" if hour == 3 and now.minute == 33 else ""
+        
+        # Special Octeday message
+        octeday_msg = " | 🎉 It's Octeday!" if weekday_index == 7 else ""
+        
+        # Format: Century Year, Day Month (Weekday) | Time | Location | Guild | Event
+        # Example: "Century of the Anchovy, Year 25, 32 Offle (Octeday) | 🌙 Dead of Night | The Shades | Thieves' Guild | Soul Cake Night"
+        base_str = f"Century of the Anchovy, UC {discworld_year}, {day} {month_name} ({discworld_weekday}){octeday_msg} | {time_desc} | 📍 {current_location} | {guild_influence}{event_str}"
+        
+        # Add Death quote occasionally (at midnight)
+        if hour == 0:
+            base_str += f"\n💀 Death says: {death_says}"
+        
+        # Add L-Space notification
+        if l_space:
+            base_str += f"\n{l_space}"
+        
+        return base_str

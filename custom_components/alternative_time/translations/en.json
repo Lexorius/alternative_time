@@ -26,7 +26,10 @@
           "mars_timezone": "Select Mars Timezone",
           "enable_eve": "Enable EVE Online Time",
           "enable_shire": "Enable Shire Calendar (Hobbits)",
-          "enable_rivendell": "Enable Calendar of Imladris (Elves)"
+          "enable_rivendell": "Enable Calendar of Imladris (Elves)",
+          "enable_tamriel": "Enable Tamriel Calendar (Elder Scrolls)",
+          "enable_egyptian": "Enable Egyptian Calendar",
+          "enable_discworld": "Enable Discworld Calendar (Pratchett)"
         },
         "data_description": {
           "name": "A unique name for this configuration",
@@ -50,7 +53,10 @@
           "mars_timezone": "One of 24 Mars timezones from MTC-12 to MTC+12",
           "enable_eve": "New Eden Standard Time from EVE Online (e.g., YC 127.03.15 14:30:45)",
           "enable_shire": "Hobbit calendar with 7 meals (e.g., S.R. 1445, 22 Halimath)",
-          "enable_rivendell": "Elven calendar with 6 seasons (e.g., F.A. 6025, Tuilë 22)"
+          "enable_rivendell": "Elven calendar with 6 seasons (e.g., F.A. 6025, Tuilë 22)",
+          "enable_tamriel": "Calendar from The Elder Scrolls with 12 months and 8-day week (e.g., 4E 201, 17th of Last Seed)",
+          "enable_egyptian": "Ancient Egyptian calendar with 3 seasons and decans (e.g., Dynasty 1 Year 25, 15 Thoth)",
+          "enable_discworld": "Terry Pratchett's Discworld with 8-day week and guilds (e.g., Century of the Anchovy, 32 Offle)"
         }
       }
     },

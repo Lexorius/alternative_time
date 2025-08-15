@@ -5,16 +5,16 @@
 [![GitHub Activity](https://img.shields.io/github/commit-activity/y/Lexorius/alternative_time.svg)](https://github.com/Lexorius/alternative_time/commits/main)
 [![License](https://img.shields.io/github/license/Lexorius/alternative_time.svg)](LICENSE)
 
-A comprehensive Home Assistant integration for alternative time systems from science, science fiction, fantasy, history, and various cultures. From Stardate to Maya Calendar, from the Shire to New Eden - this integration provides 21 different time systems as sensors.
+A comprehensive Home Assistant integration for alternative time systems from science, science fiction, fantasy, history, and various cultures. From Stardate to Maya Calendar, from the Shire to Discworld, from Tamriel to ancient Egypt - this integration provides 24 different time systems as sensors.
 
 ## 🎯 Overview
 
 This integration transforms Home Assistant into a universal time clock with support for:
 - 🚀 **Science Fiction Times** (Star Trek Stardate, EVE Online)
-- 🧙 **Fantasy Calendars** (Tolkien's Shire & Elven Calendars)
+- 🧙 **Fantasy Calendars** (Tolkien, Elder Scrolls, Discworld)
+- 🏺 **Historical Calendars** (Maya, Attic, Egyptian, French Revolution)
 - 🔴 **Mars Time Systems** (Darian Calendar, Mars Time Zones)
 - 🌐 **Internet Standards** (Unix, Swatch Internet Time)
-- 🏛️ **Historical Calendars** (Maya, Attic, French Revolution)
 - 🎖️ **Military Time Systems** (NATO DTG in 3 variants)
 - 🌏 **Cultural Calendars** (Thai, Taiwan)
 - 💻 **Technical Formats** (Hexadecimal, Julian Date)
@@ -206,6 +206,47 @@ You can create multiple instances with different configurations:
 - **Seasons**: Tuilë (Spring), Lairë (Summer), Yávië (Autumn), Quellë (Fading), Hrívë (Winter), Coirë (Stirring)
 - **Update**: Hourly
 
+### 🎮 **Tamriel Calendar (Elder Scrolls)**
+- **Format**: `4E Year, Day Month (Weekday) | Time | Blessing | Event`
+- **Example**: `4E 201, 17 Last Seed (Fredas) | Dusk 🌆 | Blessing: Talos | 🌕🌗`
+- **Features**:
+  - 12 months with unique names
+  - 8-day week with Octeday
+  - Divine blessings (9 Divines)
+  - Daedric Princes influence
+  - Two moons (Masser & Secunda)
+  - Holidays and festivals
+- **Months**: Morning Star, Sun's Dawn, First Seed, Rain's Hand, Second Seed, Midyear, Sun's Height, Last Seed, Hearthfire, Frostfall, Sun's Dusk, Evening Star
+- **Update**: Hourly
+
+### 🏺 **Egyptian Calendar**
+- **Format**: `Dynasty Year, Hieroglyphs Day Month (Season) | Decan | Hour | God | Nile`
+- **Example**: `Dynasty 1 Year 25, 𓏤𓏨 15 Thoth (Akhet) | Second Decan | ☀️ Sixth Hour | Thoth | 🌊`
+- **Features**:
+  - 3 seasons (Akhet, Peret, Shemu)
+  - 12 months of 30 days each
+  - 5 epagomenal days
+  - Decans (10-day weeks)
+  - Hieroglyphic numbers
+  - 12 day and 12 night hours
+  - Nile flood cycle
+- **Seasons**: Akhet (Inundation), Peret (Emergence), Shemu (Harvest)
+- **Update**: Hourly
+
+### 🐢 **Discworld Calendar**
+- **Format**: `Century Year, Day Month (Weekday) | Time | Location | Guild | Event`
+- **Example**: `Century of the Anchovy, UC 25, 32 Offle (Octeday) | 🌙 Dead of Night | 📍 The Shades | Thieves' Guild`
+- **Features**:
+  - 13 months with Pratchett humor
+  - 8-day week with Octeday
+  - Impossible days (32nd April)
+  - Ankh-Morpork guilds
+  - Death quotes at midnight
+  - L-Space library connections
+  - City district rotation
+- **Months**: Ick, Offle, February, March, April, May, June, Grune, August, Spune, Sektober, Ember, December
+- **Update**: Hourly
+
 ## 🎯 Usage
 
 ### Sensor Entities
@@ -233,6 +274,9 @@ After configuration, the following sensors are created (depending on selection):
 | EVE Online | `sensor.[name]_eve_online` |
 | Shire | `sensor.[name]_shire` |
 | Imladris | `sensor.[name]_rivendell` |
+| Tamriel | `sensor.[name]_tamriel` |
+| Egyptian | `sensor.[name]_egyptian` |
+| Discworld | `sensor.[name]_discworld` |
 
 ## 📊 Dashboard Examples
 
@@ -242,9 +286,11 @@ type: vertical-stack
 cards:
   - type: markdown
     content: |
-      ## 🧙 Middle-earth & New Eden
+      ## 🧙 Fantasy & Gaming Worlds
       **Shire:** {{ states('sensor.alternative_time_shire') }}
       **Imladris:** {{ states('sensor.alternative_time_rivendell') }}
+      **Tamriel:** {{ states('sensor.alternative_time_tamriel') }}
+      **Discworld:** {{ states('sensor.alternative_time_discworld') }}
       **EVE Online:** {{ states('sensor.alternative_time_eve_online') }}
   
   - type: entities
@@ -254,10 +300,34 @@ cards:
         name: Hobbit Time
       - entity: sensor.alternative_time_rivendell
         name: Elven Time
+      - entity: sensor.alternative_time_tamriel
+        name: Elder Scrolls
+      - entity: sensor.alternative_time_discworld
+        name: Discworld
       - entity: sensor.alternative_time_eve_online
         name: New Eden Time
-      - entity: sensor.alternative_time_stardate
-        name: Stardate
+```
+
+### Historical Calendars Dashboard
+```yaml
+type: vertical-stack
+cards:
+  - type: markdown
+    content: |
+      ## 🏺 Historical Time Systems
+      **Egypt:** {{ states('sensor.alternative_time_egyptian') }}
+      **Maya:** {{ states('sensor.alternative_time_maya_calendar') }}
+      **Athens:** {{ states('sensor.alternative_time_attic_calendar') }}
+      
+  - type: entities
+    title: Ancient Calendars
+    entities:
+      - entity: sensor.alternative_time_egyptian
+        name: Egyptian Calendar
+      - entity: sensor.alternative_time_maya_calendar
+        name: Maya Calendar
+      - entity: sensor.alternative_time_attic_calendar
+        name: Attic Calendar
 ```
 
 ### World Clock Dashboard
@@ -309,22 +379,51 @@ cards:
 
 ## 🤖 Automations
 
-### Hobbit Meal Reminder
+### Elder Scrolls Holiday
 ```yaml
 automation:
-  - alias: "Second Breakfast"
+  - alias: "Tamriel New Life Festival"
+    trigger:
+      - platform: template
+        value_template: >
+          {{ 'New Life Festival' in states('sensor.alternative_time_tamriel') }}
+    action:
+      - service: notify.mobile_app
+        data:
+          title: "🎮 Tamriel Holiday"
+          message: "The New Life Festival begins in Tamriel!"
+```
+
+### Egyptian Epagomenal Days
+```yaml
+automation:
+  - alias: "Birthday of the Gods"
+    trigger:
+      - platform: template
+        value_template: >
+          {{ 'Birthday of' in states('sensor.alternative_time_egyptian') }}
+    action:
+      - service: notify.mobile_app
+        data:
+          title: "🏺 Egyptian Calendar"
+          message: "{{ states('sensor.alternative_time_egyptian') }}"
+```
+
+### Discworld Death Quote
+```yaml
+automation:
+  - alias: "Death Says"
     trigger:
       - platform: time
-        at: "09:00:00"
+        at: "00:00:00"
+    condition:
+      - condition: template
+        value_template: "{{ states('sensor.alternative_time_discworld') != 'unknown' }}"
     action:
       - service: tts.google_say
         data:
-          entity_id: media_player.kitchen
-          message: "Time for second breakfast! The hobbits would be pleased."
-      - service: notify.mobile_app
-        data:
-          title: "🥐 Shire Time"
-          message: "{{ states('sensor.alternative_time_shire') }}"
+          entity_id: media_player.bedroom
+          message: "Death says: THERE IS NO JUSTICE. THERE IS JUST ME."
 ```
 
 ### EVE Online Daily Tasks
@@ -385,46 +484,85 @@ automation:
           message: "New day: {{ trigger.to_state.state }}"
 ```
 
-## 🧙 Tolkien's Calendar Systems
+## 🎮 Elder Scrolls Calendar System
 
-### Shire Calendar (Shire Reckoning)
-The calendar of the Hobbits is tailored to their needs:
+### Tamriel Calendar
+The calendar of Tamriel from The Elder Scrolls game series:
 
-#### The 7 Hobbit Meals:
-1. **First Breakfast** (6-8 AM) 🍳
-2. **Second Breakfast** (8-11 AM) 🥐
-3. **Elevenses** (11 AM-1 PM) 🍽️
-4. **Luncheon** (1-3 PM) 🍖
-5. **Afternoon Tea** (3-5 PM) ☕
-6. **Dinner** (5-7 PM) 🍰
-7. **Supper** (7-9 PM) 🍻
+#### The 12 Months:
+1. **Morning Star** (January) ❄️
+2. **Sun's Dawn** (February) 🌅
+3. **First Seed** (March) 🌱
+4. **Rain's Hand** (April) 🌧️
+5. **Second Seed** (May) 🌿
+6. **Midyear** (June) ☀️
+7. **Sun's Height** (July) 🌞
+8. **Last Seed** (August) 🌾
+9. **Hearthfire** (September) 🔥
+10. **Frostfall** (October) 🍂
+11. **Sun's Dusk** (November) 🌆
+12. **Evening Star** (December) ⭐
 
-#### Important Dates:
-- **22 Halimath**: Bilbo and Frodo's Birthday
-- **2 Yule**: New Year's Day
-- **Mid-year's Day**: Midsummer Festival
-- **1 & 2 Lithe**: Midsummer Days
+#### Features:
+- **8-day week** with Octeday as the eighth day
+- **Divine blessings** from the 9 Divines
+- **Daedric Princes** influence on certain days
+- **Two moons**: Masser and Secunda with different phases
+- **Many holidays**: New Life Festival, Witches Festival, Warriors Festival
 
-### Calendar of Imladris (Elves)
-The Elvish calendar is based on seasons:
+## 🏺 Ancient Egyptian Calendar System
 
-#### The 6 Seasons:
-- **Tuilë** (Spring) 🌸 - 54 days
-- **Lairë** (Summer) ☀️ - 72 days  
-- **Yávië** (Autumn) 🍂 - 54 days
-- **Quellë** (Fading) 🍁 - 54 days
-- **Hrívë** (Winter) ❄️ - 72 days
-- **Coirë** (Stirring) 🌱 - 54 days
+### Egyptian Calendar
+The calendar of ancient Egypt with its unique features:
 
-#### Elvish Times of Day:
-- **Tindómë** - Dawn 🌅
-- **Anarórë** - Sunrise 🌄
-- **Ára** - Morning 🌞
-- **Endë** - Midday ☀️
-- **Undómë** - Afternoon 🌤️
-- **Andúnë** - Sunset 🌇
-- **Lómë** - Night 🌙
-- **Fui** - Deep Night ⭐
+#### The 3 Seasons:
+- **Akhet** (Inundation) 🌊 - 4 months
+- **Peret** (Emergence) 🌱 - 4 months
+- **Shemu** (Harvest) ☀️ - 4 months
+
+#### Features:
+- **365 days**: 12 months of 30 days + 5 epagomenal days
+- **Decans**: 10-day weeks
+- **Hieroglyphic numbers**: 𓏤𓏥𓏦𓏧𓏨
+- **12 day and 12 night hours**
+- **Patron gods** for each month
+- **Nile status** depending on season
+- **Epagomenal days**: Birthdays of Osiris, Horus, Set, Isis, Nephthys
+
+## 🐢 Discworld Calendar System
+
+### Discworld Calendar (Terry Pratchett)
+The humorous calendar of the Discworld:
+
+#### The 13 Months:
+1. **Ick** ❄️
+2. **Offle** ❄️
+3. **February** 🌨️ (yes, really February!)
+4. **March** 🌬️
+5. **April** 🌧️
+6. **May** 🌸
+7. **June** ☀️
+8. **Grune** 🌿
+9. **August** 🌞
+10. **Spune** 🍂
+11. **Sektober** 🍺 (drinking month!)
+12. **Ember** 🔥
+13. **December** ⭐
+
+#### Features:
+- **8-day week** with Octeday
+- **Impossible days**: 32nd April and 32nd December
+- **Guilds of Ankh-Morpork**: Daily influence of different guilds
+- **Death quotes** at midnight
+- **L-Space**: Library connections at 03:33
+- **City districts**: The Shades, Unseen University, Patrician's Palace
+- **Century of the Anchovy**: Current era
+
+### Death's Best Quotes:
+- "THERE IS NO JUSTICE. THERE IS JUST ME."
+- "I COULD MURDER A CURRY."
+- "CATS. CATS ARE NICE."
+- "SQUEAK." (Death of Rats)
 
 ## 🚀 EVE Online Time System
 
@@ -481,7 +619,16 @@ ha core restart
 
 ## 📈 Version History
 
-### v1.5.0 (Latest)
+### v1.6.0 (Latest)
+- ✨ Added Tamriel Calendar (Elder Scrolls)
+- ✨ Added Egyptian Calendar
+- ✨ Added Discworld Calendar
+- 🎮 Gaming worlds expanded
+- 🏺 Historical calendars expanded
+- 🐢 Terry Pratchett's humor integrated
+- 💀 Death quotes and L-Space features
+
+### v1.5.0
 - ✨ Added EVE Online Time (New Eden Standard Time)
 - ✨ Added Shire Calendar (Shire Reckoning)
 - ✨ Added Calendar of Imladris (Elves)
@@ -518,7 +665,17 @@ ha core restart
 - 🎉 Initial release
 - ✨ Basic time systems implemented
 
+## 📝 Planned Features
 
+- [ ] More Sci-Fi time systems (Star Wars, Stargate, Doctor Who, The Expanse)
+- [ ] Historical calendars (Roman, Egyptian, Chinese, Aztec)
+- [ ] Religious calendars (Islamic, Jewish, Coptic, Hindu)
+- [ ] More Fantasy calendars (Game of Thrones, Warhammer, D&D)
+- [ ] More Mars features (Phobos/Deimos orbits, Earth time converter)
+- [ ] Configurable update intervals
+- [ ] Time conversion between systems
+- [ ] Graphical clock cards
+- [ ] Calendar export functions
 
 ## 🤝 Contributing
 
@@ -555,6 +712,9 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) for deta
 
 - **Home Assistant Community** for the amazing platform
 - **J.R.R. Tolkien** for the detailed calendar systems of Middle-earth
+- **Bethesda Game Studios** for The Elder Scrolls and Tamriel
+- **Terry Pratchett** for the Discworld and its unique humor
+- **Ancient Egyptians** for one of humanity's first precise calendars
 - **CCP Games** for EVE Online and the New Eden universe
 - **Star Trek** for the stardate inspiration
 - **Swatch** for the revolutionary Internet Beat Time
@@ -587,9 +747,12 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) for deta
 - [Tolkien Gateway - Shire Calendar](http://tolkiengateway.net/wiki/Shire_Calendar)
 - [Encyclopedia of Arda - Calendar of Imladris](https://www.glyphweb.com/arda/c/calendarofimladris.html)
 - [EVE Online Time](https://wiki.eveuniversity.org/Time)
+- [Elder Scrolls Calendar](https://en.uesp.net/wiki/Lore:Calendar)
+- [Ancient Egyptian Calendar](https://en.wikipedia.org/wiki/Egyptian_calendar)
+- [Discworld Calendar](https://wiki.lspace.org/Calendar)
 
 ---
 
 **Made with ❤️ by [Lexorius](https://github.com/Lexorius)**
 
-*"Time is an illusion. Lunchtime doubly so. Second breakfast triply so." - After Douglas Adams & Tolkien*
+*"Time is an illusion. Lunchtime doubly so. Second breakfast triply so. Octeday quadruply so." - After Douglas Adams, Tolkien & Pratchett*

@@ -22,5 +22,8 @@ CONF_MARS_TIMEZONE = "mars_timezone"
 CONF_ENABLE_EVE = "enable_eve"
 CONF_ENABLE_SHIRE = "enable_shire"
 CONF_ENABLE_RIVENDELL = "enable_rivendell"
+CONF_ENABLE_TAMRIEL = "enable_tamriel"
+CONF_ENABLE_EGYPTIAN = "enable_egyptian"
+CONF_ENABLE_DISCWORLD = "enable_discworld"
 
 DEFAULT_NAME = "Alternative Time"
