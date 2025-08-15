@@ -27,8 +27,6 @@ from .const import (
     CONF_ENABLE_ATTIC,
     CONF_ENABLE_SURIYAKATI,
     CONF_ENABLE_MINGUO,
-    CONF_ENABLE_DARIAN,
-    CONF_ENABLE_MARS_TIME,
     CONF_MARS_TIMEZONE,
     CONF_ENABLE_EVE,
     CONF_ENABLE_SHIRE,
@@ -36,6 +34,8 @@ from .const import (
     CONF_ENABLE_TAMRIEL,
     CONF_ENABLE_EGYPTIAN,
     CONF_ENABLE_DISCWORLD,
+    CONF_ENABLE_DARIAN,
+    CONF_ENABLE_MARS_TIME,
     DEFAULT_NAME,
 )
 
@@ -174,15 +174,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Optional(CONF_ENABLE_ATTIC, default=False): bool,
             vol.Optional(CONF_ENABLE_SURIYAKATI, default=False): bool,
             vol.Optional(CONF_ENABLE_MINGUO, default=False): bool,
-            vol.Optional(CONF_ENABLE_DARIAN, default=False): bool,
-            vol.Optional(CONF_ENABLE_MARS_TIME, default=False): bool,
-            vol.Optional(CONF_MARS_TIMEZONE, default="MTC+0 (Airy-0)"): vol.In(MARS_TIMEZONES),
             vol.Optional(CONF_ENABLE_EVE, default=False): bool,
             vol.Optional(CONF_ENABLE_SHIRE, default=False): bool,
             vol.Optional(CONF_ENABLE_RIVENDELL, default=False): bool,
             vol.Optional(CONF_ENABLE_TAMRIEL, default=False): bool,
             vol.Optional(CONF_ENABLE_EGYPTIAN, default=False): bool,
             vol.Optional(CONF_ENABLE_DISCWORLD, default=False): bool,
+            vol.Optional(CONF_ENABLE_DARIAN, default=False): bool,
+            vol.Optional(CONF_ENABLE_MARS_TIME, default=False): bool,
+            vol.Optional(CONF_MARS_TIMEZONE, default="MTC+0 (Airy-0)"): vol.In(MARS_TIMEZONES),
         })
 
         return self.async_show_form(
