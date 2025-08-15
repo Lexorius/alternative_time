@@ -158,11 +158,7 @@ class AlternativeTimeSensorBase(SensorEntity):
     def calculate_time(self) -> str:
         """Calculate the time value. To be overridden by subclasses."""
         return ""
-```
 
-## 6. sensor.py (Teil 2/3)
-```python
-# Fortsetzung sensor.py
 
 class TimezoneSensor(AlternativeTimeSensorBase):
     """Sensor for displaying time in a specific timezone."""
