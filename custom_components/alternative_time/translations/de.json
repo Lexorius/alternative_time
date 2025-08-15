@@ -20,7 +20,8 @@
           "enable_nato_rescue": "NATO-Zeit Rettungsdienst aktivieren",
           "enable_attic": "Attischer Kalender aktivieren",
           "enable_suriyakati": "Suriyakati-Kalender (Thai) aktivieren",
-          "enable_minguo": "Minguo-Kalender (Taiwan) aktivieren"
+          "enable_minguo": "Minguo-Kalender (Taiwan) aktivieren",
+          "enable_darian": "Darischer Kalender (Mars) aktivieren"
         },
         "data_description": {
           "name": "Ein eindeutiger Name für diese Konfiguration",
@@ -38,7 +39,8 @@
           "enable_nato_rescue": "Deutsche Rettungsdienst-Notation: DD HHMM MONAT YY (z.B. 15 1430 JAN 25)",
           "enable_attic": "Antiker Athener Lunisolarkalender mit Archon und Olympiade (z.B. 5 ἱσταμένου Hekatombaion)",
           "enable_suriyakati": "Thailändischer Kalender mit buddhistischer Ära, BE = CE+543 (z.B. 2568 BE)",
-          "enable_minguo": "Taiwan/ROC Kalender, Jahr 1 = 1912 CE (z.B. 民國114年)"
+          "enable_minguo": "Taiwan/ROC Kalender, Jahr 1 = 1912 CE (z.B. 民國114年)",
+          "enable_darian": "Mars-Kalender mit 24 Monaten und 668 Sols pro Jahr (z.B. 15 Gemini 217)"
         }
       }
     },

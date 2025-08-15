@@ -27,6 +27,9 @@ from .const import (
     CONF_ENABLE_ATTIC,
     CONF_ENABLE_SURIYAKATI,
     CONF_ENABLE_MINGUO,
+    CONF_ENABLE_DARIAN,
+    CONF_ENABLE_MARS_TIME,
+    CONF_MARS_TIMEZONE,
     DEFAULT_NAME,
 )
 
@@ -69,6 +72,34 @@ try:
 except ImportError:
     pass
 
+# Mars timezone definitions
+MARS_TIMEZONES = [
+    "MTC+0 (Airy-0)",           # Mars Coordinated Time (Prime Meridian at Airy-0 crater)
+    "MTC-1 (Olympus Mons)",      # Major volcano
+    "MTC-2 (Tharsis)",           # Tharsis region
+    "MTC-3 (Valles Marineris)",  # Grand canyon
+    "MTC-4 (Arabia Terra)",      # Arabia region
+    "MTC-5 (Amazonis)",          # Amazonis Planitia
+    "MTC-6 (Elysium)",           # Elysium Mons region
+    "MTC-7 (Hellas)",            # Hellas Basin
+    "MTC-8 (Argyre)",            # Argyre Basin
+    "MTC-9 (Chryse)",            # Chryse Planitia (Viking 1 landing site)
+    "MTC-10 (Utopia)",           # Utopia Planitia (Viking 2 landing site)
+    "MTC-11 (Isidis)",           # Isidis Basin
+    "MTC+1 (Meridiani)",         # Meridiani Planum (Opportunity rover)
+    "MTC+2 (Syrtis Major)",      # Syrtis Major
+    "MTC+3 (Tyrrhena)",          # Tyrrhena Terra
+    "MTC+4 (Cimmeria)",          # Terra Cimmeria
+    "MTC+5 (Sirenum)",           # Terra Sirenum
+    "MTC+6 (Aonia)",             # Aonia Terra
+    "MTC+7 (Noachis)",           # Noachis Terra
+    "MTC+8 (Sabaea)",            # Terra Sabaea
+    "MTC+9 (Promethei)",         # Promethei Terra
+    "MTC+10 (Chronius)",         # Chronius Mons
+    "MTC+11 (Aeolis)",           # Aeolis region (Gale Crater - Curiosity rover)
+    "MTC+12 (Arcadia)",          # Arcadia Planitia
+]
+
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Alternative Time."""
@@ -98,6 +129,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input.get(CONF_ENABLE_ATTIC, False),
                 user_input.get(CONF_ENABLE_SURIYAKATI, False),
                 user_input.get(CONF_ENABLE_MINGUO, False),
+                user_input.get(CONF_ENABLE_DARIAN, False),
+                user_input.get(CONF_ENABLE_MARS_TIME, False),
             ])
 
             if not time_systems_selected:
@@ -129,6 +162,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Optional(CONF_ENABLE_ATTIC, default=False): bool,
             vol.Optional(CONF_ENABLE_SURIYAKATI, default=False): bool,
             vol.Optional(CONF_ENABLE_MINGUO, default=False): bool,
+            vol.Optional(CONF_ENABLE_DARIAN, default=False): bool,
+            vol.Optional(CONF_ENABLE_MARS_TIME, default=False): bool,
+            vol.Optional(CONF_MARS_TIMEZONE, default="MTC+0 (Airy-0)"): vol.In(MARS_TIMEZONES),
         })
 
         return self.async_show_form(

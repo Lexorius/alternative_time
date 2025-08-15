@@ -16,5 +16,8 @@ CONF_ENABLE_NATO_RESCUE = "enable_nato_rescue"
 CONF_ENABLE_ATTIC = "enable_attic"
 CONF_ENABLE_SURIYAKATI = "enable_suriyakati"
 CONF_ENABLE_MINGUO = "enable_minguo"
+CONF_ENABLE_DARIAN = "enable_darian"
+CONF_ENABLE_MARS_TIME = "enable_mars_time"
+CONF_MARS_TIMEZONE = "mars_timezone"
 
 DEFAULT_NAME = "Alternative Time"

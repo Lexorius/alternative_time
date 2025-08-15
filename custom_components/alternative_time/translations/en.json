@@ -20,7 +20,8 @@
           "enable_nato_rescue": "Enable NATO Rescue Service Time",
           "enable_attic": "Enable Attic Calendar",
           "enable_suriyakati": "Enable Suriyakati Calendar (Thai)",
-          "enable_minguo": "Enable Minguo Calendar (Taiwan)"
+          "enable_minguo": "Enable Minguo Calendar (Taiwan)",
+          "enable_darian": "Enable Darian Calendar (Mars)"
         },
         "data_description": {
           "name": "A unique name for this configuration",
@@ -38,7 +39,8 @@
           "enable_nato_rescue": "German rescue service notation: DD HHMM MONTH YY (e.g., 15 1430 JAN 25)",
           "enable_attic": "Ancient Athenian lunisolar calendar with Archon and Olympiad (e.g., 5 histamenou Hekatombaion)",
           "enable_suriyakati": "Thai calendar with Buddhist Era, BE = CE+543 (e.g., 2568 BE)",
-          "enable_minguo": "Taiwan/ROC calendar, Year 1 = 1912 CE (e.g., Minguo 114)"
+          "enable_minguo": "Taiwan/ROC calendar, Year 1 = 1912 CE (e.g., Minguo 114)",
+          "enable_darian": "Mars calendar with 24 months and 668 sols per year (e.g., 15 Gemini 217)"
         }
       }
     },

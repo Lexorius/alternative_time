@@ -28,6 +28,9 @@ from .const import (
     CONF_ENABLE_ATTIC,
     CONF_ENABLE_SURIYAKATI,
     CONF_ENABLE_MINGUO,
+    CONF_ENABLE_DARIAN,
+    CONF_ENABLE_MARS_TIME,
+    CONF_MARS_TIMEZONE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -92,6 +95,12 @@ async def async_setup_entry(
     
     if config.get(CONF_ENABLE_MINGUO, False):
         sensors.append(MinguoCalendarSensor(base_name))
+    
+    if config.get(CONF_ENABLE_DARIAN, False):
+        sensors.append(DarianCalendarSensor(base_name))
+    
+    if config.get(CONF_ENABLE_MARS_TIME, False):
+        sensors.append(MarsTimeSensor(base_name, config.get(CONF_MARS_TIMEZONE, "MTC+0 (Airy-0)")))
 
     async_add_entities(sensors, True)
 
@@ -149,7 +158,11 @@ class AlternativeTimeSensorBase(SensorEntity):
     def calculate_time(self) -> str:
         """Calculate the time value. To be overridden by subclasses."""
         return ""
+```
 
+## 6. sensor.py (Teil 2/3)
+```python
+# Fortsetzung sensor.py
 
 class TimezoneSensor(AlternativeTimeSensorBase):
     """Sensor for displaying time in a specific timezone."""
@@ -335,7 +348,6 @@ class MayaCalendarSensor(AlternativeTimeSensorBase):
         self._update_interval = timedelta(hours=1)  # Update every hour (date changes daily)
         
         # Maya calendar constants
-        # Correlation constant (GMT): Julian Day Number for Maya date 0.0.0.0.0
         self.maya_epoch_jdn = 584283
         
         # Tzolk'in day names (20 days)
@@ -422,8 +434,6 @@ class NatoTimeZoneSensor(AlternativeTimeSensorBase):
         self._update_interval = timedelta(seconds=1)  # Update every second
         
         # NATO timezone letters
-        # Z = Zulu (UTC+0), A-M (skip J) = UTC+1 to UTC+12
-        # N-Y = UTC-1 to UTC-12
         self.nato_zones = {
             0: 'Z',  # Zulu
             1: 'A',  # Alpha
@@ -481,7 +491,6 @@ class NatoTimeZoneSensor(AlternativeTimeSensorBase):
         month_abbr = self.nato_months[now.month]
         
         # Full NATO DTG format: DDHHMM[Zone] MON YY
-        # Example: 151430Z JAN 25 (15th day, 14:30 Zulu time, January 2025)
         return f"{now.strftime('%d%H%M')}{zone_letter} {month_abbr} {now.strftime('%y')}"
 
 
@@ -509,7 +518,6 @@ class NatoTimeRescueSensor(AlternativeTimeSensorBase):
         month_abbr = self.rescue_months[now.month]
         
         # German rescue service format: DD HHMM MONAT YY
-        # Example: 15 1430 JAN 25 (15th day, 14:30, January 2025)
         return f"{now.strftime('%d %H%M')} {month_abbr} {now.strftime('%y')}"
 
 
@@ -538,14 +546,11 @@ class AtticCalendarSensor(AlternativeTimeSensorBase):
             "Skirophorion"   # June/July
         ]
         
-        # Archon years cycle (for demonstration, using modern years)
-        # In reality, archons were elected annually
         self.archon_names = [
             "Nikias", "Kallias", "Eukleides", "Aristion", "Alexias",
             "Theophilos", "Lysandros", "Demokrates", "Philippos", "Sostrates"
         ]
         
-        # Prytany names (10 tribes of Athens)
         self.prytanies = [
             "Erechtheis", "Aigeis", "Pandionis", "Leontis", "Akamantis",
             "Oineis", "Kekropis", "Hippothontis", "Aiantis", "Antiochis"
@@ -560,7 +565,6 @@ class AtticCalendarSensor(AlternativeTimeSensorBase):
         summer_solstice = datetime(current_year, 6, 21)
         
         if now < summer_solstice:
-            # Before summer solstice, we're in the previous Attic year
             summer_solstice = datetime(current_year - 1, 6, 21)
             attic_year = current_year - 1
         else:
@@ -569,7 +573,6 @@ class AtticCalendarSensor(AlternativeTimeSensorBase):
         days_since_solstice = (now - summer_solstice).days
         
         # Attic calendar had 12 months of 29-30 days (alternating)
-        # Total: 354 days (lunar year), with periodic intercalation
         month_lengths = [30, 29, 30, 29, 30, 29, 30, 29, 30, 29, 30, 29]
         
         # Find current month and day
@@ -582,7 +585,6 @@ class AtticCalendarSensor(AlternativeTimeSensorBase):
                 break
             days_remaining -= month_length
         else:
-            # Handle year overflow
             current_month_index = 11
             days_remaining = min(days_remaining, 29)
         
@@ -598,24 +600,18 @@ class AtticCalendarSensor(AlternativeTimeSensorBase):
             day_in_period = attic_day - 10
         else:
             period = "φθίνοντος"  # phthinontos (waning)
-            # Count backwards in the last dekad
             month_length = month_lengths[current_month_index]
             day_in_period = month_length - attic_day + 1
         
-        # Calculate Olympiad (4-year cycle starting from 776 BCE)
+        # Calculate Olympiad
         years_since_776_bce = attic_year + 776
         olympiad = years_since_776_bce // 4 + 1
         olympiad_year = (years_since_776_bce % 4) + 1
         
-        # Get archon name (cycling through the list)
+        # Get archon name
         archon = self.archon_names[attic_year % len(self.archon_names)]
         
-        # Calculate prytany (each tribe presided for ~36 days)
-        prytany_index = min(days_since_solstice // 36, 9)
-        prytany = self.prytanies[prytany_index]
-        
-        # Format: Day Period Month, Archon Name, Olympiad
-        # Example: "5 ἱσταμένου Hekatombaion | Archon: Nikias | Ol. 700.2"
+        # Format: Day Period Month | Archon | Olympiad
         return f"{day_in_period} {period} {attic_month} | {archon} | Ol.{olympiad}.{olympiad_year}"
 
 
@@ -630,33 +626,13 @@ class SuriyakatiCalendarSensor(AlternativeTimeSensorBase):
         
         # Thai months
         self.thai_months = [
-            "มกราคม",      # Makarakhom (January)
-            "กุมภาพันธ์",  # Kumphaphan (February)
-            "มีนาคม",      # Minakhom (March)
-            "เมษายน",      # Mesayon (April)
-            "พฤษภาคม",     # Phruetsaphakhom (May)
-            "มิถุนายน",    # Mithunayon (June)
-            "กรกฎาคม",     # Karakadakhom (July)
-            "สิงหาคม",     # Singhakhom (August)
-            "กันยายน",     # Kanyayon (September)
-            "ตุลาคม",      # Tulakhom (October)
-            "พฤศจิกายน",   # Phruetsachikayon (November)
-            "ธันวาคม"      # Thanwakhom (December)
+            "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน",
+            "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม",
+            "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
         ]
         
         # Thai numerals
         self.thai_numerals = ['๐', '๑', '๒', '๓', '๔', '๕', '๖', '๗', '๘', '๙']
-        
-        # Thai weekdays
-        self.thai_weekdays = [
-            "วันจันทร์",    # Monday
-            "วันอังคาร",    # Tuesday
-            "วันพุธ",       # Wednesday
-            "วันพฤหัสบดี",  # Thursday
-            "วันศุกร์",     # Friday
-            "วันเสาร์",     # Saturday
-            "วันอาทิตย์"    # Sunday
-        ]
 
     def to_thai_numerals(self, number: int) -> str:
         """Convert number to Thai numerals."""
@@ -672,14 +648,11 @@ class SuriyakatiCalendarSensor(AlternativeTimeSensorBase):
         # Get Thai month
         thai_month = self.thai_months[now.month - 1]
         
-        # Get Thai weekday
-        thai_weekday = self.thai_weekdays[now.weekday()]
-        
         # Convert day and year to Thai numerals
         thai_day = self.to_thai_numerals(now.day)
         thai_year = self.to_thai_numerals(buddhist_year)
         
-        # Also provide romanized version for easier reading
+        # Romanized month names
         romanized_month = [
             "Makarakhom", "Kumphaphan", "Minakhom", "Mesayon",
             "Phruetsaphakhom", "Mithunayon", "Karakadakhom", "Singhakhom",
@@ -687,7 +660,6 @@ class SuriyakatiCalendarSensor(AlternativeTimeSensorBase):
         ][now.month - 1]
         
         # Format: Thai format and romanized
-        # Example: "๒๕ ธันวาคม ๒๕๖๘ | 25 Thanwakhom 2568 BE"
         return f"{thai_day} {thai_month} {thai_year} | {now.day} {romanized_month} {buddhist_year} BE"
 
 
@@ -705,17 +677,6 @@ class MinguoCalendarSensor(AlternativeTimeSensorBase):
             "一月", "二月", "三月", "四月",
             "五月", "六月", "七月", "八月",
             "九月", "十月", "十一月", "十二月"
-        ]
-        
-        # Traditional Chinese weekdays
-        self.chinese_weekdays = [
-            "星期一",  # Monday
-            "星期二",  # Tuesday
-            "星期三",  # Wednesday
-            "星期四",  # Thursday
-            "星期五",  # Friday
-            "星期六",  # Saturday
-            "星期日"   # Sunday
         ]
         
         # Traditional Chinese numbers for day
@@ -745,13 +706,11 @@ class MinguoCalendarSensor(AlternativeTimeSensorBase):
         """Calculate current Minguo (ROC) Calendar date."""
         now = datetime.now()
         
-        # Minguo Era starts from 1912 (founding of Republic of China)
-        # Year 1 = 1912 CE
+        # Minguo Era starts from 1912
         minguo_year = now.year - 1911
         
-        # Handle years before 1912 (before ROC)
+        # Handle years before 1912
         if minguo_year < 1:
-            # Use "民前" (before Minguo)
             years_before = abs(minguo_year) + 1
             year_display = f"民前{years_before}年"
             year_display_roman = f"Before Minguo {years_before}"
@@ -763,9 +722,194 @@ class MinguoCalendarSensor(AlternativeTimeSensorBase):
         chinese_month = self.chinese_months[now.month - 1]
         chinese_day = self.to_chinese_day(now.day)
         
-        # Get Chinese weekday
-        chinese_weekday = self.chinese_weekdays[now.weekday()]
-        
         # Format: Traditional Chinese and romanized
-        # Example: "民國114年 十二月 二十五日 | Minguo 114/12/25"
         return f"{year_display} {chinese_month} {chinese_day}日 | {year_display_roman}/{now.month}/{now.day}"
+
+
+class DarianCalendarSensor(AlternativeTimeSensorBase):
+    """Sensor for displaying Darian Calendar (Mars calendar)."""
+
+    def __init__(self, base_name: str) -> None:
+        """Initialize the Darian calendar sensor."""
+        super().__init__(base_name, "darian", "Darischer Kalender")
+        self._attr_icon = "mdi:rocket-launch"
+        self._update_interval = timedelta(hours=1)  # Update every hour
+        
+        # Darian months (24 months, 27-28 sols each)
+        self.darian_months = [
+            "Sagittarius", "Dhanus",      # 1-2
+            "Capricornus", "Makara",      # 3-4
+            "Aquarius", "Kumbha",         # 5-6
+            "Pisces", "Mina",             # 7-8
+            "Aries", "Mesha",             # 9-10
+            "Taurus", "Rishabha",         # 11-12
+            "Gemini", "Mithuna",          # 13-14
+            "Cancer", "Karka",            # 15-16
+            "Leo", "Simha",               # 17-18
+            "Virgo", "Kanya",             # 19-20
+            "Libra", "Tula",              # 21-22
+            "Scorpius", "Vrishchika"      # 23-24
+        ]
+        
+        # Sol names (7-sol week)
+        self.sol_names = [
+            "Sol Solis",    # Sunday equivalent
+            "Sol Lunae",    # Monday
+            "Sol Martis",   # Tuesday  
+            "Sol Mercurii", # Wednesday
+            "Sol Jovis",    # Thursday
+            "Sol Veneris",  # Friday
+            "Sol Saturni"   # Saturday
+        ]
+        
+        # Month lengths: odd months have 28 sols, even have 27 (except leap years)
+        self.month_lengths = [28, 27] * 12  # Pattern for 24 months
+
+    def calculate_time(self) -> str:
+        """Calculate current Darian (Mars) Calendar date."""
+        # Mars Sol = 24h 39m 35.244s = 88775.244 seconds
+        # Mars Year = 668.5907 sols ≈ 687 Earth days
+        
+        # Epoch: March 1, 1609 (Telescopic epoch - Galileo's observations)
+        # For simplicity, we'll use a more recent epoch
+        # Darian Epoch = January 1, 1970 00:00:00 UTC = Darian Year 184
+        
+        now = datetime.now()
+        
+        # Calculate days since Unix epoch
+        unix_epoch = datetime(1970, 1, 1)
+        days_since_epoch = (now - unix_epoch).days
+        
+        # Convert Earth days to Mars sols
+        # 1 sol = 1.02749125 Earth days
+        sols_since_epoch = days_since_epoch / 1.02749125
+        
+        # Mars year length in sols
+        mars_year_sols = 668.5907
+        
+        # Calculate Darian year (starting from year 184)
+        base_year = 184
+        years_passed = int(sols_since_epoch / mars_year_sols)
+        darian_year = base_year + years_passed
+        
+        # Calculate sol of year
+        sol_of_year = int(sols_since_epoch % mars_year_sols)
+        
+        # Determine month and sol of month
+        current_month_index = 0
+        sols_remaining = sol_of_year
+        
+        for i in range(24):
+            # Check for leap year (simplified - every 2nd year for demonstration)
+            # Real Darian leap years are more complex
+            is_leap = (darian_year % 2 == 0) and (i == 23)
+            month_length = 28 if i % 2 == 0 else (27 if not is_leap else 28)
+            
+            if sols_remaining < month_length:
+                current_month_index = i
+                break
+            sols_remaining -= month_length
+        
+        darian_month = self.darian_months[current_month_index]
+        darian_sol = sols_remaining + 1  # 1-indexed
+        
+        # Calculate sol of week
+        total_sols = int(sols_since_epoch)
+        sol_of_week_index = total_sols % 7
+        sol_of_week = self.sol_names[sol_of_week_index]
+        
+        # Determine season (6 months each)
+        if current_month_index < 6:
+            season = "Vernal"  # Spring
+        elif current_month_index < 12:
+            season = "Summer"
+        elif current_month_index < 18:
+            season = "Autumnal"
+        else:
+            season = "Winter"
+        
+        # Format: Sol Month Year | Sol-of-week | Season
+        # Example: "15 Gemini 217 | Sol Martis | Summer"
+        return f"{darian_sol} {darian_month} {darian_year} | {sol_of_week} | {season}"
+
+
+class MarsTimeSensor(AlternativeTimeSensorBase):
+    """Sensor for displaying Mars Sol Time in selected timezone."""
+
+    def __init__(self, base_name: str, mars_timezone: str) -> None:
+        """Initialize the Mars time sensor."""
+        super().__init__(base_name, "mars_time", "Mars-Zeit")
+        self._mars_timezone = mars_timezone
+        self._attr_icon = "mdi:planet-outline"
+        self._update_interval = timedelta(seconds=30)  # Update every 30 seconds
+        
+        # Extract timezone offset from string (e.g., "MTC+3 (Location)" -> 3)
+        import re
+        match = re.search(r'MTC([+-]\d+)', mars_timezone)
+        self._timezone_offset = int(match.group(1)) if match else 0
+        
+        # Extract location name
+        match_loc = re.search(r'\((.*?)\)', mars_timezone)
+        self._location_name = match_loc.group(1) if match_loc else "Airy-0"
+
+    def calculate_time(self) -> str:
+        """Calculate current Mars Sol Time for selected timezone."""
+        now = datetime.now()
+        
+        # Mars Sol = 24h 39m 35.244s = 88775.244 seconds
+        # One Mars solar day is 1.02749125 Earth days
+        sol_duration_seconds = 88775.244
+        
+        # Calculate Mission Sol Time (MST) - starts at midnight UTC Jan 6, 2000
+        # This is approximately when Mars Global Surveyor began mapping
+        epoch = datetime(2000, 1, 6, 0, 0, 0)
+        
+        # Calculate elapsed time since epoch
+        elapsed = now - epoch
+        elapsed_seconds = elapsed.total_seconds()
+        
+        # Convert to Mars sols
+        total_sols = elapsed_seconds / sol_duration_seconds
+        
+        # Apply timezone offset (Mars has 24 time zones, each 15° or 1 hour)
+        # Mars rotates 14.62 degrees per hour (360° / 24.6229 hours)
+        adjusted_sols = total_sols + (self._timezone_offset / 24.0)
+        
+        # Get current sol number (day count)
+        sol_number = int(adjusted_sols)
+        
+        # Get time of sol (fractional part)
+        sol_fraction = adjusted_sols - sol_number
+        if sol_fraction < 0:
+            sol_fraction += 1
+            sol_number -= 1
+        
+        # Convert to Mars hours, minutes, seconds
+        # Mars uses 24-hour clock like Earth
+        mars_seconds_of_sol = sol_fraction * sol_duration_seconds
+        
+        mars_hours = int(mars_seconds_of_sol // 3699)  # 88775.244 / 24 = 3699 seconds per Mars hour
+        remaining_seconds = mars_seconds_of_sol % 3699
+        
+        mars_minutes = int(remaining_seconds // 61.65)  # 3699 / 60 = 61.65 seconds per Mars minute
+        mars_seconds = int(remaining_seconds % 61.65)
+        
+        # Ensure values are in valid range
+        mars_hours = mars_hours % 24
+        mars_minutes = mars_minutes % 60
+        mars_seconds = mars_seconds % 60
+        
+        # Determine if it's day or night (simple approximation)
+        # Sol rises at ~6:00, sets at ~18:00
+        if 6 <= mars_hours < 18:
+            period = "☉ Tag"  # Day
+        else:
+            period = "☽ Nacht"  # Night
+        
+        # Calculate Mars year (for reference)
+        # Mars year = 668.5907 sols
+        mars_year = int(total_sols / 668.5907) + 1
+        sol_of_year = int(total_sols % 668.5907) + 1
+        
+        # Format: HH:MM:SS Location | Sol X of Year Y | Day/Night
+        return f"{mars_hours:02d}:{mars_minutes:02d}:{mars_seconds:02d} {self._location_name} | Sol {sol_of_year}/MY{mars_year} | {period}"        
