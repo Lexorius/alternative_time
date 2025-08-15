@@ -344,6 +344,418 @@ class HexadecimalTimeSensor(AlternativeTimeSensorBase):
         
         return f".{hex_time:04X}"
 
+
+class MayaCalendarSensor(AlternativeTimeSensorBase):
+    """Sensor for displaying Maya Calendar."""
+
+    def __init__(self, base_name: str) -> None:
+        """Initialize the Maya calendar sensor."""
+        super().__init__(base_name, "maya_calendar", "Maya-Kalender")
+        self._attr_icon = "mdi:pyramid"
+        self._update_interval = timedelta(hours=1)  # Update every hour
+
+    def calculate_time(self) -> str:
+        """Calculate current Maya Calendar date."""
+        # Maya Long Count calculation
+        # Correlation constant: August 11, 3114 BCE (Gregorian)
+        maya_epoch = datetime(year=-3113, month=8, day=11)  # Note: Python doesn't support BCE directly
+        
+        # Use a simplified calculation for demonstration
+        # The actual Maya calendar is complex with multiple cycles
+        now = datetime.now()
+        
+        # Calculate days since a more recent epoch for simplicity
+        # Using December 21, 2012 as reference (13.0.0.0.0 in Maya)
+        reference_date = datetime(2012, 12, 21)
+        days_since_reference = (now - reference_date).days
+        
+        # Maya calendar units
+        kin = days_since_reference % 20
+        uinal = (days_since_reference // 20) % 18
+        tun = (days_since_reference // 360) % 20
+        katun = (days_since_reference // 7200) % 20
+        baktun = 13 + (days_since_reference // 144000)
+        
+        # Tzolk'in (260-day cycle)
+        tzolkin_day_number = ((days_since_reference + 4) % 13) + 1
+        tzolkin_day_names = ["Imix", "Ik", "Akbal", "Kan", "Chicchan", "Cimi", "Manik", 
+                            "Lamat", "Muluc", "Oc", "Chuen", "Eb", "Ben", "Ix", "Men", 
+                            "Cib", "Caban", "Etznab", "Cauac", "Ahau"]
+        tzolkin_day_name = tzolkin_day_names[days_since_reference % 20]
+        
+        # Haab (365-day cycle)
+        haab_months = ["Pop", "Uo", "Zip", "Zotz", "Tzec", "Xul", "Yaxkin", "Mol", 
+                      "Chen", "Yax", "Zac", "Ceh", "Mac", "Kankin", "Muan", "Pax", 
+                      "Kayab", "Cumku", "Uayeb"]
+        haab_day = days_since_reference % 365
+        haab_month_index = min(haab_day // 20, 18)
+        haab_day_of_month = (haab_day % 20)
+        haab_month = haab_months[haab_month_index]
+        
+        return f"{baktun}.{katun}.{tun}.{uinal}.{kin} | {tzolkin_day_number} {tzolkin_day_name} | {haab_day_of_month} {haab_month}"
+
+
+class NatoTimeSensor(AlternativeTimeSensorBase):
+    """Sensor for displaying NATO Time (basic format)."""
+
+    def __init__(self, base_name: str) -> None:
+        """Initialize the NATO time sensor."""
+        super().__init__(base_name, "nato_time", "NATO-Zeit")
+        self._attr_icon = "mdi:clock-time-eight"
+        self._update_interval = timedelta(seconds=1)
+
+    def calculate_time(self) -> str:
+        """Calculate current NATO Time."""
+        now = datetime.now()
+        return now.strftime("%d%H%M")
+
+
+class NatoTimeZoneSensor(AlternativeTimeSensorBase):
+    """Sensor for displaying NATO Time with Zone indicator."""
+
+    def __init__(self, base_name: str) -> None:
+        """Initialize the NATO time zone sensor."""
+        super().__init__(base_name, "nato_time_with_zone", "NATO-Zeit mit Zone")
+        self._attr_icon = "mdi:earth"
+        self._update_interval = timedelta(seconds=1)
+
+    def calculate_time(self) -> str:
+        """Calculate current NATO Time with zone."""
+        now = datetime.now()
+        
+        # Determine NATO time zone letter
+        # This is simplified - actual implementation would need proper timezone handling
+        if HAS_PYTZ:
+            try:
+                local_tz = pytz.timezone('Europe/Berlin')
+                local_time = local_tz.localize(datetime.now())
+                utc_offset = local_time.utcoffset().total_seconds() / 3600
+                
+                # Map UTC offset to NATO letter
+                nato_zones = {
+                    0: 'Z', 1: 'A', 2: 'B', 3: 'C', 4: 'D', 5: 'E',
+                    6: 'F', 7: 'G', 8: 'H', 9: 'I', 10: 'K', 11: 'L',
+                    12: 'M', -1: 'N', -2: 'O', -3: 'P', -4: 'Q', -5: 'R',
+                    -6: 'S', -7: 'T', -8: 'U', -9: 'V', -10: 'W', -11: 'X', -12: 'Y'
+                }
+                zone_letter = nato_zones.get(int(utc_offset), 'Z')
+            except:
+                zone_letter = 'Z'  # Default to Zulu time
+        else:
+            zone_letter = 'Z'
+        
+        return now.strftime(f"%d%H%M{zone_letter} %b %y").upper()
+
+
+class NatoTimeRescueSensor(AlternativeTimeSensorBase):
+    """Sensor for displaying NATO Time in German rescue service format."""
+
+    def __init__(self, base_name: str) -> None:
+        """Initialize the NATO rescue time sensor."""
+        super().__init__(base_name, "nato_rescue_time", "NATO-Zeit Rettungsdienst")
+        self._attr_icon = "mdi:ambulance"
+        self._update_interval = timedelta(seconds=1)
+
+    def calculate_time(self) -> str:
+        """Calculate current NATO Rescue Service Time."""
+        now = datetime.now()
+        
+        # German month abbreviations
+        german_months = {
+            1: "JAN", 2: "FEB", 3: "MÄR", 4: "APR", 5: "MAI", 6: "JUN",
+            7: "JUL", 8: "AUG", 9: "SEP", 10: "OKT", 11: "NOV", 12: "DEZ"
+        }
+        
+        month = german_months[now.month]
+        return f"{now.day:02d} {now.hour:02d}{now.minute:02d} {month} {now.year % 100:02d}"
+
+
+class AtticCalendarSensor(AlternativeTimeSensorBase):
+    """Sensor for displaying Attic Calendar (Ancient Athens)."""
+
+    def __init__(self, base_name: str) -> None:
+        """Initialize the Attic calendar sensor."""
+        super().__init__(base_name, "attic_calendar", "Attischer Kalender")
+        self._attr_icon = "mdi:pillar"
+        self._update_interval = timedelta(hours=1)
+
+    def calculate_time(self) -> str:
+        """Calculate current Attic Calendar date."""
+        now = datetime.now()
+        
+        # Attic months
+        months = [
+            "Hekatombaion", "Metageitnion", "Boedromion", "Pyanepsion",
+            "Maimakterion", "Poseideon", "Gamelion", "Anthesterion",
+            "Elaphebolion", "Mounichion", "Thargelion", "Skirophorion"
+        ]
+        
+        # Simplified calculation - actual Attic calendar was lunisolar
+        days_since_summer_solstice = (now.timetuple().tm_yday - 172) % 365
+        month_index = min(days_since_summer_solstice // 30, 11)
+        day_of_month = (days_since_summer_solstice % 30) + 1
+        
+        # Dekad (10-day period)
+        if day_of_month <= 10:
+            period = "ἱσταμένου"  # waxing
+        elif day_of_month <= 20:
+            period = "μεσοῦντος"  # middle
+        else:
+            period = "φθίνοντος"  # waning
+            day_of_month = 31 - day_of_month  # Count backwards in waning period
+        
+        # Archon (simplified - would rotate yearly)
+        archons = ["Nikias", "Kallias", "Kritias", "Alkibiades", "Kleisthenes"]
+        archon = archons[now.year % len(archons)]
+        
+        # Olympiad calculation
+        olympiad_year = ((now.year + 776) // 4)
+        olympiad_cycle = ((now.year + 776) % 4) + 1
+        
+        return f"{day_of_month} {period} {months[month_index]} | {archon} | Ol.{olympiad_year}.{olympiad_cycle}"
+
+
+class SuriyakatiCalendarSensor(AlternativeTimeSensorBase):
+    """Sensor for displaying Suriyakati Calendar (Thai)."""
+
+    def __init__(self, base_name: str) -> None:
+        """Initialize the Suriyakati calendar sensor."""
+        super().__init__(base_name, "suriyakati_calendar", "Suriyakati-Kalender")
+        self._attr_icon = "mdi:buddhism"
+        self._update_interval = timedelta(hours=1)
+
+    def calculate_time(self) -> str:
+        """Calculate current Suriyakati Calendar date."""
+        now = datetime.now()
+        
+        # Buddhist Era = CE + 543
+        buddhist_year = now.year + 543
+        
+        # Thai month names
+        thai_months = {
+            1: "มกราคม", 2: "กุมภาพันธ์", 3: "มีนาคม", 4: "เมษายน",
+            5: "พฤษภาคม", 6: "มิถุนายน", 7: "กรกฎาคม", 8: "สิงหาคม",
+            9: "กันยายน", 10: "ตุลาคม", 11: "พฤศจิกายน", 12: "ธันวาคม"
+        }
+        
+        # Thai numerals
+        thai_digits = "๐๑๒๓๔๕๖๗๘๙"
+        
+        def to_thai_number(n):
+            return ''.join(thai_digits[int(d)] for d in str(n))
+        
+        thai_day = to_thai_number(now.day)
+        thai_year = to_thai_number(buddhist_year)
+        thai_month = thai_months[now.month]
+        
+        # Romanized version
+        roman_months = {
+            1: "Makarakhom", 2: "Kumphaphan", 3: "Minakhom", 4: "Mesayon",
+            5: "Phruetsaphakhom", 6: "Mithunayon", 7: "Karakadakhom", 8: "Singhakhom",
+            9: "Kanyayon", 10: "Tulakhom", 11: "Phruetsachikayon", 12: "Thanwakhom"
+        }
+        
+        return f"{thai_day} {thai_month} {thai_year} | {now.day} {roman_months[now.month]} {buddhist_year} BE"
+
+
+class MinguoCalendarSensor(AlternativeTimeSensorBase):
+    """Sensor for displaying Minguo Calendar (Taiwan/ROC)."""
+
+    def __init__(self, base_name: str) -> None:
+        """Initialize the Minguo calendar sensor."""
+        super().__init__(base_name, "minguo_calendar", "Minguo-Kalender")
+        self._attr_icon = "mdi:calendar-text"
+        self._update_interval = timedelta(hours=1)
+
+    def calculate_time(self) -> str:
+        """Calculate current Minguo Calendar date."""
+        now = datetime.now()
+        
+        # Minguo year = CE - 1911 (Year 1 = 1912 CE)
+        minguo_year = now.year - 1911
+        
+        # Chinese month names
+        chinese_months = {
+            1: "一月", 2: "二月", 3: "三月", 4: "四月",
+            5: "五月", 6: "六月", 7: "七月", 8: "八月",
+            9: "九月", 10: "十月", 11: "十一月", 12: "十二月"
+        }
+        
+        # Chinese number conversion for day
+        chinese_numbers = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"]
+        
+        def to_chinese_day(day):
+            if day <= 10:
+                return chinese_numbers[day] + "日"
+            elif day < 20:
+                return "十" + chinese_numbers[day - 10] + "日"
+            elif day == 20:
+                return "二十日"
+            elif day < 30:
+                return "二十" + chinese_numbers[day - 20] + "日"
+            elif day == 30:
+                return "三十日"
+            else:
+                return "三十一日"
+        
+        chinese_date = f"民國{minguo_year}年 {chinese_months[now.month]} {to_chinese_day(now.day)}"
+        roman_date = f"Minguo {minguo_year}/{now.month:02d}/{now.day:02d}"
+        
+        return f"{chinese_date} | {roman_date}"
+
+
+class DarianCalendarSensor(AlternativeTimeSensorBase):
+    """Sensor for displaying Darian Calendar (Mars)."""
+
+    def __init__(self, base_name: str) -> None:
+        """Initialize the Darian calendar sensor."""
+        super().__init__(base_name, "darian_calendar", "Darischer Kalender")
+        self._attr_icon = "mdi:rocket"
+        self._update_interval = timedelta(hours=1)
+
+    def calculate_time(self) -> str:
+        """Calculate current Darian Calendar date."""
+        # Mars calendar calculation
+        # Reference: March 1, 1609 = Darian Year 0, Sol 1
+        
+        now = datetime.now()
+        reference_date = datetime(1609, 3, 1)
+        days_since_reference = (now - reference_date).days
+        
+        # Mars sol = 24h 39m 35s = 88775 seconds
+        # Mars year = 668.6 sols ≈ 687 Earth days
+        sols_since_reference = days_since_reference * 86400 / 88775
+        
+        mars_year = int(sols_since_reference / 668.6)
+        sol_of_year = int(sols_since_reference % 668.6) + 1
+        
+        # Darian months (24 months, alternating 27-28 sols)
+        months = [
+            "Sagittarius", "Dhanus", "Capricornus", "Makara",
+            "Aquarius", "Kumbha", "Pisces", "Mina",
+            "Aries", "Mesha", "Taurus", "Rishabha",
+            "Gemini", "Mithuna", "Cancer", "Karka",
+            "Leo", "Simha", "Virgo", "Kanya",
+            "Libra", "Tula", "Scorpius", "Vrishchika"
+        ]
+        
+        # Calculate month and sol
+        month_index = 0
+        sols_counted = 0
+        for i in range(24):
+            month_sols = 28 if i % 6 == 5 else 27  # Every 6th month has 28 sols
+            if sols_counted + month_sols >= sol_of_year:
+                month_index = i
+                sol_of_month = sol_of_year - sols_counted
+                break
+            sols_counted += month_sols
+        
+        # Week day (7-sol week)
+        weekdays = ["Sol Solis", "Sol Lunae", "Sol Martis", "Sol Mercurii", 
+                   "Sol Jovis", "Sol Veneris", "Sol Saturni"]
+        weekday = weekdays[int(sols_since_reference) % 7]
+        
+        # Season
+        if month_index < 6:
+            season = "Spring"
+        elif month_index < 12:
+            season = "Summer"
+        elif month_index < 18:
+            season = "Autumn"
+        else:
+            season = "Winter"
+        
+        return f"Sol {sol_of_month} {months[month_index]} {mars_year} | {weekday} | {season}"
+
+
+class MarsTimeSensor(AlternativeTimeSensorBase):
+    """Sensor for displaying Mars Time with timezone."""
+
+    def __init__(self, base_name: str, mars_timezone: str) -> None:
+        """Initialize the Mars time sensor."""
+        super().__init__(base_name, "mars_time", "Mars-Zeit")
+        self._attr_icon = "mdi:planet"
+        self._mars_timezone = mars_timezone
+        self._update_interval = timedelta(seconds=30)
+
+    def calculate_time(self) -> str:
+        """Calculate current Mars Time."""
+        now = datetime.now()
+        
+        # Extract timezone offset from string (e.g., "MTC+0 (Airy-0)" -> 0)
+        import re
+        match = re.search(r'MTC([+-]\d+)', self._mars_timezone)
+        if match:
+            offset = int(match.group(1))
+        else:
+            offset = 0
+        
+        # Extract location name
+        location_match = re.search(r'\((.*?)\)', self._mars_timezone)
+        location = location_match.group(1) if location_match else "Airy-0"
+        
+        # Mars sol duration in seconds
+        sol_duration = 88775.244
+        
+        # Calculate Mars Sol Date (MSD)
+        # Epoch: December 29, 1873 (MSD 0)
+        epoch = datetime(1873, 12, 29, 0, 0, 0)
+        seconds_since_epoch = (now - epoch).total_seconds()
+        msd = seconds_since_epoch / sol_duration
+        
+        # Current sol of Mars Year
+        # Mars Year 1 began April 11, 1955
+        mars_year_epoch = datetime(1955, 4, 11)
+        seconds_since_mars_epoch = (now - mars_year_epoch).total_seconds()
+        sols_since_mars_epoch = seconds_since_mars_epoch / sol_duration
+        
+        mars_year = int(sols_since_mars_epoch / 668.6) + 1
+        sol_of_year = int(sols_since_mars_epoch % 668.6) + 1
+        
+        # Calculate Mars time of day
+        sol_fraction = msd % 1
+        # Adjust for timezone
+        sol_fraction = (sol_fraction + offset / 24) % 1
+        
+        mars_hours = int(sol_fraction * 24)
+        mars_minutes = int((sol_fraction * 24 * 60) % 60)
+        mars_seconds = int((sol_fraction * 24 * 3600) % 60)
+        
+        # Day/Night indicator
+        if 6 <= mars_hours < 18:
+            day_night = "☉ Tag"
+        else:
+            day_night = "☽ Nacht"
+        
+        return f"{mars_hours:02d}:{mars_minutes:02d}:{mars_seconds:02d} {location} | Sol {sol_of_year}/MY{mars_year} | {day_night}"
+
+
+class EveOnlineTimeSensor(AlternativeTimeSensorBase):
+    """Sensor for displaying EVE Online Time (New Eden Standard Time)."""
+
+    def __init__(self, base_name: str) -> None:
+        """Initialize the EVE Online time sensor."""
+        super().__init__(base_name, "eve_online", "EVE Online Zeit")
+        self._attr_icon = "mdi:space-station"
+        self._update_interval = timedelta(seconds=1)
+
+    def calculate_time(self) -> str:
+        """Calculate current EVE Online Time."""
+        # EVE Online uses UTC and has its own calendar
+        # YC (Yoiul Conference) year starts from YC 0 = 23236 AD
+        # For gameplay purposes, YC 105 = 2003 (EVE launch year)
+        
+        now = datetime.utcnow()  # EVE uses UTC
+        
+        # Calculate YC year (starts from 2003 = YC 105)
+        eve_year = 105 + (now.year - 2003)
+        
+        # EVE uses standard Earth months and days
+        # Format: YC XXX.MM.DD HH:MM:SS
+        
+        return f"YC {eve_year}.{now.month:02d}.{now.day:02d} {now.hour:02d}:{now.minute:02d}:{now.second:02d}"
+
+
 class ShireCalendarSensor(AlternativeTimeSensorBase):
     """Sensor for displaying Shire Reckoning (Hobbit Calendar)."""
 
@@ -605,4 +1017,4 @@ class RivendellCalendarSensor(AlternativeTimeSensorBase):
         
         # Format: F.A. Year, Season Day (Weekday) | Time
         # Example: "F.A. 6025, Tuilë 22 (Elenya) | 🌞 Ára - Gates of Summer"
-        return f"F.A. {fourth_age_year}, {season_name} {day_in_season} ({elven_day}) | {time_emoji} {time_name}{event_str}"        
+        return f"F.A. {fourth_age_year}, {season_name} {day_in_season} ({elven_day}) | {time_emoji} {time_name}{event_str}"

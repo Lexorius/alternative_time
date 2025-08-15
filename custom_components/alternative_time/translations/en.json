@@ -21,9 +21,11 @@
           "enable_attic": "Enable Attic Calendar",
           "enable_suriyakati": "Enable Suriyakati Calendar (Thai)",
           "enable_minguo": "Enable Minguo Calendar (Taiwan)",
-          "enable_darian": "Enable Darian Calendar (Mars)"
-		  "enable_eve": "Enable EVE Online Time",
-		  "enable_shire": "Enable Shire Calendar (Hobbits)",
+          "enable_darian": "Enable Darian Calendar (Mars)",
+          "enable_mars_time": "Enable Mars Time with Timezone",
+          "mars_timezone": "Select Mars Timezone",
+          "enable_eve": "Enable EVE Online Time",
+          "enable_shire": "Enable Shire Calendar (Hobbits)",
           "enable_rivendell": "Enable Calendar of Imladris (Elves)"
         },
         "data_description": {
@@ -43,9 +45,11 @@
           "enable_attic": "Ancient Athenian lunisolar calendar with Archon and Olympiad (e.g., 5 histamenou Hekatombaion)",
           "enable_suriyakati": "Thai calendar with Buddhist Era, BE = CE+543 (e.g., 2568 BE)",
           "enable_minguo": "Taiwan/ROC calendar, Year 1 = 1912 CE (e.g., Minguo 114)",
-          "enable_darian": "Mars calendar with 24 months and 668 sols per year (e.g., 15 Gemini 217)"
-		  "enable_eve": "New Eden Standard Time from EVE Online (e.g., YC 127.03.15 14:30:45)",
-		  "enable_shire": "Hobbit calendar with 7 meals (e.g., S.R. 1445, 22 Halimath)",
+          "enable_darian": "Mars calendar with 24 months and 668 sols per year (e.g., 15 Gemini 217)",
+          "enable_mars_time": "Mars time with selectable timezone (e.g., 14:25:30 Olympus Mons)",
+          "mars_timezone": "One of 24 Mars timezones from MTC-12 to MTC+12",
+          "enable_eve": "New Eden Standard Time from EVE Online (e.g., YC 127.03.15 14:30:45)",
+          "enable_shire": "Hobbit calendar with 7 meals (e.g., S.R. 1445, 22 Halimath)",
           "enable_rivendell": "Elven calendar with 6 seasons (e.g., F.A. 6025, Tuilë 22)"
         }
       }
