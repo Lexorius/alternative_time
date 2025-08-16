@@ -250,6 +250,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         current_cat = self._category_order[self._category_index]
         # Calendars in this category
         cals = [(cid, info) for cid, info in (self._discovered_calendars or {}).items() if str(info.get("category") or "uncategorized").replace("religious","religion")==current_cat]
+        # If category is empty, skip to next
+        if not cals:
+            self._category_index += 1
+            return await self.async_step_select_calendars_by_category()
         # Build labels: Name — Description
         options_dict = {}
         for cid, info in sorted(cals):
@@ -277,7 +281,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             )
         # Save selected for this category and continue
-        selected = user_input.get("calendars") or []
+        selected = list(user_input.get("calendars") or [])
         selected = [cid for cid in selected if any(cid==x[0] for x in cals)]
         merged = [c for c in self._selected_calendars if c not in selected]
         merged.extend(selected)
@@ -290,7 +294,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # If returning from a previous plugin form, store data
         if user_input is not None and self._option_index > 0:
             prev_cid = self._option_calendars[self._option_index - 1]
-            self._selected_options[prev_cid] = user_input
+            normalized = {}
+            for k, v in (user_input or {}).items():
+                if isinstance(k, str) and "] " in k:
+                    raw_key = k.split("] ", 1)[1]
+                else:
+                    raw_key = k
+                normalized[raw_key] = v
+            self._selected_options[prev_cid] = normalized
 
         # Are we done with all option-bearing calendars?
         if self._option_index >= len(self._option_calendars):
@@ -308,22 +319,23 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             typ = (meta or {}).get("type")
             default = (meta or {}).get("default")
             desc = getattr(self, "_lcal", lambda i,k,default="": (meta.get("description",{}) or {}).get("en",""))(meta, "description", default="")
-            # Special default for timezone
             if key.lower() == "timezone":
                 try:
                     sys_tz = (getattr(self.hass.config, "time_zone", None) or default or "UTC")
                 except Exception:
                     sys_tz = default or "UTC"
                 default = sys_tz
+            pretty_prefix = f"[{name}] "
+            pretty_key = pretty_prefix + key
             if typ == "boolean":
-                schema_dict[vol.Optional(f"{key}", default=bool(default) if default is not None else False)] = bool
+                schema_dict[vol.Optional(pretty_key, default=bool(default) if default is not None else False)] = bool
             elif typ == "select":
                 options = self._build_select_options(cid, key, meta, info)
-                schema_dict[vol.Optional(f"{key}", default=default if default is not None else (options[0]["value"] if options else ""))] = SelectSelector(SelectSelectorConfig(options=options, multiple=False, mode=SelectSelectorMode.DROPDOWN))
+                schema_dict[vol.Optional(pretty_key, default=default if default is not None else (options[0]["value"] if options else ""))] = SelectSelector(SelectSelectorConfig(options=options, multiple=False, mode=SelectSelectorMode.DROPDOWN))
             elif typ == "number":
-                schema_dict[vol.Optional(f"{key}", default=default if default is not None else 0)] = vol.Coerce(float)
+                schema_dict[vol.Optional(pretty_key, default=default if default is not None else 0)] = vol.Coerce(float)
             else:
-                schema_dict[vol.Optional(f"{key}", default=default if default is not None else "")] = str
+                schema_dict[vol.Optional(pretty_key, default=default if default is not None else "")] = str
         schema = vol.Schema(schema_dict)
         self._option_index += 1
         return self.async_show_form(
