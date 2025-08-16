@@ -372,4 +372,4 @@ class DarianCalendarSensor(AlternativeTimeSensorBase):
         # Set state to formatted Darian date
         self._state = self._darian_date["full_date"]
         
-        _LOGGER.debug(f"Updated Darian Calendar to {self._state}")
+        _LOGGER.debug(f"Updated Darian Calendar to {self._state}")  
