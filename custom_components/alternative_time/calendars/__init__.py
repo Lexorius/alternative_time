@@ -1,1 +1,1 @@
-""
+"""Config for calendars"""
