@@ -196,6 +196,23 @@ def export_discovered_calendars() -> Dict[str, Dict[str, Any]]:
 
 class AlternativeTimeSensorBase(SensorEntity):
     """Base class for Alternative Time System sensors."""
+
+    @property
+    def extra_state_attributes(self) -> Dict[str, Any]:
+        """Normalized parent attributes as a dict (never None).
+
+        HA's SensorEntity.extra_state_attributes returns None by default.
+        Returning a dict here ensures plugin code that calls
+        ``super().extra_state_attributes.update(...)`` won't crash.
+        """
+        parent = getattr(super(), "extra_state_attributes", None)
+        try:
+            # If parent is a property on base class, access its value
+            parent_val = super().extra_state_attributes  # type: ignore[attr-defined]
+        except Exception:
+            parent_val = None
+        base_attrs = parent_val if isinstance(parent_val, dict) else (parent_val or {})
+        return dict(base_attrs)
     
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the sensor."""
