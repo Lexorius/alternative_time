@@ -56,6 +56,7 @@ from .calendars.rivendell import RivendellCalendarSensor
 from .calendars.tamriel import TamrielCalendarSensor
 from .calendars.egyptian import EgyptianCalendarSensor
 from .calendars.discworld import DiscworldCalendarSensor
+from .calendars.roman import RomanCalendarSensor
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -144,5 +145,8 @@ async def async_setup_entry(
     
     if config.get(CONF_ENABLE_DISCWORLD, False):
         sensors.append(DiscworldCalendarSensor(base_name))
+        
+    if config.get(CONF_ENABLE_ROMAN, False):
+        sensors.append(RomanCalendarSensor(base_name))
 
     async_add_entities(sensors, True)
