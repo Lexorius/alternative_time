@@ -1,0 +1,86 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure Alternative Time Systems",
+        "description": "Select the time systems you want to enable.",
+        "data": {
+          "name": "Integration name",
+          "enable_timezone": "Enable Timezone",
+          "timezone": "Select Timezone",
+          "enable_stardate": "Enable Stardate",
+          "enable_swatch": "Enable Swatch Internet Time",
+          "enable_unix": "Enable Unix Timestamp",
+          "enable_julian": "Enable Julian Date",
+          "enable_decimal": "Enable Decimal Time",
+          "enable_hexadecimal": "Enable Hexadecimal Time",
+          "enable_maya": "Enable Maya Calendar",
+          "enable_nato": "Enable NATO DTG Time",
+          "enable_nato_zone": "Enable NATO Zone Time Indicator",
+          "enable_nato_rescue": "Enable NATO Rescue Time",
+          "enable_attic": "Enable Attic Calendar",
+          "enable_suriyakati": "Enable Suriyakati Calendar",
+          "enable_minguo": "Enable Minguo Calendar (Taiwan/ROC)",
+          "enable_darian": "Enable Darian Mars Calendar",
+          "enable_mars_time": "Enable Mars Time with Timezones",
+          "mars_timezone": "Select Mars Timezone",
+          "enable_eve": "Enable EVE Online Time",
+          "enable_shire": "Enable Shire Calendar (Hobbit)",
+          "enable_rivendell": "Enable Rivendell Calendar (Elven)",
+          "enable_tamriel": "Enable Tamriel Calendar (Elder Scrolls)",
+          "enable_egyptian": "Enable Egyptian Calendar",
+          "enable_discworld": "Enable Discworld Calendar",
+          "enable_roman": "Enable Roman Calendar"
+        }
+      },
+      "confirm": {
+        "title": "Confirmation",
+        "description": "This integration displays various alternative time systems. Some of these are experimental or fictional. Calculations may contain inaccuracies. Do you want to continue?"
+      }
+    },
+    "error": {
+      "unknown": "Unexpected error",
+      "invalid_timezone": "Invalid timezone selected",
+      "no_systems_selected": "Please select at least one time system"
+    },
+    "abort": {
+      "already_configured": "Integration is already configured",
+      "user_cancelled": "Configuration cancelled by user"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Alternative Time Systems Options",
+        "description": "Adjust the settings for your time systems.",
+        "data": {
+          "enable_timezone": "Enable Timezone",
+          "timezone": "Select Timezone",
+          "enable_stardate": "Enable Stardate",
+          "enable_swatch": "Enable Swatch Internet Time",
+          "enable_unix": "Enable Unix Timestamp",
+          "enable_julian": "Enable Julian Date",
+          "enable_decimal": "Enable Decimal Time",
+          "enable_hexadecimal": "Enable Hexadecimal Time",
+          "enable_maya": "Enable Maya Calendar",
+          "enable_nato": "Enable NATO DTG Time",
+          "enable_nato_zone": "Enable NATO Zone Time Indicator",
+          "enable_nato_rescue": "Enable NATO Rescue Time",
+          "enable_attic": "Enable Attic Calendar",
+          "enable_suriyakati": "Enable Suriyakati Calendar",
+          "enable_minguo": "Enable Minguo Calendar (Taiwan/ROC)",
+          "enable_darian": "Enable Darian Mars Calendar",
+          "enable_mars_time": "Enable Mars Time with Timezones",
+          "mars_timezone": "Select Mars Timezone",
+          "enable_eve": "Enable EVE Online Time",
+          "enable_shire": "Enable Shire Calendar (Hobbit)",
+          "enable_rivendell": "Enable Rivendell Calendar (Elven)",
+          "enable_tamriel": "Enable Tamriel Calendar (Elder Scrolls)",
+          "enable_egyptian": "Enable Egyptian Calendar",
+          "enable_discworld": "Enable Discworld Calendar",
+          "enable_roman": "Enable Roman Calendar"
+        }
+      }
+    }
+  }
+}
