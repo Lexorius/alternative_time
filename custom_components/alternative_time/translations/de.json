@@ -117,35 +117,6 @@
           "enable_discworld": "Terry Pratchetts Scheibenwelt-Kalender mit 13 Monaten und 8-Tage-Woche"
         }
       },
-        "data": {
-          "name": "Name der Integration",
-          "enable_timezone": "Zeitzone aktivieren",
-          "timezone": "Zeitzone auswählen",
-          "enable_stardate": "Sternzeit aktivieren",
-          "enable_swatch": "Swatch Internet Time aktivieren",
-          "enable_unix": "Unix Timestamp aktivieren",
-          "enable_julian": "Julianisches Datum aktivieren",
-          "enable_decimal": "Dezimalzeit aktivieren",
-          "enable_hexadecimal": "Hexadezimalzeit aktivieren",
-          "enable_maya": "Maya-Kalender aktivieren",
-          "enable_nato": "NATO DTG Zeit aktivieren",
-          "enable_nato_zone": "NATO Zeitzonen-Indikator aktivieren",
-          "enable_nato_rescue": "NATO Rettungszeit aktivieren",
-          "enable_attic": "Attischer Kalender aktivieren",
-          "enable_suriyakati": "Suriyakati-Kalender aktivieren",
-          "enable_minguo": "Minguo-Kalender (Taiwan/ROC) aktivieren",
-          "enable_darian": "Darianischer Mars-Kalender aktivieren",
-          "enable_mars_time": "Mars-Zeit mit Zeitzonen aktivieren",
-          "mars_timezone": "Mars-Zeitzone auswählen",
-          "enable_eve": "EVE Online Zeit aktivieren",
-          "enable_shire": "Auenland-Kalender (Hobbit) aktivieren",
-          "enable_rivendell": "Bruchtal-Kalender (Elbisch) aktivieren",
-          "enable_tamriel": "Tamriel-Kalender (Elder Scrolls) aktivieren",
-          "enable_egyptian": "Ägyptischer Kalender aktivieren",
-          "enable_discworld": "Scheibenwelt-Kalender aktivieren",
-          "enable_roman": "Römischer Kalender aktivieren"
-        }
-      },
       "confirm": {
         "title": "Bestätigung",
         "description": "Diese Integration zeigt verschiedene alternative Zeitsysteme an. Einige davon sind experimentell oder fiktional. Die Berechnungen können Ungenauigkeiten enthalten. Möchten Sie fortfahren?"
@@ -192,6 +163,25 @@
           "enable_egyptian": "Ägyptischer Kalender aktivieren",
           "enable_discworld": "Scheibenwelt-Kalender aktivieren",
           "enable_roman": "Römischer Kalender aktivieren"
+        }
+      },
+      "military": {
+        "title": "Militärische Zeit-Optionen",
+        "description": "Konfigurieren Sie militärische Zeitsysteme.",
+        "data": {
+          "enable_nato": "NATO DTG Zeit aktivieren",
+          "enable_nato_zone": "NATO Zeitzonen-Indikator aktivieren",
+          "enable_nato_rescue": "NATO Rettungszeit aktivieren"
+        }
+      },
+      "historical": {
+        "title": "Historische Kalender-Optionen",
+        "description": "Konfigurieren Sie historische Kalender.",
+        "data": {
+          "enable_maya": "Maya-Kalender aktivieren",
+          "enable_egyptian": "Ägyptischer Kalender aktivieren",
+          "enable_roman": "Römischer Kalender aktivieren",
+          "enable_stardate": "Sternzeit aktivieren"
         }
       }
     }
