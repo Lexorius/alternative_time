@@ -6,7 +6,18 @@ import logging
 from typing import Dict, Any
 
 from homeassistant.core import HomeAssistant
-from ..sensor import AlternativeTimeSensorBase
+from homeassistant.config_entries import ConfigEntry
+
+# WICHTIG: Import der Basis-Klasse direkt aus sensor.py
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+try:
+    from ..sensor import AlternativeTimeSensorBase
+except ImportError:
+    # Fallback für direkten Import
+    from sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,41 +61,17 @@ CALENDAR_INFO = {
     
     # Short descriptions for UI
     "description": {
-        "en": "Military date-time without zone: DDHHMM (e.g. 151430)",
-        "de": "Militärische Datum-Zeit ohne Zone: DDHHMM (z.B. 151430)",
-        "es": "Fecha-hora militar sin zona: DDHHMM (ej. 151430)",
-        "fr": "Date-heure militaire sans zone : DDHHMM (ex. 151430)",
-        "it": "Data-ora militare senza zona: DDHHMM (es. 151430)",
-        "nl": "Militaire datum-tijd zonder zone: DDHHMM (bijv. 151430)",
-        "pt": "Data-hora militar sem zona: DDHHMM (ex. 151430)",
-        "ru": "Военное время-дата без зоны: DDHHMM (напр. 151430)",
-        "ja": "ゾーンなし軍事日時：DDHHMM（例：151430）",
-        "zh": "无时区军事日期时间：DDHHMM（例：151430）",
-        "ko": "시간대 없는 군사 날짜-시간: DDHHMM (예: 151430)"
-    },
-    
-    # Detailed information for documentation
-    "detailed_info": {
-        "en": {
-            "overview": "NATO Date-Time Group (DTG) is the standard military time format",
-            "basic": "Basic format: DDHHMM (day, hour, minute)",
-            "zone": "With zone: DDHHMM[Z] MON YY (Z=Zulu/UTC)",
-            "zones": "A-Z (except J) represent time zones from UTC+1 to UTC-12",
-            "j_omitted": "J is omitted to avoid confusion with I",
-            "usage": "Used by NATO forces and many military organizations worldwide",
-            "precision": "Provides unambiguous time references across time zones",
-            "communications": "Critical for coordinated military operations"
-        },
-        "de": {
-            "overview": "NATO Date-Time Group (DTG) ist das militärische Standardzeitformat",
-            "basic": "Basisformat: DDHHMM (Tag, Stunde, Minute)",
-            "zone": "Mit Zone: DDHHMM[Z] MON YY (Z=Zulu/UTC)",
-            "zones": "A-Z (außer J) repräsentieren Zeitzonen von UTC+1 bis UTC-12",
-            "j_omitted": "J wird ausgelassen, um Verwechslung mit I zu vermeiden",
-            "usage": "Verwendet von NATO-Streitkräften und vielen Militärorganisationen weltweit",
-            "precision": "Bietet eindeutige Zeitreferenzen über Zeitzonen hinweg",
-            "communications": "Kritisch für koordinierte militärische Operationen"
-        }
+        "en": "Military date-time format (DTG)",
+        "de": "Militärisches Datum-Zeit-Format (DTG)",
+        "es": "Formato militar de fecha-hora (DTG)",
+        "fr": "Format militaire date-heure (DTG)",
+        "it": "Formato militare data-ora (DTG)",
+        "nl": "Militair datum-tijd formaat (DTG)",
+        "pt": "Formato militar data-hora (DTG)",
+        "ru": "Военный формат даты-времени (DTG)",
+        "ja": "軍事日時フォーマット（DTG）",
+        "zh": "军事日期时间格式（DTG）",
+        "ko": "군사 날짜-시간 형식 (DTG)"
     },
     
     # NATO-specific data
@@ -118,69 +105,94 @@ CALENDAR_INFO = {
             -12: {"letter": "Y", "name": "Yankee", "offset": -12}
         },
         
-        # Variants
-        "variants": {
-            "basic": "NatoTimeSensor",
-            "zone": "NatoTimeZoneSensor",
-            "rescue": "NatoTimeRescueSensor"
+        # German month abbreviations for rescue service format
+        "german_months": {
+            1: "JAN", 2: "FEB", 3: "MÄR", 4: "APR",
+            5: "MAI", 6: "JUN", 7: "JUL", 8: "AUG",
+            9: "SEP", 10: "OKT", 11: "NOV", 12: "DEZ"
         }
     },
     
-    # Additional metadata
-    "reference_url": "https://en.wikipedia.org/wiki/Date-time_group",
-    "documentation_url": "https://www.nato.int",
-    "origin": "NATO military standards",
-    "created_by": "NATO",
-    
-    # Example format
-    "example": "151430",
-    "example_meaning": "15th day of month, 14:30 local time",
-    
-    # Related calendars
-    "related": ["gregorian", "utc", "military"],
-    
-    # Tags for searching and filtering
-    "tags": [
-        "military", "nato", "dtg", "tactical", "operational",
-        "zulu", "utc", "coordination", "defense"
-    ],
-    
-    # Special features
-    "features": {
-        "timezone_letters": True,
-        "unambiguous": True,
-        "compact_format": True,
-        "military_standard": True,
-        "precision": "minute"
-    },
-    
     # Configuration options for this calendar
-    "config_options": {}
+    "config_options": {
+        "format_type": {
+            "type": "select",
+            "default": "basic",
+            "options": ["basic", "zone", "rescue"],
+            "description": {
+                "en": "NATO time format variant",
+                "de": "NATO-Zeitformat-Variante"
+            }
+        },
+        "show_zone_name": {
+            "type": "boolean",
+            "default": False,
+            "description": {
+                "en": "Show phonetic zone name (e.g., Zulu)",
+                "de": "Phonetischen Zonennamen anzeigen (z.B. Zulu)"
+            }
+        },
+        "use_local_zone": {
+            "type": "boolean",
+            "default": True,
+            "description": {
+                "en": "Use local timezone (otherwise UTC/Zulu)",
+                "de": "Lokale Zeitzone verwenden (sonst UTC/Zulu)"
+            }
+        }
+    }
 }
 
 
 class NatoTimeSensor(AlternativeTimeSensorBase):
-    """Sensor for displaying NATO Time (basic format)."""
+    """Sensor for displaying NATO Time in various formats."""
     
     # Class-level update interval
     UPDATE_INTERVAL = 1  # Update every second
     
-    def __init__(self, base_name: str, hass: HomeAssistant) -> None:
+    def __init__(self, base_name: str, hass: HomeAssistant, config_entry: ConfigEntry = None) -> None:
         """Initialize the NATO time sensor."""
         super().__init__(base_name, hass)
+        
+        # Store CALENDAR_INFO as instance variable for _translate method
+        self._calendar_info = CALENDAR_INFO
         
         # Get translated name from metadata
         calendar_name = self._translate('name', 'NATO Time')
         
+        # Load configuration options from config_entry if available
+        plugin_options = {}
+        if config_entry and config_entry.data:
+            plugin_options = config_entry.data.get("plugin_options", {}).get("nato", {})
+        
+        # Configuration options with defaults
+        self._format_type = plugin_options.get("format_type", "basic")
+        self._show_zone_name = plugin_options.get("show_zone_name", False)
+        self._use_local_zone = plugin_options.get("use_local_zone", True)
+        
+        # Adjust name based on format type
+        format_suffix = {
+            "basic": "",
+            "zone": " with Zone",
+            "rescue": " (Rescue Service)"
+        }.get(self._format_type, "")
+        
         # Set sensor attributes
-        self._attr_name = f"{base_name} {calendar_name}"
-        self._attr_unique_id = f"{base_name}_nato_time"
-        self._attr_icon = CALENDAR_INFO.get("icon", "mdi:clock-time-eight")
+        self._attr_name = f"{base_name} {calendar_name}{format_suffix}"
+        self._attr_unique_id = f"{base_name}_nato_time_{self._format_type}"
+        
+        # Set icon based on format type
+        icon_map = {
+            "basic": "mdi:clock-time-eight",
+            "zone": "mdi:earth",
+            "rescue": "mdi:ambulance"
+        }
+        self._attr_icon = icon_map.get(self._format_type, CALENDAR_INFO.get("icon", "mdi:clock-time-eight"))
         
         # NATO data
         self._nato_data = CALENDAR_INFO["nato_data"]
         
-        _LOGGER.debug(f"Initialized NATO Time sensor: {self._attr_name}")
+        _LOGGER.debug(f"Initialized NATO Time sensor ({self._format_type}): {self._attr_name}")
     
     @property
     def state(self):
@@ -192,6 +204,10 @@ class NatoTimeSensor(AlternativeTimeSensorBase):
         """Return the state attributes."""
         attrs = super().extra_state_attributes
         
+        # Ensure attrs is a dictionary
+        if attrs is None:
+            attrs = {}
+        
         # Add NATO-specific attributes
         if hasattr(self, '_nato_time'):
             attrs.update(self._nato_time)
@@ -199,24 +215,151 @@ class NatoTimeSensor(AlternativeTimeSensorBase):
             # Add description in user's language
             attrs["description"] = self._translate('description')
             
+            # Add format-specific description
+            if self._format_type == "basic":
+                attrs["format_description"] = "Basic format: DDHHMM (day, hour, minute)"
+            elif self._format_type == "zone":
+                attrs["format_description"] = "Full DTG: DDHHMM[Zone] MON YY"
+            elif self._format_type == "rescue":
+                attrs["format_description"] = "German rescue service: DD HHMM MONAT YY"
+            
             # Add reference
             attrs["reference"] = CALENDAR_INFO.get('reference_url', '')
+            
+            # Add current configuration
+            attrs["format_type"] = self._format_type
+            attrs["show_zone_name"] = self._show_zone_name
+            attrs["use_local_zone"] = self._use_local_zone
         
         return attrs
     
+    def _get_timezone_info(self, earth_time: datetime) -> tuple:
+        """Get NATO timezone letter and name."""
+        zone_letter = 'Z'  # Default to Zulu time
+        zone_name = 'Zulu'
+        utc_offset = 0
+        
+        if self._use_local_zone and HAS_PYTZ:
+            try:
+                # Try to get system timezone from Home Assistant
+                if hasattr(self._hass.config, 'time_zone'):
+                    tz_name = self._hass.config.time_zone
+                    local_tz = pytz.timezone(tz_name)
+                    local_time = local_tz.localize(earth_time.replace(tzinfo=None))
+                    utc_offset = int(local_time.utcoffset().total_seconds() / 3600)
+                    
+                    if utc_offset in self._nato_data["zones"]:
+                        zone_info = self._nato_data["zones"][utc_offset]
+                        zone_letter = zone_info["letter"]
+                        zone_name = zone_info["name"]
+            except Exception as e:
+                _LOGGER.debug(f"Could not determine local timezone: {e}")
+        
+        return zone_letter, zone_name, utc_offset
+    
     def _calculate_nato_time(self, earth_time: datetime) -> Dict[str, Any]:
-        """Calculate NATO Time from standard time."""
+        """Calculate NATO Time based on selected format."""
+        
+        if self._format_type == "basic":
+            return self._calculate_basic_format(earth_time)
+        elif self._format_type == "zone":
+            return self._calculate_zone_format(earth_time)
+        elif self._format_type == "rescue":
+            return self._calculate_rescue_format(earth_time)
+        else:
+            return self._calculate_basic_format(earth_time)
+    
+    def _calculate_basic_format(self, earth_time: datetime) -> Dict[str, Any]:
+        """Calculate basic NATO Time format (DDHHMM)."""
         
         # Basic format: DDHHMM
         formatted = earth_time.strftime("%d%H%M")
+        
+        # Get timezone info for attributes
+        zone_letter, zone_name, utc_offset = self._get_timezone_info(earth_time)
+        
+        # Add zone name if configured
+        display = formatted
+        if self._show_zone_name:
+            display = f"{formatted} ({zone_name})"
         
         result = {
             "day": earth_time.day,
             "hour": earth_time.hour,
             "minute": earth_time.minute,
+            "second": earth_time.second,
+            "zone_letter": zone_letter,
+            "zone_name": zone_name,
+            "utc_offset": utc_offset,
             "formatted": formatted,
             "standard_time": earth_time.strftime("%Y-%m-%d %H:%M:%S"),
-            "full_display": formatted
+            "full_display": display
+        }
+        
+        return result
+    
+    def _calculate_zone_format(self, earth_time: datetime) -> Dict[str, Any]:
+        """Calculate NATO Time with Zone format (DDHHMM[Zone] MON YY)."""
+        
+        # Get timezone info
+        zone_letter, zone_name, utc_offset = self._get_timezone_info(earth_time)
+        
+        # Format: DDHHMM[Zone] MON YY
+        formatted = earth_time.strftime(f"%d%H%M{zone_letter} %b %y").upper()
+        
+        # Add zone name if configured
+        display = formatted
+        if self._show_zone_name:
+            display = f"{formatted} ({zone_name})"
+        
+        result = {
+            "day": earth_time.day,
+            "hour": earth_time.hour,
+            "minute": earth_time.minute,
+            "second": earth_time.second,
+            "zone_letter": zone_letter,
+            "zone_name": zone_name,
+            "utc_offset": utc_offset,
+            "month": earth_time.strftime("%b").upper(),
+            "year": earth_time.year % 100,
+            "formatted": formatted,
+            "standard_time": earth_time.strftime("%Y-%m-%d %H:%M:%S"),
+            "full_display": display
+        }
+        
+        return result
+    
+    def _calculate_rescue_format(self, earth_time: datetime) -> Dict[str, Any]:
+        """Calculate German rescue service format (DD HHMM MONAT YY)."""
+        
+        # Get German month abbreviation
+        month = self._nato_data["german_months"][earth_time.month]
+        
+        # Format with space between day and time
+        formatted = f"{earth_time.day:02d} {earth_time.hour:02d}{earth_time.minute:02d} {month} {earth_time.year % 100:02d}"
+        
+        # Get timezone info for attributes
+        zone_letter, zone_name, utc_offset = self._get_timezone_info(earth_time)
+        
+        # Add zone name if configured
+        display = formatted
+        if self._show_zone_name:
+            display = f"{formatted} ({zone_name})"
+        
+        result = {
+            "day": earth_time.day,
+            "hour": earth_time.hour,
+            "minute": earth_time.minute,
+            "second": earth_time.second,
+            "zone_letter": zone_letter,
+            "zone_name": zone_name,
+            "utc_offset": utc_offset,
+            "month_german": month,
+            "year": earth_time.year % 100,
+            "formatted": formatted,
+            "organizations": "Feuerwehr, Rettungsdienst, THW, Katastrophenschutz",
+            "standard_time": earth_time.strftime("%Y-%m-%d %H:%M:%S"),
+            "full_display": display
         }
         
         return result
@@ -227,185 +370,6 @@ class NatoTimeSensor(AlternativeTimeSensorBase):
         self._nato_time = self._calculate_nato_time(now)
         
         # Set state to formatted NATO time
-        self._state = self._nato_time["formatted"]
+        self._state = self._nato_time["full_display"]
         
         _LOGGER.debug(f"Updated NATO Time to {self._state}")
-
-
-class NatoTimeZoneSensor(AlternativeTimeSensorBase):
-    """Sensor for displaying NATO Time with Zone indicator (DTG)."""
-    
-    # Class-level update interval
-    UPDATE_INTERVAL = 1  # Update every second
-    
-    def __init__(self, base_name: str, hass: HomeAssistant) -> None:
-        """Initialize the NATO time zone sensor."""
-        super().__init__(base_name, hass)
-        
-        # Get translated name from metadata
-        calendar_name = "NATO Time with Zone"
-        
-        # Set sensor attributes
-        self._attr_name = f"{base_name} {calendar_name}"
-        self._attr_unique_id = f"{base_name}_nato_time_zone"
-        self._attr_icon = "mdi:earth"
-        
-        # NATO data
-        self._nato_data = CALENDAR_INFO["nato_data"]
-        
-        _LOGGER.debug(f"Initialized NATO Time Zone sensor: {self._attr_name}")
-    
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-    
-    @property
-    def extra_state_attributes(self) -> Dict[str, Any]:
-        """Return the state attributes."""
-        attrs = super().extra_state_attributes
-        
-        # Add NATO-specific attributes
-        if hasattr(self, '_nato_time'):
-            attrs.update(self._nato_time)
-            
-            # Add description
-            attrs["description"] = "Full military DTG: DDHHMM[Zone] MON YY"
-            
-            # Add reference
-            attrs["reference"] = CALENDAR_INFO.get('reference_url', '')
-        
-        return attrs
-    
-    def _calculate_nato_time_zone(self, earth_time: datetime) -> Dict[str, Any]:
-        """Calculate NATO Time with Zone from standard time."""
-        
-        # Determine NATO timezone letter
-        zone_letter = 'Z'  # Default to Zulu time
-        zone_name = 'Zulu'
-        utc_offset = 0
-        
-        if HAS_PYTZ:
-            try:
-                # Try to get local timezone offset
-                local_tz = pytz.timezone('Europe/Berlin')  # Default
-                local_time = local_tz.localize(datetime.now())
-                utc_offset = int(local_time.utcoffset().total_seconds() / 3600)
-                if utc_offset in self._nato_data["zones"]:
-                    zone_info = self._nato_data["zones"][utc_offset]
-                    zone_letter = zone_info["letter"]
-                    zone_name = zone_info["name"]
-            except Exception:
-                pass
-        
-        # Format: DDHHMM[Zone] MON YY
-        formatted = earth_time.strftime(f"%d%H%M{zone_letter} %b %y").upper()
-        
-        result = {
-            "day": earth_time.day,
-            "hour": earth_time.hour,
-            "minute": earth_time.minute,
-            "zone_letter": zone_letter,
-            "zone_name": zone_name,
-            "utc_offset": utc_offset,
-            "month": earth_time.strftime("%b").upper(),
-            "year": earth_time.year % 100,
-            "formatted": formatted,
-            "standard_time": earth_time.strftime("%Y-%m-%d %H:%M:%S"),
-            "full_display": formatted
-        }
-        
-        return result
-    
-    def update(self) -> None:
-        """Update the sensor."""
-        now = datetime.now()
-        self._nato_time = self._calculate_nato_time_zone(now)
-        
-        # Set state to formatted NATO time
-        self._state = self._nato_time["formatted"]
-        
-        _LOGGER.debug(f"Updated NATO Time Zone to {self._state}")
-
-
-class NatoTimeRescueSensor(AlternativeTimeSensorBase):
-    """Sensor for displaying NATO Time in German rescue service format."""
-    
-    # Class-level update interval
-    UPDATE_INTERVAL = 1  # Update every second
-    
-    def __init__(self, base_name: str, hass: HomeAssistant) -> None:
-        """Initialize the NATO rescue time sensor."""
-        super().__init__(base_name, hass)
-        
-        # Get translated name from metadata
-        calendar_name = "NATO Rescue Service Time"
-        
-        # Set sensor attributes
-        self._attr_name = f"{base_name} {calendar_name}"
-        self._attr_unique_id = f"{base_name}_nato_rescue"
-        self._attr_icon = "mdi:ambulance"
-        
-        # German month abbreviations
-        self._german_months = {
-            1: "JAN", 2: "FEB", 3: "MÄR", 4: "APR",
-            5: "MAI", 6: "JUN", 7: "JUL", 8: "AUG",
-            9: "SEP", 10: "OKT", 11: "NOV", 12: "DEZ"
-        }
-        
-        _LOGGER.debug(f"Initialized NATO Rescue Time sensor: {self._attr_name}")
-    
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-    
-    @property
-    def extra_state_attributes(self) -> Dict[str, Any]:
-        """Return the state attributes."""
-        attrs = super().extra_state_attributes
-        
-        # Add NATO-specific attributes
-        if hasattr(self, '_nato_time'):
-            attrs.update(self._nato_time)
-            
-            # Add description
-            attrs["description"] = "German rescue service notation: DD HHMM MONAT YY"
-            attrs["organizations"] = "Feuerwehr, Rettungsdienst, THW, Katastrophenschutz"
-            
-            # Add reference
-            attrs["reference"] = "BOS (Behörden und Organisationen mit Sicherheitsaufgaben)"
-        
-        return attrs
-    
-    def _calculate_nato_rescue_time(self, earth_time: datetime) -> Dict[str, Any]:
-        """Calculate NATO Rescue Service Time from standard time."""
-        
-        # Get German month abbreviation
-        month = self._german_months[earth_time.month]
-        
-        # Format with space between day and time
-        formatted = f"{earth_time.day:02d} {earth_time.hour:02d}{earth_time.minute:02d} {month} {earth_time.year % 100:02d}"
-        
-        result = {
-            "day": earth_time.day,
-            "hour": earth_time.hour,
-            "minute": earth_time.minute,
-            "month_german": month,
-            "year": earth_time.year % 100,
-            "formatted": formatted,
-            "standard_time": earth_time.strftime("%Y-%m-%d %H:%M:%S"),
-            "full_display": formatted
-        }
-        
-        return result
-    
-    def update(self) -> None:
-        """Update the sensor."""
-        now = datetime.now()
-        self._nato_time = self._calculate_nato_rescue_time(now)
-        
-        # Set state to formatted NATO rescue time
-        self._state = self._nato_time["formatted"]
-        
-        _LOGGER.debug(f"Updated NATO Rescue Time to {self._state}")
