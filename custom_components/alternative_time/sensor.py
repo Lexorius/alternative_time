@@ -246,3 +246,48 @@ class AlternativeTimeSensorBase(SensorEntity):
             return info
         
         return default
+
+    def _translate(self, key: str, default: str = "") -> str:
+        """Translate a CALENDAR_INFO text block for the user's language.
+        
+        - Reads the integration's CALENDAR_INFO from the concrete sensor module.
+        - Chooses hass.config.language if available; falls back to primary subtag (e.g. "de" from "de-DE"),
+          then to English ("en"), and finally to the provided default.
+        - If CALENDAR_INFO[key] is not a mapping (e.g. a plain string), that value is returned.
+        """
+        # Lazy-load CALENDAR_INFO from the concrete module
+        if not hasattr(self, "_calendar_info"):
+            module = self.__class__.__module__
+            if module:
+                try:
+                    mod = __import__(module, fromlist=["CALENDAR_INFO"])
+                    if hasattr(mod, "CALENDAR_INFO"):
+                        self._calendar_info = mod.CALENDAR_INFO  # type: ignore[attr-defined]
+                except Exception:  # pragma: no cover - defensive, never crash on translation
+                    pass
+
+        info = getattr(self, "_calendar_info", {}) or {}
+        block = info.get(key, {})
+        if isinstance(block, dict):
+            # Detect language from HA, tolerate missing attribute
+            lang = "en"
+            try:
+                lang = getattr(self._hass.config, "language", None) or "en"
+            except Exception:
+                lang = "en"
+            lang = str(lang).lower()
+            # Try exact match, then primary subtag, then English
+            if lang in block:
+                return str(block[lang])
+            primary = lang.split("-")[0]
+            if primary in block:
+                return str(block[primary])
+            if "en" in block:
+                return str(block["en"])
+            # If nothing matched but the dict has at least one value, return the first
+            if block:
+                return str(next(iter(block.values())))
+            return default
+        # Non-dict text - return as-is or default
+        return str(block) if block else default
+

@@ -12,6 +12,7 @@ from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig, SelectSelectorMode
 
 from .const import DOMAIN
 
@@ -30,6 +31,34 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Alternative Time Systems."""
 
+    # -----------------------------
+    # Localization helpers
+    # -----------------------------
+    def _lang(self) -> str:
+        """Return HA language like 'de-DE' or fallback 'en'."""
+        try:
+            lang = getattr(self.hass.config, "language", None) or "en"
+        except Exception:
+            lang = "en"
+        return str(lang).lower()
+
+    def _lcal(self, info: dict, key: str, *, default: str = "") -> str:
+        """Localized lookup from a CALENDAR_INFO mapping block (e.g. 'name', 'description')."""
+        block = (info or {}).get(key, {})
+        if isinstance(block, dict):
+            lang = self._lang()
+            if lang in block:
+                return str(block[lang])
+            primary = lang.split("-")[0]
+            if primary in block:
+                return str(block[primary])
+            if "en" in block:
+                return str(block["en"])
+            if block:
+                return str(next(iter(block.values())))
+            return default
+        return str(block) if block else default
+
     VERSION = 1
 
     def __init__(self):
@@ -45,7 +74,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Discover calendars asynchronously
             await self._async_discover_calendars()
             return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
+                step_id="user", data_schema=STEP_USER_DATA_SCHEMA,
+                description_placeholders={
+                    "available_calendars": ", ".join(
+                        sorted(self._lcal(ci, "name", default=cid) for cid, ci in self._discovered_calendars.items())
+                    )
+                }
             )
 
         errors = {}
@@ -77,8 +111,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Create schema for calendar selection
             calendar_schema = {}
             for cal_id, cal_info in sorted(self._discovered_calendars.items()):
-                name = cal_info.get("name", {}).get("en", cal_id)
-                description = cal_info.get("description", {}).get("en", "")
+                name = self._lcal(cal_info, "name", default=cal_id)
+                description = self._lcal(cal_info, "description", default="")
                 label = f"{name}"
                 if description:
                     label = f"{name} - {description[:50]}..."
@@ -209,6 +243,34 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options flow for Alternative Time Systems."""
 
+    # -----------------------------
+    # Localization helpers
+    # -----------------------------
+    def _lang(self) -> str:
+        """Return HA language like 'de-DE' or fallback 'en'."""
+        try:
+            lang = getattr(self.hass.config, "language", None) or "en"
+        except Exception:
+            lang = "en"
+        return str(lang).lower()
+
+    def _lcal(self, info: dict, key: str, *, default: str = "") -> str:
+        """Localized lookup from a CALENDAR_INFO mapping block (e.g. 'name', 'description')."""
+        block = (info or {}).get(key, {})
+        if isinstance(block, dict):
+            lang = self._lang()
+            if lang in block:
+                return str(block[lang])
+            primary = lang.split("-")[0]
+            if primary in block:
+                return str(block[primary])
+            if "en" in block:
+                return str(block["en"])
+            if block:
+                return str(next(iter(block.values())))
+            return default
+        return str(block) if block else default
+
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
@@ -226,20 +288,25 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         # Get currently selected calendars
         current_calendars = self.config_entry.data.get("calendars", [])
         
-        # Create schema for calendar selection
-        calendar_schema = {}
+        # Create localized options for selector
+        options = []
         for cal_id, cal_info in sorted(discovered_calendars.items()):
-            name = cal_info.get("name", {}).get("en", cal_id)
-            description = cal_info.get("description", {}).get("en", "")
-            label = f"{name}"
-            if description:
-                label = f"{name} - {description[:50]}..."
-            default = cal_id in current_calendars
-            calendar_schema[vol.Optional(cal_id, default=default)] = bool
+            name = self._lcal(cal_info, "name", default=cal_id)
+            desc = self._lcal(cal_info, "description", default="")
+            label = name if not desc else f"{name} — {desc}"
+            options.append({"label": label, "value": cal_id})
 
+        default = current_calendars
+        schema = vol.Schema({
+            vol.Required("calendars", default=default): SelectSelector(
+                SelectSelectorConfig(options=options, multiple=True, mode=SelectSelectorMode.DROPDOWN)
+            )
+        })
         return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(calendar_schema)
+            step_id="init", data_schema=schema,
+            description_placeholders={
+                "available_calendars": ", ".join(sorted(self._lcal(ci, "name", default=cid) for cid, ci in discovered_calendars.items()))
+            }
         )
 
     async def _async_discover_calendars(self) -> Dict[str, Dict[str, Any]]:
