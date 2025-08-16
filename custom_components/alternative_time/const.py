@@ -25,5 +25,6 @@ CONF_ENABLE_RIVENDELL = "enable_rivendell"
 CONF_ENABLE_TAMRIEL = "enable_tamriel"
 CONF_ENABLE_EGYPTIAN = "enable_egyptian"
 CONF_ENABLE_DISCWORLD = "enable_discworld"
+CONF_ENABLE_ROMAN = "enable_roman"
 
 DEFAULT_NAME = "Alternative Time"

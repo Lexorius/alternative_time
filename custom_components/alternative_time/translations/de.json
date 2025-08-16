@@ -5,7 +5,7 @@
         "title": "Alternative Zeitsysteme konfigurieren",
         "description": "Wählen Sie die Zeitsysteme aus, die Sie anzeigen möchten.",
         "data": {
-          "name": "Name der Instanz",
+          "name": "Name der Integration",
           "enable_timezone": "Zeitzone aktivieren",
           "timezone": "Zeitzone auswählen",
           "enable_stardate": "Sternzeit aktivieren",
@@ -15,59 +15,166 @@
           "enable_decimal": "Dezimalzeit aktivieren",
           "enable_hexadecimal": "Hexadezimalzeit aktivieren",
           "enable_maya": "Maya-Kalender aktivieren",
-          "enable_nato": "NATO-Zeit aktivieren",
-          "enable_nato_zone": "NATO-Zeit mit Zonenindikator aktivieren",
-          "enable_nato_rescue": "NATO-Zeit Rettungsdienst aktivieren",
+          "enable_nato": "NATO DTG Zeit aktivieren",
+          "enable_nato_zone": "NATO Zeitzonen-Indikator aktivieren",
+          "enable_nato_rescue": "NATO Rettungszeit aktivieren",
           "enable_attic": "Attischer Kalender aktivieren",
-          "enable_suriyakati": "Suriyakati-Kalender (Thai) aktivieren",
-          "enable_minguo": "Minguo-Kalender (Taiwan) aktivieren",
-          "enable_darian": "Darischer Kalender (Mars) aktivieren",
-          "enable_mars_time": "Mars-Zeit mit Zeitzone aktivieren",
+          "enable_suriyakati": "Suriyakati-Kalender aktivieren",
+          "enable_minguo": "Minguo-Kalender (Taiwan/ROC) aktivieren",
+          "enable_darian": "Darianischer Mars-Kalender aktivieren",
+          "enable_mars_time": "Mars-Zeit mit Zeitzonen aktivieren",
           "mars_timezone": "Mars-Zeitzone auswählen",
           "enable_eve": "EVE Online Zeit aktivieren",
-          "enable_shire": "Auenland-Kalender (Hobbits) aktivieren",
-          "enable_rivendell": "Kalender von Imladris (Elben) aktivieren",
+          "enable_shire": "Auenland-Kalender (Hobbit) aktivieren",
+          "enable_rivendell": "Bruchtal-Kalender (Elbisch) aktivieren",
           "enable_tamriel": "Tamriel-Kalender (Elder Scrolls) aktivieren",
           "enable_egyptian": "Ägyptischer Kalender aktivieren",
-          "enable_discworld": "Scheibenwelt-Kalender (Pratchett) aktivieren"
-        },
-      "disclaimer": {
-        "title": "Wichtiger Hinweis",
-        "description": "⚠️ **WICHTIGER HINWEIS** ⚠️\n\nEinige Kalendersysteme und Zeitberechnungen in dieser Integration sind:\n• **EXPERIMENTELL** - Können Berechnungsfehler enthalten\n• **NUR ZUR UNTERHALTUNG** - Nicht für kritische Aufgaben verwenden\n• **NÄHERUNGEN** - Besonders bei historischen und fiktiven Kalendern\n\nBekannte Einschränkungen:\n• Maya-Kalender verwendet vereinfachte Berechnungen\n• Ägyptischer Kalender ohne präzise astronomische Ausrichtung\n• Fantasy-Kalender (Tolkien, Elder Scrolls, Discworld) sind Interpretationen\n• Mars-Zeit basiert auf theoretischen Modellen\n\nBitte melden Sie Fehler unter:\nhttps://github.com/Lexorius/alternative_time/issues\n\nKlicken Sie auf ABSENDEN um fortzufahren.",
-        "data_description": {
-          "name": "Ein eindeutiger Name für diese Konfiguration",
-          "enable_timezone": "Zeigt die aktuelle Zeit in einer ausgewählten Zeitzone an (z.B. 14:30:45 CEST)",
-          "timezone": "Die Zeitzone, die angezeigt werden soll",
-          "enable_stardate": "Star Trek TNG-Sternzeit (z.B. 47634.44). Basiert auf dem Jahr 2323",
-          "enable_swatch": "Internet-Zeit in Beats @000-@999. Ein Tag = 1000 Beats, keine Zeitzonen",
-          "enable_unix": "Sekunden seit 1.1.1970 00:00 UTC (z.B. 1735689600). Standard in der IT",
-          "enable_julian": "Astronomische Tageszählung seit 4713 v.Chr. (z.B. 2460000.5)",
-          "enable_decimal": "Französische Revolutionszeit: 10 Stunden, 100 Minuten, 100 Sekunden pro Tag",
-          "enable_hexadecimal": "Tag in 65536 Teile geteilt, Anzeige hexadezimal (z.B. .8000 = Mittag)",
-          "enable_maya": "Lange Zählung, Tzolk'in und Haab Kalender (z.B. 13.0.12.1.15 | 8 Ahau | 3 Pop)",
-          "enable_nato": "Militärische Datum-Zeit ohne Zone: DDHHMM (z.B. 151430)",
-          "enable_nato_zone": "Vollständige militärische DTG: DDHHMM[Zone] MON YY (z.B. 151430Z JAN 25)",
-          "enable_nato_rescue": "Deutsche Rettungsdienst-Notation: DD HHMM MONAT YY (z.B. 15 1430 JAN 25)",
-          "enable_attic": "Antiker Athener Lunisolarkalender mit Archon und Olympiade (z.B. 5 ἱσταμένου Hekatombaion)",
-          "enable_suriyakati": "Thailändischer Kalender mit buddhistischer Ära, BE = CE+543 (z.B. 2568 BE)",
-          "enable_minguo": "Taiwan/ROC Kalender, Jahr 1 = 1912 CE (z.B. 民國114年)",
-          "enable_darian": "Mars-Kalender mit 24 Monaten und 668 Sols pro Jahr (z.B. 15 Gemini 217)",
-          "enable_mars_time": "Mars-Zeit mit wählbarer Zeitzone (z.B. 14:25:30 Olympus Mons)",
-          "mars_timezone": "Eine der 24 Mars-Zeitzonen von MTC-12 bis MTC+12",
-          "enable_eve": "New Eden Standard Time aus EVE Online (z.B. YC 127.03.15 14:30:45)",
-          "enable_shire": "Hobbit-Kalender mit 7 Mahlzeiten (z.B. S.R. 1445, 22 Halimath)",
-          "enable_rivendell": "Elbischer Kalender mit 6 Jahreszeiten (z.B. F.A. 6025, Tuilë 22)",
-          "enable_tamriel": "Kalender aus The Elder Scrolls mit 12 Monaten und 8-Tage-Woche (z.B. 4E 201, 17th of Last Seed)",
-          "enable_egyptian": "Altägyptischer Kalender mit 3 Jahreszeiten und Dekanen (z.B. Dynasty 1 Year 25, 15 Thoth)",
-          "enable_discworld": "Terry Pratchetts Scheibenwelt mit 8-Tage-Woche und Gilden (z.B. Century of the Anchovy, 32 Offle)"
+          "enable_discworld": "Scheibenwelt-Kalender aktivieren",
+          "enable_roman": "Römischer Kalender aktivieren"
         }
+      },
+      "confirm": {
+        "title": "Bestätigung",
+        "description": "Diese Integration zeigt verschiedene alternative Zeitsysteme an. Einige davon sind experimentell oder fiktional.\n\nDie Berechnungen können Ungenauigkeiten enthalten.\n\nMöchten Sie fortfahren?"
       }
     },
     "error": {
-      "no_time_system_selected": "Bitte wählen Sie mindestens ein Zeitsystem aus."
+      "unknown": "Unerwarteter Fehler",
+      "invalid_timezone": "Ungültige Zeitzone ausgewählt",
+      "no_systems_selected": "Bitte wählen Sie mindestens ein Zeitsystem aus"
     },
     "abort": {
-      "already_configured": "Diese Instanz ist bereits konfiguriert."
+      "already_configured": "Integration ist bereits konfiguriert",
+      "user_cancelled": "Konfiguration vom Benutzer abgebrochen"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Alternative Zeitsysteme Optionen",
+        "description": "Passen Sie die Einstellungen für Ihre Zeitsysteme an.",
+        "data": {
+          "enable_timezone": "Zeitzone aktivieren",
+          "timezone": "Zeitzone auswählen",
+          "enable_stardate": "Sternzeit aktivieren",
+          "enable_swatch": "Swatch Internet Time aktivieren",
+          "enable_unix": "Unix Timestamp aktivieren",
+          "enable_julian": "Julianisches Datum aktivieren",
+          "enable_decimal": "Dezimalzeit aktivieren",
+          "enable_hexadecimal": "Hexadezimalzeit aktivieren",
+          "enable_maya": "Maya-Kalender aktivieren",
+          "enable_nato": "NATO DTG Zeit aktivieren",
+          "enable_nato_zone": "NATO Zeitzonen-Indikator aktivieren",
+          "enable_nato_rescue": "NATO Rettungszeit aktivieren",
+          "enable_attic": "Attischer Kalender aktivieren",
+          "enable_suriyakati": "Suriyakati-Kalender aktivieren",
+          "enable_minguo": "Minguo-Kalender (Taiwan/ROC) aktivieren",
+          "enable_darian": "Darianischer Mars-Kalender aktivieren",
+          "enable_mars_time": "Mars-Zeit mit Zeitzonen aktivieren",
+          "mars_timezone": "Mars-Zeitzone auswählen",
+          "enable_eve": "EVE Online Zeit aktivieren",
+          "enable_shire": "Auenland-Kalender (Hobbit) aktivieren",
+          "enable_rivendell": "Bruchtal-Kalender (Elbisch) aktivieren",
+          "enable_tamriel": "Tamriel-Kalender (Elder Scrolls) aktivieren",
+          "enable_egyptian": "Ägyptischer Kalender aktivieren",
+          "enable_discworld": "Scheibenwelt-Kalender aktivieren",
+          "enable_roman": "Römischer Kalender aktivieren"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "timezone": {
+        "name": "Zeitzone"
+      },
+      "stardate": {
+        "name": "Sternzeit"
+      },
+      "swatch_time": {
+        "name": "Swatch Internet Zeit"
+      },
+      "unix_time": {
+        "name": "Unix Zeitstempel"
+      },
+      "julian_date": {
+        "name": "Julianisches Datum"
+      },
+      "decimal_time": {
+        "name": "Dezimalzeit"
+      },
+      "hexadecimal_time": {
+        "name": "Hexadezimalzeit"
+      },
+      "maya_calendar": {
+        "name": "Maya-Kalender"
+      },
+      "nato_dtg": {
+        "name": "NATO DTG Zeit"
+      },
+      "nato_zone": {
+        "name": "NATO Zeitzonen-Indikator"
+      },
+      "nato_rescue": {
+        "name": "NATO Rettungszeit"
+      },
+      "attic_calendar": {
+        "name": "Attischer Kalender"
+      },
+      "suriyakati_calendar": {
+        "name": "Suriyakati-Kalender"
+      },
+      "minguo_calendar": {
+        "name": "Minguo-Kalender"
+      },
+      "darian_calendar": {
+        "name": "Darianischer Mars-Kalender"
+      },
+      "mars_time": {
+        "name": "Mars-Zeit"
+      },
+      "eve_time": {
+        "name": "EVE Online Zeit"
+      },
+      "shire_calendar": {
+        "name": "Auenland-Kalender"
+      },
+      "rivendell_calendar": {
+        "name": "Bruchtal-Kalender"
+      },
+      "tamriel_calendar": {
+        "name": "Tamriel-Kalender"
+      },
+      "egyptian_calendar": {
+        "name": "Ägyptischer Kalender"
+      },
+      "discworld_calendar": {
+        "name": "Scheibenwelt-Kalender"
+      },
+      "roman_calendar": {
+        "name": "Römischer Kalender"
+      }
+    }
+  },
+  "selector": {
+    "mars_timezone": {
+      "options": {
+        "MTC": "Coordinated Mars Time (0°)",
+        "AMT": "Airy Mean Time (0°)",
+        "OLY": "Olympus Mons Zeit (-135°)",
+        "ELY": "Elysium Zeit (+60°)",
+        "CHA": "Chryse Zeit (+180°)",
+        "MAR": "Mariner Valley Zeit (-90°)",
+        "ARA": "Arabia Terra Zeit (+45°)",
+        "THR": "Tharsis Zeit (-45°)",
+        "HEL": "Hellas Basin Zeit (+105°)",
+        "VIK": "Viking 1 Landeplatz (-30°)",
+        "PTH": "Pathfinder Landeplatz (+30°)",
+        "OPP": "Opportunity Landeplatz (+165°)",
+        "SPI": "Spirit Landeplatz (+150°)",
+        "CUR": "Curiosity/Gale Krater (+135°)",
+        "PER": "Perseverance/Jezero (+75°)"
+      }
     }
   }
 }
