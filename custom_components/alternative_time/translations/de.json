@@ -2,8 +2,121 @@
   "config": {
     "step": {
       "user": {
-        "title": "Alternative Zeitsysteme konfigurieren",
-        "description": "Wählen Sie die Zeitsysteme aus, die Sie aktivieren möchten.\n\n──── Kategorien ────\n• Technisch: Unix, Julian, Dezimal, Hex, Swatch\n• Militärisch: NATO Formate\n• Historisch: Maya, Ägyptisch, Römisch, Attisch\n• Asiatisch: Suriyakati, Minguo\n• Weltraum: Mars-Kalender\n• Sci-Fi: Sternzeit, EVE Online\n• Fantasy: Mittelerde, Tamriel, Scheibenwelt",
+        "title": "Grundeinstellungen",
+        "description": "Konfigurieren Sie die Basiseinstellungen für Alternative Zeitsysteme.",
+        "data": {
+          "name": "Name der Integration",
+          "enable_timezone": "Zeitzone aktivieren",
+          "timezone": "Zeitzone auswählen"
+        },
+        "data_description": {
+          "name": "Ein eindeutiger Name für diese Konfiguration",
+          "enable_timezone": "Zeigt die aktuelle Zeit in einer ausgewählten Zeitzone an",
+          "timezone": "Wählen Sie die anzuzeigende Zeitzone (z.B. Europe/Berlin, America/New_York)"
+        }
+      },
+      "technical": {
+        "title": "Technische & Moderne Zeitsysteme",
+        "description": "Wählen Sie technische und computerbasierte Zeitsysteme aus.",
+        "data": {
+          "enable_unix": "Unix Timestamp aktivieren",
+          "enable_julian": "Julianisches Datum aktivieren",
+          "enable_decimal": "Dezimalzeit aktivieren",
+          "enable_hexadecimal": "Hexadezimalzeit aktivieren",
+          "enable_swatch": "Swatch Internet Time aktivieren"
+        },
+        "data_description": {
+          "enable_unix": "Sekunden seit 1. Januar 1970, 00:00 UTC (z.B. 1704067200)",
+          "enable_julian": "Astronomische Tageszählung seit 4713 v.Chr. (z.B. 2460000.5)",
+          "enable_decimal": "Französische Revolutionszeit: 10 Stunden, 100 Minuten, 100 Sekunden pro Tag",
+          "enable_hexadecimal": "Tag in 65536 Teile geteilt, Anzeige hexadezimal (z.B. .8000 = Mittag)",
+          "enable_swatch": "Internet-Zeit in Beats @000-@999. Ein Tag = 1000 Beats, keine Zeitzonen"
+        }
+      },
+      "military": {
+        "title": "Militärische Zeitsysteme",
+        "description": "NATO und militärische Zeitformate für präzise Kommunikation.",
+        "data": {
+          "enable_nato": "NATO DTG aktivieren",
+          "enable_nato_zone": "NATO mit Zonenindikator aktivieren",
+          "enable_nato_rescue": "NATO Rettungsformat aktivieren"
+        },
+        "data_description": {
+          "enable_nato": "Militärische Datum-Zeit ohne Zone: DDHHMM (z.B. 151430)",
+          "enable_nato_zone": "Vollständige militärische DTG: DDHHMM[Zone] MON YY (z.B. 151430Z JAN 25)",
+          "enable_nato_rescue": "Deutsche Rettungsdienst-Notation: DD HHMM MONAT YY (z.B. 15 1430 JAN 25)"
+        }
+      },
+      "historical": {
+        "title": "Historische Kalendersysteme",
+        "description": "Antike und historische Kalender verschiedener Kulturen.",
+        "data": {
+          "enable_maya": "Maya-Kalender aktivieren",
+          "enable_egyptian": "Ägyptischer Kalender aktivieren",
+          "enable_roman": "Römischer Kalender aktivieren",
+          "enable_attic": "Attischer Kalender aktivieren"
+        },
+        "data_description": {
+          "enable_maya": "Lange Zählung, Tzolk'in und Haab Kalender (z.B. 13.0.12.1.15 | 8 Ahau | 3 Pop)",
+          "enable_egyptian": "Altägyptischer Kalender mit 12 Monaten à 30 Tagen plus 5 Schalttage",
+          "enable_roman": "Römische Datierung mit Kalenden, Nonen, Iden (z.B. ante diem III Kalendas Ianuarias)",
+          "enable_attic": "Antiker Athener Lunisolarkalender mit Archon und Olympiade (z.B. 5 ἱσταμένου Hekatombaion)"
+        }
+      },
+      "cultural": {
+        "title": "Asiatische Kalendersysteme",
+        "description": "Traditionelle Kalender aus Asien.",
+        "data": {
+          "enable_suriyakati": "Suriyakati-Kalender aktivieren",
+          "enable_minguo": "Minguo-Kalender aktivieren"
+        },
+        "data_description": {
+          "enable_suriyakati": "Thailändischer Kalender mit buddhistischer Ära, BE = CE+543 (z.B. 2568 BE)",
+          "enable_minguo": "Taiwan/ROC Kalender, Jahr 1 = 1912 CE (z.B. 民國114年)"
+        }
+      },
+      "space": {
+        "title": "Weltraum & Mars Zeitsysteme",
+        "description": "Kalender und Zeitsysteme für Mars und Weltraummissionen.",
+        "data": {
+          "enable_darian": "Darianischer Mars-Kalender aktivieren",
+          "enable_mars_time": "Mars-Zeit aktivieren",
+          "mars_timezone": "Mars-Zeitzone"
+        },
+        "data_description": {
+          "enable_darian": "Mars-Kalender mit 24 Monaten und 668 Sols pro Jahr (z.B. 15 Gemini 217)",
+          "enable_mars_time": "Coordinated Mars Time mit Zeitzonen basierend auf Landeplätzen",
+          "mars_timezone": "Wählen Sie eine Mars-Zeitzone (MTC, Olympus Mons, Gale Krater, etc.)"
+        }
+      },
+      "scifi": {
+        "title": "Science-Fiction Zeitsysteme",
+        "description": "Zeitsysteme aus Science-Fiction Universen.",
+        "data": {
+          "enable_stardate": "Sternzeit aktivieren",
+          "enable_eve": "EVE Online Zeit aktivieren"
+        },
+        "data_description": {
+          "enable_stardate": "Star Trek TNG-Sternzeit (z.B. 47634.44). Basiert auf dem Jahr 2323",
+          "enable_eve": "New Eden Standard Time aus EVE Online (YC 127)"
+        }
+      },
+      "fantasy": {
+        "title": "Fantasy-Welt Kalender",
+        "description": "Kalender aus Fantasy-Welten und Videospielen.",
+        "data": {
+          "enable_shire": "Auenland-Kalender aktivieren",
+          "enable_rivendell": "Bruchtal-Kalender aktivieren",
+          "enable_tamriel": "Tamriel-Kalender aktivieren",
+          "enable_discworld": "Scheibenwelt-Kalender aktivieren"
+        },
+        "data_description": {
+          "enable_shire": "Hobbit-Kalender mit Mahlzeiten und Feiertagen (z.B. S.R. 1624, Afteryule 16)",
+          "enable_rivendell": "Elbischer Kalender mit Quenya-Namen und 6 Jahreszeiten (z.B. F.A. 24, Tuilë 35)",
+          "enable_tamriel": "Elder Scrolls Kalender mit zwei Monden und Geburtszeichen (z.B. 4E 225, Morning Star 16)",
+          "enable_discworld": "Terry Pratchetts Scheibenwelt-Kalender mit 13 Monaten und 8-Tage-Woche"
+        }
+      },
         "data": {
           "name": "Name der Integration",
           "enable_timezone": "Zeitzone aktivieren",

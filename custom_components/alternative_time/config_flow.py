@@ -10,13 +10,13 @@ import pytz
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
     TextSelector,
     TextSelectorConfig,
+    BooleanSelector,
 )
 
 from .const import (
@@ -66,98 +66,311 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle the initial step."""
-        errors = {}
-
+        """Handle the initial step - basic configuration."""
         if user_input is not None:
-            # Check if at least one time system is enabled
-            enabled_systems = [
-                key for key, value in user_input.items() 
-                if key.startswith("enable_") and value is True
-            ]
-            
-            if not enabled_systems:
-                errors["base"] = "no_systems_selected"
-            else:
-                # Store the configuration temporarily
-                self._data = user_input
-                # Move to confirmation step
-                return await self.async_step_confirm()
+            self._data.update(user_input)
+            return await self.async_step_technical()
 
-        # Get list of timezones for selector
         timezone_list = sorted(pytz.all_timezones)
         
-        # Build the data schema with visual groupings using descriptions
         data_schema = vol.Schema({
-            # Basic Configuration
             vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(
                 TextSelectorConfig()
             ),
-            
-            # ─────────────── BASIC SETTINGS ───────────────
-            vol.Required(CONF_ENABLE_TIMEZONE, default=False): bool,
+            vol.Required(
+                CONF_ENABLE_TIMEZONE,
+                default=False,
+                description={"suggested_value": False}
+            ): BooleanSelector(),
             vol.Optional(CONF_TIMEZONE, default="UTC"): SelectSelector(
                 SelectSelectorConfig(
                     options=timezone_list,
                     mode=SelectSelectorMode.DROPDOWN,
                 )
             ),
-            
-            # ─────────────── TECHNICAL/MODERN ───────────────
-            vol.Required(CONF_ENABLE_UNIX, default=False): bool,
-            vol.Required(CONF_ENABLE_JULIAN, default=False): bool,
-            vol.Required(CONF_ENABLE_DECIMAL, default=False): bool,
-            vol.Required(CONF_ENABLE_HEXADECIMAL, default=False): bool,
-            vol.Required(CONF_ENABLE_SWATCH, default=False): bool,
-            
-            # ─────────────── MILITARY/NATO ───────────────
-            vol.Required(CONF_ENABLE_NATO, default=False): bool,
-            vol.Required(CONF_ENABLE_NATO_ZONE, default=False): bool,
-            vol.Required(CONF_ENABLE_NATO_RESCUE, default=False): bool,
-            
-            # ─────────────── HISTORICAL ───────────────
-            vol.Required(CONF_ENABLE_MAYA, default=False): bool,
-            vol.Required(CONF_ENABLE_EGYPTIAN, default=False): bool,
-            vol.Required(CONF_ENABLE_ROMAN, default=False): bool,
-            vol.Required(CONF_ENABLE_ATTIC, default=False): bool,
-            
-            # ─────────────── ASIAN ───────────────
-            vol.Required(CONF_ENABLE_SURIYAKATI, default=False): bool,
-            vol.Required(CONF_ENABLE_MINGUO, default=False): bool,
-            
-            # ─────────────── SPACE/MARS ───────────────
-            vol.Required(CONF_ENABLE_DARIAN, default=False): bool,
-            vol.Required(CONF_ENABLE_MARS_TIME, default=False): bool,
+        })
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=data_schema,
+            description_placeholders={
+                "intro": "Configure the base settings for Alternative Time Systems"
+            },
+        )
+
+    async def async_step_technical(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle technical/modern time systems selection."""
+        if user_input is not None:
+            self._data.update(user_input)
+            return await self.async_step_military()
+
+        data_schema = vol.Schema({
+            vol.Required(
+                CONF_ENABLE_UNIX,
+                default=False,
+                description={"suggested_value": False}
+            ): BooleanSelector(),
+            vol.Required(
+                CONF_ENABLE_JULIAN,
+                default=False,
+                description={"suggested_value": False}
+            ): BooleanSelector(),
+            vol.Required(
+                CONF_ENABLE_DECIMAL,
+                default=False,
+                description={"suggested_value": False}
+            ): BooleanSelector(),
+            vol.Required(
+                CONF_ENABLE_HEXADECIMAL,
+                default=False,
+                description={"suggested_value": False}
+            ): BooleanSelector(),
+            vol.Required(
+                CONF_ENABLE_SWATCH,
+                default=False,
+                description={"suggested_value": False}
+            ): BooleanSelector(),
+        })
+
+        return self.async_show_form(
+            step_id="technical",
+            data_schema=data_schema,
+            description_placeholders={
+                "category": "Technical & Modern Time Systems"
+            },
+        )
+
+    async def async_step_military(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle military time systems selection."""
+        if user_input is not None:
+            self._data.update(user_input)
+            return await self.async_step_historical()
+
+        data_schema = vol.Schema({
+            vol.Required(
+                CONF_ENABLE_NATO,
+                default=False,
+                description={"suggested_value": False}
+            ): BooleanSelector(),
+            vol.Required(
+                CONF_ENABLE_NATO_ZONE,
+                default=False,
+                description={"suggested_value": False}
+            ): BooleanSelector(),
+            vol.Required(
+                CONF_ENABLE_NATO_RESCUE,
+                default=False,
+                description={"suggested_value": False}
+            ): BooleanSelector(),
+        })
+
+        return self.async_show_form(
+            step_id="military",
+            data_schema=data_schema,
+            description_placeholders={
+                "category": "Military Time Systems"
+            },
+        )
+
+    async def async_step_historical(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle historical calendar systems selection."""
+        if user_input is not None:
+            self._data.update(user_input)
+            return await self.async_step_cultural()
+
+        data_schema = vol.Schema({
+            vol.Required(
+                CONF_ENABLE_MAYA,
+                default=False,
+                description={"suggested_value": False}
+            ): BooleanSelector(),
+            vol.Required(
+                CONF_ENABLE_EGYPTIAN,
+                default=False,
+                description={"suggested_value": False}
+            ): BooleanSelector(),
+            vol.Required(
+                CONF_ENABLE_ROMAN,
+                default=False,
+                description={"suggested_value": False}
+            ): BooleanSelector(),
+            vol.Required(
+                CONF_ENABLE_ATTIC,
+                default=False,
+                description={"suggested_value": False}
+            ): BooleanSelector(),
+        })
+
+        return self.async_show_form(
+            step_id="historical",
+            data_schema=data_schema,
+            description_placeholders={
+                "category": "Historical Calendar Systems"
+            },
+        )
+
+    async def async_step_cultural(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle cultural/regional calendar systems selection."""
+        if user_input is not None:
+            self._data.update(user_input)
+            return await self.async_step_space()
+
+        data_schema = vol.Schema({
+            vol.Required(
+                CONF_ENABLE_SURIYAKATI,
+                default=False,
+                description={"suggested_value": False}
+            ): BooleanSelector(),
+            vol.Required(
+                CONF_ENABLE_MINGUO,
+                default=False,
+                description={"suggested_value": False}
+            ): BooleanSelector(),
+        })
+
+        return self.async_show_form(
+            step_id="cultural",
+            data_schema=data_schema,
+            description_placeholders={
+                "category": "Asian Calendar Systems"
+            },
+        )
+
+    async def async_step_space(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle space/Mars calendar systems selection."""
+        if user_input is not None:
+            self._data.update(user_input)
+            return await self.async_step_scifi()
+
+        data_schema = vol.Schema({
+            vol.Required(
+                CONF_ENABLE_DARIAN,
+                default=False,
+                description={"suggested_value": False}
+            ): BooleanSelector(),
+            vol.Required(
+                CONF_ENABLE_MARS_TIME,
+                default=False,
+                description={"suggested_value": False}
+            ): BooleanSelector(),
             vol.Optional(CONF_MARS_TIMEZONE, default="MTC"): SelectSelector(
                 SelectSelectorConfig(
                     options=MARS_TIMEZONES,
                     mode=SelectSelectorMode.DROPDOWN,
                 )
             ),
-            
-            # ─────────────── SCIENCE FICTION ───────────────
-            vol.Required(CONF_ENABLE_STARDATE, default=False): bool,
-            vol.Required(CONF_ENABLE_EVE, default=False): bool,
-            
-            # ─────────────── FANTASY ───────────────
-            vol.Required(CONF_ENABLE_SHIRE, default=False): bool,
-            vol.Required(CONF_ENABLE_RIVENDELL, default=False): bool,
-            vol.Required(CONF_ENABLE_TAMRIEL, default=False): bool,
-            vol.Required(CONF_ENABLE_DISCWORLD, default=False): bool,
         })
 
         return self.async_show_form(
-            step_id="user",
+            step_id="space",
             data_schema=data_schema,
-            errors=errors,
+            description_placeholders={
+                "category": "Space & Mars Time Systems"
+            },
         )
+
+    async def async_step_scifi(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle science fiction time systems selection."""
+        if user_input is not None:
+            self._data.update(user_input)
+            return await self.async_step_fantasy()
+
+        data_schema = vol.Schema({
+            vol.Required(
+                CONF_ENABLE_STARDATE,
+                default=False,
+                description={"suggested_value": False}
+            ): BooleanSelector(),
+            vol.Required(
+                CONF_ENABLE_EVE,
+                default=False,
+                description={"suggested_value": False}
+            ): BooleanSelector(),
+        })
+
+        return self.async_show_form(
+            step_id="scifi",
+            data_schema=data_schema,
+            description_placeholders={
+                "category": "Science Fiction Time Systems"
+            },
+        )
+
+    async def async_step_fantasy(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle fantasy calendar systems selection."""
+        if user_input is not None:
+            self._data.update(user_input)
+            
+            # Check if at least one time system is enabled
+            enabled_systems = [
+                key for key, value in self._data.items() 
+                if key.startswith("enable_") and value is True
+            ]
+            
+            if not enabled_systems:
+                return self.async_show_form(
+                    step_id="fantasy",
+                    data_schema=self._get_fantasy_schema(),
+                    errors={"base": "no_systems_selected"},
+                    description_placeholders={
+                        "category": "Fantasy World Calendars"
+                    },
+                )
+            
+            return await self.async_step_confirm()
+
+        return self.async_show_form(
+            step_id="fantasy",
+            data_schema=self._get_fantasy_schema(),
+            description_placeholders={
+                "category": "Fantasy World Calendars"
+            },
+        )
+
+    def _get_fantasy_schema(self) -> vol.Schema:
+        """Get the schema for fantasy calendars."""
+        return vol.Schema({
+            vol.Required(
+                CONF_ENABLE_SHIRE,
+                default=False,
+                description={"suggested_value": False}
+            ): BooleanSelector(),
+            vol.Required(
+                CONF_ENABLE_RIVENDELL,
+                default=False,
+                description={"suggested_value": False}
+            ): BooleanSelector(),
+            vol.Required(
+                CONF_ENABLE_TAMRIEL,
+                default=False,
+                description={"suggested_value": False}
+            ): BooleanSelector(),
+            vol.Required(
+                CONF_ENABLE_DISCWORLD,
+                default=False,
+                description={"suggested_value": False}
+            ): BooleanSelector(),
+        })
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the confirmation step."""
         if user_input is not None:
-            # User confirmed, create the entry
             title = self._data.get(CONF_NAME, DEFAULT_NAME)
             return self.async_create_entry(title=title, data=self._data)
 
@@ -216,38 +429,24 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
+        self._data = {}
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Manage the options."""
-        errors = {}
-        
+        """Manage the options - start with technical systems."""
         if user_input is not None:
-            # Check if at least one time system is enabled
-            enabled_systems = [
-                key for key, value in user_input.items() 
-                if key.startswith("enable_") and value is True
-            ]
-            
-            if not enabled_systems:
-                errors["base"] = "no_systems_selected"
-            else:
-                return self.async_create_entry(title="", data=user_input)
+            self._data.update(user_input)
+            return await self.async_step_military()
 
-        # Get list of timezones for selector
+        current_data = self.config_entry.options or self.config_entry.data
         timezone_list = sorted(pytz.all_timezones)
         
-        # Get current options or use defaults from config
-        current_data = self.config_entry.options or self.config_entry.data
-        
-        # Build the same schema as in the config flow
         data_schema = vol.Schema({
-            # ─────────────── BASIC SETTINGS ───────────────
             vol.Required(
                 CONF_ENABLE_TIMEZONE,
                 default=current_data.get(CONF_ENABLE_TIMEZONE, False)
-            ): bool,
+            ): BooleanSelector(),
             vol.Optional(
                 CONF_TIMEZONE,
                 default=current_data.get(CONF_TIMEZONE, "UTC")
@@ -257,121 +456,116 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     mode=SelectSelectorMode.DROPDOWN,
                 )
             ),
-            
-            # ─────────────── TECHNICAL/MODERN ───────────────
             vol.Required(
                 CONF_ENABLE_UNIX,
                 default=current_data.get(CONF_ENABLE_UNIX, False)
-            ): bool,
+            ): BooleanSelector(),
             vol.Required(
                 CONF_ENABLE_JULIAN,
                 default=current_data.get(CONF_ENABLE_JULIAN, False)
-            ): bool,
+            ): BooleanSelector(),
             vol.Required(
                 CONF_ENABLE_DECIMAL,
                 default=current_data.get(CONF_ENABLE_DECIMAL, False)
-            ): bool,
+            ): BooleanSelector(),
             vol.Required(
                 CONF_ENABLE_HEXADECIMAL,
                 default=current_data.get(CONF_ENABLE_HEXADECIMAL, False)
-            ): bool,
+            ): BooleanSelector(),
             vol.Required(
                 CONF_ENABLE_SWATCH,
                 default=current_data.get(CONF_ENABLE_SWATCH, False)
-            ): bool,
-            
-            # ─────────────── MILITARY/NATO ───────────────
-            vol.Required(
-                CONF_ENABLE_NATO,
-                default=current_data.get(CONF_ENABLE_NATO, False)
-            ): bool,
-            vol.Required(
-                CONF_ENABLE_NATO_ZONE,
-                default=current_data.get(CONF_ENABLE_NATO_ZONE, False)
-            ): bool,
-            vol.Required(
-                CONF_ENABLE_NATO_RESCUE,
-                default=current_data.get(CONF_ENABLE_NATO_RESCUE, False)
-            ): bool,
-            
-            # ─────────────── HISTORICAL ───────────────
-            vol.Required(
-                CONF_ENABLE_MAYA,
-                default=current_data.get(CONF_ENABLE_MAYA, False)
-            ): bool,
-            vol.Required(
-                CONF_ENABLE_EGYPTIAN,
-                default=current_data.get(CONF_ENABLE_EGYPTIAN, False)
-            ): bool,
-            vol.Required(
-                CONF_ENABLE_ROMAN,
-                default=current_data.get(CONF_ENABLE_ROMAN, False)
-            ): bool,
-            vol.Required(
-                CONF_ENABLE_ATTIC,
-                default=current_data.get(CONF_ENABLE_ATTIC, False)
-            ): bool,
-            
-            # ─────────────── ASIAN ───────────────
-            vol.Required(
-                CONF_ENABLE_SURIYAKATI,
-                default=current_data.get(CONF_ENABLE_SURIYAKATI, False)
-            ): bool,
-            vol.Required(
-                CONF_ENABLE_MINGUO,
-                default=current_data.get(CONF_ENABLE_MINGUO, False)
-            ): bool,
-            
-            # ─────────────── SPACE/MARS ───────────────
-            vol.Required(
-                CONF_ENABLE_DARIAN,
-                default=current_data.get(CONF_ENABLE_DARIAN, False)
-            ): bool,
-            vol.Required(
-                CONF_ENABLE_MARS_TIME,
-                default=current_data.get(CONF_ENABLE_MARS_TIME, False)
-            ): bool,
-            vol.Optional(
-                CONF_MARS_TIMEZONE,
-                default=current_data.get(CONF_MARS_TIMEZONE, "MTC")
-            ): SelectSelector(
-                SelectSelectorConfig(
-                    options=MARS_TIMEZONES,
-                    mode=SelectSelectorMode.DROPDOWN,
-                )
-            ),
-            
-            # ─────────────── SCIENCE FICTION ───────────────
-            vol.Required(
-                CONF_ENABLE_STARDATE,
-                default=current_data.get(CONF_ENABLE_STARDATE, False)
-            ): bool,
-            vol.Required(
-                CONF_ENABLE_EVE,
-                default=current_data.get(CONF_ENABLE_EVE, False)
-            ): bool,
-            
-            # ─────────────── FANTASY ───────────────
-            vol.Required(
-                CONF_ENABLE_SHIRE,
-                default=current_data.get(CONF_ENABLE_SHIRE, False)
-            ): bool,
-            vol.Required(
-                CONF_ENABLE_RIVENDELL,
-                default=current_data.get(CONF_ENABLE_RIVENDELL, False)
-            ): bool,
-            vol.Required(
-                CONF_ENABLE_TAMRIEL,
-                default=current_data.get(CONF_ENABLE_TAMRIEL, False)
-            ): bool,
-            vol.Required(
-                CONF_ENABLE_DISCWORLD,
-                default=current_data.get(CONF_ENABLE_DISCWORLD, False)
-            ): bool,
+            ): BooleanSelector(),
         })
 
         return self.async_show_form(
             step_id="init",
             data_schema=data_schema,
-            errors=errors,
         )
+
+    async def async_step_military(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Military options."""
+        if user_input is not None:
+            self._data.update(user_input)
+            return await self.async_step_historical()
+
+        current_data = self.config_entry.options or self.config_entry.data
+        
+        data_schema = vol.Schema({
+            vol.Required(
+                CONF_ENABLE_NATO,
+                default=current_data.get(CONF_ENABLE_NATO, False)
+            ): BooleanSelector(),
+            vol.Required(
+                CONF_ENABLE_NATO_ZONE,
+                default=current_data.get(CONF_ENABLE_NATO_ZONE, False)
+            ): BooleanSelector(),
+            vol.Required(
+                CONF_ENABLE_NATO_RESCUE,
+                default=current_data.get(CONF_ENABLE_NATO_RESCUE, False)
+            ): BooleanSelector(),
+        })
+
+        return self.async_show_form(
+            step_id="military",
+            data_schema=data_schema,
+        )
+
+    async def async_step_historical(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Historical options."""
+        if user_input is not None:
+            self._data.update(user_input)
+            return await self.async_step_finish()
+
+        current_data = self.config_entry.options or self.config_entry.data
+        
+        # Add remaining calendars here in a simplified form
+        data_schema = vol.Schema({
+            vol.Required(
+                CONF_ENABLE_MAYA,
+                default=current_data.get(CONF_ENABLE_MAYA, False)
+            ): BooleanSelector(),
+            vol.Required(
+                CONF_ENABLE_EGYPTIAN,
+                default=current_data.get(CONF_ENABLE_EGYPTIAN, False)
+            ): BooleanSelector(),
+            vol.Required(
+                CONF_ENABLE_ROMAN,
+                default=current_data.get(CONF_ENABLE_ROMAN, False)
+            ): BooleanSelector(),
+            vol.Required(
+                CONF_ENABLE_STARDATE,
+                default=current_data.get(CONF_ENABLE_STARDATE, False)
+            ): BooleanSelector(),
+        })
+
+        return self.async_show_form(
+            step_id="historical",
+            data_schema=data_schema,
+        )
+
+    async def async_step_finish(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Create the config entry."""
+        # Merge all collected data
+        if user_input is not None:
+            self._data.update(user_input)
+        
+        # Check if at least one system is enabled
+        enabled_systems = [
+            key for key, value in self._data.items() 
+            if key.startswith("enable_") and value is True
+        ]
+        
+        if not enabled_systems:
+            return self.async_show_form(
+                step_id="historical",
+                errors={"base": "no_systems_selected"},
+            )
+        
+        return self.async_create_entry(title="", data=self._data)

@@ -2,8 +2,121 @@
   "config": {
     "step": {
       "user": {
-        "title": "Configure Alternative Time Systems",
-        "description": "Select the time systems you want to enable.\n\n──── Categories ────\n• Technical: Unix, Julian, Decimal, Hex, Swatch\n• Military: NATO Formats\n• Historical: Maya, Egyptian, Roman, Attic\n• Asian: Suriyakati, Minguo\n• Space: Mars Calendars\n• Sci-Fi: Stardate, EVE Online\n• Fantasy: Middle-earth, Tamriel, Discworld",
+        "title": "Basic Settings",
+        "description": "Configure the base settings for Alternative Time Systems.",
+        "data": {
+          "name": "Integration name",
+          "enable_timezone": "Enable Timezone",
+          "timezone": "Select Timezone"
+        },
+        "data_description": {
+          "name": "A unique name for this configuration",
+          "enable_timezone": "Display current time in a selected timezone",
+          "timezone": "Choose the timezone to display (e.g. Europe/Berlin, America/New_York)"
+        }
+      },
+      "technical": {
+        "title": "Technical & Modern Time Systems",
+        "description": "Select technical and computer-based time systems.",
+        "data": {
+          "enable_unix": "Enable Unix Timestamp",
+          "enable_julian": "Enable Julian Date",
+          "enable_decimal": "Enable Decimal Time",
+          "enable_hexadecimal": "Enable Hexadecimal Time",
+          "enable_swatch": "Enable Swatch Internet Time"
+        },
+        "data_description": {
+          "enable_unix": "Seconds since January 1, 1970, 00:00 UTC (e.g. 1704067200)",
+          "enable_julian": "Astronomical day count since 4713 BC (e.g. 2460000.5)",
+          "enable_decimal": "French Revolutionary time: 10 hours, 100 minutes, 100 seconds per day",
+          "enable_hexadecimal": "Day divided into 65536 parts, displayed in hex (e.g. .8000 = noon)",
+          "enable_swatch": "Internet time in Beats @000-@999. One day = 1000 Beats, no timezones"
+        }
+      },
+      "military": {
+        "title": "Military Time Systems",
+        "description": "NATO and military time formats for precise communication.",
+        "data": {
+          "enable_nato": "Enable NATO DTG",
+          "enable_nato_zone": "Enable NATO with Zone Indicator",
+          "enable_nato_rescue": "Enable NATO Rescue Format"
+        },
+        "data_description": {
+          "enable_nato": "Military date-time without zone: DDHHMM (e.g. 151430)",
+          "enable_nato_zone": "Full military DTG: DDHHMM[Zone] MON YY (e.g. 151430Z JAN 25)",
+          "enable_nato_rescue": "German rescue service notation: DD HHMM MONTH YY (e.g. 15 1430 JAN 25)"
+        }
+      },
+      "historical": {
+        "title": "Historical Calendar Systems",
+        "description": "Ancient and historical calendars from various cultures.",
+        "data": {
+          "enable_maya": "Enable Maya Calendar",
+          "enable_egyptian": "Enable Egyptian Calendar",
+          "enable_roman": "Enable Roman Calendar",
+          "enable_attic": "Enable Attic Calendar"
+        },
+        "data_description": {
+          "enable_maya": "Long Count, Tzolk'in and Haab calendars (e.g. 13.0.12.1.15 | 8 Ahau | 3 Pop)",
+          "enable_egyptian": "Ancient Egyptian calendar with 12 months of 30 days plus 5 epagomenal days",
+          "enable_roman": "Roman dating with Kalends, Nones, Ides (e.g. ante diem III Kalendas Ianuarias)",
+          "enable_attic": "Ancient Athenian lunisolar calendar with Archon and Olympiad (e.g. 5 ἱσταμένου Hekatombaion)"
+        }
+      },
+      "cultural": {
+        "title": "Asian Calendar Systems",
+        "description": "Traditional calendars from Asia.",
+        "data": {
+          "enable_suriyakati": "Enable Suriyakati Calendar",
+          "enable_minguo": "Enable Minguo Calendar"
+        },
+        "data_description": {
+          "enable_suriyakati": "Thai calendar with Buddhist Era, BE = CE+543 (e.g. 2568 BE)",
+          "enable_minguo": "Taiwan/ROC calendar, Year 1 = 1912 CE (e.g. 民國114年)"
+        }
+      },
+      "space": {
+        "title": "Space & Mars Time Systems",
+        "description": "Calendars and time systems for Mars and space missions.",
+        "data": {
+          "enable_darian": "Enable Darian Mars Calendar",
+          "enable_mars_time": "Enable Mars Time",
+          "mars_timezone": "Mars Timezone"
+        },
+        "data_description": {
+          "enable_darian": "Mars calendar with 24 months and 668 sols per year (e.g. 15 Gemini 217)",
+          "enable_mars_time": "Coordinated Mars Time with timezones based on landing sites",
+          "mars_timezone": "Choose a Mars timezone (MTC, Olympus Mons, Gale Crater, etc.)"
+        }
+      },
+      "scifi": {
+        "title": "Science Fiction Time Systems",
+        "description": "Time systems from science fiction universes.",
+        "data": {
+          "enable_stardate": "Enable Stardate",
+          "enable_eve": "Enable EVE Online Time"
+        },
+        "data_description": {
+          "enable_stardate": "Star Trek TNG stardate (e.g. 47634.44). Based on year 2323",
+          "enable_eve": "New Eden Standard Time from EVE Online (YC 127)"
+        }
+      },
+      "fantasy": {
+        "title": "Fantasy World Calendars",
+        "description": "Calendars from fantasy worlds and video games.",
+        "data": {
+          "enable_shire": "Enable Shire Calendar",
+          "enable_rivendell": "Enable Rivendell Calendar",
+          "enable_tamriel": "Enable Tamriel Calendar",
+          "enable_discworld": "Enable Discworld Calendar"
+        },
+        "data_description": {
+          "enable_shire": "Hobbit calendar with meals and holidays (e.g. S.R. 1624, Afteryule 16)",
+          "enable_rivendell": "Elven calendar with Quenya names and 6 seasons (e.g. F.A. 24, Tuilë 35)",
+          "enable_tamriel": "Elder Scrolls calendar with two moons and birthsigns (e.g. 4E 225, Morning Star 16)",
+          "enable_discworld": "Terry Pratchett's Discworld calendar with 13 months and 8-day week"
+        }
+      },
         "data": {
           "name": "Integration name",
           "enable_timezone": "Enable Timezone",
