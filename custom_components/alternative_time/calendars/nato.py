@@ -372,4 +372,4 @@ class NatoTimeSensor(AlternativeTimeSensorBase):
         # Set state to formatted NATO time
         self._state = self._nato_time["full_display"]
         
-        _LOGGER.debug(f"Updated NATO Time to {self._state}")
+        _LOGGER.debug(f"Updated NATO Time to {self._state}")    
