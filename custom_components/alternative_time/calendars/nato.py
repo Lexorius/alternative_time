@@ -15,9 +15,11 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:
     from ..sensor import AlternativeTimeSensorBase
+    from ..const import DOMAIN
 except ImportError:
     # Fallback für direkten Import
     from sensor import AlternativeTimeSensorBase
+    from const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -150,7 +152,7 @@ class NatoTimeSensor(AlternativeTimeSensorBase):
     # Class-level update interval
     UPDATE_INTERVAL = 1  # Update every second
     
-    def __init__(self, base_name: str, hass: HomeAssistant, config_entry: ConfigEntry = None, plugin_options: Dict[str, Any] = None) -> None:
+    def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the NATO time sensor."""
         super().__init__(base_name, hass)
         
@@ -160,27 +162,26 @@ class NatoTimeSensor(AlternativeTimeSensorBase):
         # Get translated name from metadata
         calendar_name = self._translate('name', 'NATO Time')
         
+        # Try to get config_entry from hass.data
+        config_entry = None
+        try:
+            # Look for our integration's data in hass
+            for entry in hass.config_entries.async_entries(DOMAIN):
+                if base_name in entry.data.get("name", ""):
+                    config_entry = entry
+                    break
+        except Exception as e:
+            _LOGGER.debug(f"Could not find config_entry: {e}")
+        
         # DEBUG: Log all received parameters
         _LOGGER.warning(f"NATO DEBUG - Initialization started")
         _LOGGER.warning(f"NATO DEBUG - base_name: {base_name}")
-        _LOGGER.warning(f"NATO DEBUG - config_entry exists: {config_entry is not None}")
-        _LOGGER.warning(f"NATO DEBUG - plugin_options: {plugin_options}")
+        _LOGGER.warning(f"NATO DEBUG - config_entry found: {config_entry is not None}")
         
-        if config_entry:
-            _LOGGER.warning(f"NATO DEBUG - config_entry.data keys: {config_entry.data.keys()}")
-            _LOGGER.warning(f"NATO DEBUG - Full config_entry.data: {config_entry.data}")
-            if "plugin_options" in config_entry.data:
-                _LOGGER.warning(f"NATO DEBUG - plugin_options from config_entry: {config_entry.data.get('plugin_options')}")
-        
-        # Load configuration options - try multiple sources
+        # Load configuration options
         options = {}
         
-        # Method 1: Direct plugin_options parameter
-        if plugin_options:
-            options = plugin_options
-            _LOGGER.warning(f"NATO DEBUG - Using direct plugin_options: {options}")
-        # Method 2: From config_entry
-        elif config_entry and config_entry.data:
+        if config_entry and config_entry.data:
             all_plugin_options = config_entry.data.get("plugin_options", {})
             _LOGGER.warning(f"NATO DEBUG - All plugin_options from config: {all_plugin_options}")
             options = all_plugin_options.get("nato", {})
