@@ -6,7 +6,18 @@ import logging
 from typing import Dict, Any
 
 from homeassistant.core import HomeAssistant
-from ..sensor import AlternativeTimeSensorBase
+from homeassistant.config_entries import ConfigEntry
+
+# WICHTIG: Import der Basis-Klasse direkt aus sensor.py
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+try:
+    from ..sensor import AlternativeTimeSensorBase
+except ImportError:
+    # Fallback für direkten Import
+    from sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,30 +65,6 @@ CALENDAR_INFO = {
         "ja": "季節イベントと月相を含むアゼロスの暦",
         "zh": "艾泽拉斯日历，包含季节活动和月相",
         "ko": "계절 이벤트와 달의 위상이 있는 아제로스 달력"
-    },
-    
-    # Detailed information for documentation
-    "detailed_info": {
-        "en": {
-            "overview": "The calendar of Azeroth from World of Warcraft, tracking time across the world",
-            "structure": "12 months following real-world calendar with in-game seasonal events",
-            "timeline": "Currently Year 35 after the Dark Portal opened (canon timeline)",
-            "events": "Major seasonal events like Brewfest, Winter Veil, Hallow's End",
-            "moons": "Two moons - White Lady and Blue Child with different phases",
-            "regions": "Time varies between Eastern Kingdoms, Kalimdor, Northrend, and Pandaria",
-            "factions": "Alliance and Horde observe different holidays",
-            "magic": "Temporal anomalies due to Bronze Dragonflight activities"
-        },
-        "de": {
-            "overview": "Der Kalender von Azeroth aus World of Warcraft, verfolgt die Zeit in der Welt",
-            "structure": "12 Monate nach realem Kalender mit Ingame-Events",
-            "timeline": "Aktuell Jahr 35 nach Öffnung des Dunklen Portals (Kanon-Zeitlinie)",
-            "events": "Große saisonale Events wie Braufest, Winterhauch, Schlotternächte",
-            "moons": "Zwei Monde - Weiße Lady und Blaues Kind mit verschiedenen Phasen",
-            "regions": "Zeit variiert zwischen Östlichen Königreichen, Kalimdor, Nordend und Pandaria",
-            "factions": "Allianz und Horde feiern verschiedene Feiertage",
-            "magic": "Zeitanomalien durch Aktivitäten des Bronzenen Drachenschwarms"
-        }
     },
     
     # Warcraft-specific data
@@ -184,36 +171,6 @@ CALENDAR_INFO = {
         "year_name": "Year of the Phoenix"
     },
     
-    # Additional metadata
-    "reference_url": "https://wowpedia.fandom.com/wiki/Calendar",
-    "documentation_url": "https://worldofwarcraft.com/en-us/story/timeline",
-    "origin": "World of Warcraft",
-    "created_by": "Blizzard Entertainment",
-    "introduced": "World of Warcraft (2004)",
-    
-    # Example format
-    "example": "Year 35, Day of the Wisp, 15th of Brewtime | 🍺 Brewfest | White Lady: 🌕 Full",
-    "example_meaning": "Year 35 after Dark Portal, Day of the Wisp, 15th of Brewtime month, during Brewfest, White Lady moon is full",
-    
-    # Related calendars
-    "related": ["tamriel", "shire", "discworld"],
-    
-    # Tags for searching and filtering
-    "tags": [
-        "fantasy", "warcraft", "wow", "azeroth", "blizzard",
-        "mmorpg", "alliance", "horde", "gaming"
-    ],
-    
-    # Special features
-    "features": {
-        "dual_moons": True,
-        "seasonal_events": True,
-        "faction_specific": True,
-        "regional_time": True,
-        "dragon_aspects": True,
-        "precision": "day"
-    },
-    
     # Configuration options for this calendar
     "config_options": {
         "faction": {
@@ -268,9 +225,12 @@ class WarcraftCalendarSensor(AlternativeTimeSensorBase):
     # Class-level update interval
     UPDATE_INTERVAL = 3600  # Update every hour
     
-    def __init__(self, base_name: str, hass: HomeAssistant) -> None:
+    def __init__(self, base_name: str, hass: HomeAssistant, config_entry: ConfigEntry = None) -> None:
         """Initialize the Warcraft calendar sensor."""
         super().__init__(base_name, hass)
+        
+        # Store CALENDAR_INFO as instance variable for _translate method
+        self._calendar_info = CALENDAR_INFO
         
         # Get translated name from metadata
         calendar_name = self._translate('name', 'World of Warcraft Calendar')
@@ -280,12 +240,17 @@ class WarcraftCalendarSensor(AlternativeTimeSensorBase):
         self._attr_unique_id = f"{base_name}_warcraft"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:sword")
         
-        # Configuration options
-        self._faction = "Neutral"
-        self._region = "Eastern Kingdoms"
-        self._show_events = True
-        self._show_moons = True
-        self._show_dragon_aspect = True
+        # Load configuration options from config_entry if available
+        plugin_options = {}
+        if config_entry and config_entry.data:
+            plugin_options = config_entry.data.get("plugin_options", {}).get("warcraft", {})
+        
+        # Configuration options with defaults
+        self._faction = plugin_options.get("faction", "Neutral")
+        self._region = plugin_options.get("region", "Eastern Kingdoms")
+        self._show_events = plugin_options.get("show_events", True)
+        self._show_moons = plugin_options.get("show_moons", True)
+        self._show_dragon_aspect = plugin_options.get("show_dragon_aspect", True)
         
         # Warcraft data
         self._warcraft_data = CALENDAR_INFO["warcraft_data"]

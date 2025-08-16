@@ -6,7 +6,18 @@ import logging
 from typing import Dict, Any
 
 from homeassistant.core import HomeAssistant
-from ..sensor import AlternativeTimeSensorBase
+from homeassistant.config_entries import ConfigEntry
+
+# WICHTIG: Import der Basis-Klasse direkt aus sensor.py
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+try:
+    from ..sensor import AlternativeTimeSensorBase
+except ImportError:
+    # Fallback für direkten Import
+    from sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,30 +65,6 @@ CALENDAR_INFO = {
         "ja": "スター・ウォーズの銀河標準暦（例：35:3:21 GrS）",
         "zh": "星球大战银河标准历（例：35:3:21 GrS）",
         "ko": "스타워즈 은하 표준력 (예: 35:3:21 GrS)"
-    },
-    
-    # Detailed information for documentation
-    "detailed_info": {
-        "en": {
-            "overview": "The Galactic Standard Calendar is the primary calendar system used in the Star Wars galaxy",
-            "structure": "368-day year, 10 months, 7 weeks per month, 5 days per week",
-            "epoch": "Based on the Treaty of Coruscant (BTC/ATC) or Great ReSynchronization (GrS)",
-            "months": "Each month has 7 weeks of 5 days, plus 3 festival weeks and 3 holidays",
-            "time": "24 standard hours per day, 60 minutes per hour",
-            "usage": "Used throughout the galaxy for commerce, government, and military operations",
-            "eras": "Multiple era systems: BBY/ABY (Battle of Yavin), BTC/ATC (Treaty of Coruscant), GrS (Great ReSynchronization)",
-            "note": "The calendar includes galactic festivals that span entire weeks"
-        },
-        "de": {
-            "overview": "Der Galaktische Standardkalender ist das primäre Kalendersystem in der Star Wars Galaxie",
-            "structure": "368-Tage-Jahr, 10 Monate, 7 Wochen pro Monat, 5 Tage pro Woche",
-            "epoch": "Basiert auf dem Vertrag von Coruscant (BTC/ATC) oder der Großen ReSynchronisation (GrS)",
-            "months": "Jeder Monat hat 7 Wochen mit 5 Tagen, plus 3 Festwochen und 3 Feiertage",
-            "time": "24 Standardstunden pro Tag, 60 Minuten pro Stunde",
-            "usage": "Wird galaxisweit für Handel, Regierung und Militär verwendet",
-            "eras": "Mehrere Ära-Systeme: BBY/ABY (Schlacht von Yavin), BTC/ATC (Vertrag von Coruscant), GrS (Große ReSynchronisation)",
-            "note": "Der Kalender enthält galaktische Festivals, die ganze Wochen dauern"
-        }
     },
     
     # Star Wars-specific data
@@ -164,35 +151,6 @@ CALENDAR_INFO = {
         }
     },
     
-    # Additional metadata
-    "reference_url": "https://starwars.fandom.com/wiki/Galactic_Standard_Calendar",
-    "documentation_url": "https://starwars.fandom.com/wiki/Time",
-    "origin": "Star Wars Universe",
-    "created_by": "George Lucas / Lucasfilm",
-    "introduced": "Star Wars Expanded Universe",
-    
-    # Example format
-    "example": "35:3:21 GrS | Taungsday | Third Week",
-    "example_meaning": "Year 35, Month 3, Day 21 (Great ReSynchronization) | Taungsday | Third Week",
-    
-    # Related calendars
-    "related": ["stardate", "eve_online", "warhammer40k_imperial"],
-    
-    # Tags for searching and filtering
-    "tags": [
-        "scifi", "star_wars", "galactic", "space", "fictional",
-        "coruscant", "republic", "empire", "jedi", "sith"
-    ],
-    
-    # Special features
-    "features": {
-        "festival_weeks": True,
-        "multiple_eras": True,
-        "galactic_holidays": True,
-        "regional_time": True,
-        "precision": "day"
-    },
-    
     # Configuration options for this calendar
     "config_options": {
         "era_system": {
@@ -239,9 +197,12 @@ class StarWarsCalendarSensor(AlternativeTimeSensorBase):
     # Class-level update interval
     UPDATE_INTERVAL = 3600  # Update every hour
     
-    def __init__(self, base_name: str, hass: HomeAssistant) -> None:
+    def __init__(self, base_name: str, hass: HomeAssistant, config_entry: ConfigEntry = None) -> None:
         """Initialize the Star Wars calendar sensor."""
         super().__init__(base_name, hass)
+        
+        # Store CALENDAR_INFO as instance variable for _translate method
+        self._calendar_info = CALENDAR_INFO
         
         # Get translated name from metadata
         calendar_name = self._translate('name', 'Star Wars Galactic Calendar')
@@ -251,11 +212,16 @@ class StarWarsCalendarSensor(AlternativeTimeSensorBase):
         self._attr_unique_id = f"{base_name}_star_wars"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:death-star-variant")
         
-        # Configuration options
-        self._era_system = "grs"
-        self._show_week = True
-        self._show_festivals = True
-        self._planet_time = "Coruscant"
+        # Load configuration options from config_entry if available
+        plugin_options = {}
+        if config_entry and config_entry.data:
+            plugin_options = config_entry.data.get("plugin_options", {}).get("star_wars", {})
+        
+        # Configuration options with defaults
+        self._era_system = plugin_options.get("era_system", "grs")
+        self._show_week = plugin_options.get("show_week", True)
+        self._show_festivals = plugin_options.get("show_festivals", True)
+        self._planet_time = plugin_options.get("planet_time", "Coruscant")
         
         # Star Wars data
         self._star_wars_data = CALENDAR_INFO["star_wars_data"]
