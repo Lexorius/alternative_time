@@ -2,8 +2,8 @@
   "config": {
     "step": {
       "user": {
-        "title": "Configure Alternative Time Systems",
-        "description": "Choose the time systems you want to display.",
+        "title": "Basic Settings",
+        "description": "Configure the base settings for Alternative Time Systems.",
         "data": {
           "name": "Integration name",
           "enable_timezone": "Enable Timezone",
@@ -33,9 +33,69 @@
           "enable_roman": "Enable Roman Calendar"
         }
       },
+      "select_modern": {
+        "title": "Modern & Technical Time Systems",
+        "description": "Select modern and technical time systems.",
+        "data": {
+          "group_technical": "── Technical Time Systems ──",
+          "enable_unix": "Enable Unix Timestamp",
+          "enable_julian": "Enable Julian Date",
+          "enable_decimal": "Enable Decimal Time",
+          "enable_hexadecimal": "Enable Hexadecimal Time",
+          "enable_swatch": "Enable Swatch Internet Time",
+          "group_military": "── Military Time Systems ──",
+          "enable_nato": "Enable NATO DTG Time",
+          "enable_nato_zone": "Enable NATO Zone Time Indicator",
+          "enable_nato_rescue": "Enable NATO Rescue Time"
+        }
+      },
+      "select_historical": {
+        "title": "Historical Calendar Systems",
+        "description": "Select historical calendars from various cultures.",
+        "data": {
+          "group_ancient": "── Ancient Calendars ──",
+          "enable_maya": "Enable Maya Calendar",
+          "enable_egyptian": "Enable Egyptian Calendar",
+          "enable_roman": "Enable Roman Calendar",
+          "enable_attic": "Enable Attic Calendar",
+          "group_asian": "── Asian Calendars ──",
+          "enable_suriyakati": "Enable Suriyakati Calendar",
+          "enable_minguo": "Enable Minguo Calendar (Taiwan/ROC)"
+        }
+      },
+      "select_cultural": {
+        "title": "Space & Mars Time Systems",
+        "description": "Configure time systems for Mars and space.",
+        "data": {
+          "group_space": "── Mars Calendars ──",
+          "enable_darian": "Enable Darian Mars Calendar",
+          "enable_mars_time": "Enable Mars Time with Timezones",
+          "mars_timezone": "Select Mars Timezone"
+        }
+      },
+      "select_scifi": {
+        "title": "Science Fiction Time Systems",
+        "description": "Select time systems from science fiction universes.",
+        "data": {
+          "group_scifi": "── Sci-Fi Time Systems ──",
+          "enable_stardate": "Enable Stardate (Star Trek)",
+          "enable_eve": "Enable EVE Online Time"
+        }
+      },
+      "select_fantasy": {
+        "title": "Fantasy World Calendars",
+        "description": "Select calendars from fantasy worlds.",
+        "data": {
+          "group_fantasy": "── Fantasy Calendars ──",
+          "enable_shire": "Enable Shire Calendar (Hobbit)",
+          "enable_rivendell": "Enable Rivendell Calendar (Elven)",
+          "enable_tamriel": "Enable Tamriel Calendar (Elder Scrolls)",
+          "enable_discworld": "Enable Discworld Calendar"
+        }
+      },
       "confirm": {
         "title": "Confirmation",
-        "description": "This integration displays various alternative time systems. Some of these are experimental or fictional.\n\nCalculations may contain inaccuracies.\n\nDo you want to continue?"
+        "description": "This integration displays various alternative time systems. Some of these are experimental or fictional. Calculations may contain inaccuracies. Do you want to continue?"
       }
     },
     "error": {
