@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import os
+import sys
 from datetime import datetime, timedelta
 import traceback
 from importlib import import_module
@@ -32,18 +33,44 @@ def discover_all_calendars() -> Dict[str, Any]:
     
     if not os.path.exists(calendars_dir):
         _LOGGER.error(f"Calendars directory not found: {calendars_dir}")
+        # Try alternative path for debugging
+        _LOGGER.debug(f"Current file location: {__file__}")
+        _LOGGER.debug(f"Directory contents: {os.listdir(os.path.dirname(__file__))}")
         return calendars
     
+    _LOGGER.debug(f"Scanning calendars directory: {calendars_dir}")
+    
     # Scan all .py files in the calendars directory
-    for filename in os.listdir(calendars_dir):
+    try:
+        files = os.listdir(calendars_dir)
+        _LOGGER.debug(f"Found files in calendars directory: {files}")
+    except Exception as e:
+        _LOGGER.error(f"Error listing calendars directory: {e}")
+        return calendars
+    
+    for filename in files:
         if filename.endswith('.py') and not filename.startswith('__'):
             module_name = filename[:-3]  # Remove .py extension
+            _LOGGER.debug(f"Attempting to import calendar module: {module_name}")
             
             try:
-                # Import the module
-                module = import_module(f'.calendars.{module_name}', package='custom_components.alternative_time')
+                # Import the module - try different import methods
+                try:
+                    # Method 1: Relative import with package
+                    module = import_module(f'.calendars.{module_name}', package='custom_components.alternative_time')
+                except ImportError as e1:
+                    _LOGGER.debug(f"Relative import failed for {module_name}: {e1}")
+                    try:
+                        # Method 2: Direct import
+                        module = import_module(f'custom_components.alternative_time.calendars.{module_name}')
+                    except ImportError as e2:
+                        _LOGGER.debug(f"Direct import failed for {module_name}: {e2}")
+                        # Method 3: Add to path and import
+                        if calendars_dir not in sys.path:
+                            sys.path.insert(0, calendars_dir)
+                        module = import_module(module_name)
                 
-                # Check if it has CALENDAR_INFO
+                # Check if it has CALENDAR_INFO (v2.5 format)
                 if hasattr(module, 'CALENDAR_INFO'):
                     info = module.CALENDAR_INFO
                     calendar_id = info.get('id', module_name)
@@ -54,7 +81,8 @@ def discover_all_calendars() -> Dict[str, Any]:
                         attr = getattr(module, attr_name)
                         if (isinstance(attr, type) and 
                             issubclass(attr, SensorEntity) and 
-                            attr.__name__ != 'AlternativeTimeSensorBase'):
+                            attr.__name__ != 'AlternativeTimeSensorBase' and
+                            attr.__name__ != 'SensorEntity'):
                             sensor_classes.append({
                                 'class': attr,
                                 'name': attr.__name__
@@ -74,14 +102,57 @@ def discover_all_calendars() -> Dict[str, Any]:
                             f"[{info.get('category', 'uncategorized')}] "
                             f"with {len(sensor_classes)} sensor(s)"
                         )
+                    else:
+                        _LOGGER.debug(f"Module {module_name} has CALENDAR_INFO but no sensor classes")
+                        
+                # Check for old format (backward compatibility)
+                elif hasattr(module, '__all__'):
+                    # Old format - try to adapt it
+                    _LOGGER.debug(f"Module {module_name} appears to be old format (has __all__)")
+                    
+                    # Try to find sensor classes
+                    sensor_classes = []
+                    for export_name in module.__all__:
+                        if hasattr(module, export_name):
+                            exported = getattr(module, export_name)
+                            if (isinstance(exported, type) and 
+                                issubclass(exported, SensorEntity)):
+                                sensor_classes.append({
+                                    'class': exported,
+                                    'name': export_name
+                                })
+                    
+                    if sensor_classes:
+                        # Create minimal info for old format
+                        calendar_id = module_name
+                        info = {
+                            'id': calendar_id,
+                            'name': {'en': calendar_id.replace('_', ' ').title()},
+                            'description': {'en': f'Legacy calendar: {calendar_id}'},
+                            'category': 'uncategorized'
+                        }
+                        
+                        calendars[calendar_id] = {
+                            'module': module,
+                            'module_name': module_name,
+                            'info': info,
+                            'sensors': sensor_classes,
+                            'update_interval': 60
+                        }
+                        
+                        _LOGGER.info(f"✓ Discovered legacy calendar: {calendar_id} with {len(sensor_classes)} sensor(s)")
                 else:
-                    _LOGGER.debug(f"Module {module_name} has no CALENDAR_INFO, skipping")
+                    _LOGGER.debug(f"Module {module_name} has no CALENDAR_INFO or __all__, skipping")
                     
             except ImportError as e:
                 _LOGGER.warning(f"Could not import calendar module {module_name}: {e}")
             except Exception as e:
                 _LOGGER.error(f"Error discovering calendar {module_name}: {e}")
                 _LOGGER.debug(traceback.format_exc())
+    
+    # If no calendars found, log directory contents for debugging
+    if not calendars:
+        _LOGGER.warning(f"No calendars discovered! Directory contents: {files}")
     
     return calendars
 
@@ -135,9 +206,13 @@ for cal_id, cal_data in DISCOVERED_CALENDARS.items():
         categories[category] = []
     categories[category].append(cal_id)
 
-_LOGGER.info(f"Discovery complete! Found {len(DISCOVERED_CALENDARS)} calendars:")
-for category, cals in sorted(categories.items()):
-    _LOGGER.info(f"  {category}: {', '.join(cals)}")
+if DISCOVERED_CALENDARS:
+    _LOGGER.info(f"Discovery complete! Found {len(DISCOVERED_CALENDARS)} calendars:")
+    for category, cals in sorted(categories.items()):
+        _LOGGER.info(f"  {category}: {', '.join(cals)}")
+else:
+    _LOGGER.warning("No calendars discovered! Check the calendars/ directory")
+    
 _LOGGER.info("=" * 60)
 
 # Build the calendar registry for quick access

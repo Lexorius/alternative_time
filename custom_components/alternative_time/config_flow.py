@@ -20,9 +20,7 @@ from homeassistant.helpers.selector import (
     BooleanSelector,
 )
 
-# Import discovery functions from sensor module
-from .sensor import export_discovered_calendars, DOMAIN
-from .const import DEFAULT_NAME, MARS_TIMEZONES
+from .const import DEFAULT_NAME, MARS_TIMEZONES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +41,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def _discover_calendars(self):
         """Discover available calendars and organize by category."""
         if self._discovered_calendars is None:
-            self._discovered_calendars = export_discovered_calendars()
+            try:
+                # Import the discovery function when needed
+                from .sensor import export_discovered_calendars
+                self._discovered_calendars = export_discovered_calendars()
+                
+                if not self._discovered_calendars:
+                    _LOGGER.warning("No calendars discovered by sensor module")
+                    # Try direct discovery as fallback
+                    self._discovered_calendars = self._direct_discovery()
+                
+            except ImportError as e:
+                _LOGGER.error(f"Could not import discovery function: {e}")
+                # Fallback to direct discovery
+                self._discovered_calendars = self._direct_discovery()
             
             # Organize calendars by category
             self._categories = defaultdict(list)
@@ -54,7 +65,69 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Sort categories for consistent ordering
             self._category_list = sorted(self._categories.keys())
             
-            _LOGGER.info(f"Discovered {len(self._discovered_calendars)} calendars in {len(self._categories)} categories")
+            _LOGGER.info(f"Config flow discovered {len(self._discovered_calendars)} calendars in {len(self._categories)} categories")
+
+    def _direct_discovery(self) -> Dict[str, Any]:
+        """Direct discovery of calendars as fallback."""
+        import os
+        import sys
+        from importlib import import_module
+        
+        calendars = {}
+        
+        # Get the calendars directory path
+        base_dir = os.path.dirname(__file__)
+        calendars_dir = os.path.join(base_dir, 'calendars')
+        
+        if not os.path.exists(calendars_dir):
+            _LOGGER.error(f"Calendars directory not found for config flow: {calendars_dir}")
+            return calendars
+        
+        _LOGGER.debug(f"Config flow scanning calendars directory: {calendars_dir}")
+        
+        # Add to path if needed
+        if calendars_dir not in sys.path:
+            sys.path.insert(0, calendars_dir)
+        
+        try:
+            files = os.listdir(calendars_dir)
+            _LOGGER.debug(f"Config flow found files: {files}")
+        except Exception as e:
+            _LOGGER.error(f"Error listing calendars directory in config flow: {e}")
+            return calendars
+        
+        for filename in files:
+            if filename.endswith('.py') and not filename.startswith('__'):
+                module_name = filename[:-3]
+                
+                try:
+                    # Try to import the module
+                    try:
+                        module = import_module(f'.calendars.{module_name}', package='custom_components.alternative_time')
+                    except:
+                        try:
+                            module = import_module(f'custom_components.alternative_time.calendars.{module_name}')
+                        except:
+                            module = import_module(module_name)
+                    
+                    # Check for CALENDAR_INFO
+                    if hasattr(module, 'CALENDAR_INFO'):
+                        info = module.CALENDAR_INFO
+                        calendar_id = info.get('id', module_name)
+                        
+                        calendars[calendar_id] = {
+                            'module': module,
+                            'module_name': module_name,
+                            'info': info,
+                            'update_interval': getattr(module, 'UPDATE_INTERVAL', 60)
+                        }
+                        
+                        _LOGGER.debug(f"Config flow discovered: {calendar_id}")
+                        
+                except Exception as e:
+                    _LOGGER.debug(f"Config flow could not import {module_name}: {e}")
+        
+        return calendars
 
     def _get_translated_text(self, calendar_info: Dict, key: str, language: str = "en") -> str:
         """Get translated text from calendar info."""
@@ -151,8 +224,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             cal_name = self._get_translated_text(info, 'name', language)
             cal_desc = self._get_translated_text(info, 'description', language)
             
-            # Add to schema
-            schema_dict[vol.Required(enable_key, default=False)] = BooleanSelector()
+            # Add to schema with description as label
+            schema_dict[vol.Required(
+                enable_key, 
+                default=False,
+                description={"suggested_value": False}
+            )] = BooleanSelector()
             
             # Add special options if needed
             if cal_id == 'timezone':
@@ -304,7 +381,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     def _discover_calendars(self):
         """Discover available calendars."""
         if self._discovered_calendars is None:
-            self._discovered_calendars = export_discovered_calendars()
+            try:
+                from .sensor import export_discovered_calendars
+                self._discovered_calendars = export_discovered_calendars()
+            except ImportError:
+                _LOGGER.error("Could not import discovery function in options flow")
+                self._discovered_calendars = {}
+            
             _LOGGER.info(f"Options flow discovered {len(self._discovered_calendars)} calendars")
 
     async def async_step_init(
@@ -349,9 +432,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         
         # Build schema for each category
         for category in sorted(categories.keys()):
-            # Add a section header (this is just for organization in code)
-            # Note: Home Assistant doesn't support section headers in schemas directly
-            
             for cal_id, cal_data in categories[category]:
                 info = cal_data['info']
                 enable_key = f"enable_{cal_id}"
