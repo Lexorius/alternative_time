@@ -27,6 +27,8 @@ from .const import (
     CONF_ENABLE_ATTIC,
     CONF_ENABLE_SURIYAKATI,
     CONF_ENABLE_MINGUO,
+    CONF_ENABLE_DARIAN,
+    CONF_ENABLE_MARS_TIME,
     CONF_MARS_TIMEZONE,
     CONF_ENABLE_EVE,
     CONF_ENABLE_SHIRE,
@@ -34,8 +36,6 @@ from .const import (
     CONF_ENABLE_TAMRIEL,
     CONF_ENABLE_EGYPTIAN,
     CONF_ENABLE_DISCWORLD,
-    CONF_ENABLE_DARIAN,
-    CONF_ENABLE_MARS_TIME,
     DEFAULT_NAME,
 )
 
@@ -112,6 +112,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self):
+        """Initialize the config flow."""
+        self.data = {}
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -148,14 +152,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not time_systems_selected:
                 errors["base"] = "no_time_system_selected"
             else:
-                # Create unique ID based on name
-                await self.async_set_unique_id(user_input[CONF_NAME])
-                self._abort_if_unique_id_configured()
-
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME],
-                    data=user_input
-                )
+                # Store data temporarily and show disclaimer
+                self.data = user_input
+                return await self.async_step_disclaimer()
 
         data_schema = vol.Schema({
             vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
@@ -174,19 +173,54 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Optional(CONF_ENABLE_ATTIC, default=False): bool,
             vol.Optional(CONF_ENABLE_SURIYAKATI, default=False): bool,
             vol.Optional(CONF_ENABLE_MINGUO, default=False): bool,
+            vol.Optional(CONF_ENABLE_DARIAN, default=False): bool,
+            vol.Optional(CONF_ENABLE_MARS_TIME, default=False): bool,
+            vol.Optional(CONF_MARS_TIMEZONE, default="MTC+0 (Airy-0)"): vol.In(MARS_TIMEZONES),
             vol.Optional(CONF_ENABLE_EVE, default=False): bool,
             vol.Optional(CONF_ENABLE_SHIRE, default=False): bool,
             vol.Optional(CONF_ENABLE_RIVENDELL, default=False): bool,
             vol.Optional(CONF_ENABLE_TAMRIEL, default=False): bool,
             vol.Optional(CONF_ENABLE_EGYPTIAN, default=False): bool,
             vol.Optional(CONF_ENABLE_DISCWORLD, default=False): bool,
-            vol.Optional(CONF_ENABLE_DARIAN, default=False): bool,
-            vol.Optional(CONF_ENABLE_MARS_TIME, default=False): bool,
-            vol.Optional(CONF_MARS_TIMEZONE, default="MTC+0 (Airy-0)"): vol.In(MARS_TIMEZONES),
         })
 
         return self.async_show_form(
             step_id="user",
             data_schema=data_schema,
             errors=errors
+        )
+
+    async def async_step_disclaimer(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the disclaimer step."""
+        if user_input is not None:
+            # Create unique ID based on name
+            await self.async_set_unique_id(self.data[CONF_NAME])
+            self._abort_if_unique_id_configured()
+
+            return self.async_create_entry(
+                title=self.data[CONF_NAME],
+                data=self.data
+            )
+
+        return self.async_show_form(
+            step_id="disclaimer",
+            description_placeholders={
+                "disclaimer_text": (
+                    "⚠️ **IMPORTANT DISCLAIMER** ⚠️\n\n"
+                    "Some calendar systems and time calculations in this integration are:\n"
+                    "• **EXPERIMENTAL** - May contain calculation errors\n"
+                    "• **FOR ENTERTAINMENT PURPOSES** - Do not rely on them for critical tasks\n"
+                    "• **APPROXIMATIONS** - Especially for historical and fictional calendars\n\n"
+                    "Known limitations:\n"
+                    "• Maya Calendar uses simplified calculations\n"
+                    "• Egyptian Calendar lacks precise astronomical alignment\n"
+                    "• Fantasy calendars (Tolkien, Elder Scrolls, Discworld) are interpretations\n"
+                    "• Mars time is based on theoretical models\n\n"
+                    "Please report any issues at:\n"
+                    "https://github.com/Lexorius/alternative_time/issues\n\n"
+                    "Click SUBMIT to acknowledge and continue."
+                )
+            }
         )

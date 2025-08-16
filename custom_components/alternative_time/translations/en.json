@@ -31,6 +31,9 @@
           "enable_egyptian": "Enable Egyptian Calendar",
           "enable_discworld": "Enable Discworld Calendar (Pratchett)"
         },
+      "disclaimer": {
+        "title": "Important Notice",
+        "description": "⚠️ **IMPORTANT DISCLAIMER** ⚠️\n\nSome calendar systems and time calculations in this integration are:\n• **EXPERIMENTAL** - May contain calculation errors\n• **FOR ENTERTAINMENT PURPOSES** - Do not rely on them for critical tasks\n• **APPROXIMATIONS** - Especially for historical and fictional calendars\n\nKnown limitations:\n• Maya Calendar uses simplified calculations\n• Egyptian Calendar lacks precise astronomical alignment\n• Fantasy calendars (Tolkien, Elder Scrolls, Discworld) are interpretations\n• Mars time is based on theoretical models\n\nPlease report any issues at:\nhttps://github.com/Lexorius/alternative_time/issues\n\nClick SUBMIT to acknowledge and continue.",
         "data_description": {
           "name": "A unique name for this configuration",
           "enable_timezone": "Shows current time in a selected timezone (e.g., 14:30:45 CEST)",

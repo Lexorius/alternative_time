@@ -31,6 +31,9 @@
           "enable_egyptian": "Ägyptischer Kalender aktivieren",
           "enable_discworld": "Scheibenwelt-Kalender (Pratchett) aktivieren"
         },
+      "disclaimer": {
+        "title": "Wichtiger Hinweis",
+        "description": "⚠️ **WICHTIGER HINWEIS** ⚠️\n\nEinige Kalendersysteme und Zeitberechnungen in dieser Integration sind:\n• **EXPERIMENTELL** - Können Berechnungsfehler enthalten\n• **NUR ZUR UNTERHALTUNG** - Nicht für kritische Aufgaben verwenden\n• **NÄHERUNGEN** - Besonders bei historischen und fiktiven Kalendern\n\nBekannte Einschränkungen:\n• Maya-Kalender verwendet vereinfachte Berechnungen\n• Ägyptischer Kalender ohne präzise astronomische Ausrichtung\n• Fantasy-Kalender (Tolkien, Elder Scrolls, Discworld) sind Interpretationen\n• Mars-Zeit basiert auf theoretischen Modellen\n\nBitte melden Sie Fehler unter:\nhttps://github.com/Lexorius/alternative_time/issues\n\nKlicken Sie auf ABSENDEN um fortzufahren.",
         "data_description": {
           "name": "Ein eindeutiger Name für diese Konfiguration",
           "enable_timezone": "Zeigt die aktuelle Zeit in einer ausgewählten Zeitzone an (z.B. 14:30:45 CEST)",
