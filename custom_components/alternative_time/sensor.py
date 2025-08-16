@@ -16,6 +16,7 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+from homeassistant.helpers.event import async_track_time_interval
 
 from .const import DOMAIN
 
@@ -219,13 +220,30 @@ class AlternativeTimeSensorBase(SensorEntity):
         self._base_name = base_name
         self._hass = hass
         self._state = None
-        self._attr_should_poll = True
+        self._attr_should_poll = False
         
-        # Set update interval from class attribute if available
-        if hasattr(self.__class__, 'UPDATE_INTERVAL'):
-            self._update_interval = self.__class__.UPDATE_INTERVAL
-        else:
-            self._update_interval = 3600  # Default 1 hour
+        # Set update interval from class attribute or metadata if available
+        self._update_interval = 3600  # Default 1 hour
+        # First, if the class provides UPDATE_INTERVAL, take it
+        try:
+            if hasattr(self.__class__, 'UPDATE_INTERVAL'):
+                val = int(getattr(self.__class__, 'UPDATE_INTERVAL'))
+                if val > 0:
+                    self._update_interval = val
+        except Exception:
+            pass
+        # Then prefer module CALENDAR_INFO['update_interval'] if present
+        try:
+            module = self.__class__.__module__
+            if module:
+                mod = __import__(module, fromlist=['CALENDAR_INFO'])
+                if hasattr(mod, 'CALENDAR_INFO'):
+                    self._calendar_info = getattr(self, '_calendar_info', None) or mod.CALENDAR_INFO
+                    ui = self._calendar_info.get('update_interval')
+                    if isinstance(ui, (int, float)) and ui > 0:
+                        self._update_interval = int(ui)
+        except Exception:
+            pass
     
     @property
     def update_interval(self) -> int:
@@ -307,4 +325,51 @@ class AlternativeTimeSensorBase(SensorEntity):
             return default
         # Non-dict text - return as-is or default
         return str(block) if block else default
+
+    async def async_added_to_hass(self) -> None:
+        """Set up periodic updates based on per-plugin interval."""
+        await super().async_added_to_hass()
+        # Re-evaluate update interval from CALENDAR_INFO just in case
+        try:
+            info = getattr(self, '_calendar_info', None)
+            if not info:
+                module = self.__class__.__module__
+                if module:
+                    mod = __import__(module, fromlist=['CALENDAR_INFO'])
+                    if hasattr(mod, 'CALENDAR_INFO'):
+                        self._calendar_info = mod.CALENDAR_INFO
+                        info = self._calendar_info
+            if isinstance(info, dict):
+                ui = info.get('update_interval')
+                if isinstance(ui, (int, float)) and ui > 0:
+                    self._update_interval = int(ui)
+        except Exception:
+            pass
+        interval = timedelta(seconds=max(1, int(self._update_interval)))
+        # Schedule periodic callback
+        self._unsub_timer = async_track_time_interval(self._hass, self._handle_timer, interval)
+        # Do an immediate update to populate state
+        await self._handle_timer(None)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Clean up timers on removal."""
+        try:
+            unsub = getattr(self, '_unsub_timer', None)
+            if unsub:
+                unsub()
+        except Exception:
+            pass
+        await super().async_will_remove_from_hass()
+
+    async def _handle_timer(self, _now) -> None:
+        """Timer handler that runs the plugin's update and writes state."""
+        try:
+            if hasattr(self, 'async_update'):
+                await self.async_update()  # type: ignore[func-returns-value]
+            elif hasattr(self, 'update'):
+                await self._hass.async_add_executor_job(self.update)
+            self.async_write_ha_state()
+        except Exception as ex:
+            _LOGGER.debug("Update error in %s: %s", getattr(self, '_attr_name', None) or self._base_name, ex)
+
 

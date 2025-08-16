@@ -12,7 +12,6 @@ from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig, SelectSelectorMode
 
 from .const import DOMAIN
 
@@ -30,6 +29,48 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Alternative Time Systems."""
+
+    # -----------------------------
+    # Grouping & details helpers
+    # -----------------------------
+    def _build_groups(self, selected_ids: list[str], info_map: dict[str, dict]) -> dict[str, list[str]]:
+        """Return mapping {category: [ids...]} for selected calendars."""
+        groups: dict[str, list[str]] = {}
+        for cid in selected_ids:
+            info = (info_map or {}).get(cid, {}) or {}
+            cat = str(info.get("category") or "uncategorized")
+            # Normalize common synonyms
+            if cat == "religious":
+                cat = "religion"
+            groups.setdefault(cat, []).append(cid)
+        for k in list(groups):
+            groups[k] = sorted(groups[k])
+        return groups
+
+    def _details_text(self, discovered: dict[str, dict]) -> str:
+        """Build a compact details string for the form description."""
+        try:
+            lines = []
+            # Category counts
+            cat_counts: dict[str, int] = {}
+            for cid, info in (discovered or {}).items():
+                cat = str(info.get("category") or "uncategorized")
+                cat_counts[cat] = cat_counts.get(cat, 0) + 1
+            if cat_counts:
+                cats_line = ", ".join(f"{c} ({n})" for c, n in sorted(cat_counts.items()))
+                lines.append(f"Categories: {cats_line}")
+            # Per-calendar details
+            for cid, info in sorted((discovered or {}).items()):
+                name = self._lcal(info, "name", default=cid) if hasattr(self, "_lcal") else (info.get("name", {}) or {}).get("en", cid)
+                cat = str(info.get("category") or "?")
+                ver = str(info.get("version") or "")
+                acc = str(info.get("accuracy") or "")
+                upd = info.get("update_interval")
+                upd_txt = f"{upd}s" if isinstance(upd, (int, float)) else str(upd or "")
+                lines.append(f"- {name} [{cid}] — cat={cat}, v={ver}, acc={acc}, update={upd_txt}")
+            return "\n".join(lines)
+        except Exception:
+            return ""
 
     # -----------------------------
     # Localization helpers
@@ -79,6 +120,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     "available_calendars": ", ".join(
                         sorted(self._lcal(ci, "name", default=cid) for cid, ci in self._discovered_calendars.items())
                     )
+                ,
+                    "details": self._details_text(self._discovered_calendars)
                 }
             )
 
@@ -125,7 +168,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="select_calendars",
                 data_schema=vol.Schema(calendar_schema),
-                description_placeholders={"calendars_found": str(len(calendar_schema))}
+                description_placeholders={"calendars_found": str(len(calendar_schema)),
+                    "details": self._details_text(self._discovered_calendars)}
             )
 
         # Process selected calendars
@@ -144,7 +188,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Create the config entry
         data = {
             **self._user_input,
-            "calendars": self._selected_calendars
+            "calendars": self._selected_calendars,
+            "groups": self._build_groups(self._selected_calendars, self._discovered_calendars)
         }
         
         return self.async_create_entry(
@@ -244,6 +289,46 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options flow for Alternative Time Systems."""
 
     # -----------------------------
+    # Grouping & details helpers
+    # -----------------------------
+    def _build_groups(self, selected_ids: list[str], info_map: dict[str, dict]) -> dict[str, list[str]]:
+        """Return mapping {category: [ids...]} for selected calendars."""
+        groups: dict[str, list[str]] = {}
+        for cid in selected_ids:
+            info = (info_map or {}).get(cid, {}) or {}
+            cat = str(info.get("category") or "uncategorized")
+            # Normalize common synonyms
+            if cat == "religious":
+                cat = "religion"
+            groups.setdefault(cat, []).append(cid)
+        for k in list(groups):
+            groups[k] = sorted(groups[k])
+        return groups
+
+    def _details_text(self, discovered: dict[str, dict]) -> str:
+        """Build a compact details string for the form description."""
+        try:
+            lines = []
+            cat_counts: dict[str, int] = {}
+            for cid, info in (discovered or {}).items():
+                cat = str(info.get("category") or "uncategorized")
+                cat_counts[cat] = cat_counts.get(cat, 0) + 1
+            if cat_counts:
+                cats_line = ", ".join(f"{c} ({n})" for c, n in sorted(cat_counts.items()))
+                lines.append(f"Categories: {cats_line}")
+            for cid, info in sorted((discovered or {}).items()):
+                name = self._lcal(info, "name", default=cid) if hasattr(self, "_lcal") else (info.get("name", {}) or {}).get("en", cid)
+                cat = str(info.get("category") or "?")
+                ver = str(info.get("version") or "")
+                acc = str(info.get("accuracy") or "")
+                upd = info.get("update_interval")
+                upd_txt = f"{upd}s" if isinstance(upd, (int, float)) else str(upd or "")
+                lines.append(f"- {name} [{cid}] — cat={cat}, v={ver}, acc={acc}, update={upd_txt}")
+            return "\n".join(lines)
+        except Exception:
+            return ""
+
+    # -----------------------------
     # Localization helpers
     # -----------------------------
     def _lang(self) -> str:
@@ -280,6 +365,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     ) -> FlowResult:
         """Manage the options."""
         if user_input is not None:
+                        # Compute groups mapping based on selected calendars
+            if isinstance(user_input, dict):
+                selected = user_input.get('calendars')
+                if isinstance(selected, list):
+                    discovered = await self._async_discover_calendars()
+                    user_input['groups'] = self._build_groups(selected, discovered)
             return self.async_create_entry(title="", data=user_input)
 
         # Discover available calendars
@@ -288,25 +379,20 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         # Get currently selected calendars
         current_calendars = self.config_entry.data.get("calendars", [])
         
-        # Create localized options for selector
-        options = []
+        # Create schema for calendar selection
+        calendar_schema = {}
         for cal_id, cal_info in sorted(discovered_calendars.items()):
             name = self._lcal(cal_info, "name", default=cal_id)
-            desc = self._lcal(cal_info, "description", default="")
-            label = name if not desc else f"{name} — {desc}"
-            options.append({"label": label, "value": cal_id})
+            description = self._lcal(cal_info, "description", default="")
+            label = f"{name}"
+            if description:
+                label = f"{name} - {description[:50]}..."
+            default = cal_id in current_calendars
+            calendar_schema[vol.Optional(cal_id, default=default)] = bool
 
-        default = current_calendars
-        schema = vol.Schema({
-            vol.Required("calendars", default=default): SelectSelector(
-                SelectSelectorConfig(options=options, multiple=True, mode=SelectSelectorMode.DROPDOWN)
-            )
-        })
         return self.async_show_form(
-            step_id="init", data_schema=schema,
-            description_placeholders={
-                "available_calendars": ", ".join(sorted(self._lcal(ci, "name", default=cid) for cid, ci in discovered_calendars.items()))
-            }
+            step_id="init",
+            data_schema=vol.Schema(calendar_schema)
         )
 
     async def _async_discover_calendars(self) -> Dict[str, Dict[str, Any]]:
