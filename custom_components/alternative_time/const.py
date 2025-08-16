@@ -1,5 +1,7 @@
+"""Constants for Alternative Time integration."""
 DOMAIN = "alternative_time"
 
+# Configuration constants
 CONF_NAME = "name"
 CONF_TIMEZONE = "timezone"
 CONF_ENABLE_TIMEZONE = "enable_timezone"
@@ -28,3 +30,49 @@ CONF_ENABLE_DISCWORLD = "enable_discworld"
 CONF_ENABLE_ROMAN = "enable_roman"
 
 DEFAULT_NAME = "Alternative Time"
+
+# Sensor types for display
+SENSOR_TYPES = {
+    "timezone": "Timezone",
+    "stardate": "Stardate",
+    "swatch": "Swatch Internet Time",
+    "unix": "Unix Timestamp",
+    "julian": "Julian Date",
+    "decimal": "Decimal Time",
+    "hexadecimal": "Hexadecimal Time",
+    "maya": "Maya Calendar",
+    "nato": "NATO DTG",
+    "nato_zone": "NATO Zone Time",
+    "nato_rescue": "NATO Rescue Time",
+    "attic": "Attic Calendar",
+    "suriyakati": "Suriyakati Calendar",
+    "minguo": "Minguo Calendar",
+    "darian": "Darian Mars Calendar",
+    "mars_time": "Mars Time",
+    "eve": "EVE Online Time",
+    "shire": "Shire Calendar",
+    "rivendell": "Rivendell Calendar",
+    "tamriel": "Tamriel Calendar",
+    "egyptian": "Egyptian Calendar",
+    "discworld": "Discworld Calendar",
+    "roman": "Roman Calendar"
+}
+
+# Mars timezone options
+MARS_TIMEZONES = [
+    "MTC",  # Coordinated Mars Time
+    "AMT",  # Airy Mean Time
+    "OLY",  # Olympus Mons Time
+    "ELY",  # Elysium Time
+    "CHA",  # Chryse Time
+    "MAR",  # Mariner Valley Time
+    "ARA",  # Arabia Terra Time
+    "THR",  # Tharsis Time
+    "HEL",  # Hellas Basin Time
+    "VIK",  # Viking 1 Landing Site
+    "PTH",  # Pathfinder Landing Site
+    "OPP",  # Opportunity Landing Site
+    "SPI",  # Spirit Landing Site
+    "CUR",  # Curiosity/Gale Crater
+    "PER",  # Perseverance/Jezero
+]
