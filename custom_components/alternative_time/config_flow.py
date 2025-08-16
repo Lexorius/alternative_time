@@ -131,11 +131,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return groups
 
     def _build_select_options(self, cid: str, key: str, meta: dict, info: dict) -> list[dict]:
-        """Return a list of {label,value} for select fields.
-        - If meta['options'] present => use it.
-        - Special case 'timezone': derive from CALENDAR_INFO['timezone_data'] or HA's timezones, 
-          and include self.hass.config.time_zone as first option.
-        """
+        """Return a list of {label,value} for select fields."""
         opts = (meta or {}).get("options")
         if isinstance(opts, list) and opts:
             return [{"label": str(o), "value": o} for o in opts]
@@ -145,8 +141,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             tzs = []
             # From plugin info
             tzdata = (info or {}).get("timezone_data") or {}
-            for _grp, arr in (tzdata or {}).items():
-                if isinstance(arr, list):
+            
+            # Handle regions dict structure
+            regions = tzdata.get("regions", {})
+            if isinstance(regions, dict):
+                for _region, tz_list in regions.items():
+                    if isinstance(tz_list, list):
+                        tzs.extend([str(x) for x in tz_list])
+            
+            # Also check for direct timezone lists
+            for _grp, arr in tzdata.items():
+                if isinstance(arr, list) and _grp != "regions":
                     tzs.extend([str(x) for x in arr])
             
             # Unique preserve order
@@ -159,7 +164,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             
             # Ensure system timezone is included and bubbled to top
             try:
-                sys_tz = (getattr(self.hass.config, "time_zone", None) or "UTC")
+                sys_tz = getattr(self.hass.config, "time_zone", None) or "UTC"
             except Exception:
                 sys_tz = "UTC"
             
@@ -247,6 +252,24 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Iterate category list and collect calendars with checkbox UI and detailed labels."""
+        # Process user input if we're coming back from a form
+        if user_input is not None and self._category_index > 0:
+            # Save selected for previous category
+            selected = list(user_input.get("calendars") or [])
+            # Get calendars from previous category
+            prev_cat = self._category_order[self._category_index - 1]
+            prev_cals = [
+                cid for cid, info in (self._discovered_calendars or {}).items() 
+                if str(info.get("category") or "uncategorized").replace("religious", "religion") == prev_cat
+            ]
+            selected = [cid for cid in selected if cid in [c for c, _ in [(c, None) for c in prev_cals]]]
+            
+            # Merge with existing selections
+            merged = [c for c in self._selected_calendars if c not in [c for c, _ in [(c, None) for c in prev_cals]]]
+            merged.extend(selected)
+            self._selected_calendars = merged
+        
+        # Check if we're done with all categories
         if self._category_index >= len(self._category_order):
             # Done with categories -> go to plugin options
             self._option_calendars = [
@@ -290,7 +313,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             name = self._lcal(info, "name", default=cid)
             desc = self._lcal(info, "description", default="")
             upd = info.get("update_interval")
-            upd_txt = (f"{int(upd)}s" if isinstance(upd, (int, float)) else "")
+            upd_txt = f"{int(upd)}s" if isinstance(upd, (int, float)) else ""
             acc = str(info.get("accuracy") or "")
             extra = " • ".join([p for p in [
                 f"update: {upd_txt}" if upd_txt else "", 
@@ -308,167 +331,164 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required("calendars", default=default): cv.multi_select(options_dict)
         })
         
-        if user_input is None:
-            return self.async_show_form(
-                step_id="select_calendars_by_category",
-                data_schema=schema,
-                description_placeholders={
-                    "category": current_cat.title(),
-                    "details": self._details_text(dict(cals))
-                }
-            )
-        
-        # Save selected for this category and continue
-        selected = list(user_input.get("calendars") or [])
-        selected = [cid for cid in selected if any(cid == x[0] for x in cals)]
-        merged = [c for c in self._selected_calendars if c not in selected]
-        merged.extend(selected)
-        self._selected_calendars = merged
+        # Increment index for next iteration
         self._category_index += 1
-        return await self.async_step_select_calendars_by_category()
+        
+        return self.async_show_form(
+            step_id="select_calendars_by_category",
+            data_schema=schema,
+            description_placeholders={
+                "category": current_cat.title(),
+                "details": self._details_text(dict(cals))
+            }
+        )
 
-async def async_step_plugin_options(
-    self, user_input: dict[str, Any] | None = None
-) -> FlowResult:
-    """Iterate selected calendars that expose CALENDAR_INFO['config_options'] and collect values."""
-    
-    # Process user input from previous form
-    if user_input is not None:
-        # Store data from the current calendar (not previous!)
-        if self._option_index > 0 and self._option_index <= len(self._option_calendars):
-            current_cid = self._option_calendars[self._option_index - 1]
+    async def async_step_plugin_options(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Iterate selected calendars that expose CALENDAR_INFO['config_options'] and collect values."""
+        
+        # Process user input from previous form
+        if user_input is not None and self._option_index > 0:
+            # Store data from the previous calendar (not current!)
+            prev_cid = self._option_calendars[self._option_index - 1]
             normalized = {}
+            
+            _LOGGER.debug(f"Processing options for {prev_cid}, raw input: {user_input}")
+            
             for k, v in (user_input or {}).items():
                 if isinstance(k, str) and "] " in k:
                     raw_key = k.split("] ", 1)[1]
                 else:
                     raw_key = k
                 normalized[raw_key] = v
-            self._selected_options[current_cid] = normalized
-            _LOGGER.debug(f"Stored options for {current_cid}: {normalized}")
+            
+            self._selected_options[prev_cid] = normalized
+            _LOGGER.debug(f"Stored options for {prev_cid}: {normalized}")
 
-    # Check if we're done with all calendars
-    if self._option_index >= len(self._option_calendars):
-        # Create final data
-        data = {
-            **self._user_input,
-            "calendars": self._selected_calendars,
-            "groups": self._build_groups(self._selected_calendars, self._discovered_calendars),
-            "plugin_options": self._selected_options
-        }
-        _LOGGER.debug(f"Creating entry with data: {data}")
-        return self.async_create_entry(
-            title=self._user_input.get("name", "Alternative Time"),
-            data=data
+        # Check if we're done with all calendars
+        if self._option_index >= len(self._option_calendars):
+            # Create final data
+            data = {
+                **self._user_input,
+                "calendars": self._selected_calendars,
+                "groups": self._build_groups(self._selected_calendars, self._discovered_calendars),
+                "plugin_options": self._selected_options
+            }
+            _LOGGER.debug(f"Creating entry with data: {data}")
+            return self.async_create_entry(
+                title=self._user_input.get("name", "Alternative Time"),
+                data=data
+            )
+
+        # Get current calendar to configure
+        cid = self._option_calendars[self._option_index]
+        info = self._discovered_calendars.get(cid, {}) or {}
+        opts = info.get("config_options") or {}
+        
+        # Skip calendars without options
+        if not opts:
+            _LOGGER.debug(f"Calendar {cid} has no config options, skipping")
+            self._option_index += 1
+            return await self.async_step_plugin_options()
+        
+        # Get calendar name for display
+        name = self._lcal(info, "name", default=cid)
+        _LOGGER.debug(f"Configuring options for calendar {cid} ({name}), options: {list(opts.keys())}")
+        
+        # Build schema dynamically
+        schema_dict = {}
+        for key, meta in opts.items():
+            if not isinstance(meta, dict):
+                _LOGGER.warning(f"Invalid config option metadata for {key} in {cid}")
+                continue
+            
+            try:
+                typ = meta.get("type", "string")
+                default = meta.get("default")
+                desc = self._lcal(meta, "description", default="")
+                
+                # Special handling for timezone
+                if key.lower() == "timezone":
+                    try:
+                        sys_tz = getattr(self.hass.config, "time_zone", None) or default or "UTC"
+                    except Exception:
+                        sys_tz = default or "UTC"
+                    default = sys_tz
+                
+                pretty_prefix = f"[{name}] "
+                pretty_key = pretty_prefix + key
+                
+                _LOGGER.debug(f"Building field {key}: type={typ}, default={default}")
+                
+                if typ == "boolean":
+                    schema_dict[vol.Optional(pretty_key, default=bool(default) if default is not None else False)] = bool
+                    
+                elif typ == "select":
+                    options = self._build_select_options(cid, key, meta, info)
+                    if options:
+                        # Ensure default is in options
+                        option_values = [o["value"] for o in options]
+                        if default not in option_values and option_values:
+                            default = option_values[0]
+                        
+                        schema_dict[vol.Optional(pretty_key, default=default)] = SelectSelector(
+                            SelectSelectorConfig(
+                                options=options, 
+                                multiple=False, 
+                                mode=SelectSelectorMode.DROPDOWN
+                            )
+                        )
+                    else:
+                        _LOGGER.warning(f"No options for select field {key} in {cid}")
+                        
+                elif typ in ("number", "integer", "float"):
+                    # Handle min/max if present
+                    min_val = meta.get("min")
+                    max_val = meta.get("max")
+                    default_num = float(default) if default is not None else 0.0
+                    
+                    if min_val is not None and max_val is not None:
+                        schema_dict[vol.Optional(pretty_key, default=default_num)] = vol.All(
+                            vol.Coerce(float),
+                            vol.Range(min=float(min_val), max=float(max_val))
+                        )
+                    else:
+                        schema_dict[vol.Optional(pretty_key, default=default_num)] = vol.Coerce(float)
+                        
+                elif typ == "string" or typ == "text":
+                    schema_dict[vol.Optional(pretty_key, default=str(default) if default is not None else "")] = str
+                    
+                else:
+                    # Fallback for unknown types
+                    _LOGGER.warning(f"Unknown config option type '{typ}' for {key} in {cid}, using string")
+                    schema_dict[vol.Optional(pretty_key, default=str(default) if default is not None else "")] = str
+                    
+            except Exception as e:
+                _LOGGER.error(f"Error building schema for {key} in {cid}: {e}", exc_info=True)
+                continue
+        
+        # If no valid options, skip to next
+        if not schema_dict:
+            _LOGGER.debug(f"No valid config options for {cid}, skipping")
+            self._option_index += 1
+            return await self.async_step_plugin_options()
+        
+        # Increment index for next iteration
+        self._option_index += 1
+        
+        schema = vol.Schema(schema_dict)
+        
+        return self.async_show_form(
+            step_id="plugin_options",
+            data_schema=schema,
+            description_placeholders={
+                "plugin": name,
+                "details": self._details_text({cid: info}),
+                "description": f"Configure options for {name}"
+            }
         )
 
-    # Get current calendar to configure
-    cid = self._option_calendars[self._option_index]
-    info = self._discovered_calendars.get(cid, {}) or {}
-    opts = info.get("config_options") or {}
-    
-    # Skip calendars without options
-    if not opts:
-        _LOGGER.debug(f"Calendar {cid} has no config options, skipping")
-        self._option_index += 1
-        return await self.async_step_plugin_options()
-    
-    # Get calendar name for display
-    name = self._lcal(info, "name", default=cid)
-    _LOGGER.debug(f"Configuring options for calendar {cid} ({name})")
-    
-    # Build schema dynamically
-    schema_dict = {}
-    for key, meta in opts.items():
-        if not isinstance(meta, dict):
-            _LOGGER.warning(f"Invalid config option metadata for {key} in {cid}")
-            continue
-            
-        typ = meta.get("type", "string")
-        default = meta.get("default")
-        desc = self._lcal(meta, "description", default="")
-        
-        # Special handling for timezone
-        if key.lower() == "timezone":
-            try:
-                sys_tz = getattr(self.hass.config, "time_zone", None) or default or "UTC"
-            except Exception:
-                sys_tz = default or "UTC"
-            default = sys_tz
-        
-        pretty_prefix = f"[{name}] "
-        pretty_key = pretty_prefix + key
-        
-        try:
-            if typ == "boolean":
-                schema_dict[vol.Optional(pretty_key, default=bool(default) if default is not None else False)] = bool
-            elif typ == "select":
-                options = self._build_select_options(cid, key, meta, info)
-                if options:
-                    schema_dict[vol.Optional(
-                        pretty_key, 
-                        default=default if default is not None else options[0]["value"]
-                    )] = SelectSelector(
-                        SelectSelectorConfig(
-                            options=options, 
-                            multiple=False, 
-                            mode=SelectSelectorMode.DROPDOWN
-                        )
-                    )
-            elif typ in ("number", "integer", "float"):
-                # Handle min/max if present
-                min_val = meta.get("min")
-                max_val = meta.get("max")
-                if min_val is not None and max_val is not None:
-                    schema_dict[vol.Optional(
-                        pretty_key, 
-                        default=float(default) if default is not None else 0.0
-                    )] = vol.All(
-                        vol.Coerce(float),
-                        vol.Range(min=float(min_val), max=float(max_val))
-                    )
-                else:
-                    schema_dict[vol.Optional(
-                        pretty_key, 
-                        default=float(default) if default is not None else 0.0
-                    )] = vol.Coerce(float)
-            elif typ == "string":
-                schema_dict[vol.Optional(
-                    pretty_key, 
-                    default=str(default) if default is not None else ""
-                )] = str
-            else:
-                # Fallback for unknown types
-                _LOGGER.warning(f"Unknown config option type '{typ}' for {key} in {cid}")
-                schema_dict[vol.Optional(
-                    pretty_key, 
-                    default=str(default) if default is not None else ""
-                )] = str
-                
-        except Exception as e:
-            _LOGGER.error(f"Error building schema for {key} in {cid}: {e}")
-            continue
-    
-    # If no valid options, skip to next
-    if not schema_dict:
-        _LOGGER.debug(f"No valid config options for {cid}, skipping")
-        self._option_index += 1
-        return await self.async_step_plugin_options()
-    
-    # Increment index for next iteration
-    self._option_index += 1
-    
-    schema = vol.Schema(schema_dict)
-    
-    return self.async_show_form(
-        step_id="plugin_options",
-        data_schema=schema,
-        description_placeholders={
-            "plugin": name,
-            "details": self._details_text({cid: info}),
-            "description": f"Configure options for {name}"
-        }
-    )
     async def _async_discover_calendars(self) -> None:
         """Discover available calendar implementations asynchronously."""
         try:
