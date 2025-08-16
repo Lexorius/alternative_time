@@ -1,122 +1,165 @@
-"""Sensor platform for Alternative Time integration."""
+"""Sensor platform for Alternative Time integration - Version 2.5 Dynamic Discovery."""
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+import os
+from datetime import datetime, timedelta
 import traceback
+from importlib import import_module
+from typing import Dict, Any, Optional, List
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    DOMAIN,
-    CONF_NAME,
-    CONF_TIMEZONE,
-    CONF_ENABLE_TIMEZONE,
-    CONF_ENABLE_STARDATE,
-    CONF_ENABLE_SWATCH,
-    CONF_ENABLE_UNIX,
-    CONF_ENABLE_JULIAN,
-    CONF_ENABLE_DECIMAL,
-    CONF_ENABLE_HEXADECIMAL,
-    CONF_ENABLE_MAYA,
-    CONF_ENABLE_NATO,
-    CONF_ENABLE_NATO_ZONE,
-    CONF_ENABLE_NATO_RESCUE,
-    CONF_ENABLE_ATTIC,
-    CONF_ENABLE_SURIYAKATI,
-    CONF_ENABLE_MINGUO,
-    CONF_ENABLE_DARIAN,
-    CONF_ENABLE_MARS_TIME,
-    CONF_MARS_TIMEZONE,
-    CONF_ENABLE_EVE,
-    CONF_ENABLE_SHIRE,
-    CONF_ENABLE_RIVENDELL,
-    CONF_ENABLE_TAMRIEL,
-    CONF_ENABLE_EGYPTIAN,
-    CONF_ENABLE_DISCWORLD,
-    CONF_ENABLE_ROMAN,
-)
-
 _LOGGER = logging.getLogger(__name__)
 
-# Track which calendar modules are available
-AVAILABLE_CALENDARS = {}
+# Domain constant - the only one we really need
+DOMAIN = "alternative_time"
+
+# Track discovered calendar modules
+DISCOVERED_CALENDARS = {}
+CALENDAR_REGISTRY = {}
 
 
-def try_import_calendar(module_name: str, class_name: str) -> bool:
-    """Try to import a calendar module and register it."""
-    try:
-        # Fix: Use correct import path
-        from importlib import import_module
-        module = import_module(f'.calendars.{module_name}', package='custom_components.alternative_time')
-        AVAILABLE_CALENDARS[module_name] = getattr(module, class_name)
-        _LOGGER.debug(f"✓ Successfully imported {class_name} from calendars.{module_name}")
-        return True
-    except ImportError as e:
-        _LOGGER.warning(f"✗ Could not import {class_name} from calendars.{module_name}: {e}")
-        return False
-    except AttributeError as e:
-        _LOGGER.warning(f"✗ Module calendars.{module_name} exists but {class_name} not found: {e}")
-        return False
-    except Exception as e:
-        _LOGGER.error(f"✗ Unexpected error importing calendars.{module_name}: {e}")
-        return False
+def discover_all_calendars() -> Dict[str, Any]:
+    """Discover all available calendar modules dynamically."""
+    calendars = {}
+    
+    # Get the calendars directory path
+    calendars_dir = os.path.join(os.path.dirname(__file__), 'calendars')
+    
+    if not os.path.exists(calendars_dir):
+        _LOGGER.error(f"Calendars directory not found: {calendars_dir}")
+        return calendars
+    
+    # Scan all .py files in the calendars directory
+    for filename in os.listdir(calendars_dir):
+        if filename.endswith('.py') and not filename.startswith('__'):
+            module_name = filename[:-3]  # Remove .py extension
+            
+            try:
+                # Import the module
+                module = import_module(f'.calendars.{module_name}', package='custom_components.alternative_time')
+                
+                # Check if it has CALENDAR_INFO
+                if hasattr(module, 'CALENDAR_INFO'):
+                    info = module.CALENDAR_INFO
+                    calendar_id = info.get('id', module_name)
+                    
+                    # Find all sensor classes in the module
+                    sensor_classes = []
+                    for attr_name in dir(module):
+                        attr = getattr(module, attr_name)
+                        if (isinstance(attr, type) and 
+                            issubclass(attr, SensorEntity) and 
+                            attr.__name__ != 'AlternativeTimeSensorBase'):
+                            sensor_classes.append({
+                                'class': attr,
+                                'name': attr.__name__
+                            })
+                    
+                    if sensor_classes:
+                        calendars[calendar_id] = {
+                            'module': module,
+                            'module_name': module_name,
+                            'info': info,
+                            'sensors': sensor_classes,
+                            'update_interval': getattr(module, 'UPDATE_INTERVAL', info.get('update_interval', 60))
+                        }
+                        
+                        _LOGGER.info(
+                            f"✓ Discovered calendar: {calendar_id} "
+                            f"[{info.get('category', 'uncategorized')}] "
+                            f"with {len(sensor_classes)} sensor(s)"
+                        )
+                else:
+                    _LOGGER.debug(f"Module {module_name} has no CALENDAR_INFO, skipping")
+                    
+            except ImportError as e:
+                _LOGGER.warning(f"Could not import calendar module {module_name}: {e}")
+            except Exception as e:
+                _LOGGER.error(f"Error discovering calendar {module_name}: {e}")
+                _LOGGER.debug(traceback.format_exc())
+    
+    return calendars
 
 
-# Try to import all calendar implementations
-_LOGGER.info("Starting import of calendar modules...")
+def generate_config_schema() -> Dict[str, Any]:
+    """Generate configuration schema based on discovered calendars."""
+    schema = {
+        'name': {
+            'type': 'string',
+            'default': 'Alternative Time',
+            'required': True
+        }
+    }
+    
+    # Add enable option for each discovered calendar
+    for calendar_id, calendar_data in DISCOVERED_CALENDARS.items():
+        info = calendar_data['info']
+        
+        # Generate config key
+        config_key = f"enable_{calendar_id}"
+        
+        schema[config_key] = {
+            'type': 'boolean',
+            'default': False,
+            'required': False,
+            'name': info.get('name', {}).get('en', calendar_id),
+            'description': info.get('description', {}).get('en', ''),
+            'category': info.get('category', 'uncategorized')
+        }
+        
+        # Add extra config options if calendar needs them
+        if 'config_options' in info:
+            for option_key, option_config in info['config_options'].items():
+                schema[f"{calendar_id}_{option_key}"] = option_config
+    
+    return schema
 
-# Technical/Modern
-try_import_calendar('timezone', 'TimezoneSensor')
-try_import_calendar('stardate', 'StardateSensor')
-try_import_calendar('swatch', 'SwatchTimeSensor')
-try_import_calendar('unix', 'UnixTimeSensor')
-try_import_calendar('julian', 'JulianDateSensor')
-try_import_calendar('decimal', 'DecimalTimeSensor')
-try_import_calendar('hexadecimal', 'HexadecimalTimeSensor')
 
-# Historical
-try_import_calendar('maya', 'MayaCalendarSensor')
-try_import_calendar('attic', 'AtticCalendarSensor')
-try_import_calendar('suriyakati', 'SuriyakatiCalendarSensor')
-try_import_calendar('egyptian', 'EgyptianCalendarSensor')
-try_import_calendar('roman', 'RomanCalendarSensor')
+# Discover calendars on module load
+_LOGGER.info("=" * 60)
+_LOGGER.info("Alternative Time v2.5 - Dynamic Calendar Discovery")
+_LOGGER.info("=" * 60)
 
-# Asian
-try_import_calendar('minguo', 'MinguoCalendarSensor')
+DISCOVERED_CALENDARS = discover_all_calendars()
 
-# Military/NATO - Special handling for multiple classes in one module
-nato_imported = try_import_calendar('nato', 'NatoTimeSensor')
-if nato_imported:
-    try:
-        from importlib import import_module
-        nato_module = import_module('.calendars.nato', package='custom_components.alternative_time')
-        if hasattr(nato_module, 'NatoTimeZoneSensor'):
-            AVAILABLE_CALENDARS['nato_zone'] = nato_module.NatoTimeZoneSensor
-            _LOGGER.debug("✓ Successfully imported NatoTimeZoneSensor from calendars.nato")
-        if hasattr(nato_module, 'NatoTimeRescueSensor'):
-            AVAILABLE_CALENDARS['nato_rescue'] = nato_module.NatoTimeRescueSensor
-            _LOGGER.debug("✓ Successfully imported NatoTimeRescueSensor from calendars.nato")
-    except Exception as e:
-        _LOGGER.warning(f"Could not import additional NATO sensors: {e}")
+# Group calendars by category for logging
+categories = {}
+for cal_id, cal_data in DISCOVERED_CALENDARS.items():
+    category = cal_data['info'].get('category', 'uncategorized')
+    if category not in categories:
+        categories[category] = []
+    categories[category].append(cal_id)
 
-# Space/Mars
-try_import_calendar('darian', 'DarianCalendarSensor')
-try_import_calendar('mars', 'MarsTimeSensor')
+_LOGGER.info(f"Discovery complete! Found {len(DISCOVERED_CALENDARS)} calendars:")
+for category, cals in sorted(categories.items()):
+    _LOGGER.info(f"  {category}: {', '.join(cals)}")
+_LOGGER.info("=" * 60)
 
-# Sci-Fi
-try_import_calendar('eve', 'EveOnlineTimeSensor')
-
-# Fantasy
-try_import_calendar('shire', 'ShireCalendarSensor')
-try_import_calendar('rivendell', 'RivendellCalendarSensor')
-try_import_calendar('tamriel', 'TamrielCalendarSensor')
-try_import_calendar('discworld', 'DiscworldCalendarSensor')
-
-_LOGGER.info(f"Calendar import complete. {len(AVAILABLE_CALENDARS)} calendars available: {', '.join(AVAILABLE_CALENDARS.keys())}")
+# Build the calendar registry for quick access
+for cal_id, cal_data in DISCOVERED_CALENDARS.items():
+    CALENDAR_REGISTRY[cal_id] = cal_data
+    
+    # Register variants (like nato_zone, nato_rescue)
+    if 'variants' in cal_data['info']:
+        for variant_id, variant_class_name in cal_data['info']['variants'].items():
+            full_variant_id = f"{cal_id}_{variant_id}"
+            
+            # Find the variant class
+            for sensor in cal_data['sensors']:
+                if sensor['name'] == variant_class_name:
+                    CALENDAR_REGISTRY[full_variant_id] = {
+                        'module': cal_data['module'],
+                        'module_name': cal_data['module_name'],
+                        'info': {**cal_data['info'], 'id': full_variant_id},
+                        'sensors': [sensor],
+                        'update_interval': cal_data['update_interval']
+                    }
+                    _LOGGER.debug(f"  Registered variant: {full_variant_id}")
 
 
 async def async_setup_entry(
@@ -125,101 +168,160 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Alternative Time sensors from a config entry."""
-    _LOGGER.info(f"Setting up Alternative Time sensors for '{config_entry.title}'")
+    _LOGGER.info(f"Setting up Alternative Time v2.5 sensors for '{config_entry.title}'")
     _LOGGER.debug(f"Config entry ID: {config_entry.entry_id}")
-    _LOGGER.debug(f"Config data: {config_entry.data}")
+    _LOGGER.debug(f"Config data keys: {config_entry.data.keys()}")
     
     config = config_entry.data
-    base_name = config.get(CONF_NAME, "Alternative Time")
-    _LOGGER.info(f"Base name for sensors: '{base_name}'")
+    base_name = config.get('name', 'Alternative Time')
+    user_language = hass.config.language or 'en'
+    
+    _LOGGER.info(f"Base name: '{base_name}', User language: '{user_language}'")
     
     sensors = []
     enabled_count = 0
-    skipped_count = 0
+    created_count = 0
     
-    # Configuration mapping
-    calendar_configs = [
-        (CONF_ENABLE_TIMEZONE, 'timezone', lambda: AVAILABLE_CALENDARS.get('timezone', None)(base_name, config.get(CONF_TIMEZONE, "UTC"))),
-        (CONF_ENABLE_STARDATE, 'stardate', lambda: AVAILABLE_CALENDARS.get('stardate', None)(base_name)),
-        (CONF_ENABLE_SWATCH, 'swatch', lambda: AVAILABLE_CALENDARS.get('swatch', None)(base_name)),
-        (CONF_ENABLE_UNIX, 'unix', lambda: AVAILABLE_CALENDARS.get('unix', None)(base_name)),
-        (CONF_ENABLE_JULIAN, 'julian', lambda: AVAILABLE_CALENDARS.get('julian', None)(base_name)),
-        (CONF_ENABLE_DECIMAL, 'decimal', lambda: AVAILABLE_CALENDARS.get('decimal', None)(base_name)),
-        (CONF_ENABLE_HEXADECIMAL, 'hexadecimal', lambda: AVAILABLE_CALENDARS.get('hexadecimal', None)(base_name)),
-        (CONF_ENABLE_MAYA, 'maya', lambda: AVAILABLE_CALENDARS.get('maya', None)(base_name)),
-        (CONF_ENABLE_NATO, 'nato', lambda: AVAILABLE_CALENDARS.get('nato', None)(base_name)),
-        (CONF_ENABLE_NATO_ZONE, 'nato_zone', lambda: AVAILABLE_CALENDARS.get('nato_zone', None)(base_name)),
-        (CONF_ENABLE_NATO_RESCUE, 'nato_rescue', lambda: AVAILABLE_CALENDARS.get('nato_rescue', None)(base_name)),
-        (CONF_ENABLE_ATTIC, 'attic', lambda: AVAILABLE_CALENDARS.get('attic', None)(base_name)),
-        (CONF_ENABLE_SURIYAKATI, 'suriyakati', lambda: AVAILABLE_CALENDARS.get('suriyakati', None)(base_name)),
-        (CONF_ENABLE_MINGUO, 'minguo', lambda: AVAILABLE_CALENDARS.get('minguo', None)(base_name)),
-        (CONF_ENABLE_DARIAN, 'darian', lambda: AVAILABLE_CALENDARS.get('darian', None)(base_name)),
-        (CONF_ENABLE_MARS_TIME, 'mars', lambda: AVAILABLE_CALENDARS.get('mars', None)(base_name, config.get(CONF_MARS_TIMEZONE, "MTC"))),
-        (CONF_ENABLE_EVE, 'eve', lambda: AVAILABLE_CALENDARS.get('eve', None)(base_name)),
-        (CONF_ENABLE_SHIRE, 'shire', lambda: AVAILABLE_CALENDARS.get('shire', None)(base_name)),
-        (CONF_ENABLE_RIVENDELL, 'rivendell', lambda: AVAILABLE_CALENDARS.get('rivendell', None)(base_name)),
-        (CONF_ENABLE_TAMRIEL, 'tamriel', lambda: AVAILABLE_CALENDARS.get('tamriel', None)(base_name)),
-        (CONF_ENABLE_EGYPTIAN, 'egyptian', lambda: AVAILABLE_CALENDARS.get('egyptian', None)(base_name)),
-        (CONF_ENABLE_DISCWORLD, 'discworld', lambda: AVAILABLE_CALENDARS.get('discworld', None)(base_name)),
-        (CONF_ENABLE_ROMAN, 'roman', lambda: AVAILABLE_CALENDARS.get('roman', None)(base_name)),
-    ]
-    
-    # Create sensors for enabled calendars
-    for conf_key, calendar_name, sensor_factory in calendar_configs:
-        if config.get(conf_key, False):
-            enabled_count += 1
-            _LOGGER.debug(f"Config {conf_key} is enabled, attempting to create {calendar_name} sensor...")
-            
-            try:
-                # Check if the calendar module is available
-                if calendar_name not in AVAILABLE_CALENDARS and calendar_name not in ['nato_zone', 'nato_rescue']:
-                    _LOGGER.warning(f"Calendar '{calendar_name}' is enabled but module not available")
-                    skipped_count += 1
-                    continue
+    # Process each config entry
+    for key, value in config.items():
+        # Skip non-enable keys
+        if not key.startswith('enable_') or not value:
+            continue
+        
+        # Extract calendar ID from key
+        calendar_id = key[7:]  # Remove 'enable_' prefix
+        enabled_count += 1
+        
+        _LOGGER.debug(f"Processing enabled calendar: {calendar_id}")
+        
+        # Look up calendar in registry
+        if calendar_id not in CALENDAR_REGISTRY:
+            _LOGGER.warning(f"Calendar '{calendar_id}' is enabled but not found in registry")
+            continue
+        
+        cal_data = CALENDAR_REGISTRY[calendar_id]
+        
+        try:
+            # Create sensor instances
+            for sensor_info in cal_data['sensors']:
+                sensor_class = sensor_info['class']
                 
-                # Create the sensor
-                sensor = sensor_factory()
-                if sensor:
-                    sensors.append(sensor)
-                    _LOGGER.info(f"✓ Created {calendar_name} sensor")
+                # Determine constructor parameters
+                if calendar_id == 'timezone':
+                    # Special case for timezone sensor
+                    timezone = config.get('timezone', 'UTC')
+                    sensor = sensor_class(base_name, timezone, hass)
+                elif calendar_id == 'mars' or 'mars' in calendar_id:
+                    # Special case for Mars time with timezone
+                    mars_tz = config.get('mars_timezone', 'MTC')
+                    sensor = sensor_class(base_name, mars_tz, hass)
                 else:
-                    _LOGGER.warning(f"✗ Failed to create {calendar_name} sensor (factory returned None)")
-                    skipped_count += 1
-                    
-            except Exception as e:
-                _LOGGER.error(f"✗ Error creating {calendar_name} sensor: {e}")
-                _LOGGER.debug(traceback.format_exc())
-                skipped_count += 1
-        else:
-            _LOGGER.debug(f"Config {conf_key} is disabled, skipping {calendar_name}")
+                    # Standard sensor
+                    sensor = sensor_class(base_name, hass)
+                
+                sensors.append(sensor)
+                created_count += 1
+                
+                info = cal_data['info']
+                _LOGGER.info(
+                    f"✓ Created {sensor_info['name']} "
+                    f"[{info.get('category', 'uncategorized')}]"
+                )
+                
+        except Exception as e:
+            _LOGGER.error(f"Error creating sensor for {calendar_id}: {e}")
+            _LOGGER.debug(traceback.format_exc())
     
     # Add fallback sensor if nothing was created
     if not sensors:
         _LOGGER.warning("No sensors were created! Adding a fallback sensor...")
-        sensors.append(FallbackTimeSensor(base_name))
+        fallback = FallbackTimeSensor(base_name, hass)
+        sensors.append(fallback)
     
-    # Add all sensors
-    async_add_entities(sensors, True)
+    # Add all sensors with update enabled
+    async_add_entities(sensors, update_before_add=True)
     
     # Summary logging
-    _LOGGER.info("=" * 50)
-    _LOGGER.info(f"Alternative Time Setup Complete for '{base_name}'")
-    _LOGGER.info(f"  Enabled in config: {enabled_count}")
-    _LOGGER.info(f"  Successfully created: {len(sensors)}")
-    _LOGGER.info(f"  Skipped (missing/error): {skipped_count}")
-    _LOGGER.info(f"  Active sensors: {', '.join([s.name for s in sensors])}")
-    _LOGGER.info("=" * 50)
+    _LOGGER.info("=" * 60)
+    _LOGGER.info(f"Alternative Time v2.5 Setup Complete")
+    _LOGGER.info(f"  Configuration: '{base_name}'")
+    _LOGGER.info(f"  Enabled calendars: {enabled_count}")
+    _LOGGER.info(f"  Created sensors: {created_count}")
+    _LOGGER.info(f"  Total active: {len(sensors)}")
+    _LOGGER.info("=" * 60)
+
+
+def export_discovered_calendars() -> Dict[str, Any]:
+    """Export discovered calendars for use by config_flow."""
+    return DISCOVERED_CALENDARS
+
+
+def get_calendar_schema() -> Dict[str, Any]:
+    """Get the configuration schema for discovered calendars."""
+    return generate_config_schema()
 
 
 class AlternativeTimeSensorBase(SensorEntity):
-    """Base class for Alternative Time sensors."""
+    """Base class for Alternative Time sensors - Version 2.5."""
 
-    def __init__(self, base_name: str) -> None:
-        """Initialize the sensor base."""
+    # Default update interval
+    UPDATE_INTERVAL = 60
+
+    def __init__(self, base_name: str, hass: HomeAssistant) -> None:
+        """Initialize the sensor base with Home Assistant instance."""
         self._base_name = base_name
+        self._hass = hass
         self._state = None
-        _LOGGER.debug(f"Initialized base sensor with name: {base_name}")
+        self._last_update = None
         
+        # Get user language from Home Assistant
+        self._language = hass.config.language or 'en'
+        
+        # Use class-level UPDATE_INTERVAL
+        self._update_interval = getattr(self.__class__, 'UPDATE_INTERVAL', 60)
+        self._next_update = datetime.now()
+        
+        # Try to get calendar metadata
+        self._metadata = self._get_metadata()
+        
+        _LOGGER.debug(
+            f"Initialized {self.__class__.__name__} '{base_name}' "
+            f"[{self._metadata.get('category', 'uncategorized')}] "
+            f"Update: {self._update_interval}s, Language: {self._language}"
+        )
+    
+    def _get_metadata(self) -> Dict[str, Any]:
+        """Get metadata from module or class."""
+        # Try to get from module
+        module = self.__class__.__module__
+        if module:
+            try:
+                mod = import_module(module)
+                if hasattr(mod, 'CALENDAR_INFO'):
+                    return mod.CALENDAR_INFO
+            except:
+                pass
+        
+        # Try class attribute
+        if hasattr(self.__class__, 'CALENDAR_INFO'):
+            return self.__class__.CALENDAR_INFO
+        
+        return {}
+    
+    def _translate(self, key: str, fallback: str = None) -> str:
+        """Get translated string from metadata."""
+        if not self._metadata:
+            return fallback or key
+        
+        translations = self._metadata.get(key, {})
+        if isinstance(translations, dict):
+            # Try user language, then English, then fallback
+            return translations.get(
+                self._language,
+                translations.get('en', fallback or key)
+            )
+        return translations or fallback or key
+    
     @property
     def should_poll(self) -> bool:
         """Return True if entity has to be polled for state."""
@@ -228,34 +330,97 @@ class AlternativeTimeSensorBase(SensorEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._state is not None
+        return True
+    
+    @property
+    def force_update(self) -> bool:
+        """Force update even if state hasn't changed."""
+        return True
+    
+    async def async_update(self) -> None:
+        """Update the sensor asynchronously."""
+        now = datetime.now()
+        
+        # Check if it's time to update
+        if now >= self._next_update:
+            if hasattr(self, 'update'):
+                try:
+                    self.update()
+                    self._last_update = now
+                    self._next_update = now + timedelta(seconds=self._update_interval)
+                except Exception as e:
+                    _LOGGER.error(f"Error updating {self._attr_name}: {e}")
+                    _LOGGER.debug(traceback.format_exc())
+    
+    @property
+    def device_info(self):
+        """Return device information."""
+        return {
+            "identifiers": {(DOMAIN, self._base_name)},
+            "name": self._base_name,
+            "manufacturer": "Alternative Time Systems",
+            "model": "Time Calculator",
+            "sw_version": "2.5.0",
+        }
+    
+    @property
+    def extra_state_attributes(self) -> Dict[str, Any]:
+        """Return common state attributes."""
+        attrs = {
+            "update_interval": self._update_interval,
+            "last_update": self._last_update.isoformat() if self._last_update else "Never",
+            "next_update": self._next_update.isoformat() if self._next_update else "Unknown",
+        }
+        
+        # Add metadata info if available
+        if self._metadata:
+            attrs["calendar_info"] = {
+                "id": self._metadata.get('id', 'unknown'),
+                "category": self._metadata.get('category', 'uncategorized'),
+                "accuracy": self._metadata.get('accuracy', 'unknown'),
+            }
+            
+            # Add reference URL if available
+            if 'reference_url' in self._metadata:
+                attrs["calendar_info"]["reference"] = self._metadata['reference_url']
+        
+        return attrs
 
 
 class FallbackTimeSensor(AlternativeTimeSensorBase):
-    """Fallback sensor when no calendars are available."""
+    """Fallback sensor when no calendars are configured."""
     
-    def __init__(self, base_name: str) -> None:
+    UPDATE_INTERVAL = 60
+    
+    def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the fallback sensor."""
-        super().__init__(base_name)
+        super().__init__(base_name, hass)
         self._attr_name = f"{base_name} Status"
         self._attr_unique_id = f"{base_name}_fallback"
         self._attr_icon = "mdi:clock-alert"
-        _LOGGER.info("Created fallback sensor - check configuration!")
+        _LOGGER.info("Created fallback sensor - no calendars configured")
     
     @property
     def state(self):
         """Return the state."""
-        return self._state
+        return self._state or "No calendars"
     
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Dict[str, Any]:
         """Return state attributes."""
-        return {
+        attrs = super().extra_state_attributes
+        attrs.update({
             "message": "No calendars configured",
-            "available_calendars": list(AVAILABLE_CALENDARS.keys()),
-            "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        }
+            "discovered_calendars": list(DISCOVERED_CALENDARS.keys()),
+            "total_discovered": len(DISCOVERED_CALENDARS),
+            "categories": list(set(
+                c['info'].get('category', 'uncategorized') 
+                for c in DISCOVERED_CALENDARS.values()
+            )),
+            "current_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        })
+        return attrs
     
     def update(self) -> None:
         """Update the sensor."""
-        self._state = "No calendars active"
+        self._state = datetime.now().strftime("%H:%M:%S")
