@@ -12,6 +12,7 @@ from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig, SelectSelectorMode
 
 from .const import DOMAIN
 
@@ -36,6 +37,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovered_calendars: Dict[str, Dict[str, Any]] = {}
         self._selected_calendars: List[str] = []
+        self._selected_categories: List[str] = []
+        self._category_order: List[str] = []
+        self._category_index: int = 0
+        self._selected_options: Dict[str, Dict[str, Any]] = {}
+        self._option_calendars: List[str] = []
+        self._option_index: int = 0
+
+    def _categories(self) -> List[str]:
+        cats = set()
+        for _cid, info in (self._discovered_calendars or {}).items():
+            cat = str((info or {}).get("category") or "uncategorized")
+            if cat == "religious":
+                cat = "religion"
+            cats.add(cat)
+        return sorted(cats)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -54,69 +70,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, user_input)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            # Store the name and proceed to calendar selection
-            self.context["title_placeholders"] = {"name": info["title"]}
-            self._user_input = user_input
-            return await self.async_step_select_calendars()
-
-        return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
-        )
-
-    async def async_step_select_calendars(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle calendar selection."""
-        if user_input is None:
-            # Discover calendars if not already done
-            if not self._discovered_calendars:
-                await self._async_discover_calendars()
-
-            # Create schema for calendar selection
-            calendar_schema = {}
-            for cal_id, cal_info in sorted(self._discovered_calendars.items()):
-                name = cal_info.get("name", {}).get("en", cal_id)
-                description = cal_info.get("description", {}).get("en", "")
-                label = f"{name}"
-                if description:
-                    label = f"{name} - {description[:50]}..."
-                calendar_schema[vol.Optional(cal_id, default=False)] = bool
-
-            if not calendar_schema:
-                # No calendars found
-                return self.async_abort(reason="no_calendars_found")
-
-            return self.async_show_form(
-                step_id="select_calendars",
-                data_schema=vol.Schema(calendar_schema),
-                description_placeholders={"calendars_found": str(len(calendar_schema))}
-            )
-
-        # Process selected calendars
-        self._selected_calendars = [
-            cal_id for cal_id, selected in user_input.items() if selected
-        ]
-
-        if not self._selected_calendars:
-            # No calendars selected
-            return self.async_show_form(
-                step_id="select_calendars",
-                data_schema=vol.Schema({}),
-                errors={"base": "no_calendars_selected"}
-            )
-
-        # Create the config entry
-        data = {
-            **self._user_input,
-            "calendars": self._selected_calendars
-        }
-        
-        return self.async_create_entry(
-            title=self._user_input.get("name", "Alternative Time"),
-            data=data
-        )
+            return self.async_show_form(step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors={"base": "unknown"})
+        # Store user input and move to category selection
+        self._user_input = user_input
+        await self._async_discover_calendars()
+        return await self.async_step_select_categories()
 
     async def _async_discover_calendars(self) -> None:
         """Discover available calendar implementations asynchronously."""
@@ -205,6 +163,133 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
+
+    async def async_step_select_categories(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+        """Step to select which categories to configure."""
+        categories = self._categories()
+        if not categories:
+            return self.async_abort(reason="no_calendars_found")
+        if user_input is None:
+            options = [{"label": c.title(), "value": c} for c in categories]
+            schema = vol.Schema({
+                vol.Required("categories", default=categories): SelectSelector(
+                    SelectSelectorConfig(options=options, multiple=True, mode=SelectSelectorMode.DROPDOWN)
+                )
+            })
+            return self.async_show_form(step_id="select_categories", data_schema=schema,
+                description_placeholders={
+                    "details": getattr(self, "_details_text", lambda d: "")(self._discovered_calendars)
+                })
+        # Save and proceed
+        selected = user_input.get("categories") or []
+        self._selected_categories = [c for c in selected if c in categories]
+        self._category_order = list(self._selected_categories)
+        self._category_index = 0
+        self._selected_calendars = []
+        return await self.async_step_select_calendars_by_category()
+
+    async def async_step_select_calendars_by_category(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+        """Iterate category list and collect calendars with nice labels."""
+        if self._category_index >= len(self._category_order):
+            # Done with categories -> go to plugin options
+            # Build list of calendars that have per-plugin options
+            self._option_calendars = [cid for cid in self._selected_calendars if isinstance((self._discovered_calendars.get(cid, {}) or {}).get("config_options"), dict)]
+            self._option_index = 0
+            if self._option_calendars:
+                return await self.async_step_plugin_options()
+            # No options -> create entry
+            data = { **getattr(self, "_user_input", {}), "calendars": self._selected_calendars,
+                     "groups": getattr(self, "_build_groups", lambda a,b: {})(self._selected_calendars, self._discovered_calendars) }
+            return self.async_create_entry(title=self._user_input.get("name", "Alternative Time"), data=data)
+
+        current_cat = self._category_order[self._category_index]
+        # Collect calendars in this category
+        cals = [(cid, info) for cid, info in (self._discovered_calendars or {}).items() if str(info.get("category") or "uncategorized").replace("religious","religion")==current_cat]
+        # Build options with labels "Name — Description"
+        options = []
+        for cid, info in sorted(cals):
+            name = getattr(self, "_lcal", lambda i,k,default="": (i.get("name",{}) or {}).get("en", cid))(info, "name", default=cid)
+            desc = getattr(self, "_lcal", lambda i,k,default="": (i.get("description",{}) or {}).get("en",""))(info, "description", default="")
+            label = f"{name} — {desc}" if desc else name
+            options.append({ "label": label, "value": cid })
+        # Default preselect: keep already selected ones from this category
+        already = [cid for cid in self._selected_calendars if any(cid==x[0] for x in cals)]
+        default = already or [cid for cid,_ in cals]
+        schema = vol.Schema({
+            vol.Required("calendars", default=default): SelectSelector(
+                SelectSelectorConfig(options=options, multiple=True, mode=SelectSelectorMode.DROPDOWN)
+            )
+        })
+        if user_input is None:
+            return self.async_show_form(
+                step_id="select_calendars_by_category",
+                data_schema=schema,
+                description_placeholders={
+                    "category": current_cat.title(),
+                    "details": getattr(self, "_details_text", lambda d: "")(dict(cals))
+                }
+            )
+        # Save selected for this category and move on
+        selected = user_input.get("calendars") or []
+        # Keep only those in this category
+        selected = [cid for cid in selected if any(cid==x[0] for x in cals)]
+        # Merge into global list (unique)
+        merged = [c for c in self._selected_calendars if c not in selected]
+        merged.extend(selected)
+        self._selected_calendars = merged
+        self._category_index += 1
+        return await self.async_step_select_calendars_by_category()
+
+    async def async_step_plugin_options(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+        """Iterate selected calendars that expose CALENDAR_INFO['config_options'] and collect values."""
+        # If returning from a previous plugin form, store data
+        if user_input is not None and self._option_index > 0:
+            prev_cid = self._option_calendars[self._option_index - 1]
+            self._selected_options[prev_cid] = user_input
+
+        # Are we done with all option-bearing calendars?
+        if self._option_index >= len(self._option_calendars):
+            data = { **getattr(self, "_user_input", {}), "calendars": self._selected_calendars,
+                     "groups": getattr(self, "_build_groups", lambda a,b: {})(self._selected_calendars, self._discovered_calendars),
+                     "plugin_options": self._selected_options }
+            return self.async_create_entry(title=self._user_input.get("name", "Alternative Time"), data=data)
+
+        cid = self._option_calendars[self._option_index]
+        info = self._discovered_calendars.get(cid, {}) or {}
+        opts = info.get("config_options") or {}
+        # Build schema dynamically
+        schema_dict = {}
+        for key, meta in (opts or {}).items():
+            typ = (meta or {}).get("type")
+            default = (meta or {}).get("default")
+            desc = getattr(self, "_lcal", lambda i,k,default="": (meta.get("description",{}) or {}).get("en",""))(meta, "description", default="")
+            if typ == "boolean":
+                schema_dict[vol.Optional(f"{key}", default=bool(default))] = bool
+            elif typ == "select":
+                options = (meta or {}).get("options") or []
+                opt_objs = [{"label": str(o), "value": o} for o in options]
+                schema_dict[vol.Optional(f"{key}", default=default)] = SelectSelector(SelectSelectorConfig(options=opt_objs, multiple=False, mode=SelectSelectorMode.DROPDOWN))
+            elif typ == "number":
+                # Accept int/float; coerce to float
+                schema_dict[vol.Optional(f"{key}", default=default if default is not None else 0)] = vol.Coerce(float)
+            else:
+                # string/free text
+                schema_dict[vol.Optional(f"{key}", default=default if default is not None else "")] = str
+
+        # Show form for this plugin
+        name = getattr(self, "_lcal", lambda i,k,default="": (info.get("name",{}) or {}).get("en", cid))(info, "name", default=cid)
+        desc = getattr(self, "_lcal", lambda i,k,default="": (info.get("description",{}) or {}).get("en",""))(info, "description", default="")
+        schema = vol.Schema(schema_dict)
+        self._option_index += 1
+        return self.async_show_form(
+            step_id="plugin_options",
+            data_schema=schema,
+            description_placeholders={
+                "plugin": name,
+                "details": getattr(self, "_details_text", lambda d: "")({cid: info}),
+                "description": desc
+            }
+        )
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options flow for Alternative Time Systems."""
