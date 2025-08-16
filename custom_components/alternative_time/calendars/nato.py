@@ -150,7 +150,7 @@ class NatoTimeSensor(AlternativeTimeSensorBase):
     # Class-level update interval
     UPDATE_INTERVAL = 1  # Update every second
     
-    def __init__(self, base_name: str, hass: HomeAssistant, config_entry: ConfigEntry = None) -> None:
+    def __init__(self, base_name: str, hass: HomeAssistant, config_entry: ConfigEntry = None, plugin_options: Dict[str, Any] = None) -> None:
         """Initialize the NATO time sensor."""
         super().__init__(base_name, hass)
         
@@ -160,15 +160,24 @@ class NatoTimeSensor(AlternativeTimeSensorBase):
         # Get translated name from metadata
         calendar_name = self._translate('name', 'NATO Time')
         
-        # Load configuration options from config_entry if available
-        plugin_options = {}
-        if config_entry and config_entry.data:
-            plugin_options = config_entry.data.get("plugin_options", {}).get("nato", {})
+        # Load configuration options - try multiple sources
+        options = {}
+        
+        # Method 1: Direct plugin_options parameter
+        if plugin_options:
+            options = plugin_options
+            _LOGGER.debug(f"NATO: Using direct plugin_options: {options}")
+        # Method 2: From config_entry
+        elif config_entry and config_entry.data:
+            options = config_entry.data.get("plugin_options", {}).get("nato", {})
+            _LOGGER.debug(f"NATO: Using config_entry plugin_options: {options}")
         
         # Configuration options with defaults
-        self._format_type = plugin_options.get("format_type", "basic")
-        self._show_zone_name = plugin_options.get("show_zone_name", False)
-        self._use_local_zone = plugin_options.get("use_local_zone", True)
+        self._format_type = options.get("format_type", "basic")
+        self._show_zone_name = options.get("show_zone_name", False)
+        self._use_local_zone = options.get("use_local_zone", True)
+        
+        _LOGGER.info(f"NATO sensor initialized with format_type: {self._format_type}, show_zone: {self._show_zone_name}, local_zone: {self._use_local_zone}")
         
         # Adjust name based on format type
         format_suffix = {
@@ -372,4 +381,4 @@ class NatoTimeSensor(AlternativeTimeSensorBase):
         # Set state to formatted NATO time
         self._state = self._nato_time["full_display"]
         
-        _LOGGER.debug(f"Updated NATO Time to {self._state}")    
+        _LOGGER.debug(f"Updated NATO Time to {self._state}")
