@@ -60,6 +60,46 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         ordered = [c for c in FIXED_CATEGORY_ORDER if c in cats]
         return ordered
 
+    def _build_select_options(self, cid: str, key: str, meta: dict, info: dict) -> list[dict]:
+        """Return a list of {label,value} for select fields.
+        - If meta['options'] present => use it.
+        - Special case 'timezone': derive from CALENDAR_INFO['timezone_data'] or HA's timezones, and include self.hass.config.time_zone as first option.
+        """
+        opts = (meta or {}).get("options")
+        if isinstance(opts, list) and opts:
+            return [{"label": str(o), "value": o} for o in opts]
+        # Special handling for timezone
+        if key.lower() == "timezone":
+            tzs = []
+            # From plugin info
+            tzdata = (info or {}).get("timezone_data") or {}
+            for _grp, arr in (tzdata or {}).items():
+                if isinstance(arr, list):
+                    tzs.extend([str(x) for x in arr])
+            # Unique preserve order
+            seen = set(); tzs_u = []
+            for t in tzs:
+                if t not in seen:
+                    seen.add(t); tzs_u.append(t)
+            # Ensure system timezone is included and bubbled to top
+            try:
+                sys_tz = (getattr(self.hass.config, "time_zone", None) or "UTC")
+            except Exception:
+                sys_tz = "UTC"
+            if sys_tz and sys_tz not in seen:
+                tzs_u.insert(0, sys_tz)
+            elif sys_tz and tzs_u and tzs_u[0] != sys_tz:
+                # move to front
+                tzs_u = [sys_tz] + [t for t in tzs_u if t != sys_tz]
+            if not tzs_u:
+                tzs_u = ["UTC"]
+            return [{"label": z, "value": z} for z in tzs_u]
+        # Fallback: use default as the only option
+        default = (meta or {}).get("default")
+        if default is None:
+            default = ""
+        return [{"label": str(default), "value": default}]
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -215,7 +255,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         for cid, info in sorted(cals):
             name = getattr(self, "_lcal", lambda i,k,default="": (i.get("name",{}) or {}).get("en", cid))(info, "name", default=cid)
             desc = getattr(self, "_lcal", lambda i,k,default="": (i.get("description",{}) or {}).get("en",""))(info, "description", default="")
-            label = f"{name} — {desc}" if desc else name
+            upd = info.get("update_interval"); upd_txt = (f"{int(upd)}s" if isinstance(upd,(int,float)) else "")
+            acc = str(info.get("accuracy") or "")
+            extra = " • ".join([p for p in [f"update: {upd_txt}" if upd_txt else "", f"acc: {acc}" if acc else ""] if p])
+            base = f"{name} — {desc}" if desc else name
+            label = f"{base} ({extra})" if extra else base
             options_dict[cid] = label
         # Defaults: keep already chosen in this category, else select all
         already = [cid for cid,_ in cals if cid in self._selected_calendars]
@@ -264,22 +308,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             typ = (meta or {}).get("type")
             default = (meta or {}).get("default")
             desc = getattr(self, "_lcal", lambda i,k,default="": (meta.get("description",{}) or {}).get("en",""))(meta, "description", default="")
+            # Special default for timezone
+            if key.lower() == "timezone":
+                try:
+                    sys_tz = (getattr(self.hass.config, "time_zone", None) or default or "UTC")
+                except Exception:
+                    sys_tz = default or "UTC"
+                default = sys_tz
             if typ == "boolean":
                 schema_dict[vol.Optional(f"{key}", default=bool(default) if default is not None else False)] = bool
             elif typ == "select":
-                options = (meta or {}).get("options") or []
-                opt_objs = [{"label": str(o), "value": o} for o in options]
-                schema_dict[vol.Optional(f"{key}", default=default)] = SelectSelector(SelectSelectorConfig(options=opt_objs, multiple=False, mode=SelectSelectorMode.DROPDOWN))
+                options = self._build_select_options(cid, key, meta, info)
+                schema_dict[vol.Optional(f"{key}", default=default if default is not None else (options[0]["value"] if options else ""))] = SelectSelector(SelectSelectorConfig(options=options, multiple=False, mode=SelectSelectorMode.DROPDOWN))
             elif typ == "number":
-                # Accept int/float; coerce to float
                 schema_dict[vol.Optional(f"{key}", default=default if default is not None else 0)] = vol.Coerce(float)
             else:
-                # string/free text
                 schema_dict[vol.Optional(f"{key}", default=default if default is not None else "")] = str
-
-        # Show form for this plugin
-        name = getattr(self, "_lcal", lambda i,k,default="": (info.get("name",{}) or {}).get("en", cid))(info, "name", default=cid)
-        desc = getattr(self, "_lcal", lambda i,k,default="": (info.get("description",{}) or {}).get("en",""))(info, "description", default="")
         schema = vol.Schema(schema_dict)
         self._option_index += 1
         return self.async_show_form(
