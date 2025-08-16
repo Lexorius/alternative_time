@@ -1,202 +1,359 @@
-"""Shire Calendar (Hobbit/LOTR) implementation."""
+"""Shire Calendar (Hobbit/LOTR) implementation - Version 2.5."""
 from __future__ import annotations
 
 from datetime import datetime
 import logging
+from typing import Dict, Any
 
-from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
+from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
 
+# ============================================
+# CALENDAR METADATA
+# ============================================
 
-class ShireCalendarSensor(SensorEntity):
+# Update interval in seconds (3600 seconds = 1 hour)
+UPDATE_INTERVAL = 3600
+
+# Complete calendar information for auto-discovery
+CALENDAR_INFO = {
+    "id": "shire",
+    "version": "2.5.0",
+    "icon": "mdi:pipe",
+    "category": "fantasy",
+    "accuracy": "fictional",
+    "update_interval": UPDATE_INTERVAL,
+    
+    # Multi-language names
+    "name": {
+        "en": "Shire Calendar (LOTR)",
+        "de": "Auenland-Kalender (HdR)",
+        "es": "Calendario de la Comarca (ESDLA)",
+        "fr": "Calendrier de la Comté (SdA)",
+        "it": "Calendario della Contea (SdA)",
+        "nl": "Gouw Kalender (LOTR)",
+        "pt": "Calendário do Condado (SdA)",
+        "ru": "Календарь Шира (ВК)",
+        "ja": "ホビット庄暦",
+        "zh": "夏尔历",
+        "ko": "샤이어 달력"
+    },
+    
+    # Short descriptions for UI
+    "description": {
+        "en": "Hobbit calendar from Lord of the Rings (e.g. S.R. 1624, Afteryule 16)",
+        "de": "Hobbit-Kalender aus Herr der Ringe (z.B. A.Z. 1624, Nachjul 16)",
+        "es": "Calendario hobbit de El Señor de los Anillos",
+        "fr": "Calendrier hobbit du Seigneur des Anneaux",
+        "it": "Calendario hobbit del Signore degli Anelli"
+    },
+    
+    # Detailed information for documentation
+    "detailed_info": {
+        "en": {
+            "overview": "The Shire Calendar is used by Hobbits in Middle-earth",
+            "structure": "12 months of 30 days each, plus special days (Yule and Lithe)",
+            "year_start": "Year begins at 2 Yule (around December 21)",
+            "weeks": "7-day weeks from Sterday to Highday",
+            "reckoning": "Shire Reckoning (S.R.) counts from colonization of the Shire",
+            "meals": "Seven daily meals: First Breakfast, Second Breakfast, Elevenses, Luncheon, Afternoon Tea, Dinner, Supper",
+            "special": "Bilbo and Frodo's birthday on September 22",
+            "note": "LOTR ends in T.A. 3021 = S.R. 1421"
+        },
+        "de": {
+            "overview": "Der Auenland-Kalender wird von Hobbits in Mittelerde verwendet",
+            "structure": "12 Monate mit je 30 Tagen, plus Sondertage (Jul und Lithe)",
+            "year_start": "Jahr beginnt am 2. Jul (um den 21. Dezember)",
+            "weeks": "7-Tage-Wochen von Sterntag bis Hochtag",
+            "reckoning": "Auenland-Zeitrechnung (A.Z.) zählt seit Besiedlung des Auenlandes",
+            "meals": "Sieben tägliche Mahlzeiten: Erstes Frühstück, Zweites Frühstück, Elfuhrtee, Mittagessen, Nachmittagstee, Abendessen, Nachtmahl",
+            "special": "Bilbos und Frodos Geburtstag am 22. September",
+            "note": "HdR endet in D.Z. 3021 = A.Z. 1421"
+        }
+    },
+    
+    # Shire-specific data
+    "shire_data": {
+        # Shire months
+        "months": [
+            {"name": "Afteryule", "days": 30, "season": "Winter"},
+            {"name": "Solmath", "days": 30, "season": "Winter"},
+            {"name": "Rethe", "days": 30, "season": "Spring"},
+            {"name": "Astron", "days": 30, "season": "Spring"},
+            {"name": "Thrimidge", "days": 30, "season": "Spring"},
+            {"name": "Forelithe", "days": 30, "season": "Summer"},
+            {"name": "Afterlithe", "days": 30, "season": "Summer"},
+            {"name": "Wedmath", "days": 30, "season": "Summer"},
+            {"name": "Halimath", "days": 30, "season": "Harvest"},
+            {"name": "Winterfilth", "days": 30, "season": "Harvest"},
+            {"name": "Blotmath", "days": 30, "season": "Harvest"},
+            {"name": "Foreyule", "days": 30, "season": "Winter"}
+        ],
+        
+        # Shire weekdays
+        "weekdays": [
+            "Sterday",    # Saturday (Stars)
+            "Sunday",     # Sunday (Sun)
+            "Monday",     # Monday (Moon)
+            "Trewsday",   # Tuesday (Trees)
+            "Hevensday",  # Wednesday (Heavens)
+            "Mersday",    # Thursday (Sea)
+            "Highday"     # Friday (High day)
+        ],
+        
+        # Special days
+        "special_days": {
+            (1, 1): "🎊 2 Yule - New Year's Day",
+            (3, 25): "🌸 Elven New Year",
+            (6, 21): "☀️ 1 Lithe - Midsummer's Eve",
+            (6, 22): "🎉 Mid-year's Day",
+            (6, 23): "🎊 Overlithe (leap years only)",
+            (6, 24): "☀️ 2 Lithe",
+            (9, 22): "🎂 Bilbo & Frodo's Birthday!",
+            (12, 21): "❄️ 1 Yule - Midwinter"
+        },
+        
+        # Hobbit meals
+        "meals": {
+            (6, 8): {"name": "First Breakfast", "emoji": "🍳"},
+            (8, 9): {"name": "Second Breakfast", "emoji": "🥐"},
+            (11, 12): {"name": "Elevenses", "emoji": "☕"},
+            (12, 14): {"name": "Luncheon", "emoji": "🍽️"},
+            (15, 16): {"name": "Afternoon Tea", "emoji": "🫖"},
+            (18, 20): {"name": "Dinner", "emoji": "🍖"},
+            (20, 22): {"name": "Supper", "emoji": "🍷"}
+        },
+        
+        # Time periods
+        "time_periods": {
+            (5, 7): "Dawn - The Shire awakens",
+            (7, 12): "Morning - Time for adventures",
+            (12, 17): "Afternoon - Pleasant walking weather",
+            (17, 20): "Evening - Smoke rings and tales",
+            (20, 23): "Night - Stars are out",
+            (23, 5): "Late Night - All respectable hobbits abed"
+        },
+        
+        # Hobbit family names for name days
+        "name_days": {
+            1: "Baggins", 5: "Took", 10: "Brandybuck",
+            15: "Gamgee", 20: "Cotton", 25: "Proudfoot", 30: "Bracegirdle"
+        },
+        
+        # Shire Reckoning base year
+        "sr_base": 1600,  # Year 2000 = S.R. 1600 for our conversion
+        "earth_base": 2000
+    },
+    
+    # Additional metadata
+    "reference_url": "https://tolkiengateway.net/wiki/Shire_Calendar",
+    "documentation_url": "http://shire-reckoning.com/calendar.html",
+    "origin": "J.R.R. Tolkien's Middle-earth",
+    "created_by": "J.R.R. Tolkien",
+    "introduced": "The Hobbit (1937) / The Lord of the Rings (1954-1955)",
+    
+    # Example format
+    "example": "S.R. 1624, Afteryule 16 (Trewsday)",
+    "example_meaning": "Shire Reckoning year 1624, 16th of Afteryule, Trewsday",
+    
+    # Related calendars
+    "related": ["rivendell", "gregorian"],
+    
+    # Tags for searching and filtering
+    "tags": [
+        "fantasy", "tolkien", "hobbit", "lotr", "shire",
+        "middle_earth", "bilbo", "frodo", "gandalf"
+    ],
+    
+    # Special features
+    "features": {
+        "seven_meals": True,
+        "special_days": True,
+        "moon_phases": True,
+        "hobbit_customs": True,
+        "precision": "day"
+    },
+    
+    # Configuration options
+    "config_options": {
+        "show_meals": {
+            "type": "boolean",
+            "default": True,
+            "description": {
+                "en": "Show current Hobbit meal time",
+                "de": "Aktuelle Hobbit-Mahlzeit anzeigen"
+            }
+        },
+        "show_moon": {
+            "type": "boolean",
+            "default": True,
+            "description": {
+                "en": "Show moon phase",
+                "de": "Mondphase anzeigen"
+            }
+        },
+        "show_name_day": {
+            "type": "boolean",
+            "default": True,
+            "description": {
+                "en": "Show Hobbit family name day",
+                "de": "Hobbit-Familiennamentag anzeigen"
+            }
+        }
+    }
+}
+
+
+class ShireCalendarSensor(AlternativeTimeSensorBase):
     """Sensor for displaying Shire Calendar from Middle-earth."""
-
-    def __init__(self, base_name: str) -> None:
+    
+    # Class-level update interval
+    UPDATE_INTERVAL = 3600  # Update every hour
+    
+    def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the Shire calendar sensor."""
-        self._attr_name = f"{base_name} Shire Calendar"
+        super().__init__(base_name, hass)
+        
+        # Get translated name from metadata
+        calendar_name = self._translate('name', 'Shire Calendar')
+        
+        # Set sensor attributes
+        self._attr_name = f"{base_name} {calendar_name}"
         self._attr_unique_id = f"{base_name}_shire_calendar"
-        self._attr_icon = "mdi:pipe"
-        self._state = None
-
+        self._attr_icon = CALENDAR_INFO.get("icon", "mdi:pipe")
+        
+        # Configuration options
+        self._show_meals = True
+        self._show_moon = True
+        self._show_name_day = True
+        
+        # Shire data
+        self._shire_data = CALENDAR_INFO["shire_data"]
+        
+        _LOGGER.debug(f"Initialized Shire Calendar sensor: {self._attr_name}")
+    
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
-
+    
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes."""
-        shire_date = self._calculate_shire_date(datetime.now())
+        attrs = super().extra_state_attributes
         
-        return {
-            "shire_year": shire_date["year"],
-            "month": shire_date["month"],
-            "day": shire_date["day"],
-            "weekday": shire_date["weekday"],
-            "season": shire_date["season"],
-            "special_day": shire_date["special_day"],
-            "meal_time": shire_date["meal_time"],
-            "moon_phase": shire_date["moon_phase"],
-            "gregorian_date": datetime.now().strftime("%Y-%m-%d"),
-            "time_of_day": shire_date["time_of_day"],
-            "hobbit_name_day": shire_date["hobbit_name_day"],
-        }
-
-    def _calculate_shire_date(self, earth_date: datetime) -> dict:
+        # Add Shire-specific attributes
+        if hasattr(self, '_shire_date'):
+            attrs.update(self._shire_date)
+            
+            # Add description in user's language
+            attrs["description"] = self._translate('description')
+            
+            # Add reference
+            attrs["reference"] = CALENDAR_INFO.get('reference_url', '')
+        
+        return attrs
+    
+    def _get_meal_time(self, hour: int) -> Dict[str, str]:
+        """Get current Hobbit meal time."""
+        for (start, end), meal in self._shire_data["meals"].items():
+            if start <= hour < end:
+                return meal
+        return {"name": "Resting Time", "emoji": "🌙"}
+    
+    def _get_time_period(self, hour: int) -> str:
+        """Get time of day description."""
+        for (start, end), period in self._shire_data["time_periods"].items():
+            if start <= hour or (start > end and hour < end):
+                return period
+        return "Time for adventures"
+    
+    def _get_moon_phase(self, day: int) -> str:
+        """Calculate simplified moon phase."""
+        day_in_lunar = day % 29.5
+        if day_in_lunar < 2:
+            return "🌑 New Moon"
+        elif day_in_lunar < 7:
+            return "🌒 Waxing Crescent"
+        elif day_in_lunar < 9:
+            return "🌓 First Quarter"
+        elif day_in_lunar < 14:
+            return "🌔 Waxing Gibbous"
+        elif day_in_lunar < 16:
+            return "🌕 Full Moon"
+        elif day_in_lunar < 21:
+            return "🌖 Waning Gibbous"
+        elif day_in_lunar < 23:
+            return "🌗 Last Quarter"
+        else:
+            return "🌘 Waning Crescent"
+    
+    def _calculate_shire_date(self, earth_date: datetime) -> Dict[str, Any]:
         """Calculate Shire Reckoning date from Earth date."""
         
-        # The Shire Calendar has 12 months of 30 days each, plus special days
-        # Year starts at Yule (around December 21)
-        
-        # Shire months
-        shire_months = [
-            "Afteryule",    # January
-            "Solmath",      # February  
-            "Rethe",        # March
-            "Astron",       # April
-            "Thrimidge",    # May
-            "Forelithe",    # June
-            "Afterlithe",   # July
-            "Wedmath",      # August
-            "Halimath",     # September
-            "Winterfilth",  # October
-            "Blotmath",     # November
-            "Foreyule"      # December
-        ]
-        
-        # Shire weekdays (7-day week)
-        shire_weekdays = [
-            "Sterday",   # Saturday (Stars)
-            "Sunday",    # Sunday (Sun)
-            "Monday",    # Monday (Moon)
-            "Trewsday",  # Tuesday (Trees)
-            "Hevensday", # Wednesday (Heavens)
-            "Mersday",   # Thursday (Sea)
-            "Highday"    # Friday (High day)
-        ]
-        
-        # Convert to Shire calendar
-        # Using a simplified conversion where current year maps to Fourth Age
-        # The Lord of the Rings ends in T.A. 3021 = S.R. 1421
-        # We'll consider year 2000 as S.R. 1600 for fun
-        shire_year = 1600 + (earth_date.year - 2000)
+        # Calculate Shire year
+        years_since_base = earth_date.year - self._shire_data["earth_base"]
+        shire_year = self._shire_data["sr_base"] + years_since_base
         
         # Map Earth months to Shire months (simplified)
-        month_index = earth_date.month - 1
-        shire_month = shire_months[month_index]
+        month_index = min(earth_date.month - 1, 11)
+        month_data = self._shire_data["months"][month_index]
         
         # Shire day (1-30 for regular days)
         shire_day = min(earth_date.day, 30)
         
-        # Weekday
-        weekday_index = earth_date.weekday()
-        # Shift to make Sterday = Saturday
-        weekday_index = (weekday_index + 2) % 7
-        shire_weekday = shire_weekdays[weekday_index]
+        # Weekday (shift to make Sterday = Saturday)
+        weekday_index = (earth_date.weekday() + 2) % 7
+        shire_weekday = self._shire_data["weekdays"][weekday_index]
         
-        # Determine season
-        if earth_date.month in [12, 1, 2]:
-            season = "Yule-tide"
-        elif earth_date.month in [3, 4, 5]:
-            season = "Spring"
-        elif earth_date.month in [6, 7, 8]:
-            season = "Summer"
-        else:
-            season = "Harvest"
+        # Check for special days
+        special_day = self._shire_data["special_days"].get((earth_date.month, earth_date.day), "")
         
-        # Check for special Shire days
-        special_day = ""
-        if earth_date.month == 1 and earth_date.day == 1:
-            special_day = "🎊 2 Yule - New Year's Day"
-        elif earth_date.month == 3 and earth_date.day == 25:
-            special_day = "🌸 Elven New Year"
-        elif earth_date.month == 6 and earth_date.day == 21:
-            special_day = "☀️ 1 Lithe - Midsummer's Eve"
-        elif earth_date.month == 6 and earth_date.day == 22:
-            special_day = "🎉 Mid-year's Day"
-        elif earth_date.month == 9 and earth_date.day == 22:
-            special_day = "🎂 Bilbo & Frodo's Birthday!"
-        elif earth_date.month == 12 and earth_date.day == 21:
-            special_day = "❄️ 1 Yule - Midwinter"
+        # Meal time
+        meal_data = self._get_meal_time(earth_date.hour) if self._show_meals else {}
         
-        # Hobbit meal times
-        hour = earth_date.hour
-        if 6 <= hour < 8:
-            meal_time = "🍳 First Breakfast"
-        elif 8 <= hour < 9:
-            meal_time = "🥐 Second Breakfast"
-        elif 11 <= hour < 12:
-            meal_time = "☕ Elevenses"
-        elif 12 <= hour < 14:
-            meal_time = "🍽️ Luncheon"
-        elif 15 <= hour < 16:
-            meal_time = "🫖 Afternoon Tea"
-        elif 18 <= hour < 20:
-            meal_time = "🍖 Dinner"
-        elif 20 <= hour < 22:
-            meal_time = "🍷 Supper"
-        else:
-            meal_time = "🌙 Resting Time"
+        # Time period
+        time_of_day = self._get_time_period(earth_date.hour)
         
-        # Time of day descriptions (Hobbit style)
-        if 5 <= hour < 7:
-            time_of_day = "Dawn - The Shire awakens"
-        elif 7 <= hour < 12:
-            time_of_day = "Morning - Time for adventures"
-        elif 12 <= hour < 17:
-            time_of_day = "Afternoon - Pleasant walking weather"
-        elif 17 <= hour < 20:
-            time_of_day = "Evening - Smoke rings and tales"
-        elif 20 <= hour < 23:
-            time_of_day = "Night - Stars are out"
-        else:
-            time_of_day = "Late Night - All respectable hobbits abed"
+        # Moon phase
+        moon_phase = self._get_moon_phase(earth_date.day) if self._show_moon else ""
         
-        # Moon phases (simplified)
-        day_in_lunar = earth_date.day % 29.5
-        if day_in_lunar < 2:
-            moon_phase = "🌑 New Moon"
-        elif day_in_lunar < 7:
-            moon_phase = "🌒 Waxing Crescent"
-        elif day_in_lunar < 9:
-            moon_phase = "🌓 First Quarter"
-        elif day_in_lunar < 14:
-            moon_phase = "🌔 Waxing Gibbous"
-        elif day_in_lunar < 16:
-            moon_phase = "🌕 Full Moon"
-        elif day_in_lunar < 21:
-            moon_phase = "🌖 Waning Gibbous"
-        elif day_in_lunar < 23:
-            moon_phase = "🌗 Last Quarter"
-        else:
-            moon_phase = "🌘 Waning Crescent"
+        # Hobbit name day
+        name_day = self._shire_data["name_days"].get(shire_day, "") if self._show_name_day else ""
         
-        # Hobbit name days (some important hobbit family names)
-        name_days = {
-            1: "Baggins", 5: "Took", 10: "Brandybuck", 
-            15: "Gamgee", 20: "Cotton", 25: "Proudfoot", 30: "Bracegirdle"
-        }
-        hobbit_name_day = name_days.get(shire_day, "")
-        
-        return {
+        result = {
             "year": shire_year,
-            "month": shire_month,
+            "month": month_data["name"],
             "day": shire_day,
             "weekday": shire_weekday,
-            "season": season,
-            "special_day": special_day,
-            "meal_time": meal_time,
-            "moon_phase": moon_phase,
+            "season": month_data["season"],
             "time_of_day": time_of_day,
-            "hobbit_name_day": hobbit_name_day,
+            "gregorian_date": earth_date.strftime("%Y-%m-%d"),
+            "full_date": f"S.R. {shire_year}, {month_data['name']} {shire_day}"
         }
-
+        
+        if special_day:
+            result["special_day"] = special_day
+        
+        if meal_data:
+            result["meal_time"] = f"{meal_data['emoji']} {meal_data['name']}"
+        
+        if moon_phase:
+            result["moon_phase"] = moon_phase
+        
+        if name_day:
+            result["hobbit_name_day"] = name_day
+        
+        return result
+    
     def update(self) -> None:
         """Update the sensor."""
-        shire_date = self._calculate_shire_date(datetime.now())
+        now = datetime.now()
+        self._shire_date = self._calculate_shire_date(now)
         
-        # Format: S.R. YYYY, Month Day (Weekday)
-        # Example: "S.R. 1624, Afteryule 16 (Trewsday)"
-        self._state = f"S.R. {shire_date['year']}, {shire_date['month']} {shire_date['day']}"
+        # Set state to formatted Shire date
+        self._state = self._shire_date["full_date"]
+        
+        _LOGGER.debug(f"Updated Shire Calendar to {self._state}")
