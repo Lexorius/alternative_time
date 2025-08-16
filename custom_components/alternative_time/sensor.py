@@ -49,7 +49,9 @@ AVAILABLE_CALENDARS = {}
 def try_import_calendar(module_name: str, class_name: str) -> bool:
     """Try to import a calendar module and register it."""
     try:
-        module = __import__(f'.calendars.{module_name}', globals(), locals(), [class_name], 1)
+        # Fix: Use correct import path
+        from importlib import import_module
+        module = import_module(f'.calendars.{module_name}', package='custom_components.alternative_time')
         AVAILABLE_CALENDARS[module_name] = getattr(module, class_name)
         _LOGGER.debug(f"✓ Successfully imported {class_name} from calendars.{module_name}")
         return True
@@ -86,10 +88,20 @@ try_import_calendar('roman', 'RomanCalendarSensor')
 # Asian
 try_import_calendar('minguo', 'MinguoCalendarSensor')
 
-# Military/NATO
-if try_import_calendar('nato', 'NatoTimeSensor'):
-    try_import_calendar('nato', 'NatoTimeZoneSensor')
-    try_import_calendar('nato', 'NatoTimeRescueSensor')
+# Military/NATO - Special handling for multiple classes in one module
+nato_imported = try_import_calendar('nato', 'NatoTimeSensor')
+if nato_imported:
+    try:
+        from importlib import import_module
+        nato_module = import_module('.calendars.nato', package='custom_components.alternative_time')
+        if hasattr(nato_module, 'NatoTimeZoneSensor'):
+            AVAILABLE_CALENDARS['nato_zone'] = nato_module.NatoTimeZoneSensor
+            _LOGGER.debug("✓ Successfully imported NatoTimeZoneSensor from calendars.nato")
+        if hasattr(nato_module, 'NatoTimeRescueSensor'):
+            AVAILABLE_CALENDARS['nato_rescue'] = nato_module.NatoTimeRescueSensor
+            _LOGGER.debug("✓ Successfully imported NatoTimeRescueSensor from calendars.nato")
+    except Exception as e:
+        _LOGGER.warning(f"Could not import additional NATO sensors: {e}")
 
 # Space/Mars
 try_import_calendar('darian', 'DarianCalendarSensor')
@@ -136,8 +148,8 @@ async def async_setup_entry(
         (CONF_ENABLE_HEXADECIMAL, 'hexadecimal', lambda: AVAILABLE_CALENDARS.get('hexadecimal', None)(base_name)),
         (CONF_ENABLE_MAYA, 'maya', lambda: AVAILABLE_CALENDARS.get('maya', None)(base_name)),
         (CONF_ENABLE_NATO, 'nato', lambda: AVAILABLE_CALENDARS.get('nato', None)(base_name)),
-        (CONF_ENABLE_NATO_ZONE, 'nato', lambda: getattr(AVAILABLE_CALENDARS.get('nato', type), 'NatoTimeZoneSensor', None)(base_name) if 'nato' in AVAILABLE_CALENDARS else None),
-        (CONF_ENABLE_NATO_RESCUE, 'nato', lambda: getattr(AVAILABLE_CALENDARS.get('nato', type), 'NatoTimeRescueSensor', None)(base_name) if 'nato' in AVAILABLE_CALENDARS else None),
+        (CONF_ENABLE_NATO_ZONE, 'nato_zone', lambda: AVAILABLE_CALENDARS.get('nato_zone', None)(base_name)),
+        (CONF_ENABLE_NATO_RESCUE, 'nato_rescue', lambda: AVAILABLE_CALENDARS.get('nato_rescue', None)(base_name)),
         (CONF_ENABLE_ATTIC, 'attic', lambda: AVAILABLE_CALENDARS.get('attic', None)(base_name)),
         (CONF_ENABLE_SURIYAKATI, 'suriyakati', lambda: AVAILABLE_CALENDARS.get('suriyakati', None)(base_name)),
         (CONF_ENABLE_MINGUO, 'minguo', lambda: AVAILABLE_CALENDARS.get('minguo', None)(base_name)),
@@ -160,7 +172,7 @@ async def async_setup_entry(
             
             try:
                 # Check if the calendar module is available
-                if calendar_name not in AVAILABLE_CALENDARS and calendar_name != 'nato':
+                if calendar_name not in AVAILABLE_CALENDARS and calendar_name not in ['nato_zone', 'nato_rescue']:
                     _LOGGER.warning(f"Calendar '{calendar_name}' is enabled but module not available")
                     skipped_count += 1
                     continue
