@@ -16,6 +16,11 @@ from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig,
 
 from .const import DOMAIN
 
+# Fixed category order for the wizard
+FIXED_CATEGORY_ORDER = [
+    'technical', 'historical', 'cultural', 'military', 'space', 'fantasy', 'scifi', 'religion', 'uncategorized'
+]
+
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema({
@@ -51,7 +56,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if cat == "religious":
                 cat = "religion"
             cats.add(cat)
-        return sorted(cats)
+        # Intersect with fixed order to get a stable sequence
+        ordered = [c for c in FIXED_CATEGORY_ORDER if c in cats]
+        return ordered
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -183,42 +190,38 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Save and proceed
         selected = user_input.get("categories") or []
         self._selected_categories = [c for c in selected if c in categories]
-        self._category_order = list(self._selected_categories)
+        self._category_order = [c for c in FIXED_CATEGORY_ORDER if c in self._selected_categories]
         self._category_index = 0
         self._selected_calendars = []
         return await self.async_step_select_calendars_by_category()
 
     async def async_step_select_calendars_by_category(self, user_input: dict[str, Any] | None = None) -> FlowResult:
-        """Iterate category list and collect calendars with nice labels."""
+        """Iterate category list and collect calendars with checkbox UI and detailed labels."""
         if self._category_index >= len(self._category_order):
             # Done with categories -> go to plugin options
-            # Build list of calendars that have per-plugin options
             self._option_calendars = [cid for cid in self._selected_calendars if isinstance((self._discovered_calendars.get(cid, {}) or {}).get("config_options"), dict)]
             self._option_index = 0
             if self._option_calendars:
                 return await self.async_step_plugin_options()
-            # No options -> create entry
             data = { **getattr(self, "_user_input", {}), "calendars": self._selected_calendars,
                      "groups": getattr(self, "_build_groups", lambda a,b: {})(self._selected_calendars, self._discovered_calendars) }
             return self.async_create_entry(title=self._user_input.get("name", "Alternative Time"), data=data)
 
         current_cat = self._category_order[self._category_index]
-        # Collect calendars in this category
+        # Calendars in this category
         cals = [(cid, info) for cid, info in (self._discovered_calendars or {}).items() if str(info.get("category") or "uncategorized").replace("religious","religion")==current_cat]
-        # Build options with labels "Name — Description"
-        options = []
+        # Build labels: Name — Description
+        options_dict = {}
         for cid, info in sorted(cals):
             name = getattr(self, "_lcal", lambda i,k,default="": (i.get("name",{}) or {}).get("en", cid))(info, "name", default=cid)
             desc = getattr(self, "_lcal", lambda i,k,default="": (i.get("description",{}) or {}).get("en",""))(info, "description", default="")
             label = f"{name} — {desc}" if desc else name
-            options.append({ "label": label, "value": cid })
-        # Default preselect: keep already selected ones from this category
-        already = [cid for cid in self._selected_calendars if any(cid==x[0] for x in cals)]
+            options_dict[cid] = label
+        # Defaults: keep already chosen in this category, else select all
+        already = [cid for cid,_ in cals if cid in self._selected_calendars]
         default = already or [cid for cid,_ in cals]
         schema = vol.Schema({
-            vol.Required("calendars", default=default): SelectSelector(
-                SelectSelectorConfig(options=options, multiple=True, mode=SelectSelectorMode.DROPDOWN)
-            )
+            vol.Required("calendars", default=default): cv.multi_select(options_dict)
         })
         if user_input is None:
             return self.async_show_form(
@@ -229,11 +232,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     "details": getattr(self, "_details_text", lambda d: "")(dict(cals))
                 }
             )
-        # Save selected for this category and move on
+        # Save selected for this category and continue
         selected = user_input.get("calendars") or []
-        # Keep only those in this category
         selected = [cid for cid in selected if any(cid==x[0] for x in cals)]
-        # Merge into global list (unique)
         merged = [c for c in self._selected_calendars if c not in selected]
         merged.extend(selected)
         self._selected_calendars = merged
@@ -264,7 +265,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             default = (meta or {}).get("default")
             desc = getattr(self, "_lcal", lambda i,k,default="": (meta.get("description",{}) or {}).get("en",""))(meta, "description", default="")
             if typ == "boolean":
-                schema_dict[vol.Optional(f"{key}", default=bool(default))] = bool
+                schema_dict[vol.Optional(f"{key}", default=bool(default) if default is not None else False)] = bool
             elif typ == "select":
                 options = (meta or {}).get("options") or []
                 opt_objs = [{"label": str(o), "value": o} for o in options]
