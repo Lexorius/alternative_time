@@ -244,28 +244,6 @@ class AlternativeTimeSensorBase(SensorEntity):
         return True
     
     def _translate(self, key: str, default: str = "") -> str:
-        """Get translated string from CALENDAR_INFO."""
-        if not hasattr(self, '_calendar_info'):
-            # Try to get CALENDAR_INFO from module
-            module = self.__class__.__module__
-            if module:
-                try:
-                    mod = __import__(module, fromlist=['CALENDAR_INFO'])
-                    if hasattr(mod, 'CALENDAR_INFO'):
-                        self._calendar_info = mod.CALENDAR_INFO
-                except Exception:
-                    pass
-        
-        if hasattr(self, '_calendar_info'):
-            info = self._calendar_info.get(key, {})
-            if isinstance(info, dict):
-                # Get user's language or default to English
-                return info.get('en', default)
-            return info
-        
-        return default
-
-    def _translate(self, key: str, default: str = "") -> str:
         """Translate a CALENDAR_INFO text block for the user's language.
         
         - Reads the integration's CALENDAR_INFO from the concrete sensor module.
@@ -309,7 +287,6 @@ class AlternativeTimeSensorBase(SensorEntity):
         # Non-dict text - return as-is or default
         return str(block) if block else default
 
-
     @property
     def device_info(self) -> Dict[str, Any]:
         """Group entities by plugin category as a Device in HA registry."""
@@ -324,7 +301,7 @@ class AlternativeTimeSensorBase(SensorEntity):
         category = str(info.get("category") or "uncategorized")
         if category == "religious":
             category = "religion"
-        device_name = f"Alternative Time â€” {category.title()}"
+        device_name = f"Alternative Time — {category.title()}"
         return {
             "identifiers": {(DOMAIN, f"group:{category}")},
             "manufacturer": "Alternative Time Systems",
@@ -383,4 +360,3 @@ class AlternativeTimeSensorBase(SensorEntity):
                 self.async_write_ha_state()
             except Exception:
                 pass
-                
