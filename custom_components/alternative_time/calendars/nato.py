@@ -1,4 +1,4 @@
-"""NATO Time formats implementation - Version 2.5."""
+"""NATO Time formats implementation - Version 2.5 DEBUG."""
 from __future__ import annotations
 
 from datetime import datetime
@@ -160,24 +160,38 @@ class NatoTimeSensor(AlternativeTimeSensorBase):
         # Get translated name from metadata
         calendar_name = self._translate('name', 'NATO Time')
         
+        # DEBUG: Log all received parameters
+        _LOGGER.warning(f"NATO DEBUG - Initialization started")
+        _LOGGER.warning(f"NATO DEBUG - base_name: {base_name}")
+        _LOGGER.warning(f"NATO DEBUG - config_entry exists: {config_entry is not None}")
+        _LOGGER.warning(f"NATO DEBUG - plugin_options: {plugin_options}")
+        
+        if config_entry:
+            _LOGGER.warning(f"NATO DEBUG - config_entry.data keys: {config_entry.data.keys()}")
+            _LOGGER.warning(f"NATO DEBUG - Full config_entry.data: {config_entry.data}")
+            if "plugin_options" in config_entry.data:
+                _LOGGER.warning(f"NATO DEBUG - plugin_options from config_entry: {config_entry.data.get('plugin_options')}")
+        
         # Load configuration options - try multiple sources
         options = {}
         
         # Method 1: Direct plugin_options parameter
         if plugin_options:
             options = plugin_options
-            _LOGGER.debug(f"NATO: Using direct plugin_options: {options}")
+            _LOGGER.warning(f"NATO DEBUG - Using direct plugin_options: {options}")
         # Method 2: From config_entry
         elif config_entry and config_entry.data:
-            options = config_entry.data.get("plugin_options", {}).get("nato", {})
-            _LOGGER.debug(f"NATO: Using config_entry plugin_options: {options}")
+            all_plugin_options = config_entry.data.get("plugin_options", {})
+            _LOGGER.warning(f"NATO DEBUG - All plugin_options from config: {all_plugin_options}")
+            options = all_plugin_options.get("nato", {})
+            _LOGGER.warning(f"NATO DEBUG - NATO specific options: {options}")
         
         # Configuration options with defaults
         self._format_type = options.get("format_type", "basic")
         self._show_zone_name = options.get("show_zone_name", False)
         self._use_local_zone = options.get("use_local_zone", True)
         
-        _LOGGER.info(f"NATO sensor initialized with format_type: {self._format_type}, show_zone: {self._show_zone_name}, local_zone: {self._use_local_zone}")
+        _LOGGER.warning(f"NATO DEBUG - Final settings: format_type={self._format_type}, show_zone={self._show_zone_name}, local_zone={self._use_local_zone}")
         
         # Adjust name based on format type
         format_suffix = {
@@ -201,7 +215,7 @@ class NatoTimeSensor(AlternativeTimeSensorBase):
         # NATO data
         self._nato_data = CALENDAR_INFO["nato_data"]
         
-        _LOGGER.debug(f"Initialized NATO Time sensor ({self._format_type}): {self._attr_name}")
+        _LOGGER.warning(f"NATO DEBUG - Sensor initialized: name={self._attr_name}, format={self._format_type}")
     
     @property
     def state(self):
@@ -269,6 +283,8 @@ class NatoTimeSensor(AlternativeTimeSensorBase):
     def _calculate_nato_time(self, earth_time: datetime) -> Dict[str, Any]:
         """Calculate NATO Time based on selected format."""
         
+        _LOGGER.debug(f"NATO DEBUG - Calculating time with format: {self._format_type}")
+        
         if self._format_type == "basic":
             return self._calculate_basic_format(earth_time)
         elif self._format_type == "zone":
@@ -276,6 +292,7 @@ class NatoTimeSensor(AlternativeTimeSensorBase):
         elif self._format_type == "rescue":
             return self._calculate_rescue_format(earth_time)
         else:
+            _LOGGER.warning(f"NATO DEBUG - Unknown format type: {self._format_type}, using basic")
             return self._calculate_basic_format(earth_time)
     
     def _calculate_basic_format(self, earth_time: datetime) -> Dict[str, Any]:
@@ -341,6 +358,8 @@ class NatoTimeSensor(AlternativeTimeSensorBase):
     def _calculate_rescue_format(self, earth_time: datetime) -> Dict[str, Any]:
         """Calculate German rescue service format (DD HHMM MONAT YY)."""
         
+        _LOGGER.debug(f"NATO DEBUG - Calculating rescue format")
+        
         # Get German month abbreviation
         month = self._nato_data["german_months"][earth_time.month]
         
@@ -371,6 +390,8 @@ class NatoTimeSensor(AlternativeTimeSensorBase):
             "full_display": display
         }
         
+        _LOGGER.debug(f"NATO DEBUG - Rescue format result: {display}")
+        
         return result
     
     def update(self) -> None:
@@ -381,4 +402,4 @@ class NatoTimeSensor(AlternativeTimeSensorBase):
         # Set state to formatted NATO time
         self._state = self._nato_time["full_display"]
         
-        _LOGGER.debug(f"Updated NATO Time to {self._state}")
+        _LOGGER.debug(f"NATO DEBUG - Updated to: {self._state} (format: {self._format_type})")
