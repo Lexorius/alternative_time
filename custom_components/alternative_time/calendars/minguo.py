@@ -40,7 +40,159 @@ CALENDAR_INFO = {
         "zh": "民國紀年",
         "zh-tw": "中華民國曆",
         "ko": "민국 달력 (대만)"
+    },
+    
+    # Short descriptions for UI
+    "description": {
+        "en": "Taiwan/ROC calendar, Year 1 = 1912 CE (e.g. 民國114年)",
+        "de": "Taiwan/ROC Kalender, Jahr 1 = 1912 CE (z.B. 民國114年)",
+        "es": "Calendario de Taiwán/ROC, Año 1 = 1912 CE (ej. 民國114年)",
+        "fr": "Calendrier de Taïwan/ROC, Année 1 = 1912 CE (ex. 民國114年)",
+        "it": "Calendario Taiwan/ROC, Anno 1 = 1912 CE (es. 民國114年)",
+        "nl": "Taiwan/ROC kalender, Jaar 1 = 1912 CE (bijv. 民國114年)",
+        "pt": "Calendário de Taiwan/ROC, Ano 1 = 1912 CE (ex. 民國114年)",
+        "ru": "Календарь Тайвань/КР, Год 1 = 1912 н.э. (напр. 民國114年)",
+        "ja": "台湾/中華民国暦、元年 = 西暦1912年（例：民國114年）",
+        "zh": "台湾/中华民国历法，元年 = 公元1912年（例：民國114年）",
+        "zh-tw": "中華民國曆法，民國元年 = 西元1912年（例：民國114年）",
+        "ko": "대만/중화민국 달력, 1년 = 서기 1912년 (예: 民國114年)"
+    },
+    
+    # Detailed information for documentation
+    "detailed_info": {
+        "en": {
+            "overview": "The Minguo calendar is the official calendar used in Taiwan (Republic of China)",
+            "epoch": "Year 1 corresponds to 1912 CE, the founding year of the Republic of China",
+            "structure": "Uses the same months and days as the Gregorian calendar, only the year numbering differs",
+            "usage": "Official documents, government records, and daily life in Taiwan",
+            "conversion": "Minguo year = Gregorian year - 1911",
+            "before_epoch": "Years before 1912 are denoted as 民前 (before the Republic)",
+            "holidays": "Includes traditional Chinese festivals and ROC national holidays"
+        },
+        "zh-tw": {
+            "overview": "民國紀年是中華民國（臺灣）的官方曆法",
+            "epoch": "民國元年對應西元1912年，即中華民國成立之年",
+            "structure": "使用與公曆相同的月份和日期，僅年份編號不同",
+            "usage": "用於官方文件、政府記錄和臺灣日常生活",
+            "conversion": "民國年 = 西元年 - 1911",
+            "before_epoch": "1912年之前的年份標記為民前",
+            "holidays": "包含傳統中國節日和中華民國國定假日"
+        },
+        "de": {
+            "overview": "Der Minguo-Kalender ist der offizielle Kalender in Taiwan (Republik China)",
+            "epoch": "Jahr 1 entspricht 1912 n.Chr., dem Gründungsjahr der Republik China",
+            "structure": "Verwendet dieselben Monate und Tage wie der gregorianische Kalender, nur die Jahreszählung unterscheidet sich",
+            "usage": "Offizielle Dokumente, Regierungsunterlagen und tägliches Leben in Taiwan",
+            "conversion": "Minguo-Jahr = Gregorianisches Jahr - 1911",
+            "before_epoch": "Jahre vor 1912 werden als 民前 (vor der Republik) bezeichnet",
+            "holidays": "Umfasst traditionelle chinesische Feste und ROC-Nationalfeiertage"
+        }
+    },
+    
+    # Minguo-specific data
+    "minguo_data": {
+        "epoch_year": 1912,
+        "founding_date": "1912-01-01",
+        
+        # Month names in Traditional Chinese
+        "chinese_months": [
+            "一月", "二月", "三月", "四月", "五月", "六月",
+            "七月", "八月", "九月", "十月", "十一月", "十二月"
+        ],
+        
+        # Weekday names in Traditional Chinese
+        "chinese_weekdays": [
+            "星期一", "星期二", "星期三", "星期四",
+            "星期五", "星期六", "星期日"
+        ],
+        
+        # Important dates in ROC calendar
+        "holidays": {
+            (1, 1): {"name": "中華民國開國紀念日", "emoji": "🎊", "en": "Founding Day of ROC"},
+            (2, 28): {"name": "和平紀念日", "emoji": "🕊️", "en": "Peace Memorial Day"},
+            (3, 29): {"name": "革命先烈紀念日", "emoji": "🌹", "en": "Youth Day"},
+            (4, 4): {"name": "兒童節", "emoji": "👶", "en": "Children's Day"},
+            (4, 5): {"name": "清明節", "emoji": "🏔️", "en": "Tomb Sweeping Day"},
+            (5, 1): {"name": "勞動節", "emoji": "👷", "en": "Labor Day"},
+            (9, 28): {"name": "孔子誕辰紀念日", "emoji": "📚", "en": "Confucius' Birthday"},
+            (10, 10): {"name": "國慶日", "emoji": "🇹🇼", "en": "National Day"},
+            (10, 25): {"name": "臺灣光復節", "emoji": "🎌", "en": "Retrocession Day"},
+            (10, 31): {"name": "蔣公誕辰紀念日", "emoji": "🎖️", "en": "Chiang Kai-shek's Birthday"},
+            (11, 12): {"name": "國父誕辰紀念日", "emoji": "🏛️", "en": "Sun Yat-sen's Birthday"},
+            (12, 25): {"name": "行憲紀念日", "emoji": "📜", "en": "Constitution Day"}
+        },
+        
+        # Era names
+        "eras": {
+            "republic": {"chinese": "民國", "english": "Republic Era"},
+            "before": {"chinese": "民前", "english": "Before Republic"}
+        },
+        
+        # Number characters
+        "chinese_numbers": ["〇", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"]
+    },
+    
+    # Additional metadata
+    "reference_url": "https://en.wikipedia.org/wiki/Republic_of_China_calendar",
+    "documentation_url": "https://www.taiwan.gov.tw",
+    "origin": "Republic of China (Taiwan)",
+    "created_by": "Government of Republic of China",
+    "introduced": "January 1, 1912",
+    
+    # Example format
+    "example": "民國 114年3月15日",
+    "example_meaning": "Republic Year 114, March 15 (= 2025-03-15 CE)",
+    
+    # Related calendars
+    "related": ["gregorian", "chinese", "japanese"],
+    
+    # Tags for searching and filtering
+    "tags": [
+        "cultural", "taiwan", "roc", "republic_of_china", "official",
+        "minguo", "chinese", "taiwanese", "asian", "modern"
+    ],
+    
+    # Special features
+    "features": {
+        "official_calendar": True,
+        "gregorian_based": True,
+        "traditional_holidays": True,
+        "chinese_characters": True,
+        "precision": "day"
+    },
+    
+    # Configuration options for this calendar
+    "config_options": {
+        "show_chinese": {
+            "type": "boolean",
+            "default": True,
+            "description": {
+                "en": "Show date in Chinese characters",
+                "de": "Datum in chinesischen Zeichen anzeigen",
+                "zh-tw": "顯示中文日期"
+            }
+        },
+        "show_holidays": {
+            "type": "boolean",
+            "default": True,
+            "description": {
+                "en": "Show ROC national holidays",
+                "de": "ROC-Nationalfeiertage anzeigen",
+                "zh-tw": "顯示國定假日"
+            }
+        },
+        "date_format": {
+            "type": "select",
+            "default": "traditional",
+            "options": ["traditional", "numeric", "mixed"],
+            "description": {
+                "en": "Date format style",
+                "de": "Datumsformat-Stil",
+                "zh-tw": "日期格式樣式"
+            }
+        }
     }
+}
 
 
 class MinguoCalendarSensor(AlternativeTimeSensorBase):
@@ -217,155 +369,4 @@ class MinguoCalendarSensor(AlternativeTimeSensorBase):
         else:
             self._state = self._minguo_date["full_date_numeric"]
         
-        _LOGGER.debug(f"Updated Minguo Calendar to {self._state}"),
-    
-    # Short descriptions for UI
-    "description": {
-        "en": "Taiwan/ROC calendar, Year 1 = 1912 CE (e.g. 民國114年)",
-        "de": "Taiwan/ROC Kalender, Jahr 1 = 1912 CE (z.B. 民國114年)",
-        "es": "Calendario de Taiwán/ROC, Año 1 = 1912 CE (ej. 民國114年)",
-        "fr": "Calendrier de Taïwan/ROC, Année 1 = 1912 CE (ex. 民國114年)",
-        "it": "Calendario Taiwan/ROC, Anno 1 = 1912 CE (es. 民國114年)",
-        "nl": "Taiwan/ROC kalender, Jaar 1 = 1912 CE (bijv. 民國114年)",
-        "pt": "Calendário de Taiwan/ROC, Ano 1 = 1912 CE (ex. 民國114年)",
-        "ru": "Календарь Тайваня/КР, Год 1 = 1912 н.э. (напр. 民國114年)",
-        "ja": "台湾/中華民国暦、元年 = 西暦1912年（例：民國114年）",
-        "zh": "台湾/中华民国历法，元年 = 公元1912年（例：民國114年）",
-        "zh-tw": "中華民國曆法，民國元年 = 西元1912年（例：民國114年）",
-        "ko": "대만/중화민국 달력, 1년 = 서기 1912년 (예: 民國114年)"
-    },
-    
-    # Detailed information for documentation
-    "detailed_info": {
-        "en": {
-            "overview": "The Minguo calendar is the official calendar used in Taiwan (Republic of China)",
-            "epoch": "Year 1 corresponds to 1912 CE, the founding year of the Republic of China",
-            "structure": "Uses the same months and days as the Gregorian calendar, only the year numbering differs",
-            "usage": "Official documents, government records, and daily life in Taiwan",
-            "conversion": "Minguo year = Gregorian year - 1911",
-            "before_epoch": "Years before 1912 are denoted as 民前 (before the Republic)",
-            "holidays": "Includes traditional Chinese festivals and ROC national holidays"
-        },
-        "zh-tw": {
-            "overview": "民國紀年是中華民國（台灣）的官方曆法",
-            "epoch": "民國元年對應西元1912年，即中華民國成立之年",
-            "structure": "使用與公曆相同的月份和日期，僅年份編號不同",
-            "usage": "用於官方文件、政府記錄和台灣日常生活",
-            "conversion": "民國年 = 西元年 - 1911",
-            "before_epoch": "1912年之前的年份標記為民前",
-            "holidays": "包含傳統中國節日和中華民國國定假日"
-        },
-        "de": {
-            "overview": "Der Minguo-Kalender ist der offizielle Kalender in Taiwan (Republik China)",
-            "epoch": "Jahr 1 entspricht 1912 n.Chr., dem Gründungsjahr der Republik China",
-            "structure": "Verwendet dieselben Monate und Tage wie der gregorianische Kalender, nur die Jahreszählung unterscheidet sich",
-            "usage": "Offizielle Dokumente, Regierungsunterlagen und tägliches Leben in Taiwan",
-            "conversion": "Minguo-Jahr = Gregorianisches Jahr - 1911",
-            "before_epoch": "Jahre vor 1912 werden als 民前 (vor der Republik) bezeichnet",
-            "holidays": "Umfasst traditionelle chinesische Feste und ROC-Nationalfeiertage"
-        }
-    },
-    
-    # Minguo-specific data
-    "minguo_data": {
-        "epoch_year": 1912,
-        "founding_date": "1912-01-01",
-        
-        # Month names in Traditional Chinese
-        "chinese_months": [
-            "一月", "二月", "三月", "四月", "五月", "六月",
-            "七月", "八月", "九月", "十月", "十一月", "十二月"
-        ],
-        
-        # Weekday names in Traditional Chinese
-        "chinese_weekdays": [
-            "星期一", "星期二", "星期三", "星期四",
-            "星期五", "星期六", "星期日"
-        ],
-        
-        # Important dates in ROC calendar
-        "holidays": {
-            (1, 1): {"name": "中華民國開國紀念日", "emoji": "🎊", "en": "Founding Day of ROC"},
-            (2, 28): {"name": "和平紀念日", "emoji": "🕊️", "en": "Peace Memorial Day"},
-            (3, 29): {"name": "革命先烈紀念日", "emoji": "🌹", "en": "Youth Day"},
-            (4, 4): {"name": "兒童節", "emoji": "👶", "en": "Children's Day"},
-            (4, 5): {"name": "清明節", "emoji": "🏔️", "en": "Tomb Sweeping Day"},
-            (5, 1): {"name": "勞動節", "emoji": "👷", "en": "Labor Day"},
-            (9, 28): {"name": "孔子誕辰紀念日", "emoji": "📚", "en": "Confucius' Birthday"},
-            (10, 10): {"name": "國慶日", "emoji": "🇹🇼", "en": "National Day"},
-            (10, 25): {"name": "臺灣光復節", "emoji": "🎌", "en": "Retrocession Day"},
-            (10, 31): {"name": "蔣公誕辰紀念日", "emoji": "🎖️", "en": "Chiang Kai-shek's Birthday"},
-            (11, 12): {"name": "國父誕辰紀念日", "emoji": "🏛️", "en": "Sun Yat-sen's Birthday"},
-            (12, 25): {"name": "行憲紀念日", "emoji": "📜", "en": "Constitution Day"}
-        },
-        
-        # Era names
-        "eras": {
-            "republic": {"chinese": "民國", "english": "Republic Era"},
-            "before": {"chinese": "民前", "english": "Before Republic"}
-        },
-        
-        # Number characters
-        "chinese_numbers": ["〇", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"]
-    },
-    
-    # Additional metadata
-    "reference_url": "https://en.wikipedia.org/wiki/Republic_of_China_calendar",
-    "documentation_url": "https://www.taiwan.gov.tw",
-    "origin": "Republic of China (Taiwan)",
-    "created_by": "Government of Republic of China",
-    "introduced": "January 1, 1912",
-    
-    # Example format
-    "example": "民國 114年3月15日",
-    "example_meaning": "Republic Year 114, March 15 (= 2025-03-15 CE)",
-    
-    # Related calendars
-    "related": ["gregorian", "chinese", "japanese"],
-    
-    # Tags for searching and filtering
-    "tags": [
-        "cultural", "taiwan", "roc", "republic_of_china", "official",
-        "minguo", "chinese", "taiwanese", "asian", "modern"
-    ],
-    
-    # Special features
-    "features": {
-        "official_calendar": True,
-        "gregorian_based": True,
-        "traditional_holidays": True,
-        "chinese_characters": True,
-        "precision": "day"
-    },
-    
-    # Configuration options for this calendar
-    "config_options": {
-        "show_chinese": {
-            "type": "boolean",
-            "default": True,
-            "description": {
-                "en": "Show date in Chinese characters",
-                "de": "Datum in chinesischen Zeichen anzeigen",
-                "zh-tw": "顯示中文日期"
-            }
-        },
-        "show_holidays": {
-            "type": "boolean",
-            "default": True,
-            "description": {
-                "en": "Show ROC national holidays",
-                "de": "ROC-Nationalfeiertage anzeigen",
-                "zh-tw": "顯示國定假日"
-            }
-        },
-        "date_format": {
-            "type": "select",
-            "default": "traditional",
-            "options": ["traditional", "numeric", "mixed"],
-            "description": {
-                "en": "Date format style",
-                "de": "Datumsformat-Stil",
-                "zh-tw": "日期格式樣式"
-            }
-        }
-    }
+        _LOGGER.debug(f"Updated Minguo Calendar to {self._state}")

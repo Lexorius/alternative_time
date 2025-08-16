@@ -1,11 +1,11 @@
-"""Warhammer 40,000 – Imperial Dating System calendar (Old Style) - v1.0.0
+"""Warhammer 40,000 - Imperial Dating System calendar (Old Style) - v1.0.0
 
 This sensor renders dates in the classic Imperial format:
     C.FFF.YYY.M##
 where:
-- C   = Check number (0–9), indicating accuracy/source (0 = Terra/most accurate).
-- FFF = Year fraction (000–999), i.e., 1,000 equal parts of the year.
-- YYY = Year within the millennium (000–999).
+- C   = Check number (0-9), indicating accuracy/source (0 = Terra/most accurate).
+- FFF = Year fraction (000-999), i.e., 1,000 equal parts of the year.
+- YYY = Year within the millennium (000-999).
 - M## = Millennium designator (e.g., M41).
 
 By default we convert the **current Terran (Gregorian) date** per the
@@ -17,7 +17,7 @@ References:
 - Lexicanum: "Imperial Dating System" (check numbers, year fraction, Makr constant).
 - 1000 fractions per year ≈ 8h 45m 36s per fraction; "Makr constant" 0.11407955.
 
-Note: We only implement Old Style here. New Style (post–Great Rift "Vigilus template")
+Note: We only implement Old Style here. New Style (post-Great Rift "Vigilus template")
 would require a local rift epoch anchor and is not included to keep the sensor lean.
 """
 from __future__ import annotations
@@ -46,8 +46,8 @@ CALENDAR_INFO: Dict[str, Any] = {
     "accuracy": "lore-accurate (Old Style)",
     "update_interval": UPDATE_INTERVAL,
     "name": {
-        "en": "Warhammer 40,000 – Imperial Date (Old Style)",
-        "de": "Warhammer 40.000 – Imperiales Datum (Old Style)"
+        "en": "Warhammer 40,000 - Imperial Date (Old Style)",
+        "de": "Warhammer 40.000 - Imperiales Datum (Old Style)"
     },
     "description": {
         "en": "Formats current Terran time into the Imperial Dating System (C.FFF.YYY.M##).",
@@ -55,8 +55,14 @@ CALENDAR_INFO: Dict[str, Any] = {
     },
     "reference_url": "https://wh40k.lexicanum.com/wiki/Imperial_Dating_System",
     "notes": {
-        "en": "Uses Gregorian AD for year/millennium. Set a positive year_offset (e.g., 38000) to emulate M41/M42 in present day.",
-        "de": "Verwendet gregorianisches AD für Jahr/Jahrtausend. Mit year_offset (z. B. 38000) lässt sich M41/M42 im Jetzt emulieren."
+        "en": (
+            "Uses Gregorian AD for year/millennium. Set a positive year_offset "
+            "(e.g., 38000) to emulate M41/M42 in present day."
+        ),
+        "de": (
+            "Verwendet gregorianisches AD für Jahr/Jahrtausend. Mit year_offset "
+            "(z. B. 38000) lässt sich M41/M42 im Jetzt emulieren."
+        )
     },
     # Constants from the lore
     "imperial": {
@@ -65,29 +71,29 @@ CALENDAR_INFO: Dict[str, Any] = {
     },
     "config_options": {
         "check_number": {
-            "type": "number",
+            "type": "integer",
             "default": 0,
             "min": 0,
             "max": 9,
             "description": {
-                "en": "Imperial check number 0–9 (0 = Terra/most accurate).",
-                "de": "Imperiale Prüfziffer 0–9 (0 = Terra/höchste Genauigkeit)."
+                "en": "Imperial check number 0-9 (0 = Terra/most accurate).",
+                "de": "Imperiale Prüfziffer 0-9 (0 = Terra/höchste Genauigkeit)."
             }
         },
         "year_offset": {
-            "type": "number",
+            "type": "integer",
             "default": 0,
             "description": {
                 "en": "Add this many years before converting (e.g., 38000 to map 2025 → 40025 → M41).",
-                "de": "So viele Jahre vor der Umrechnung addieren (z. B. 38000, um 2025 → 40025 → M41 zu erhalten)."
+                "de": "So viele Jahre vor der Umrechnung addieren (z. B. 38000, um 2025 → 40025 → M41 zu erhalten)."
             }
         },
         "system_designator": {
-            "type": "text",
+            "type": "string",
             "default": "SOL",
             "description": {
                 "en": "Optional system/sector code to append (e.g., SOL, VCM).",
-                "de": "Optionaler System-/Sektorkürzel zum Anhängen (z. B. SOL, VCM)."
+                "de": "Optionaler System-/Sektorkürzel zum Anhängen (z. B. SOL, VCM)."
             }
         },
         "fraction_method": {
@@ -117,48 +123,48 @@ class ImperialDate:
 
 
 class WarhammerImperialCalendarSensor(AlternativeTimeSensorBase):
-    \"\"\"Sensor that exposes the Imperial Dating System (Old Style).\"\"\"
+    """Sensor that exposes the Imperial Dating System (Old Style)."""
 
     UPDATE_INTERVAL = UPDATE_INTERVAL
 
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         super().__init__(base_name, hass)
 
-        calendar_name = self._translate('name', 'Warhammer 40,000 – Imperial Date (Old Style)')
-        self._attr_name = f\"{base_name} {calendar_name}\"
-        self._attr_unique_id = f\"{base_name}_warhammer40k_imperial_date\"
-        self._attr_icon = CALENDAR_INFO.get(\"icon\", \"mdi:sword-cross\")
+        calendar_name = self._translate('name', 'Warhammer 40,000 - Imperial Date (Old Style)')
+        self._attr_name = f"{base_name} {calendar_name}"
+        self._attr_unique_id = f"{base_name}_warhammer40k_imperial_date"
+        self._attr_icon = CALENDAR_INFO.get("icon", "mdi:sword-cross")
 
         # Options (can be set via an options flow or service call)
         self._check_number: int = 0
         self._year_offset: int = 0
-        self._system_designator: str | None = \"SOL\"
-        self._fraction_method: str = \"precise\"  # 'precise' or 'lexicanum'
+        self._system_designator: str | None = "SOL"
+        self._fraction_method: str = "precise"  # 'precise' or 'lexicanum'
 
-        _LOGGER.debug(\"Initialized %s\", self._attr_name)
+        _LOGGER.debug("Initialized %s", self._attr_name)
 
     # -------------------------------
     # Public properties
     # -------------------------------
     @property
     def state(self):
-        return getattr(self, \"_state\", None)
+        return getattr(self, "_state", None)
 
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         attrs = super().extra_state_attributes
-        if hasattr(self, \"_imperial\"):
+        if hasattr(self, "_imperial"):
             attrs.update({
-                \"imperial_check\": self._imperial.check,
-                \"imperial_fraction\": self._imperial.fraction,
-                \"imperial_year_in_millennium\": self._imperial.year_in_millennium,
-                \"imperial_millennium\": self._imperial.millennium,
-                \"system_designator\": self._imperial.system,
-                \"terran_year\": self._terran_year,
-                \"leap_year\": self._leap_year,
-                \"fraction_method\": self._fraction_method,
-                \"reference\": CALENDAR_INFO.get(\"reference_url\"),
-                \"notes\": self._translate(\"notes\"),
+                "imperial_check": self._imperial.check,
+                "imperial_fraction": self._imperial.fraction,
+                "imperial_year_in_millennium": self._imperial.year_in_millennium,
+                "imperial_millennium": self._imperial.millennium,
+                "system_designator": self._imperial.system,
+                "terran_year": self._terran_year,
+                "leap_year": self._leap_year,
+                "fraction_method": self._fraction_method,
+                "reference": CALENDAR_INFO.get("reference_url"),
+                "notes": self._translate("notes"),
             })
         return attrs
 
@@ -186,7 +192,7 @@ class WarhammerImperialCalendarSensor(AlternativeTimeSensorBase):
         if system_designator is not None:
             self._system_designator = str(system_designator).strip() or None
         if fraction_method is not None:
-            if fraction_method in (\"precise\", \"lexicanum\"):
+            if fraction_method in ("precise", "lexicanum"):
                 self._fraction_method = fraction_method
 
     # -------------------------------
@@ -198,7 +204,7 @@ class WarhammerImperialCalendarSensor(AlternativeTimeSensorBase):
 
     @staticmethod
     def _millennium_of_year(y: int) -> int:
-        # 1–1000 -> M01, 1001–2000 -> M02, etc.
+        # 1-1000 -> M01, 1001-2000 -> M02, etc.
         return (y - 1) // 1000 + 1
 
     @staticmethod
@@ -226,7 +232,7 @@ class WarhammerImperialCalendarSensor(AlternativeTimeSensorBase):
         determined_hour = ordinal * 24 + dt.hour
         # Incorporate minutes/seconds as fractional hour for smoother steps
         determined_hour += dt.minute / 60.0 + dt.second / 3600.0
-        makr = CALENDAR_INFO[\"imperial\"][\"makr_constant\"]
+        makr = CALENDAR_INFO["imperial"]["makr_constant"]
         frac = int((determined_hour * makr))  # floor
         if frac < 0:
             frac = 0
@@ -241,7 +247,7 @@ class WarhammerImperialCalendarSensor(AlternativeTimeSensorBase):
         yim = self._year_in_millennium(terran_year)  # 0..999
         leap = self._is_leap_year(terran_year if self._year_offset else dt.year)
 
-        if self._fraction_method == \"lexicanum\":
+        if self._fraction_method == "lexicanum":
             fraction = self._calc_fraction_lexicanum(dt)
         else:
             fraction = self._calc_fraction_precise(dt)
@@ -260,10 +266,12 @@ class WarhammerImperialCalendarSensor(AlternativeTimeSensorBase):
     # -------------------------------
     # Update hook
     # -------------------------------
-    def _update(self, now: datetime) -> None:
+    def update(self) -> None:
+        """Update the sensor state."""
         try:
+            now = datetime.now()
             self._imperial = self._to_imperial(now)
             self._state = self._imperial.format()
         except Exception as exc:
-            _LOGGER.exception(\"Failed to compute Imperial date: %s\", exc)
-            self._state = \"error\"
+            _LOGGER.exception("Failed to compute Imperial date: %s", exc)
+            self._state = "error"
