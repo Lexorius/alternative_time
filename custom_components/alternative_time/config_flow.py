@@ -327,13 +327,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._category_index += 1
         return await self.async_step_select_calendars_by_category()
 
-    async def async_step_plugin_options(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Iterate selected calendars that expose CALENDAR_INFO['config_options'] and collect values."""
-        # If returning from a previous plugin form, store data
-        if user_input is not None and self._option_index > 0:
-            prev_cid = self._option_calendars[self._option_index - 1]
+async def async_step_plugin_options(
+    self, user_input: dict[str, Any] | None = None
+) -> FlowResult:
+    """Iterate selected calendars that expose CALENDAR_INFO['config_options'] and collect values."""
+    
+    # Process user input from previous form
+    if user_input is not None:
+        # Store data from the current calendar (not previous!)
+        if self._option_index > 0 and self._option_index <= len(self._option_calendars):
+            current_cid = self._option_calendars[self._option_index - 1]
             normalized = {}
             for k, v in (user_input or {}).items():
                 if isinstance(k, str) and "] " in k:
@@ -341,83 +344,131 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 else:
                     raw_key = k
                 normalized[raw_key] = v
-            self._selected_options[prev_cid] = normalized
+            self._selected_options[current_cid] = normalized
+            _LOGGER.debug(f"Stored options for {current_cid}: {normalized}")
 
-        # Are we done with all option-bearing calendars?
-        if self._option_index >= len(self._option_calendars):
-            data = {
-                **self._user_input,
-                "calendars": self._selected_calendars,
-                "groups": self._build_groups(self._selected_calendars, self._discovered_calendars),
-                "plugin_options": self._selected_options
-            }
-            return self.async_create_entry(
-                title=self._user_input.get("name", "Alternative Time"),
-                data=data
-            )
+    # Check if we're done with all calendars
+    if self._option_index >= len(self._option_calendars):
+        # Create final data
+        data = {
+            **self._user_input,
+            "calendars": self._selected_calendars,
+            "groups": self._build_groups(self._selected_calendars, self._discovered_calendars),
+            "plugin_options": self._selected_options
+        }
+        _LOGGER.debug(f"Creating entry with data: {data}")
+        return self.async_create_entry(
+            title=self._user_input.get("name", "Alternative Time"),
+            data=data
+        )
 
-        cid = self._option_calendars[self._option_index]
-        info = self._discovered_calendars.get(cid, {}) or {}
-        opts = info.get("config_options") or {}
+    # Get current calendar to configure
+    cid = self._option_calendars[self._option_index]
+    info = self._discovered_calendars.get(cid, {}) or {}
+    opts = info.get("config_options") or {}
+    
+    # Skip calendars without options
+    if not opts:
+        _LOGGER.debug(f"Calendar {cid} has no config options, skipping")
+        self._option_index += 1
+        return await self.async_step_plugin_options()
+    
+    # Get calendar name for display
+    name = self._lcal(info, "name", default=cid)
+    _LOGGER.debug(f"Configuring options for calendar {cid} ({name})")
+    
+    # Build schema dynamically
+    schema_dict = {}
+    for key, meta in opts.items():
+        if not isinstance(meta, dict):
+            _LOGGER.warning(f"Invalid config option metadata for {key} in {cid}")
+            continue
+            
+        typ = meta.get("type", "string")
+        default = meta.get("default")
+        desc = self._lcal(meta, "description", default="")
         
-        # Get calendar name for display
-        name = self._lcal(info, "name", default=cid)
+        # Special handling for timezone
+        if key.lower() == "timezone":
+            try:
+                sys_tz = getattr(self.hass.config, "time_zone", None) or default or "UTC"
+            except Exception:
+                sys_tz = default or "UTC"
+            default = sys_tz
         
-        # Build schema dynamically
-        schema_dict = {}
-        for key, meta in (opts or {}).items():
-            typ = (meta or {}).get("type")
-            default = (meta or {}).get("default")
-            desc = self._lcal(meta, "description", default="")
-            
-            if key.lower() == "timezone":
-                try:
-                    sys_tz = (getattr(self.hass.config, "time_zone", None) or default or "UTC")
-                except Exception:
-                    sys_tz = default or "UTC"
-                default = sys_tz
-            
-            pretty_prefix = f"[{name}] "
-            pretty_key = pretty_prefix + key
-            
+        pretty_prefix = f"[{name}] "
+        pretty_key = pretty_prefix + key
+        
+        try:
             if typ == "boolean":
                 schema_dict[vol.Optional(pretty_key, default=bool(default) if default is not None else False)] = bool
             elif typ == "select":
                 options = self._build_select_options(cid, key, meta, info)
-                schema_dict[vol.Optional(
-                    pretty_key, 
-                    default=default if default is not None else (options[0]["value"] if options else "")
-                )] = SelectSelector(
-                    SelectSelectorConfig(
-                        options=options, 
-                        multiple=False, 
-                        mode=SelectSelectorMode.DROPDOWN
+                if options:
+                    schema_dict[vol.Optional(
+                        pretty_key, 
+                        default=default if default is not None else options[0]["value"]
+                    )] = SelectSelector(
+                        SelectSelectorConfig(
+                            options=options, 
+                            multiple=False, 
+                            mode=SelectSelectorMode.DROPDOWN
+                        )
                     )
-                )
             elif typ in ("number", "integer", "float"):
+                # Handle min/max if present
+                min_val = meta.get("min")
+                max_val = meta.get("max")
+                if min_val is not None and max_val is not None:
+                    schema_dict[vol.Optional(
+                        pretty_key, 
+                        default=float(default) if default is not None else 0.0
+                    )] = vol.All(
+                        vol.Coerce(float),
+                        vol.Range(min=float(min_val), max=float(max_val))
+                    )
+                else:
+                    schema_dict[vol.Optional(
+                        pretty_key, 
+                        default=float(default) if default is not None else 0.0
+                    )] = vol.Coerce(float)
+            elif typ == "string":
                 schema_dict[vol.Optional(
                     pretty_key, 
-                    default=default if default is not None else 0
-                )] = vol.Coerce(float)
-            else:
-                schema_dict[vol.Optional(
-                    pretty_key, 
-                    default=default if default is not None else ""
+                    default=str(default) if default is not None else ""
                 )] = str
-        
-        schema = vol.Schema(schema_dict)
+            else:
+                # Fallback for unknown types
+                _LOGGER.warning(f"Unknown config option type '{typ}' for {key} in {cid}")
+                schema_dict[vol.Optional(
+                    pretty_key, 
+                    default=str(default) if default is not None else ""
+                )] = str
+                
+        except Exception as e:
+            _LOGGER.error(f"Error building schema for {key} in {cid}: {e}")
+            continue
+    
+    # If no valid options, skip to next
+    if not schema_dict:
+        _LOGGER.debug(f"No valid config options for {cid}, skipping")
         self._option_index += 1
-        
-        return self.async_show_form(
-            step_id="plugin_options",
-            data_schema=schema,
-            description_placeholders={
-                "plugin": name,
-                "details": self._details_text({cid: info}),
-                "description": desc
-            }
-        )
-
+        return await self.async_step_plugin_options()
+    
+    # Increment index for next iteration
+    self._option_index += 1
+    
+    schema = vol.Schema(schema_dict)
+    
+    return self.async_show_form(
+        step_id="plugin_options",
+        data_schema=schema,
+        description_placeholders={
+            "plugin": name,
+            "details": self._details_text({cid: info}),
+            "description": f"Configure options for {name}"
+        }
+    )
     async def _async_discover_calendars(self) -> None:
         """Discover available calendar implementations asynchronously."""
         try:
