@@ -2,282 +2,146 @@
   "config": {
     "step": {
       "user": {
-        "title": "Basic Settings",
-        "description": "Configure the base settings for Alternative Time Systems.",
+        "title": "Alternative Time Systems v2.5",
+        "description": "Welcome to Alternative Time Systems!\n\nThis integration will automatically discover all available calendar modules.\n\nOn the next screens, you can select which time systems to enable, organized by category.",
         "data": {
-          "name": "Integration name",
-          "enable_timezone": "Enable Timezone",
-          "timezone": "Select Timezone"
-        },
-        "data_description": {
-          "name": "A unique name for this configuration",
-          "enable_timezone": "Display current time in a selected timezone",
-          "timezone": "Choose the timezone to display (e.g. Europe/Berlin, America/New_York)"
+          "name": "Configuration name"
         }
       },
-      "technical": {
+      "category_technical": {
         "title": "Technical & Modern Time Systems",
-        "description": "Select technical and computer-based time systems.",
+        "description": "Configure technical and computer-based time systems.\n\nAvailable: {calendars}\n\nProgress: Step {progress}",
         "data": {
-          "enable_unix": "Enable Unix Timestamp",
-          "enable_julian": "Enable Julian Date",
-          "enable_decimal": "Enable Decimal Time",
-          "enable_hexadecimal": "Enable Hexadecimal Time",
-          "enable_swatch": "Enable Swatch Internet Time"
+          "enable_unix": "Unix Timestamp",
+          "enable_julian": "Julian Date",
+          "enable_decimal": "Decimal Time",
+          "enable_hexadecimal": "Hexadecimal Time",
+          "enable_swatch": "Swatch Internet Time",
+          "enable_timezone": "Time Zone Display",
+          "timezone": "Select Time Zone"
         },
         "data_description": {
-          "enable_unix": "Seconds since January 1, 1970, 00:00 UTC (e.g. 1704067200)",
-          "enable_julian": "Astronomical day count since 4713 BC (e.g. 2460000.5)",
-          "enable_decimal": "French Revolutionary time: 10 hours, 100 minutes, 100 seconds per day",
-          "enable_hexadecimal": "Day divided into 65536 parts, displayed in hex (e.g. .8000 = noon)",
-          "enable_swatch": "Internet time in Beats @000-@999. One day = 1000 Beats, no timezones"
+          "enable_unix": "Seconds since January 1, 1970 (Unix epoch)",
+          "enable_julian": "Astronomical day count since 4713 BCE",
+          "enable_decimal": "French Revolutionary time: 10 hours, 100 minutes per day",
+          "enable_hexadecimal": "Day divided into 65536 parts, displayed in hex",
+          "enable_swatch": "Internet Time in Beats @000-@999. One day = 1000 beats",
+          "enable_timezone": "Display time in selected timezone"
         }
       },
-      "military": {
-        "title": "Military Time Systems",
-        "description": "NATO and military time formats for precise communication.",
-        "data": {
-          "enable_nato": "Enable NATO DTG",
-          "enable_nato_zone": "Enable NATO with Zone Indicator",
-          "enable_nato_rescue": "Enable NATO Rescue Format"
-        },
-        "data_description": {
-          "enable_nato": "Military date-time without zone: DDHHMM (e.g. 151430)",
-          "enable_nato_zone": "Full military DTG: DDHHMM[Zone] MON YY (e.g. 151430Z JAN 25)",
-          "enable_nato_rescue": "German rescue service notation: DD HHMM MONTH YY (e.g. 15 1430 JAN 25)"
-        }
-      },
-      "historical": {
+      "category_historical": {
         "title": "Historical Calendar Systems",
-        "description": "Ancient and historical calendars from various cultures.",
+        "description": "Configure ancient and historical calendars.\n\nAvailable: {calendars}\n\nProgress: Step {progress}",
         "data": {
-          "enable_maya": "Enable Maya Calendar",
-          "enable_egyptian": "Enable Egyptian Calendar",
-          "enable_roman": "Enable Roman Calendar",
-          "enable_attic": "Enable Attic Calendar"
+          "enable_maya": "Maya Calendar",
+          "enable_egyptian": "Egyptian Calendar",
+          "enable_roman": "Roman Calendar",
+          "enable_attic": "Attic Calendar"
         },
         "data_description": {
-          "enable_maya": "Long Count, Tzolk'in and Haab calendars (e.g. 13.0.12.1.15 | 8 Ahau | 3 Pop)",
-          "enable_egyptian": "Ancient Egyptian calendar with 12 months of 30 days plus 5 epagomenal days",
-          "enable_roman": "Roman dating with Kalends, Nones, Ides (e.g. ante diem III Kalendas Ianuarias)",
-          "enable_attic": "Ancient Athenian lunisolar calendar with Archon and Olympiad (e.g. 5 ἱσταμένου Hekatombaion)"
+          "enable_maya": "Long Count, Tzolk'in and Haab calendars",
+          "enable_egyptian": "Ancient Egyptian civil calendar with 365 days",
+          "enable_roman": "Ancient Roman calendar with Kalends, Nones, and Ides",
+          "enable_attic": "Ancient Athenian lunisolar calendar"
         }
       },
-      "cultural": {
-        "title": "Asian Calendar Systems",
-        "description": "Traditional calendars from Asia.",
+      "category_cultural": {
+        "title": "Cultural Calendar Systems",
+        "description": "Configure regional and cultural calendars.\n\nAvailable: {calendars}\n\nProgress: Step {progress}",
         "data": {
-          "enable_suriyakati": "Enable Suriyakati Calendar",
-          "enable_minguo": "Enable Minguo Calendar"
+          "enable_suriyakati": "Suriyakati (Thai) Calendar",
+          "enable_minguo": "Minguo (Taiwan) Calendar"
         },
         "data_description": {
-          "enable_suriyakati": "Thai calendar with Buddhist Era, BE = CE+543 (e.g. 2568 BE)",
-          "enable_minguo": "Taiwan/ROC calendar, Year 1 = 1912 CE (e.g. 民國114年)"
+          "enable_suriyakati": "Thai calendar with Buddhist Era (BE = CE + 543)",
+          "enable_minguo": "Taiwan/ROC calendar (Year 1 = 1912 CE)"
         }
       },
-      "space": {
-        "title": "Space & Mars Time Systems",
-        "description": "Calendars and time systems for Mars and space missions.",
+      "category_military": {
+        "title": "Military Time Systems",
+        "description": "Configure military and tactical time formats.\n\nAvailable: {calendars}\n\nProgress: Step {progress}",
         "data": {
-          "enable_darian": "Enable Darian Mars Calendar",
-          "enable_mars_time": "Enable Mars Time",
-          "mars_timezone": "Mars Timezone"
+          "enable_nato": "NATO Time",
+          "enable_nato_zone": "NATO Time with Zone",
+          "enable_nato_rescue": "NATO Rescue Format"
         },
         "data_description": {
-          "enable_darian": "Mars calendar with 24 months and 668 sols per year (e.g. 15 Gemini 217)",
-          "enable_mars_time": "Coordinated Mars Time with timezones based on landing sites",
-          "mars_timezone": "Choose a Mars timezone (MTC, Olympus Mons, Gale Crater, etc.)"
+          "enable_nato": "Military date-time without zone: DDHHMM",
+          "enable_nato_zone": "Full military DTG: DDHHMM[Zone] MON YY",
+          "enable_nato_rescue": "German rescue service notation"
         }
       },
-      "scifi": {
+      "category_space": {
+        "title": "Space & Astronomical Time Systems",
+        "description": "Configure Mars and space-related calendars.\n\nAvailable: {calendars}\n\nProgress: Step {progress}",
+        "data": {
+          "enable_darian": "Darian Calendar (Mars)",
+          "enable_mars_time": "Mars Sol Time",
+          "mars_timezone": "Mars Time Zone"
+        },
+        "data_description": {
+          "enable_darian": "Mars calendar with 24 months and 668 sols per year",
+          "enable_mars_time": "Martian solar time (sols)"
+        }
+      },
+      "category_scifi": {
         "title": "Science Fiction Time Systems",
-        "description": "Time systems from science fiction universes.",
+        "description": "Configure time systems from science fiction universes.\n\nAvailable: {calendars}\n\nProgress: Step {progress}",
         "data": {
-          "enable_stardate": "Enable Stardate",
-          "enable_eve": "Enable EVE Online Time"
+          "enable_stardate": "Star Trek Stardate",
+          "enable_eve": "EVE Online Time"
         },
         "data_description": {
-          "enable_stardate": "Star Trek TNG stardate (e.g. 47634.44). Based on year 2323",
-          "enable_eve": "New Eden Standard Time from EVE Online (YC 127)"
+          "enable_stardate": "Star Trek TNG stardate (e.g. 47634.44)",
+          "enable_eve": "EVE Online New Eden Standard Time"
         }
       },
-      "fantasy": {
+      "category_fantasy": {
         "title": "Fantasy World Calendars",
-        "description": "Calendars from fantasy worlds and video games.",
+        "description": "Configure calendars from fantasy worlds and games.\n\nAvailable: {calendars}\n\nProgress: Step {progress}",
         "data": {
-          "enable_shire": "Enable Shire Calendar",
-          "enable_rivendell": "Enable Rivendell Calendar",
-          "enable_tamriel": "Enable Tamriel Calendar",
-          "enable_discworld": "Enable Discworld Calendar"
+          "enable_shire": "Shire Calendar (LOTR)",
+          "enable_rivendell": "Rivendell Calendar (LOTR)",
+          "enable_tamriel": "Tamriel Calendar (Elder Scrolls)",
+          "enable_discworld": "Discworld Calendar"
         },
         "data_description": {
-          "enable_shire": "Hobbit calendar with meals and holidays (e.g. S.R. 1624, Afteryule 16)",
-          "enable_rivendell": "Elven calendar with Quenya names and 6 seasons (e.g. F.A. 24, Tuilë 35)",
-          "enable_tamriel": "Elder Scrolls calendar with two moons and birthsigns (e.g. 4E 225, Morning Star 16)",
-          "enable_discworld": "Terry Pratchett's Discworld calendar with 13 months and 8-day week"
+          "enable_shire": "Hobbit calendar from Lord of the Rings",
+          "enable_rivendell": "Elvish calendar from Lord of the Rings",
+          "enable_tamriel": "Elder Scrolls calendar with moons and Daedric days",
+          "enable_discworld": "Terry Pratchett's Discworld calendar"
         }
+      },
+      "category_uncategorized": {
+        "title": "Other Time Systems",
+        "description": "Configure additional time systems.\n\nAvailable: {calendars}\n\nProgress: Step {progress}",
+        "data": {}
       },
       "confirm": {
-        "title": "Confirmation",
-        "description": "This integration displays various alternative time systems. Some of these are experimental or fictional. Calculations may contain inaccuracies. Do you want to continue?"
+        "title": "Confirm Configuration",
+        "description": "Ready to create configuration: **{name}**\n\nYou have selected **{count}** calendar(s):\n\n{summary}\n\nClick Submit to create the configuration."
       }
     },
     "error": {
       "unknown": "Unexpected error",
-      "invalid_timezone": "Invalid timezone selected",
+      "no_calendars_found": "No calendar modules were discovered. Please check the calendars directory.",
       "no_systems_selected": "Please select at least one time system"
     },
     "abort": {
-      "already_configured": "Integration is already configured",
+      "already_configured": "Alternative Time is already configured",
       "user_cancelled": "Configuration cancelled by user"
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Alternative Time Systems Options",
-        "description": "Adjust the settings for your time systems.",
-        "data": {
-          "enable_timezone": "Enable Timezone",
-          "timezone": "Select Timezone",
-          "enable_stardate": "Enable Stardate",
-          "enable_swatch": "Enable Swatch Internet Time",
-          "enable_unix": "Enable Unix Timestamp",
-          "enable_julian": "Enable Julian Date",
-          "enable_decimal": "Enable Decimal Time",
-          "enable_hexadecimal": "Enable Hexadecimal Time",
-          "enable_maya": "Enable Maya Calendar",
-          "enable_nato": "Enable NATO DTG Time",
-          "enable_nato_zone": "Enable NATO Zone Time Indicator",
-          "enable_nato_rescue": "Enable NATO Rescue Time",
-          "enable_attic": "Enable Attic Calendar",
-          "enable_suriyakati": "Enable Suriyakati Calendar",
-          "enable_minguo": "Enable Minguo Calendar (Taiwan/ROC)",
-          "enable_darian": "Enable Darian Mars Calendar",
-          "enable_mars_time": "Enable Mars Time with Timezones",
-          "mars_timezone": "Select Mars Timezone",
-          "enable_eve": "Enable EVE Online Time",
-          "enable_shire": "Enable Shire Calendar (Hobbit)",
-          "enable_rivendell": "Enable Rivendell Calendar (Elven)",
-          "enable_tamriel": "Enable Tamriel Calendar (Elder Scrolls)",
-          "enable_egyptian": "Enable Egyptian Calendar",
-          "enable_discworld": "Enable Discworld Calendar",
-          "enable_roman": "Enable Roman Calendar"
-        }
-      },
-      "military": {
-        "title": "Military Time Options",
-        "description": "Configure military time systems.",
-        "data": {
-          "enable_nato": "Enable NATO DTG Time",
-          "enable_nato_zone": "Enable NATO Zone Time Indicator",
-          "enable_nato_rescue": "Enable NATO Rescue Time"
-        }
-      },
-      "historical": {
-        "title": "Historical Calendar Options",
-        "description": "Configure historical calendars.",
-        "data": {
-          "enable_maya": "Enable Maya Calendar",
-          "enable_egyptian": "Enable Egyptian Calendar",
-          "enable_roman": "Enable Roman Calendar",
-          "enable_stardate": "Enable Stardate"
-        }
+        "title": "Alternative Time Options",
+        "description": "Modify your time system configuration.\n\nEnable or disable calendars and adjust their settings.",
+        "data": {}
       }
-    }
-  },
-  "entity": {
-    "sensor": {
-      "timezone": {
-        "name": "Timezone"
-      },
-      "stardate": {
-        "name": "Stardate"
-      },
-      "swatch_time": {
-        "name": "Swatch Internet Time"
-      },
-      "unix_time": {
-        "name": "Unix Timestamp"
-      },
-      "julian_date": {
-        "name": "Julian Date"
-      },
-      "decimal_time": {
-        "name": "Decimal Time"
-      },
-      "hexadecimal_time": {
-        "name": "Hexadecimal Time"
-      },
-      "maya_calendar": {
-        "name": "Maya Calendar"
-      },
-      "nato_dtg": {
-        "name": "NATO DTG Time"
-      },
-      "nato_zone": {
-        "name": "NATO Zone Time Indicator"
-      },
-      "nato_rescue": {
-        "name": "NATO Rescue Time"
-      },
-      "attic_calendar": {
-        "name": "Attic Calendar"
-      },
-      "suriyakati_calendar": {
-        "name": "Suriyakati Calendar"
-      },
-      "minguo_calendar": {
-        "name": "Minguo Calendar"
-      },
-      "darian_calendar": {
-        "name": "Darian Mars Calendar"
-      },
-      "mars_time": {
-        "name": "Mars Time"
-      },
-      "eve_time": {
-        "name": "EVE Online Time"
-      },
-      "shire_calendar": {
-        "name": "Shire Calendar"
-      },
-      "rivendell_calendar": {
-        "name": "Rivendell Calendar"
-      },
-      "tamriel_calendar": {
-        "name": "Tamriel Calendar"
-      },
-      "egyptian_calendar": {
-        "name": "Egyptian Calendar"
-      },
-      "discworld_calendar": {
-        "name": "Discworld Calendar"
-      },
-      "roman_calendar": {
-        "name": "Roman Calendar"
-      }
-    }
-  },
-  "selector": {
-    "mars_timezone": {
-      "options": {
-        "MTC": "Coordinated Mars Time (0°)",
-        "AMT": "Airy Mean Time (0°)",
-        "OLY": "Olympus Mons Time (-135°)",
-        "ELY": "Elysium Time (+60°)",
-        "CHA": "Chryse Time (+180°)",
-        "MAR": "Mariner Valley Time (-90°)",
-        "ARA": "Arabia Terra Time (+45°)",
-        "THR": "Tharsis Time (-45°)",
-        "HEL": "Hellas Basin Time (+105°)",
-        "VIK": "Viking 1 Landing Site (-30°)",
-        "PTH": "Pathfinder Landing Site (+30°)",
-        "OPP": "Opportunity Landing Site (+165°)",
-        "SPI": "Spirit Landing Site (+150°)",
-        "CUR": "Curiosity/Gale Crater (+135°)",
-        "PER": "Perseverance/Jezero (+75°)"
-      }
+    },
+    "error": {
+      "no_systems_selected": "At least one time system must remain enabled"
     }
   }
 }
