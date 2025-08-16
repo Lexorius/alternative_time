@@ -12,11 +12,11 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
-from homeassistant.helpers.event import async_track_time_interval
 
 from .const import DOMAIN
 
@@ -220,30 +220,13 @@ class AlternativeTimeSensorBase(SensorEntity):
         self._base_name = base_name
         self._hass = hass
         self._state = None
-        self._attr_should_poll = False
+        self._attr_should_poll = True
         
-        # Set update interval from class attribute or metadata if available
-        self._update_interval = 3600  # Default 1 hour
-        # First, if the class provides UPDATE_INTERVAL, take it
-        try:
-            if hasattr(self.__class__, 'UPDATE_INTERVAL'):
-                val = int(getattr(self.__class__, 'UPDATE_INTERVAL'))
-                if val > 0:
-                    self._update_interval = val
-        except Exception:
-            pass
-        # Then prefer module CALENDAR_INFO['update_interval'] if present
-        try:
-            module = self.__class__.__module__
-            if module:
-                mod = __import__(module, fromlist=['CALENDAR_INFO'])
-                if hasattr(mod, 'CALENDAR_INFO'):
-                    self._calendar_info = getattr(self, '_calendar_info', None) or mod.CALENDAR_INFO
-                    ui = self._calendar_info.get('update_interval')
-                    if isinstance(ui, (int, float)) and ui > 0:
-                        self._update_interval = int(ui)
-        except Exception:
-            pass
+        # Set update interval from class attribute if available
+        if hasattr(self.__class__, 'UPDATE_INTERVAL'):
+            self._update_interval = self.__class__.UPDATE_INTERVAL
+        else:
+            self._update_interval = 3600  # Default 1 hour
     
     @property
     def update_interval(self) -> int:
@@ -326,50 +309,77 @@ class AlternativeTimeSensorBase(SensorEntity):
         # Non-dict text - return as-is or default
         return str(block) if block else default
 
-    async def async_added_to_hass(self) -> None:
-        """Set up periodic updates based on per-plugin interval."""
-        await super().async_added_to_hass()
-        # Re-evaluate update interval from CALENDAR_INFO just in case
+
+    @property
+    def device_info(self) -> Dict[str, Any]:
+        """Group entities by plugin category as a Device in HA registry."""
+        # Lazy-load CALENDAR_INFO from module
+        info = {}
         try:
-            info = getattr(self, '_calendar_info', None)
-            if not info:
-                module = self.__class__.__module__
-                if module:
-                    mod = __import__(module, fromlist=['CALENDAR_INFO'])
-                    if hasattr(mod, 'CALENDAR_INFO'):
-                        self._calendar_info = mod.CALENDAR_INFO
-                        info = self._calendar_info
-            if isinstance(info, dict):
-                ui = info.get('update_interval')
-                if isinstance(ui, (int, float)) and ui > 0:
-                    self._update_interval = int(ui)
+            mod = __import__(self.__class__.__module__, fromlist=["CALENDAR_INFO"])
+            if hasattr(mod, "CALENDAR_INFO"):
+                info = getattr(mod, "CALENDAR_INFO") or {}
         except Exception:
-            pass
-        interval = timedelta(seconds=max(1, int(self._update_interval)))
-        # Schedule periodic callback
-        self._unsub_timer = async_track_time_interval(self._hass, self._handle_timer, interval)
-        # Do an immediate update to populate state
-        await self._handle_timer(None)
+            info = {}
+        category = str(info.get("category") or "uncategorized")
+        if category == "religious":
+            category = "religion"
+        device_name = f"Alternative Time — {category.title()}"
+        return {
+            "identifiers": {(DOMAIN, f"group:{category}")},
+            "manufacturer": "Alternative Time Systems",
+            "model": "Category Group",
+            "name": device_name,
+        }
+
+    async def async_added_to_hass(self) -> None:
+        """Schedule periodic updates in a non-blocking way."""
+        # Determine interval from CALENDAR_INFO or class constant
+        interval = None
+        try:
+            mod = __import__(self.__class__.__module__, fromlist=["CALENDAR_INFO"])
+            info = getattr(mod, "CALENDAR_INFO", {}) or {}
+            interval = info.get("update_interval")
+        except Exception:
+            interval = None
+        if not isinstance(interval, (int, float)):
+            interval = getattr(self.__class__, "UPDATE_INTERVAL", None)
+        try:
+            seconds = max(1, int(interval)) if interval else 3600
+        except Exception:
+            seconds = 3600
+
+        # Avoid platform-wide polling
+        self._attr_should_poll = False
+
+        # Start scheduler
+        from datetime import timedelta as _td
+        self._unsub_timer = async_track_time_interval(self._hass, self._async_timer_tick, _td(seconds=seconds))
+        # Trigger first run
+        self._hass.async_create_task(self._async_timer_tick(None))
 
     async def async_will_remove_from_hass(self) -> None:
-        """Clean up timers on removal."""
-        try:
-            unsub = getattr(self, '_unsub_timer', None)
-            if unsub:
+        """Cancel the scheduled timer when entity is removed."""
+        unsub = getattr(self, "_unsub_timer", None)
+        if unsub:
+            try:
                 unsub()
-        except Exception:
-            pass
-        await super().async_will_remove_from_hass()
+            except Exception:
+                pass
+            self._unsub_timer = None
 
-    async def _handle_timer(self, _now) -> None:
-        """Timer handler that runs the plugin's update and writes state."""
+    async def _async_timer_tick(self, _now) -> None:
+        """Call plugin update without blocking the event loop."""
         try:
-            if hasattr(self, 'async_update'):
-                await self.async_update()  # type: ignore[func-returns-value]
-            elif hasattr(self, 'update'):
-                await self._hass.async_add_executor_job(self.update)
-            self.async_write_ha_state()
-        except Exception as ex:
-            _LOGGER.debug("Update error in %s: %s", getattr(self, '_attr_name', None) or self._base_name, ex)
-
-
+            # Prefer plugin's async_update if available
+            if hasattr(self, "async_update") and callable(getattr(self, "async_update")):
+                await getattr(self, "async_update")()
+            else:
+                await self._hass.async_add_executor_job(getattr(self, "update"))
+        except Exception as exc:
+            _LOGGER.debug(f"Scheduled update failed for {self.name}: {exc}")
+        finally:
+            try:
+                self.async_write_ha_state()
+            except Exception:
+                pass
