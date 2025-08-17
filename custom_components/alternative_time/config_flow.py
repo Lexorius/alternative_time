@@ -549,6 +549,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if filename.endswith(".py") and not filename.startswith("__"):
                 module_name = filename[:-3]  # Remove .py extension
                 
+                # Skip template and example files
+                if "template" in module_name.lower() or "example" in module_name.lower():
+                    continue
+                
                 try:
                     # Import module asynchronously
                     module = await self.hass.async_add_executor_job(
@@ -650,6 +654,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             if filename.endswith(".py") and not filename.startswith("__"):
                 module_name = filename[:-3]
                 
+                # Skip template and example files
+                if "template" in module_name.lower() or "example" in module_name.lower():
+                    continue
+                
                 try:
                     # Import module asynchronously
                     module = await self.hass.async_add_executor_job(
@@ -674,4 +682,3 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             return module
         except Exception:
             return None
-            
