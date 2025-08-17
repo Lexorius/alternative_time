@@ -307,20 +307,37 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._category_index += 1
             return await self.async_step_select_calendars_by_category()
         
-        # Build labels: Name — Description
+        # Build labels with separators between items
         options_dict = {}
-        for cid, info in sorted(cals):
+        separator = "─" * 50  # Visual separator
+        
+        for i, (cid, info) in enumerate(sorted(cals)):
             name = self._lcal(info, "name", default=cid)
             desc = self._lcal(info, "description", default="")
             upd = info.get("update_interval")
             upd_txt = f"{int(upd)}s" if isinstance(upd, (int, float)) else ""
             acc = str(info.get("accuracy") or "")
-            extra = " • ".join([p for p in [
-                f"update: {upd_txt}" if upd_txt else "", 
-                f"acc: {acc}" if acc else ""
-            ] if p])
-            base = f"{name} — {desc}" if desc else name
-            label = f"{base} ({extra})" if extra else base
+            
+            # Build extra info line
+            extra_parts = []
+            if upd_txt:
+                extra_parts.append(f"Update: {upd_txt}")
+            if acc:
+                extra_parts.append(f"Accuracy: {acc}")
+            extra = " • ".join(extra_parts)
+            
+            # Format the label with name, description and extra info on separate lines
+            label_parts = [name]
+            if desc:
+                label_parts.append(f"  ↳ {desc}")
+            if extra:
+                label_parts.append(f"  ↳ {extra}")
+            
+            # Add separator after each item except the last
+            if i < len(cals) - 1:
+                label_parts.append(f"  {separator}")
+            
+            label = "\n".join(label_parts)
             options_dict[cid] = label
         
         # Defaults: keep already chosen in this category, else select all

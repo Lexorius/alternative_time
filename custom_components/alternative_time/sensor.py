@@ -26,6 +26,9 @@ _LOGGER = logging.getLogger(__name__)
 _DISCOVERED_CALENDARS_CACHE: Optional[Dict[str, Dict[str, Any]]] = None
 _DISCOVERY_LOCK = asyncio.Lock()
 
+# Store config entries globally for sensor access
+_CONFIG_ENTRIES: Dict[str, ConfigEntry] = {}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -33,6 +36,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Alternative Time Systems sensors from a config entry."""
+    
+    # Store config entry for sensor access
+    entry_id = config_entry.entry_id
+    _CONFIG_ENTRIES[entry_id] = config_entry
     
     # Get selected calendars from config
     selected_calendars = config_entry.data.get("calendars", [])
@@ -76,13 +83,17 @@ async def async_setup_entry(
                 _LOGGER.error(f"No sensor class found in calendar module: {calendar_id}")
                 continue
             
-            # Create sensor instance
+            # Create sensor instance - store calendar_id for later lookup
             sensor = sensor_class(name, hass)
+            sensor._calendar_id = calendar_id  # Store for plugin options lookup
+            sensor._config_entry_id = entry_id  # Store entry ID
             sensors.append(sensor)
             _LOGGER.info(f"Created sensor for calendar: {calendar_id}")
             
         except Exception as e:
             _LOGGER.error(f"Failed to create sensor for calendar {calendar_id}: {e}")
+            import traceback
+            traceback.print_exc()
             continue
     
     if sensors:
@@ -195,6 +206,11 @@ def export_discovered_calendars() -> Dict[str, Dict[str, Any]]:
     return discovered
 
 
+def get_config_entry(entry_id: str) -> Optional[ConfigEntry]:
+    """Get a config entry by ID."""
+    return _CONFIG_ENTRIES.get(entry_id)
+
+
 class AlternativeTimeSensorBase(SensorEntity):
     """Base class for Alternative Time System sensors."""
 
@@ -221,12 +237,26 @@ class AlternativeTimeSensorBase(SensorEntity):
         self._hass = hass
         self._state = None
         self._attr_should_poll = True
+        self._calendar_id = None  # Will be set by async_setup_entry
+        self._config_entry_id = None  # Will be set by async_setup_entry
         
         # Set update interval from class attribute if available
         if hasattr(self.__class__, 'UPDATE_INTERVAL'):
             self._update_interval = self.__class__.UPDATE_INTERVAL
         else:
             self._update_interval = 3600  # Default 1 hour
+    
+    def get_plugin_options(self) -> Dict[str, Any]:
+        """Get plugin options for this sensor."""
+        if not self._config_entry_id or not self._calendar_id:
+            return {}
+        
+        config_entry = _CONFIG_ENTRIES.get(self._config_entry_id)
+        if not config_entry:
+            return {}
+        
+        plugin_options = config_entry.data.get("plugin_options", {})
+        return plugin_options.get(self._calendar_id, {})
     
     @property
     def update_interval(self) -> int:
