@@ -49,14 +49,27 @@ async def async_setup_entry(
         _LOGGER.warning("No calendars selected")
         return
     
+    _LOGGER.info(f"Setting up sensors for calendars: {selected_calendars}")
+    
+    # Clear cache to force re-discovery
+    global _DISCOVERED_CALENDARS_CACHE
+    _DISCOVERED_CALENDARS_CACHE = None
+    
     # Discover all available calendars
     discovered_calendars = await async_discover_all_calendars(hass)
+    
+    if not discovered_calendars:
+        _LOGGER.error("No calendars could be discovered!")
+        return
+    
+    _LOGGER.info(f"Discovered calendars: {list(discovered_calendars.keys())}")
     
     # Create sensors for selected calendars
     sensors = []
     for calendar_id in selected_calendars:
         if calendar_id not in discovered_calendars:
-            _LOGGER.warning(f"Calendar {calendar_id} not found")
+            _LOGGER.error(f"Calendar '{calendar_id}' is enabled but not found in registry")
+            _LOGGER.debug(f"Available calendars: {list(discovered_calendars.keys())}")
             continue
         
         calendar_info = discovered_calendars[calendar_id]
@@ -93,11 +106,12 @@ async def async_setup_entry(
         except Exception as e:
             _LOGGER.error(f"Failed to create sensor for calendar {calendar_id}: {e}")
             import traceback
-            traceback.print_exc()
+            _LOGGER.debug(traceback.format_exc())
             continue
     
     if sensors:
         async_add_entities(sensors)
+        _LOGGER.info(f"Added {len(sensors)} sensors to Home Assistant")
 
 
 async def async_discover_all_calendars(hass: HomeAssistant) -> Dict[str, Dict[str, Any]]:
@@ -165,19 +179,40 @@ async def async_import_calendar_module(hass: HomeAssistant, module_name: str):
     """Import a calendar module asynchronously."""
     def _import():
         try:
+            # Add parent directory to path for imports
+            import sys
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            parent_dir = os.path.dirname(current_dir)
+            if parent_dir not in sys.path:
+                sys.path.insert(0, parent_dir)
+            
             # Try different import methods
             try:
-                return import_module(f'.calendars.{module_name}', 
+                module = import_module(f'.calendars.{module_name}', 
                                    package='custom_components.alternative_time')
-            except ImportError:
+                _LOGGER.debug(f"Successfully imported {module_name} via method 1")
+                return module
+            except ImportError as e1:
+                _LOGGER.debug(f"Method 1 failed for {module_name}: {e1}")
                 try:
-                    return import_module(
+                    module = import_module(
                         f'custom_components.alternative_time.calendars.{module_name}'
                     )
-                except ImportError:
-                    return import_module(module_name)
+                    _LOGGER.debug(f"Successfully imported {module_name} via method 2")
+                    return module
+                except ImportError as e2:
+                    _LOGGER.debug(f"Method 2 failed for {module_name}: {e2}")
+                    try:
+                        module = import_module(module_name)
+                        _LOGGER.debug(f"Successfully imported {module_name} via method 3")
+                        return module
+                    except ImportError as e3:
+                        _LOGGER.debug(f"Method 3 failed for {module_name}: {e3}")
+                        raise e3
         except Exception as e:
             _LOGGER.error(f"Failed to import calendar module {module_name}: {e}")
+            import traceback
+            _LOGGER.debug(traceback.format_exc())
             return None
     
     return await hass.async_add_executor_job(_import)
