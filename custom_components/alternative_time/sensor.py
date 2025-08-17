@@ -122,10 +122,15 @@ async def async_discover_all_calendars(hass: HomeAssistant) -> Dict[str, Dict[st
         
         # List files asynchronously
         files = await hass.async_add_executor_job(os.listdir, calendars_dir)
+        _LOGGER.debug(f"Found files in calendars directory: {files}")
         
         for filename in files:
             if filename.endswith(".py") and not filename.startswith("__"):
                 module_name = filename[:-3]  # Remove .py extension
+                
+                # Skip template and example files
+                if "template" in module_name.lower() or "example" in module_name.lower():
+                    continue
                 
                 try:
                     # Import module asynchronously
@@ -136,12 +141,22 @@ async def async_discover_all_calendars(hass: HomeAssistant) -> Dict[str, Dict[st
                         cal_id = cal_info.get('id', module_name)
                         discovered[cal_id] = cal_info
                         _LOGGER.debug(f"Discovered calendar: {cal_id}")
+                    elif module:
+                        _LOGGER.debug(f"Module {module_name} has no CALENDAR_INFO")
+                    else:
+                        _LOGGER.debug(f"Could not import module {module_name}")
                         
                 except Exception as e:
                     _LOGGER.warning(f"Failed to discover calendar {module_name}: {e}")
+                    import traceback
+                    _LOGGER.debug(traceback.format_exc())
                     continue
         
-        _LOGGER.info(f"Discovered {len(discovered)} calendars")
+        if not discovered:
+            _LOGGER.error(f"No calendars discovered! Directory contents: {files}")
+        else:
+            _LOGGER.info(f"Discovered {len(discovered)} calendars: {list(discovered.keys())}")
+        
         _DISCOVERED_CALENDARS_CACHE = discovered
         return discovered
 
@@ -185,11 +200,19 @@ def export_discovered_calendars() -> Dict[str, Dict[str, Any]]:
     calendars_dir = os.path.join(current_dir, "calendars")
     
     if not os.path.exists(calendars_dir):
+        _LOGGER.warning(f"Calendars directory not found in export: {calendars_dir}")
         return discovered
     
-    for filename in os.listdir(calendars_dir):
+    files = os.listdir(calendars_dir)
+    _LOGGER.debug(f"Export discovery - found files: {files}")
+    
+    for filename in files:
         if filename.endswith(".py") and not filename.startswith("__"):
             module_name = filename[:-3]
+            
+            # Skip template and example files
+            if "template" in module_name.lower() or "example" in module_name.lower():
+                continue
             
             try:
                 module = import_module(f'.calendars.{module_name}', 
@@ -199,10 +222,20 @@ def export_discovered_calendars() -> Dict[str, Dict[str, Any]]:
                     cal_info = module.CALENDAR_INFO
                     cal_id = cal_info.get('id', module_name)
                     discovered[cal_id] = cal_info
+                    _LOGGER.debug(f"Export discovered: {cal_id}")
+                else:
+                    _LOGGER.debug(f"Export - no CALENDAR_INFO in {module_name}")
                     
-            except Exception:
+            except Exception as e:
+                _LOGGER.debug(f"Export failed for {module_name}: {e}")
                 continue
     
+    if not discovered:
+        _LOGGER.error(f"Export - no calendars discovered! Files: {files}")
+    else:
+        _LOGGER.info(f"Export discovered {len(discovered)} calendars")
+    
+    _DISCOVERED_CALENDARS_CACHE = discovered
     return discovered
 
 
