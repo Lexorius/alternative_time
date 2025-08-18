@@ -163,6 +163,18 @@ CALENDAR_INFO = {
     
     # Configuration options for this calendar
     "config_options": {
+        "timezone": {
+            "type": "select",
+            "default": "MTC",
+            "options": [
+                "MTC", "AMT", "OLY", "ELY", "CHA", "MAR", "ARA", "THR",
+                "HEL", "VIK", "PTH", "OPP", "SPI", "CUR", "PER"
+            ],
+            "description": {
+                "en": "Select Mars timezone",
+                "de": "Mars-Zeitzone auswählen"
+            }
+        },
         "show_mission_sol": {
             "type": "boolean",
             "default": True,
@@ -197,7 +209,7 @@ class MarsTimeSensor(AlternativeTimeSensorBase):
     # Class-level update interval
     UPDATE_INTERVAL = 60  # Update every minute
     
-    def __init__(self, base_name: str, mars_timezone: str, hass: HomeAssistant) -> None:
+    def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the Mars time sensor."""
         super().__init__(base_name, hass)
         
@@ -209,18 +221,24 @@ class MarsTimeSensor(AlternativeTimeSensorBase):
         self._attr_unique_id = f"{base_name}_mars_time"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:rocket-launch")
         
-        # Mars timezone
-        self._mars_timezone = mars_timezone
+        # Get plugin options
+        options = self.get_plugin_options()
+        
+        # Mars timezone (from config or default)
+        self._mars_timezone = options.get("timezone", "MTC")
         
         # Configuration options
-        self._show_mission_sol = True
-        self._show_solar_longitude = True
-        self._show_earth_time = False
+        self._show_mission_sol = options.get("show_mission_sol", True)
+        self._show_solar_longitude = options.get("show_solar_longitude", True)
+        self._show_earth_time = options.get("show_earth_time", False)
         
         # Mars data
         self._mars_data = CALENDAR_INFO["mars_data"]
         
-        _LOGGER.debug(f"Initialized Mars Time sensor: {self._attr_name} with timezone {mars_timezone}")
+        # Initialize state
+        self._state = None
+        
+        _LOGGER.debug(f"Initialized Mars Time sensor: {self._attr_name} with timezone {self._mars_timezone}")
     
     @property
     def state(self):
