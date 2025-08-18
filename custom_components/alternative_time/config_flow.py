@@ -134,7 +134,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Return a list of {label,value} for select fields."""
         opts = (meta or {}).get("options")
         if isinstance(opts, list) and opts:
-            return [{"label": str(o), "value": o} for o in opts]
+            # Ensure all values are strings
+            return [{"label": str(o), "value": str(o)} for o in opts]
         
         # Special handling for timezone
         if key.lower() == "timezone":
@@ -444,12 +445,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 elif typ == "select":
                     options = self._build_select_options(cid, key, meta, info)
                     if options:
-                        # Ensure default is in options
-                        option_values = [o["value"] for o in options]
-                        if default not in option_values and option_values:
-                            default = option_values[0]
+                        # Ensure all option values are strings (SelectSelector requirement)
+                        options = [{"label": str(o["label"]), "value": str(o["value"])} for o in options]
                         
-                        schema_dict[vol.Optional(pretty_key, default=default)] = SelectSelector(
+                        # Ensure default is a string and in options
+                        default_str = str(default) if default is not None else ""
+                        option_values = [o["value"] for o in options]
+                        if default_str not in option_values and option_values:
+                            default_str = option_values[0]
+                        
+                        schema_dict[vol.Optional(pretty_key, default=default_str)] = SelectSelector(
                             SelectSelectorConfig(
                                 options=options, 
                                 multiple=False, 
