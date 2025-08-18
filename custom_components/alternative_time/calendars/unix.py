@@ -207,10 +207,13 @@ class UnixTimestampSensor(AlternativeTimeSensorBase):
         self._attr_unique_id = f"{base_name}_unix"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:counter")
         
-        # Configuration options
-        self._show_milliseconds = False
-        self._show_human_readable = True
-        self._show_milestone = True
+        # Get plugin options
+        options = self.get_plugin_options()
+        
+        # Configuration options with defaults
+        self._show_milliseconds = options.get("show_milliseconds", False)
+        self._show_human_readable = options.get("show_human_readable", True)
+        self._show_milestone = options.get("show_milestone", True)
         
         # Unix data
         self._unix_data = CALENDAR_INFO["unix_data"]

@@ -1,21 +1,12 @@
-"""Sexagesimal Cycle Calendar (干支 Gānzhī) implementation - Version 1.0."""
+"""Sexagesimal Cycle Calendar (干支 Gānzhī) implementation - Version 2.5."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 from typing import Dict, Any, Tuple
 
 from homeassistant.core import HomeAssistant
-
-# Import base class
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-try:
-    from ..sensor import AlternativeTimeSensorBase
-except ImportError:
-    from sensor import AlternativeTimeSensorBase
+from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +20,7 @@ UPDATE_INTERVAL = 3600
 # Complete calendar information for auto-discovery
 CALENDAR_INFO = {
     "id": "sexagesimal",
-    "version": "1.0.0",
+    "version": "2.5.0",
     "icon": "mdi:numeric-6-box-multiple",
     "category": "cultural",
     "accuracy": "traditional",
@@ -63,6 +54,26 @@ CALENDAR_INFO = {
         "ja": "天干と地支による伝統的な60年周期",
         "zh": "天干地支六十甲子循环系统",
         "ko": "천간과 지지에 의한 전통적인 60년 주기"
+    },
+    
+    # Detailed information for documentation
+    "detailed_info": {
+        "en": {
+            "overview": "The Sexagesimal cycle is a traditional East Asian calendar system",
+            "structure": "Combines 10 Heavenly Stems with 12 Earthly Branches for a 60-year cycle",
+            "usage": "Used in Chinese, Japanese, Korean, and Vietnamese calendars",
+            "elements": "Each stem and branch is associated with elements and yin-yang",
+            "zodiac": "The 12 branches correspond to the zodiac animals",
+            "applications": "Used for years, months, days, and hours"
+        },
+        "de": {
+            "overview": "Der Sexagesimalzyklus ist ein traditionelles ostasiatisches Kalendersystem",
+            "structure": "Kombiniert 10 Himmelsstämme mit 12 Erdzweigen für einen 60-Jahres-Zyklus",
+            "usage": "Verwendet in chinesischen, japanischen, koreanischen und vietnamesischen Kalendern",
+            "elements": "Jeder Stamm und Zweig ist mit Elementen und Yin-Yang verbunden",
+            "zodiac": "Die 12 Zweige entsprechen den Tierkreiszeichen",
+            "applications": "Verwendet für Jahre, Monate, Tage und Stunden"
+        }
     },
     
     # Sexagesimal system data
@@ -177,7 +188,7 @@ CALENDAR_INFO = {
             },
             {
                 "cn": "未", "traditional": "未", "pinyin": "wèi",
-                "animal": "Goat", "animal_cn": "羊", "emoji": "🐐",
+                "animal": "Goat", "animal_cn": "羊", "emoji": "🐑",
                 "hour": "13:00-15:00", "month": 6, "yin_yang": "Yin",
                 "element": "Earth", "direction": "SSW"
             },
@@ -189,7 +200,7 @@ CALENDAR_INFO = {
             },
             {
                 "cn": "酉", "traditional": "酉", "pinyin": "yǒu",
-                "animal": "Rooster", "animal_cn": "鸡", "emoji": "🐓",
+                "animal": "Rooster", "animal_cn": "鸡", "emoji": "🐔",
                 "hour": "17:00-19:00", "month": 8, "yin_yang": "Yin",
                 "element": "Metal", "direction": "West"
             },
@@ -207,7 +218,7 @@ CALENDAR_INFO = {
             }
         ],
         
-        # 60 Cycle combinations (first 10 for reference)
+        # 60 Cycle combinations
         "cycle_names": [
             "甲子", "乙丑", "丙寅", "丁卯", "戊辰", "己巳", "庚午", "辛未", "壬申", "癸酉",
             "甲戌", "乙亥", "丙子", "丁丑", "戊寅", "己卯", "庚辰", "辛巳", "壬午", "癸未",
@@ -236,6 +247,35 @@ CALENDAR_INFO = {
             "day": {"date": "1984-01-01", "stem": 0, "branch": 10},  # 甲戌日
             "hour": {"base": "1984-01-01 00:00", "stem": 0, "branch": 0}  # 甲子时
         }
+    },
+    
+    # Additional metadata
+    "reference_url": "https://en.wikipedia.org/wiki/Sexagenary_cycle",
+    "documentation_url": "https://www.chinesefortunecalendar.com/",
+    "origin": "Ancient China",
+    "created_by": "Ancient Chinese astronomers",
+    "period": "Shang Dynasty (1600-1046 BCE)",
+    
+    # Example format
+    "example": "甲子年 乙丑月 丙寅日 丁卯时",
+    "example_meaning": "Wood-Rat Year, Wood-Ox Month, Fire-Tiger Day, Fire-Rabbit Hour",
+    
+    # Related calendars
+    "related": ["chinese", "japanese", "korean", "vietnamese"],
+    
+    # Tags for searching and filtering
+    "tags": [
+        "cultural", "asian", "chinese", "traditional", "sexagesimal",
+        "ganzhi", "stems", "branches", "zodiac", "elements"
+    ],
+    
+    # Special features
+    "features": {
+        "cyclical": True,
+        "elements": True,
+        "zodiac": True,
+        "yin_yang": True,
+        "precision": "hour"
     },
     
     # Configuration options
@@ -301,9 +341,6 @@ class SexagesimalCalendarSensor(AlternativeTimeSensorBase):
         """Initialize the Sexagesimal calendar sensor."""
         super().__init__(base_name, hass)
         
-        # Store CALENDAR_INFO as instance variable
-        self._calendar_info = CALENDAR_INFO
-        
         # Get translated name from metadata
         calendar_name = self._translate('name', 'Sexagesimal Cycle Calendar')
         
@@ -312,33 +349,20 @@ class SexagesimalCalendarSensor(AlternativeTimeSensorBase):
         self._attr_unique_id = f"{base_name}_sexagesimal"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:numeric-6-box-multiple")
         
-        # Initialize configuration with defaults
-        self._cycle_type = "all"
-        self._display_format = "chinese"
-        self._show_elements = True
-        self._show_zodiac = True
-        self._show_cycle_number = False
+        # Get plugin options
+        options = self.get_plugin_options()
+        
+        # Configuration options with defaults
+        self._cycle_type = options.get("cycle_type", "all")
+        self._display_format = options.get("display_format", "chinese")
+        self._show_elements = options.get("show_elements", True)
+        self._show_zodiac = options.get("show_zodiac", True)
+        self._show_cycle_number = options.get("show_cycle_number", False)
         
         # Sexagesimal data
         self._sexagesimal_data = CALENDAR_INFO["sexagesimal_data"]
         
         _LOGGER.debug(f"Initialized Sexagesimal Calendar sensor: {self._attr_name}")
-    
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass, load config and set up updates."""
-        # Load plugin options if available
-        options = self.get_plugin_options()
-        
-        if options:
-            _LOGGER.debug(f"Sexagesimal: Loading options: {options}")
-            self._cycle_type = options.get("cycle_type", "all")
-            self._display_format = options.get("display_format", "chinese")
-            self._show_elements = options.get("show_elements", True)
-            self._show_zodiac = options.get("show_zodiac", True)
-            self._show_cycle_number = options.get("show_cycle_number", False)
-        
-        # Call parent implementation for scheduling updates
-        await super().async_added_to_hass()
     
     @property
     def state(self):
@@ -350,10 +374,6 @@ class SexagesimalCalendarSensor(AlternativeTimeSensorBase):
         """Return the state attributes."""
         attrs = super().extra_state_attributes
         
-        # Ensure attrs is a dictionary
-        if attrs is None:
-            attrs = {}
-        
         # Add Sexagesimal-specific attributes
         if hasattr(self, '_sexagesimal_date'):
             attrs.update(self._sexagesimal_date)
@@ -361,11 +381,8 @@ class SexagesimalCalendarSensor(AlternativeTimeSensorBase):
             # Add description in user's language
             attrs["description"] = self._translate('description')
             
-            # Add configuration
-            attrs["cycle_type"] = self._cycle_type
-            attrs["display_format"] = self._display_format
-            attrs["show_elements"] = self._show_elements
-            attrs["show_zodiac"] = self._show_zodiac
+            # Add reference
+            attrs["reference"] = CALENDAR_INFO.get('reference_url', '')
         
         return attrs
     
