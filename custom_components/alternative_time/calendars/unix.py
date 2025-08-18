@@ -7,7 +7,16 @@ import time
 from typing import Dict, Any
 
 from homeassistant.core import HomeAssistant
-from ..sensor import AlternativeTimeSensorBase
+# WICHTIG: Import der Basis-Klasse direkt aus sensor.py
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+try:
+    from ..sensor import AlternativeTimeSensorBase
+except ImportError:
+    # Fallback für direkten Import
+    from sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
 
