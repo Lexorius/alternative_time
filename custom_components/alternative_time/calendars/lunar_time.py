@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 # ============================================
 
 # Update interval in seconds (60 seconds for lunar time)
-UPDATE_INTERVAL = 60
+UPDATE_INTERVAL = 1
 
 # Complete calendar information for auto-discovery
 CALENDAR_INFO = {

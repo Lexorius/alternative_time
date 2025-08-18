@@ -165,7 +165,7 @@ class NatoTimeSensor(AlternativeTimeSensorBase):
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:clock-time-eight")
         
         # Initialize configuration with defaults
-        self._format_type = "basic"
+        self._format_type = "zone"
         self._show_zone_name = False
         self._use_local_zone = True
         

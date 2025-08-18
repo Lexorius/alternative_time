@@ -218,6 +218,9 @@ class UnixTimestampSensor(AlternativeTimeSensorBase):
         # Unix data
         self._unix_data = CALENDAR_INFO["unix_data"]
         
+        # Initialize state
+        self._state = None
+        
         _LOGGER.debug(f"Initialized Unix Timestamp sensor: {self._attr_name}")
     
     @property
