@@ -13,6 +13,7 @@ This integration transforms Home Assistant into a universal time clock with supp
 - 🧙 **Fantasy Calendars** (Tolkien, Elder Scrolls, Discworld)
 - 🏺 **Historical Calendars** (Maya, Attic, Egyptian, French Revolution)
 - 🔴 **Mars Time Systems** (Darian Calendar, Mars Time Zones)
+-    **ESA Lunar Time System** (experimental) 
 - 🌐 **Internet Standards** (Unix, Swatch Internet Time)
 - 🎖️ **Military Time Systems** (NATO DTG in 3 variants)
 - 🌏 **Cultural Calendars** (Thai, Taiwan)
