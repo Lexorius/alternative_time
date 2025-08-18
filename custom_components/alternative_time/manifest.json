@@ -7,6 +7,20 @@
   "documentation": "https://github.com/Lexorius/alternative_time",
   "iot_class": "calculated",
   "issue_tracker": "https://github.com/Lexorius/alternative_time/issues",
-  "requirements": [],
-  "version": "2.5.0.1"
+    "requirements": [
+    "pytz>=2023.3",
+    "LunarCalendar>=0.0.9",
+    "hijri-converter>=2.3.1",
+    "convertdate>=2.4.0",
+    "jdcal>=1.4.1",
+    "ephem>=4.1.4",
+    "skyfield>=1.46",
+    "astral>=3.2",
+    "workalendar>=17.0.0",
+    "holidays>=0.34",
+    "babel>=2.13.0",
+    "python-dateutil>=2.8.2",
+    "numpy>=1.24.0"
+  ],
+  "version": "2.5.0.5"
 }
