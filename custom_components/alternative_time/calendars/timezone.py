@@ -56,180 +56,173 @@ CALENDAR_INFO = {
         "fr": "Afficher l'heure dans différents fuseaux horaires du monde",
         "it": "Mostra l'ora in diversi fusi orari del mondo",
         "nl": "Tijd weergeven in verschillende tijdzones wereldwijd",
-        "pt": "Exibir hora em diferentes fusos horários do mundo",
+        "pt": "Exibir hora em diferentes fusos horários ao redor do mundo",
         "ru": "Отображение времени в разных часовых поясах мира",
-        "ja": "世界各地のタイムゾーンの時刻を表示",
+        "ja": "世界中の異なるタイムゾーンの時刻を表示",
         "zh": "显示世界各地不同时区的时间",
         "ko": "전 세계 다양한 시간대의 시간 표시"
     },
     
-    # Detailed information for documentation
-    "detailed_info": {
-        "en": {
-            "overview": "A timezone sensor that displays current time in any timezone worldwide",
-            "structure": "Based on the IANA Time Zone Database (tzdata)",
-            "zones": "Supports over 500 timezone identifiers",
-            "dst": "Automatic Daylight Saving Time handling",
-            "format": "24-hour format with timezone abbreviation",
-            "accuracy": "Synchronized with system time",
-            "history": "Timezone database maintained since 1986",
-            "updates": "Regular updates for political timezone changes"
-        },
-        "de": {
-            "overview": "Ein Zeitzonensensor, der die aktuelle Zeit in jeder Zeitzone weltweit anzeigt",
-            "structure": "Basierend auf der IANA Time Zone Database (tzdata)",
-            "zones": "Unterstützt über 500 Zeitzonenbezeichner",
-            "dst": "Automatische Sommerzeitumstellung",
-            "format": "24-Stunden-Format mit Zeitzonenabkürzung",
-            "accuracy": "Synchronisiert mit Systemzeit",
-            "history": "Zeitzonendatenbank seit 1986 gepflegt",
-            "updates": "Regelmäßige Updates für politische Zeitzonenänderungen"
-        }
-    },
-    
-    # Timezone-specific data
+    # Timezone data
     "timezone_data": {
-        # Major timezone groups
         "regions": {
-            "africa": ["Africa/Cairo", "Africa/Lagos", "Africa/Johannesburg", "Africa/Nairobi"],
-            "america": ["America/New_York", "America/Chicago", "America/Los_Angeles", "America/Mexico_City", "America/Sao_Paulo"],
-            "asia": ["Asia/Tokyo", "Asia/Shanghai", "Asia/Kolkata", "Asia/Dubai", "Asia/Singapore"],
-            "europe": ["Europe/London", "Europe/Paris", "Europe/Berlin", "Europe/Moscow", "Europe/Madrid"],
-            "pacific": ["Pacific/Sydney", "Pacific/Auckland", "Pacific/Honolulu", "Pacific/Fiji"]
-        },
-        
-        # UTC offsets (standard time)
-        "utc_offsets": {
-            "UTC-12": ["Pacific/Kwajalein"],
-            "UTC-11": ["Pacific/Samoa"],
-            "UTC-10": ["Pacific/Honolulu"],
-            "UTC-9": ["America/Anchorage"],
-            "UTC-8": ["America/Los_Angeles"],
-            "UTC-7": ["America/Denver"],
-            "UTC-6": ["America/Chicago"],
-            "UTC-5": ["America/New_York"],
-            "UTC-4": ["America/Halifax"],
-            "UTC-3": ["America/Sao_Paulo"],
-            "UTC-2": ["Atlantic/South_Georgia"],
-            "UTC-1": ["Atlantic/Azores"],
-            "UTC+0": ["Europe/London", "Africa/Casablanca"],
-            "UTC+1": ["Europe/Paris", "Europe/Berlin"],
-            "UTC+2": ["Europe/Athens", "Africa/Cairo"],
-            "UTC+3": ["Europe/Moscow", "Asia/Baghdad"],
-            "UTC+4": ["Asia/Dubai", "Asia/Baku"],
-            "UTC+5": ["Asia/Karachi", "Asia/Tashkent"],
-            "UTC+5:30": ["Asia/Kolkata", "Asia/Colombo"],
-            "UTC+6": ["Asia/Dhaka", "Asia/Almaty"],
-            "UTC+7": ["Asia/Bangkok", "Asia/Jakarta"],
-            "UTC+8": ["Asia/Shanghai", "Asia/Singapore"],
-            "UTC+9": ["Asia/Tokyo", "Asia/Seoul"],
-            "UTC+10": ["Australia/Sydney", "Asia/Vladivostok"],
-            "UTC+11": ["Pacific/Noumea"],
-            "UTC+12": ["Pacific/Auckland", "Pacific/Fiji"]
-        },
-        
-        # Daylight saving time information
-        "dst_info": {
-            "northern_hemisphere": {
-                "start": "March (2nd Sunday)",
-                "end": "November (1st Sunday)",
-                "regions": ["USA", "Canada", "Europe"]
-            },
-            "southern_hemisphere": {
-                "start": "October (1st Sunday)",
-                "end": "April (1st Sunday)",
-                "regions": ["Australia", "New Zealand", "Brazil"]
-            },
-            "no_dst": ["Japan", "China", "India", "Russia (since 2014)"]
-        },
-        
-        # Special timezones
-        "special_zones": {
-            "UTC": "Coordinated Universal Time",
-            "GMT": "Greenwich Mean Time",
-            "EST": "Eastern Standard Time",
-            "PST": "Pacific Standard Time",
-            "IST": "India Standard Time",
-            "JST": "Japan Standard Time",
-            "AEST": "Australian Eastern Standard Time"
-        },
-        
-        # Time formats by region
-        "regional_formats": {
-            "12hour": ["USA", "Canada", "Australia", "Philippines"],
-            "24hour": ["Europe", "Asia", "Africa", "South America"]
+            "Americas": [
+                "America/New_York",
+                "America/Chicago",
+                "America/Denver",
+                "America/Los_Angeles",
+                "America/Toronto",
+                "America/Mexico_City",
+                "America/Sao_Paulo",
+                "America/Buenos_Aires"
+            ],
+            "Europe": [
+                "Europe/London",
+                "Europe/Paris",
+                "Europe/Berlin",
+                "Europe/Moscow",
+                "Europe/Rome",
+                "Europe/Madrid",
+                "Europe/Amsterdam",
+                "Europe/Stockholm",
+                "Europe/Zurich"
+            ],
+            "Asia": [
+                "Asia/Tokyo",
+                "Asia/Shanghai",
+                "Asia/Hong_Kong",
+                "Asia/Singapore",
+                "Asia/Dubai",
+                "Asia/Kolkata",
+                "Asia/Bangkok",
+                "Asia/Seoul"
+            ],
+            "Pacific": [
+                "Pacific/Auckland",
+                "Pacific/Sydney",
+                "Australia/Melbourne",
+                "Australia/Perth",
+                "Pacific/Honolulu",
+                "Pacific/Fiji"
+            ],
+            "Africa": [
+                "Africa/Cairo",
+                "Africa/Johannesburg",
+                "Africa/Lagos",
+                "Africa/Nairobi"
+            ]
         }
     },
     
     # Additional metadata
-    "reference_url": "https://www.iana.org/time-zones",
-    "documentation_url": "https://en.wikipedia.org/wiki/List_of_tz_database_time_zones",
-    "origin": "IANA (Internet Assigned Numbers Authority)",
-    "created_by": "Arthur David Olson",
-    "database": "tzdata",
+    "reference_url": "https://en.wikipedia.org/wiki/Time_zone",
+    "documentation_url": "https://www.timeanddate.com/time/map/",
+    "origin": "IANA Time Zone Database",
+    "created_by": "International standards",
     
     # Example format
-    "example": "14:30:45 CET",
-    "example_meaning": "14 hours, 30 minutes, 45 seconds Central European Time",
+    "example": "14:30:00 CET (UTC+1)",
+    "example_meaning": "2:30 PM Central European Time",
     
     # Related calendars
-    "related": ["gregorian", "utc", "unix"],
+    "related": ["unix", "julian", "gregorian"],
     
     # Tags for searching and filtering
     "tags": [
-        "timezone", "world", "time", "dst", "utc", "gmt",
-        "international", "travel", "global", "iana", "tzdata"
+        "timezone", "world", "clock", "time", "global",
+        "utc", "gmt", "dst", "international", "travel"
     ],
     
     # Special features
     "features": {
-        "real_time": True,
-        "dst_aware": True,
-        "political_updates": True,
-        "historical_data": True,
-        "precision": "second"
+        "supports_dst": True,
+        "supports_abbreviations": True,
+        "supports_offsets": True,
+        "precision": "second",
+        "real_time": True
     },
     
-    # Configuration options for this calendar
+    # Configuration options
     "config_options": {
         "timezone": {
             "type": "select",
             "default": "UTC",
+            "options": [],  # Will be populated from timezone_data
+            "label": {
+                "en": "Timezone",
+                "de": "Zeitzone",
+                "fr": "Fuseau horaire",
+                "es": "Zona horaria"
+            },
             "description": {
                 "en": "Select timezone to display",
-                "de": "Anzuzeigende Zeitzone auswählen"
+                "de": "Zeitzone zur Anzeige auswählen",
+                "fr": "Sélectionner le fuseau horaire à afficher",
+                "es": "Seleccionar zona horaria para mostrar"
             }
         },
         "show_offset": {
             "type": "boolean",
             "default": True,
-            "description": {
+            "label": {
                 "en": "Show UTC offset",
-                "de": "UTC-Versatz anzeigen"
+                "de": "UTC-Versatz anzeigen",
+                "fr": "Afficher le décalage UTC",
+                "es": "Mostrar desplazamiento UTC"
+            },
+            "description": {
+                "en": "Display UTC offset (e.g. UTC+1)",
+                "de": "UTC-Versatz anzeigen (z.B. UTC+1)",
+                "fr": "Afficher le décalage UTC (ex. UTC+1)",
+                "es": "Mostrar desplazamiento UTC (ej. UTC+1)"
             }
         },
         "show_dst": {
             "type": "boolean",
             "default": True,
-            "description": {
+            "label": {
                 "en": "Show DST indicator",
-                "de": "Sommerzeit-Indikator anzeigen"
+                "de": "Sommerzeit-Indikator",
+                "fr": "Indicateur d'heure d'été",
+                "es": "Indicador de horario de verano"
+            },
+            "description": {
+                "en": "Show when daylight saving time is active",
+                "de": "Anzeigen wenn Sommerzeit aktiv ist",
+                "fr": "Afficher quand l'heure d'été est active",
+                "es": "Mostrar cuando el horario de verano está activo"
             }
         },
         "format_24h": {
             "type": "boolean",
             "default": True,
+            "label": {
+                "en": "24-hour format",
+                "de": "24-Stunden-Format",
+                "fr": "Format 24 heures",
+                "es": "Formato 24 horas"
+            },
             "description": {
-                "en": "Use 24-hour format",
-                "de": "24-Stunden-Format verwenden"
+                "en": "Use 24-hour time format",
+                "de": "24-Stunden-Zeitformat verwenden",
+                "fr": "Utiliser le format 24 heures",
+                "es": "Usar formato de 24 horas"
             }
         },
         "show_date": {
             "type": "boolean",
             "default": False,
+            "label": {
+                "en": "Show date",
+                "de": "Datum anzeigen",
+                "fr": "Afficher la date",
+                "es": "Mostrar fecha"
+            },
             "description": {
-                "en": "Show date along with time",
-                "de": "Datum zusammen mit Zeit anzeigen"
+                "en": "Include date in display",
+                "de": "Datum in Anzeige einbeziehen",
+                "fr": "Inclure la date dans l'affichage",
+                "es": "Incluir fecha en la pantalla"
             }
         }
     }
@@ -237,7 +230,7 @@ CALENDAR_INFO = {
 
 
 class TimezoneSensor(AlternativeTimeSensorBase):
-    """Sensor for displaying time in a specific timezone."""
+    """Sensor for displaying time in different timezones."""
     
     # Class-level update interval
     UPDATE_INTERVAL = 1  # Update every second
@@ -246,8 +239,15 @@ class TimezoneSensor(AlternativeTimeSensorBase):
         """Initialize the timezone sensor."""
         super().__init__(base_name, hass)
         
+        # Store CALENDAR_INFO as instance variable
+        self._calendar_info = CALENDAR_INFO
+        
         self._timezone_str = timezone
+        
+        # WICHTIG: Timezone wird NICHT im __init__ geladen (blocking call)
+        # Wird stattdessen lazy beim ersten Update oder in async_added_to_hass geladen
         self._timezone = None
+        self._timezone_initialized = False
         
         # Get translated name from metadata
         calendar_name = self._translate('name', 'World Timezones')
@@ -257,24 +257,41 @@ class TimezoneSensor(AlternativeTimeSensorBase):
         self._attr_unique_id = f"{base_name}_timezone_{timezone.replace('/', '_')}"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:clock-time-four-outline")
         
-        # Configuration options
-        self._show_offset = True
-        self._show_dst = True
-        self._format_24h = True
-        self._show_date = False
+        # Get plugin options
+        options = self.get_plugin_options()
+        
+        # Configuration options with defaults
+        self._show_offset = options.get("show_offset", True)
+        self._show_dst = options.get("show_dst", True)
+        self._format_24h = options.get("format_24h", True)
+        self._show_date = options.get("show_date", False)
         
         # Timezone data
         self._timezone_data = CALENDAR_INFO["timezone_data"]
         
-        _LOGGER.debug(f"Initialized Timezone sensor: {self._attr_name}")
+        # Initialize state
+        self._state = None
+        self._tz_info = {}
         
-        # Initialize timezone
-        if HAS_PYTZ:
+        _LOGGER.debug(f"Initialized Timezone sensor: {self._attr_name}")
+    
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        
+        # Initialisiere Timezone async
+        if HAS_PYTZ and not self._timezone_initialized:
             try:
-                self._timezone = pytz.timezone(self._timezone_str)
+                # Führe die blockierende Operation in einem Executor aus
+                self._timezone = await self._hass.async_add_executor_job(
+                    pytz.timezone, self._timezone_str
+                )
+                self._timezone_initialized = True
+                _LOGGER.debug(f"Loaded timezone {self._timezone_str}")
             except Exception as e:
                 _LOGGER.warning(f"Could not load timezone {self._timezone_str}: {e}")
                 self._timezone = None
+                self._timezone_initialized = True  # Prevent retry
     
     @property
     def state(self):
@@ -304,7 +321,6 @@ class TimezoneSensor(AlternativeTimeSensorBase):
     
     def _calculate_timezone_info(self, now_tz: datetime) -> Dict[str, Any]:
         """Calculate timezone information."""
-        
         # Format time based on configuration
         if self._format_24h:
             time_format = "%H:%M:%S"
@@ -320,15 +336,18 @@ class TimezoneSensor(AlternativeTimeSensorBase):
         offset = now_tz.strftime("%z")
         if offset:
             hours = int(offset[:3])
-            minutes = int(offset[3:])
+            minutes = int(offset[3:]) if len(offset) > 3 else 0
             offset_display = f"UTC{hours:+d}:{minutes:02d}" if minutes else f"UTC{hours:+d}"
         else:
             offset_display = "UTC"
         
         # Check DST status
         is_dst = False
-        if HAS_PYTZ and self._timezone:
-            is_dst = bool(now_tz.dst())
+        if HAS_PYTZ and self._timezone and self._timezone_initialized:
+            try:
+                is_dst = bool(now_tz.dst())
+            except:
+                is_dst = False
         
         # Build display string
         display_parts = [time_display, tz_abbr]
@@ -379,18 +398,18 @@ class TimezoneSensor(AlternativeTimeSensorBase):
     
     def update(self) -> None:
         """Update the sensor."""
-        if HAS_PYTZ and self._timezone:
+        if HAS_PYTZ and self._timezone and self._timezone_initialized:
             now_tz = datetime.now(self._timezone)
             self._tz_info = self._calculate_timezone_info(now_tz)
             self._state = self._tz_info["full_display"]
         else:
-            # Fallback without pytz
+            # Fallback without pytz or before timezone is loaded
             now = datetime.now()
             self._state = now.strftime("%H:%M:%S") + f" {self._timezone_str}"
             self._tz_info = {
                 "time": now.strftime("%H:%M:%S"),
                 "timezone_id": self._timezone_str,
-                "error": "pytz not available"
+                "error": "pytz not available or timezone not loaded"
             }
         
         _LOGGER.debug(f"Updated Timezone to {self._state}")
