@@ -11,5 +11,5 @@
     "pytz>=2023.3",
     "LunarCalendar>=0.0.9"
   ],
-  "version": "2.5.0.8"
+  "version": "2.5.0.16"
 }
