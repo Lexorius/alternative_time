@@ -1,9 +1,9 @@
-"""Mars Time Calendar implementation - Version 2.5."""
+"""Mars Time (Darian Calendar) implementation - Version 2.5."""
 from __future__ import annotations
 
 from datetime import datetime
-import logging
 import math
+import logging
 from typing import Dict, Any
 
 from homeassistant.core import HomeAssistant
@@ -15,12 +15,12 @@ _LOGGER = logging.getLogger(__name__)
 # CALENDAR METADATA
 # ============================================
 
-# Update interval in seconds (60 seconds for Mars time)
+# Update interval in seconds (60 seconds = 1 minute)
 UPDATE_INTERVAL = 60
 
 # Complete calendar information for auto-discovery
 CALENDAR_INFO = {
-    "id": "mars_time",
+    "id": "mars",
     "version": "2.5.0",
     "icon": "mdi:rocket-launch",
     "category": "space",
@@ -31,122 +31,88 @@ CALENDAR_INFO = {
     "name": {
         "en": "Mars Sol Time",
         "de": "Mars Sol-Zeit",
-        "es": "Tiempo Solar de Marte",
-        "fr": "Temps Solaire Martien",
-        "it": "Tempo Solare Marziano",
+        "es": "Tiempo Sol de Marte",
+        "fr": "Temps Sol de Mars",
+        "it": "Tempo Sol di Marte",
         "nl": "Mars Sol Tijd",
-        "pt": "Tempo Solar de Marte",
+        "pt": "Tempo Sol de Marte",
         "ru": "Марсианское солнечное время",
-        "ja": "火星太陽時",
+        "ja": "火星ソル時間",
         "zh": "火星太阳时",
-        "ko": "화성 태양시"
+        "ko": "화성 솔 시간"
     },
     
     # Short descriptions for UI
     "description": {
-        "en": "Martian solar time with timezone support (e.g. 14:23:45 MTC)",
-        "de": "Marsianische Sonnenzeit mit Zeitzonenunterstützung (z.B. 14:23:45 MTC)",
-        "es": "Tiempo solar marciano con soporte de zona horaria (ej. 14:23:45 MTC)",
-        "fr": "Temps solaire martien avec support de fuseau horaire (ex. 14:23:45 MTC)",
-        "it": "Tempo solare marziano con supporto fuso orario (es. 14:23:45 MTC)",
-        "nl": "Martiaanse zonnetijd met tijdzone ondersteuning (bijv. 14:23:45 MTC)",
-        "pt": "Tempo solar marciano com suporte de fuso horário (ex. 14:23:45 MTC)",
-        "ru": "Марсианское солнечное время с поддержкой часовых поясов (напр. 14:23:45 MTC)",
-        "ja": "タイムゾーン対応の火星太陽時（例：14:23:45 MTC）",
-        "zh": "支持时区的火星太阳时（例：14:23:45 MTC）",
-        "ko": "시간대를 지원하는 화성 태양시 (예: 14:23:45 MTC)"
-    },
-    
-    # Detailed information for documentation
-    "detailed_info": {
-        "en": {
-            "overview": "Mars Sol Time tracks time on Mars using sols (Martian days)",
-            "sol_length": "One sol = 24 hours, 39 minutes, 35.244 seconds (88775.244 Earth seconds)",
-            "msd": "Mars Sol Date (MSD) - continuous count since December 29, 1873",
-            "timezones": "15 Mars time zones based on 15-degree longitude increments",
-            "mtc": "Coordinated Mars Time (MTC) - Mars equivalent of UTC, based at Airy-0 crater",
-            "missions": "Each Mars mission uses local solar time at their landing site",
-            "year": "Mars year = 668.6 sols (approximately 687 Earth days)",
-            "seasons": "Mars has seasons due to 25.2° axial tilt, but they're nearly twice as long as Earth's"
-        },
-        "de": {
-            "overview": "Mars Sol-Zeit verfolgt die Zeit auf dem Mars mit Sols (Marstagen)",
-            "sol_length": "Ein Sol = 24 Stunden, 39 Minuten, 35,244 Sekunden (88775,244 Erdsekunden)",
-            "msd": "Mars Sol Date (MSD) - kontinuierliche Zählung seit 29. Dezember 1873",
-            "timezones": "15 Mars-Zeitzonen basierend auf 15-Grad-Längengrad-Schritten",
-            "mtc": "Coordinated Mars Time (MTC) - Mars-Äquivalent zu UTC, basiert am Airy-0 Krater",
-            "missions": "Jede Mars-Mission verwendet lokale Sonnenzeit an ihrem Landeplatz",
-            "year": "Marsjahr = 668,6 Sols (ungefähr 687 Erdtage)",
-            "seasons": "Mars hat Jahreszeiten durch 25,2° Achsenneigung, aber sie sind fast doppelt so lang wie auf der Erde"
-        }
+        "en": "Mars Sol Date (MSD) and local solar time on Mars",
+        "de": "Mars Sol-Datum (MSD) und lokale Sonnenzeit auf dem Mars",
+        "es": "Fecha Sol de Marte (MSD) y hora solar local en Marte",
+        "fr": "Date Sol de Mars (MSD) et heure solaire locale sur Mars",
+        "it": "Data Sol di Marte (MSD) e ora solare locale su Marte",
+        "nl": "Mars Sol Datum (MSD) en lokale zonnetijd op Mars",
+        "pt": "Data Sol de Marte (MSD) e hora solar local em Marte",
+        "ru": "Марсианская солнечная дата (MSD) и местное солнечное время на Марсе",
+        "ja": "火星ソル日付（MSD）と火星の地方太陽時",
+        "zh": "火星太阳日（MSD）和火星当地太阳时",
+        "ko": "화성 솔 날짜(MSD)와 화성 현지 태양시"
     },
     
     # Mars-specific data
     "mars_data": {
-        "sol_seconds": 88775.244,  # Mars sol in Earth seconds
-        "earth_day_seconds": 86400.0,
-        "tropical_year_sols": 668.6,  # Mars solar days per Mars year
-        "tropical_year_days": 686.9725,  # Earth days per Mars year
-        "msd_epoch_jd": 2405522.0,  # MSD epoch in Julian Date
-        "axial_tilt": 25.19,  # degrees
+        # Physical constants
+        "sol_duration_seconds": 88775.244147,  # Mars solar day in Earth seconds
+        "tropical_year_sols": 668.5991,  # Mars year in sols
+        "j2000_epoch": 946727935.816,  # J2000 epoch in Unix timestamp
+        "mars_epoch_msd": 44796.0,  # MSD at J2000 epoch
         
-        # Mars timezones (offset from MTC in Mars hours)
+        # Mars timezones (based on landing sites and features)
         "timezones": {
-            "MTC": {"offset": 0, "name": "Coordinated Mars Time", "longitude": 0},
-            "AMT": {"offset": 0, "name": "Airy Mean Time", "longitude": 0},
-            "OLY": {"offset": -9, "name": "Olympus Mons Time", "longitude": -135},
-            "ELY": {"offset": 4, "name": "Elysium Time", "longitude": 60},
-            "CHA": {"offset": 12, "name": "Chryse Time", "longitude": 180},
-            "MAR": {"offset": -6, "name": "Mariner Valley Time", "longitude": -90},
-            "ARA": {"offset": 3, "name": "Arabia Terra Time", "longitude": 45},
-            "THR": {"offset": -3, "name": "Tharsis Time", "longitude": -45},
-            "HEL": {"offset": 7, "name": "Hellas Basin Time", "longitude": 105},
-            "VIK": {"offset": -2, "name": "Viking 1 Landing Site", "longitude": -30},
-            "PTH": {"offset": 2, "name": "Pathfinder Landing Site", "longitude": 30},
-            "OPP": {"offset": 11, "name": "Opportunity Landing Site", "longitude": 165},
-            "SPI": {"offset": 10, "name": "Spirit Landing Site", "longitude": 150},
-            "CUR": {"offset": 9, "name": "Curiosity/Gale Crater", "longitude": 135},
-            "PER": {"offset": 5, "name": "Perseverance/Jezero", "longitude": 75}
+            "MTC": {"name": "Mars Coordinated Time", "longitude": 0},
+            "AMT": {"name": "Amazonis Time", "longitude": -158},
+            "OLY": {"name": "Olympus Time", "longitude": -134},
+            "ELY": {"name": "Elysium Time", "longitude": 135},
+            "CHA": {"name": "Chryse Time", "longitude": -33},
+            "MAR": {"name": "Marineris Time", "longitude": -59},
+            "ARA": {"name": "Arabia Time", "longitude": 20},
+            "THR": {"name": "Tharsis Time", "longitude": -125},
+            "HEL": {"name": "Hellas Time", "longitude": 70},
+            # Mission landing sites
+            "VIK": {"name": "Viking Lander Time", "longitude": -48},
+            "PTH": {"name": "Pathfinder Time", "longitude": -33.55},
+            "OPP": {"name": "Opportunity Time", "longitude": -5.53},
+            "SPI": {"name": "Spirit Time", "longitude": 175.47},
+            "CUR": {"name": "Curiosity Time", "longitude": 137.44},
+            "PER": {"name": "Perseverance Time", "longitude": 77.45}
         },
         
-        # Mission landing dates (MSD)
+        # Mission landing dates (in MSD)
         "missions": {
-            "Viking 1": 34816,
-            "Viking 2": 34878,
-            "Pathfinder": 49270,
-            "Spirit": 50903,
-            "Opportunity": 50924,
-            "Phoenix": 51738,
-            "Curiosity": 51505,
-            "InSight": 52224,
-            "Perseverance": 52304.5
-        },
-        
-        # Mars months (for Darian calendar reference)
-        "seasons": [
-            {"name": "Northern Spring", "ls_start": 0, "ls_end": 90},
-            {"name": "Northern Summer", "ls_start": 90, "ls_end": 180},
-            {"name": "Northern Autumn", "ls_start": 180, "ls_end": 270},
-            {"name": "Northern Winter", "ls_start": 270, "ls_end": 360}
-        ]
+            "Viking 1": 34809,
+            "Viking 2": 34895,
+            "Pathfinder": 46236,
+            "Spirit": 49269,
+            "Opportunity": 49290,
+            "Curiosity": 49269,
+            "Perseverance": 52304
+        }
     },
     
     # Additional metadata
     "reference_url": "https://en.wikipedia.org/wiki/Timekeeping_on_Mars",
     "documentation_url": "https://www.giss.nasa.gov/tools/mars24/",
-    "origin": "NASA/JPL Mars missions",
-    "created_by": "Various space agencies",
+    "origin": "NASA/JPL",
+    "created_by": "Various Mars missions",
     
     # Example format
-    "example": "14:23:45 MTC (Sol 52984)",
-    "example_meaning": "14 hours, 23 minutes, 45 seconds Coordinated Mars Time, Sol 52984",
+    "example": "Sol 52304, 14:26:35 MTC",
+    "example_meaning": "Mars Sol Date 52304, Mars Coordinated Time",
     
     # Related calendars
-    "related": ["darian", "julian", "unix"],
+    "related": ["julian", "gregorian", "unix"],
     
     # Tags for searching and filtering
     "tags": [
-        "space", "mars", "planetary", "sol", "nasa", "jpl",
+        "mars", "space", "planetary", "sol", "msd", "nasa", "jpl",
         "scientific", "astronomical", "mission", "exploration",
         "rover", "perseverance", "curiosity", "mtc"
     ],
@@ -170,33 +136,65 @@ CALENDAR_INFO = {
                 "MTC", "AMT", "OLY", "ELY", "CHA", "MAR", "ARA", "THR",
                 "HEL", "VIK", "PTH", "OPP", "SPI", "CUR", "PER"
             ],
+            "label": {
+                "en": "Mars timezone",
+                "de": "Mars-Zeitzone",
+                "fr": "Fuseau horaire martien",
+                "es": "Zona horaria marciana"
+            },
             "description": {
                 "en": "Select Mars timezone",
-                "de": "Mars-Zeitzone auswählen"
+                "de": "Mars-Zeitzone auswählen",
+                "fr": "Sélectionner le fuseau horaire martien",
+                "es": "Seleccionar zona horaria marciana"
             }
         },
         "show_mission_sol": {
             "type": "boolean",
             "default": True,
+            "label": {
+                "en": "Show mission sol",
+                "de": "Missions-Sol anzeigen",
+                "fr": "Afficher sol de mission",
+                "es": "Mostrar sol de misión"
+            },
             "description": {
                 "en": "Show mission sol for selected timezone",
-                "de": "Zeige Missions-Sol für ausgewählte Zeitzone"
+                "de": "Zeige Missions-Sol für ausgewählte Zeitzone",
+                "fr": "Afficher le sol de mission pour le fuseau horaire sélectionné",
+                "es": "Mostrar sol de misión para la zona horaria seleccionada"
             }
         },
         "show_solar_longitude": {
             "type": "boolean",
             "default": True,
+            "label": {
+                "en": "Show solar longitude",
+                "de": "Sonnenlänge anzeigen",
+                "fr": "Afficher longitude solaire",
+                "es": "Mostrar longitud solar"
+            },
             "description": {
                 "en": "Show solar longitude (Ls)",
-                "de": "Zeige Sonnenlänge (Ls)"
+                "de": "Zeige Sonnenlänge (Ls)",
+                "fr": "Afficher la longitude solaire (Ls)",
+                "es": "Mostrar longitud solar (Ls)"
             }
         },
         "show_earth_time": {
             "type": "boolean",
             "default": False,
+            "label": {
+                "en": "Show Earth time",
+                "de": "Erdzeit anzeigen",
+                "fr": "Afficher heure terrestre",
+                "es": "Mostrar hora terrestre"
+            },
             "description": {
                 "en": "Also show Earth UTC time",
-                "de": "Auch Erd-UTC-Zeit anzeigen"
+                "de": "Auch Erd-UTC-Zeit anzeigen",
+                "fr": "Afficher aussi l'heure UTC terrestre",
+                "es": "Mostrar también hora UTC terrestre"
             }
         }
     }
@@ -212,6 +210,9 @@ class MarsTimeSensor(AlternativeTimeSensorBase):
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the Mars time sensor."""
         super().__init__(base_name, hass)
+        
+        # Store CALENDAR_INFO as instance variable
+        self._calendar_info = CALENDAR_INFO
         
         # Get translated name from metadata
         calendar_name = self._translate('name', 'Mars Sol Time')
@@ -237,6 +238,7 @@ class MarsTimeSensor(AlternativeTimeSensorBase):
         
         # Initialize state
         self._state = None
+        self._mars_time_info = {}
         
         _LOGGER.debug(f"Initialized Mars Time sensor: {self._attr_name} with timezone {self._mars_timezone}")
     
@@ -271,72 +273,68 @@ class MarsTimeSensor(AlternativeTimeSensorBase):
     
     def _calculate_mars_time(self, earth_utc: datetime) -> Dict[str, Any]:
         """Calculate Mars time from Earth UTC time."""
-        
-        # Calculate Julian Date
-        a = (14 - earth_utc.month) // 12
-        y = earth_utc.year + 4800 - a
-        m = earth_utc.month + 12 * a - 3
-        
-        jdn = earth_utc.day + (153 * m + 2) // 5 + 365 * y + y // 4 - y // 100 + y // 400 - 32045
-        jd = jdn + (earth_utc.hour - 12) / 24.0 + earth_utc.minute / 1440.0 + earth_utc.second / 86400.0
+        # Convert to Unix timestamp
+        unix_timestamp = earth_utc.timestamp()
         
         # Calculate Mars Sol Date (MSD)
-        msd = (jd - self._mars_data["msd_epoch_jd"]) / (self._mars_data["sol_seconds"] / self._mars_data["earth_day_seconds"])
+        # MSD = (Unix timestamp - J2000 epoch) / seconds per sol + MSD at J2000
+        elapsed_seconds = unix_timestamp - self._mars_data["j2000_epoch"]
+        elapsed_sols = elapsed_seconds / self._mars_data["sol_duration_seconds"]
+        msd = self._mars_data["mars_epoch_msd"] + elapsed_sols
         
-        # Calculate Coordinated Mars Time (MTC)
-        mtc_hours = (msd % 1) * 24
-        mtc_hour = int(mtc_hours)
-        mtc_minutes = (mtc_hours - mtc_hour) * 60
-        mtc_minute = int(mtc_minutes)
-        mtc_second = int((mtc_minutes - mtc_minute) * 60)
+        # Calculate Mars Coordinated Time (MTC) - Mean Solar Time at Prime Meridian
+        sol_fraction = msd % 1
+        mtc_hours = int(sol_fraction * 24)
+        mtc_minutes = int((sol_fraction * 24 - mtc_hours) * 60)
+        mtc_seconds = int(((sol_fraction * 24 - mtc_hours) * 60 - mtc_minutes) * 60)
+        mtc_time = f"{mtc_hours:02d}:{mtc_minutes:02d}:{mtc_seconds:02d}"
         
-        mtc_time = f"{mtc_hour:02d}:{mtc_minute:02d}:{mtc_second:02d}"
-        
-        # Get timezone offset
-        timezone_info = self._mars_data["timezones"].get(self._mars_timezone, {"offset": 0})
-        timezone_offset = timezone_info["offset"]
-        
-        # Calculate local Mars time
-        local_hours = mtc_hours + timezone_offset
-        
-        # Handle day boundary crossing
-        if local_hours >= 24:
-            local_hours -= 24
-        elif local_hours < 0:
-            local_hours += 24
-            
-        local_hour = int(local_hours)
-        local_minutes = (local_hours - local_hour) * 60
-        local_minute = int(local_minutes)
-        local_second = int((local_minutes - local_minute) * 60)
-        
-        local_time = f"{local_hour:02d}:{local_minute:02d}:{local_second:02d}"
-        
-        # Calculate solar longitude (Ls) - approximate
+        # Calculate solar longitude (Ls) - Mars season indicator
+        # Simplified calculation - actual formula is much more complex
         mars_year_fraction = (msd / self._mars_data["tropical_year_sols"]) % 1
-        ls = mars_year_fraction * 360
+        ls = mars_year_fraction * 360  # Degrees
         
         # Determine season
-        season = "Unknown"
-        for season_data in self._mars_data["seasons"]:
-            if season_data["ls_start"] <= ls < season_data["ls_end"]:
-                season = season_data["name"]
-                break
+        if 0 <= ls < 90:
+            season = "Northern Spring / Southern Fall"
+        elif 90 <= ls < 180:
+            season = "Northern Summer / Southern Winter"
+        elif 180 <= ls < 270:
+            season = "Northern Fall / Southern Spring"
+        else:
+            season = "Northern Winter / Southern Summer"
         
-        # Calculate subsolar longitude
-        subsolar_longitude = (msd * 360) % 360 - 180
+        # Calculate local solar time for selected timezone
+        timezone_data = self._mars_data["timezones"].get(self._mars_timezone, {"longitude": 0})
+        timezone_offset = timezone_data["longitude"] / 15  # Convert longitude to hours
         
-        # Equation of time (approximate)
-        eot_minutes = 50 * math.sin(math.radians(2 * ls)) - 3 * math.sin(math.radians(4 * ls))
+        # Equation of time correction (simplified)
+        # Mars has a more eccentric orbit than Earth, causing larger variations
+        eot_degrees = 2.861 * math.sin(2 * math.radians(ls)) - 0.071 * math.sin(4 * math.radians(ls))
+        eot_minutes = eot_degrees * 4  # Convert degrees to minutes of time
         
-        # Calculate sunrise/sunset (equatorial approximation)
-        sunrise_hour = 6 - eot_minutes / 60
-        sunset_hour = 18 - eot_minutes / 60
+        # Subsolar longitude
+        subsolar_longitude = (sol_fraction * 360 + eot_degrees) % 360
         
-        sunrise_time = f"{int(sunrise_hour):02d}:{int((sunrise_hour % 1) * 60):02d}"
-        sunset_time = f"{int(sunset_hour):02d}:{int((sunset_hour % 1) * 60):02d}"
+        # Local Mean Solar Time
+        lmst_hours = (mtc_hours + timezone_offset) % 24
+        lmst_minutes = mtc_minutes
+        lmst_seconds = mtc_seconds
         
-        # Calculate mission sol if applicable
+        # Apply equation of time for Local True Solar Time
+        total_minutes = lmst_hours * 60 + lmst_minutes + eot_minutes
+        ltst_hours = int(total_minutes // 60) % 24
+        ltst_minutes = int(total_minutes % 60)
+        
+        local_time = f"{ltst_hours:02d}:{ltst_minutes:02d}:{lmst_seconds:02d}"
+        
+        # Calculate sunrise/sunset (simplified - assumes equatorial location)
+        sunrise_hour = 6 - int(eot_minutes / 60)
+        sunset_hour = 18 - int(eot_minutes / 60)
+        sunrise_time = f"{sunrise_hour:02d}:00"
+        sunset_time = f"{sunset_hour:02d}:00"
+        
+        # Check if any mission landed at this timezone
         mission_sol = None
         mission_name = None
         for mission, landing_msd in self._mars_data["missions"].items():
