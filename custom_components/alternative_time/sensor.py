@@ -297,7 +297,14 @@ class AlternativeTimeSensorBase(SensorEntity):
         except Exception:
             parent_val = None
         base_attrs = parent_val if isinstance(parent_val, dict) else (parent_val or {})
-        return dict(base_attrs)
+        
+        # Füge History-Exclusion Marker hinzu für schnell aktualisierende Sensoren
+        attrs = dict(base_attrs)
+        if hasattr(self, '_update_interval') and self._update_interval <= 10:
+            attrs["recorder_exclude_suggested"] = True
+            attrs["update_interval_seconds"] = self._update_interval
+        
+        return attrs
     
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the sensor."""
@@ -313,6 +320,27 @@ class AlternativeTimeSensorBase(SensorEntity):
             self._update_interval = self.__class__.UPDATE_INTERVAL
         else:
             self._update_interval = 3600  # Default 1 hour
+        
+        # HISTORY CONTROL: State Class explizit auf None setzen
+        # Dies verhindert die Erstellung von Langzeit-Statistiken
+        self._attr_state_class = None
+        
+        # Optional: Markiere schnell aktualisierende Sensoren
+        # Dies ist ein Hinweis für Admins, kann aber nicht automatisch History deaktivieren
+        if self._update_interval <= 10:  # 10 Sekunden oder schneller
+            _LOGGER.info(
+                f"Sensor {base_name} updates every {self._update_interval}s. "
+                f"Consider excluding from recorder to save database space."
+            )
+    
+    @property
+    def state_class(self):
+        """Return None to disable statistics.
+        
+        This prevents Home Assistant from creating long-term statistics
+        for this sensor, which is appropriate for time display sensors.
+        """
+        return None
     
     def get_plugin_options(self) -> Dict[str, Any]:
         """Get plugin options for this sensor."""
