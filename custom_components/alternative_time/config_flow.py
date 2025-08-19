@@ -301,12 +301,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Process the user input for the previous calendar
             cal_options = {}
             
+            _LOGGER.debug(f"Processing options for {prev_cal_id}, raw input: {user_input}")
+            _LOGGER.debug(f"Key mapping: {self._option_key_mapping}")
+            
             # Verwende das Key-Mapping um die Original-Keys wiederherzustellen
             for display_key, value in user_input.items():
                 if display_key in self._option_key_mapping:
                     original_key = self._option_key_mapping[display_key]
-                    cal_options[original_key] = value
-                    _LOGGER.debug(f"Mapped {display_key} -> {original_key} = {value}")
+                    # WICHTIG: Bei Select-Feldern könnte der Wert None sein wenn nichts ausgewählt
+                    if value is not None:
+                        cal_options[original_key] = value
+                        _LOGGER.debug(f"Mapped {display_key} -> {original_key} = {value}")
+                else:
+                    _LOGGER.warning(f"No mapping found for display key: {display_key}")
             
             # Store in selected_options with the actual calendar id
             if cal_options:
@@ -377,6 +384,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 else:
                     desc_text = desc if desc else ""
                 
+                _LOGGER.debug(f"Building field {key} ({full_display_key}): type={typ}, default={default}")
+                
                 # Build field based on type
                 if typ == "bool" or typ == "boolean":
                     default_bool = bool(default) if default is not None else False
@@ -403,20 +412,31 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     # Handle select with options
                     options = config.get("options", [])
                     if options:
+                        # WICHTIG: Bei Integer-Options müssen wir sie als Strings behandeln
                         select_options = []
                         for opt in options:
                             if isinstance(opt, dict):
+                                # Option has its own label/value structure
                                 select_options.append(opt)
                             else:
-                                select_options.append({"label": str(opt), "value": str(opt)})
+                                # Simple value - convert to string for display
+                                opt_str = str(opt)
+                                select_options.append({"label": opt_str, "value": opt_str})
                         
-                        schema_dict[vol.Optional(full_display_key, default=str(default) if default else "", description=desc_text)] = SelectSelector(
-                            SelectSelectorConfig(
-                                options=select_options,
-                                mode=SelectSelectorMode.DROPDOWN
-                            )
-                        )
+                        # Convert default to string if it exists
+                        default_str = str(default) if default is not None else ""
+                        
+                        # Ensure default is in options
+                        option_values = [o["value"] for o in select_options]
+                        if default_str not in option_values and option_values:
+                            default_str = option_values[0]
+                        
+                        _LOGGER.debug(f"Select field {key}: options={select_options}, default={default_str}")
+                        
+                        # Use vol.In validator with string values
+                        schema_dict[vol.Optional(full_display_key, default=default_str, description=desc_text)] = vol.In(option_values)
                     else:
+                        # Fallback to string if no options
                         schema_dict[vol.Optional(full_display_key, default=str(default) if default is not None else "", description=desc_text)] = str
                         
                 elif typ == "string" or typ == "text":
