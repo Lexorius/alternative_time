@@ -1,4 +1,4 @@
-"""Unix Timestamp Calendar implementation - Version 2.5."""
+"""Unix Timestamp Calendar implementation - Version 2.6."""
 from __future__ import annotations
 
 from datetime import datetime
@@ -30,7 +30,7 @@ UPDATE_INTERVAL = 1
 # Complete calendar information for auto-discovery
 CALENDAR_INFO = {
     "id": "unix",
-    "version": "2.5.0",
+    "version": "2.6.0",
     "icon": "mdi:counter",
     "category": "technical",
     "accuracy": "millisecond",
@@ -173,6 +173,10 @@ CALENDAR_INFO = {
         "show_milliseconds": {
             "type": "boolean",
             "default": False,
+            "label": {
+                "en": "Show milliseconds",
+                "de": "Millisekunden anzeigen"
+            },
             "description": {
                 "en": "Show millisecond precision",
                 "de": "Millisekunden-Präzision anzeigen"
@@ -181,6 +185,10 @@ CALENDAR_INFO = {
         "show_human_readable": {
             "type": "boolean",
             "default": True,
+            "label": {
+                "en": "Show human-readable date",
+                "de": "Lesbares Datum anzeigen"
+            },
             "description": {
                 "en": "Show human-readable date",
                 "de": "Menschenlesbares Datum anzeigen"
@@ -189,6 +197,10 @@ CALENDAR_INFO = {
         "show_milestone": {
             "type": "boolean",
             "default": True,
+            "label": {
+                "en": "Show milestones",
+                "de": "Meilensteine anzeigen"
+            },
             "description": {
                 "en": "Show nearest milestone",
                 "de": "Nächsten Meilenstein anzeigen"
@@ -216,21 +228,53 @@ class UnixTimestampSensor(AlternativeTimeSensorBase):
         self._attr_unique_id = f"{base_name}_unix"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:counter")
         
-        # Get plugin options
-        options = self.get_plugin_options()
-        
-        # Configuration options with defaults
-        self._show_milliseconds = options.get("show_milliseconds", False)
-        self._show_human_readable = options.get("show_human_readable", True)
-        self._show_milestone = options.get("show_milestone", True)
+        # Configuration options with defaults from CALENDAR_INFO
+        # Options will be loaded later in async_added_to_hass
+        config_defaults = CALENDAR_INFO.get("config_options", {})
+        self._show_milliseconds = config_defaults.get("show_milliseconds", {}).get("default", False)
+        self._show_human_readable = config_defaults.get("show_human_readable", {}).get("default", True)
+        self._show_milestone = config_defaults.get("show_milestone", {}).get("default", True)
         
         # Unix data
         self._unix_data = CALENDAR_INFO["unix_data"]
         
         # Initialize state
         self._state = None
+        self._unix_time = {}
+        
+        # Flag to track if options have been loaded
+        self._options_loaded = False
         
         _LOGGER.debug(f"Initialized Unix Timestamp sensor: {self._attr_name}")
+    
+    def _load_options(self) -> None:
+        """Load plugin options after IDs are set."""
+        if self._options_loaded:
+            return
+            
+        try:
+            options = self.get_plugin_options()
+            if options:
+                # Update configuration from plugin options
+                self._show_milliseconds = options.get("show_milliseconds", self._show_milliseconds)
+                self._show_human_readable = options.get("show_human_readable", self._show_human_readable)
+                self._show_milestone = options.get("show_milestone", self._show_milestone)
+                
+                _LOGGER.debug(f"Unix sensor loaded options: milliseconds={self._show_milliseconds}, "
+                            f"human_readable={self._show_human_readable}, milestone={self._show_milestone}")
+            else:
+                _LOGGER.debug("Unix sensor using default options - no custom options found")
+                
+            self._options_loaded = True
+        except Exception as e:
+            _LOGGER.debug(f"Unix sensor could not load options yet: {e}")
+    
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        
+        # Try to load options now that IDs should be set
+        self._load_options()
     
     @property
     def state(self):
@@ -243,7 +287,7 @@ class UnixTimestampSensor(AlternativeTimeSensorBase):
         attrs = super().extra_state_attributes
         
         # Add Unix-specific attributes
-        if hasattr(self, '_unix_time'):
+        if self._unix_time:
             attrs.update(self._unix_time)
             
             # Add description in user's language
@@ -346,6 +390,10 @@ class UnixTimestampSensor(AlternativeTimeSensorBase):
     
     def update(self) -> None:
         """Update the sensor."""
+        # Ensure options are loaded (in case async_added_to_hass hasn't run yet)
+        if not self._options_loaded:
+            self._load_options()
+        
         now = datetime.now()
         self._unix_time = self._calculate_unix_time(now)
         
