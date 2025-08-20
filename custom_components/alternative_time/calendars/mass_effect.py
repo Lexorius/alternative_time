@@ -1,10 +1,5 @@
 """Mass Effect - Galactic Standard Time & Year
-Version 2.5.0
-
-Features:
-- GST clock (20 hours, 100 minutes, 100 seconds; 1 GST sec = 0.5 Earth sec)
-- Optional GSY year counter (approx.; configurable epoch & year length)
-- Multilingual metadata and configurable options like other calendars
+Version 2.5.1 - Mit verbessertem Logging und Fehlerbehandlung
 """
 from __future__ import annotations
 
@@ -21,7 +16,7 @@ UPDATE_INTERVAL = 1  # smooth clock
 
 CALENDAR_INFO = {
     "id": "mass_effect",
-    "version": "2.5.0",
+    "version": "2.5.1",
     "icon": "mdi:rocket",
     "category": "scifi",
     "accuracy": "fictional",
@@ -63,33 +58,51 @@ CALENDAR_INFO = {
         "enable_gst": {
             "type": "boolean",
             "default": True,
-            "description": { "en": "Show GST clock", "de": "GST-Uhr anzeigen" }
+            "description": { 
+                "en": "Show GST clock", 
+                "de": "GST-Uhr anzeigen" 
+            }
         },
         "precision": {
             "type": "select",
             "default": "second",
             "options": ["second", "centisecond"],
-            "description": { "en": "Clock precision", "de": "Uhr-Präzision" }
+            "description": { 
+                "en": "Clock precision", 
+                "de": "Uhr-Präzision" 
+            }
         },
         "show_period": {
             "type": "boolean",
             "default": True,
-            "description": { "en": "Show time period (Night/Morning/etc.)", "de": "Tagesabschnitt anzeigen (Nacht/Morgen/usw.)" }
+            "description": { 
+                "en": "Show time period (Night/Morning/etc.)", 
+                "de": "Tagesabschnitt anzeigen (Nacht/Morgen/usw.)" 
+            }
         },
         "enable_gsy": {
             "type": "boolean",
             "default": False,
-            "description": { "en": "Enable GSY counter (approximate)", "de": "GSY-Zähler aktivieren (annähernd)" }
+            "description": { 
+                "en": "Enable GSY counter (approximate)", 
+                "de": "GSY-Zähler aktivieren (annähernd)" 
+            }
         },
         "epoch_gs0_utc": {
             "type": "text",
             "default": "2183-01-01T00:00:00Z",
-            "description": { "en": "Epoch for 0 GSY (UTC ISO-8601)", "de": "Epoche für 0 GSY (UTC ISO-8601)" }
+            "description": { 
+                "en": "Epoch for 0 GSY (UTC ISO-8601)", 
+                "de": "Epoche für 0 GSY (UTC ISO-8601)" 
+            }
         },
         "gsy_length_days": {
             "type": "number",
             "default": 398.1,
-            "description": { "en": "Length of 1 GSY in Earth days (approx.)", "de": "Länge von 1 GSY in Erdtagen (ca.)" }
+            "description": { 
+                "en": "Length of 1 GSY in Earth days (approx.)", 
+                "de": "Länge von 1 GSY in Erdtagen (ca.)" 
+            }
         }
     }
 }
@@ -100,6 +113,7 @@ class MassEffectGalacticStandardSensor(AlternativeTimeSensorBase):
 
     UPDATE_INTERVAL = UPDATE_INTERVAL
 
+    # Konstanten für GST-Berechnung
     GST_SECONDS_PER_SEC = 2.0  # 1 GST sec = 0.5 Earth sec (=> 2 GST s per Earth s)
     GST_SECONDS_PER_MIN = 100
     GST_MINUTES_PER_HOUR = 100
@@ -118,7 +132,7 @@ class MassEffectGalacticStandardSensor(AlternativeTimeSensorBase):
         self._attr_unique_id = f"{base_name}_mass_effect_gs"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:rocket")
 
-        # defaults (may be overridden from plugin options in update())
+        # Defaults (werden in update() überschrieben)
         self._enable_gst = True
         self._precision = "second"
         self._show_period = True
@@ -126,7 +140,12 @@ class MassEffectGalacticStandardSensor(AlternativeTimeSensorBase):
         self._epoch_gs0_utc = "2183-01-01T00:00:00Z"
         self._gsy_length_days = 398.1
 
+        # Daten-Cache
         self._data: Dict[str, Any] = {}
+        self._state = "Initializing..."
+        
+        # Flag für einmaliges Logging
+        self._first_update = True
 
     @property
     def state(self):
@@ -143,7 +162,7 @@ class MassEffectGalacticStandardSensor(AlternativeTimeSensorBase):
 
     # ---------- helpers ----------
     def _parse_epoch(self, txt: str) -> datetime:
-        # Very lenient ISO8601 parser (YYYY-MM-DD or with time and Z)
+        """Parse ISO8601 epoch string to datetime."""
         try:
             if txt.endswith('Z'):
                 # strip Z and set tz
@@ -154,11 +173,12 @@ class MassEffectGalacticStandardSensor(AlternativeTimeSensorBase):
             if dt.tzinfo is None:
                 dt = dt.replace(tzinfo=timezone.utc)
             return dt.astimezone(timezone.utc)
-        except Exception:
-            _LOGGER.warning("Invalid epoch_gs0_utc '%s', using default 2183-01-01T00:00:00Z", txt)
+        except Exception as e:
+            _LOGGER.warning("Invalid epoch_gs0_utc '%s': %s, using default 2183-01-01T00:00:00Z", txt, e)
             return datetime(2183, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
 
     def _format_gst(self, gst_total_seconds: float) -> Dict[str, Any]:
+        """Format GST seconds into readable time."""
         # Normalize to [0, day)
         gst_in_day = gst_total_seconds % self.GST_SECONDS_PER_DAY
 
@@ -172,9 +192,9 @@ class MassEffectGalacticStandardSensor(AlternativeTimeSensorBase):
         centi = int((s_float - s) * 100)
 
         if self._precision == "centisecond":
-            formatted = f"{h:02d}:{m:02d}:{s:02d}.{centi:02d} GST"
+            formatted = f"{h:02d}:{m:03d}:{s:03d}.{centi:02d} GST"
         else:
-            formatted = f"{h:02d}:{m:02d}:{s:02d} GST"
+            formatted = f"{h:02d}:{m:03d}:{s:03d} GST"
 
         # period of GS day (rough, 5 equal segments)
         period = ""
@@ -194,7 +214,9 @@ class MassEffectGalacticStandardSensor(AlternativeTimeSensorBase):
 
         return {
             "gst_formatted": formatted,
-            "gst_hours": h, "gst_minutes": m, "gst_seconds": s,
+            "gst_hours": h,
+            "gst_minutes": m,
+            "gst_seconds": s,
             "gst_centiseconds": centi,
             "gst_day_progress": f"{progress:.1f}%",
             "gst_period": period
@@ -202,33 +224,51 @@ class MassEffectGalacticStandardSensor(AlternativeTimeSensorBase):
 
     # ---------- update ----------
     def update(self) -> None:
+        """Update the sensor state."""
         try:
-            # Options
-            opts = {}
+            # Lade Plugin-Optionen
+            opts = self.get_plugin_options()
+            
+            # Debug-Logging beim ersten Update
+            if self._first_update:
+                if opts:
+                    _LOGGER.info(f"Mass Effect sensor loaded options: {opts}")
+                else:
+                    _LOGGER.debug("Mass Effect sensor using default options")
+                self._first_update = False
+            
+            # Wende Optionen an
+            self._enable_gst = bool(opts.get("enable_gst", True))
+            self._precision = str(opts.get("precision", "second"))
+            self._show_period = bool(opts.get("show_period", True))
+            self._enable_gsy = bool(opts.get("enable_gsy", False))
+            self._epoch_gs0_utc = str(opts.get("epoch_gs0_utc", "2183-01-01T00:00:00Z"))
+            
             try:
-                if hasattr(self, "get_plugin_options"):
-                    opts = self.get_plugin_options() or {}
-            except Exception:
-                opts = {}
-
-            self._enable_gst = bool(opts.get("enable_gst", self._enable_gst))
-            self._precision = str(opts.get("precision", self._precision))
-            self._show_period = bool(opts.get("show_period", self._show_period))
-            self._enable_gsy = bool(opts.get("enable_gsy", self._enable_gsy))
-            self._epoch_gs0_utc = str(opts.get("epoch_gs0_utc", self._epoch_gs0_utc))
-            try:
-                self._gsy_length_days = float(opts.get("gsy_length_days", self._gsy_length_days))
-            except Exception:
-                pass
+                self._gsy_length_days = float(opts.get("gsy_length_days", 398.1))
+                # Validierung
+                if self._gsy_length_days <= 0:
+                    _LOGGER.warning("Invalid gsy_length_days %f, using default 398.1", self._gsy_length_days)
+                    self._gsy_length_days = 398.1
+            except (ValueError, TypeError):
+                self._gsy_length_days = 398.1
 
             now_utc = datetime.now(timezone.utc)
 
             # GST clock
             display_parts = []
-            data: Dict[str, Any] = {"now_utc": now_utc.strftime("%Y-%m-%d %H:%M:%S UTC")}
+            data: Dict[str, Any] = {
+                "now_utc": now_utc.strftime("%Y-%m-%d %H:%M:%S UTC"),
+                "config": {
+                    "gst_enabled": self._enable_gst,
+                    "gsy_enabled": self._enable_gsy,
+                    "precision": self._precision,
+                    "show_period": self._show_period
+                }
+            }
 
             if self._enable_gst:
-                # total GST seconds since Unix epoch (approx; lore-agnostic)
+                # total GST seconds since Unix epoch
                 unix_seconds = now_utc.timestamp()
                 gst_total_seconds = unix_seconds * self.GST_SECONDS_PER_SEC
                 gst_block = self._format_gst(gst_total_seconds)
@@ -240,14 +280,14 @@ class MassEffectGalacticStandardSensor(AlternativeTimeSensorBase):
                 epoch_dt = self._parse_epoch(self._epoch_gs0_utc)
                 delta = now_utc - epoch_dt
                 earth_days = delta.total_seconds() / 86400.0
-                gsy_float = earth_days / max(self._gsy_length_days, 0.0001)
-                gsy_year = int(gsy_float // 1)
+                gsy_float = earth_days / self._gsy_length_days
+                gsy_year = int(gsy_float)
                 gsy_frac = gsy_float - gsy_year
 
                 # also show approximate day-of-year in GST days
                 gst_days_total = delta.total_seconds() / self.EARTH_SECONDS_PER_GST_DAY
                 gst_days_in_year = self._gsy_length_days / (self.EARTH_SECONDS_PER_GST_DAY / 86400.0)  # ≈ 343.9
-                doy_gst = (gst_days_total - int(gst_days_total // gst_days_in_year) * gst_days_in_year)
+                doy_gst = gst_days_total - (int(gst_days_total / gst_days_in_year) * gst_days_in_year)
 
                 data.update({
                     "gsy_epoch_utc": epoch_dt.isoformat(),
@@ -259,7 +299,13 @@ class MassEffectGalacticStandardSensor(AlternativeTimeSensorBase):
                 display_parts.append(f"GSY {gsy_year} (+{gsy_frac*100:.1f}%)")
 
             # State string
-            self._state = " | ".join(display_parts) if display_parts else "Disabled"
+            if display_parts:
+                self._state = " | ".join(display_parts)
+            elif not self._enable_gst and not self._enable_gsy:
+                self._state = "Disabled (enable GST or GSY)"
+            else:
+                self._state = "No data"
+                
             self._data = data
 
         except Exception as exc:
