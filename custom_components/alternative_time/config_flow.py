@@ -363,31 +363,30 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Iterate selected calendars that expose CALENDAR_INFO['config_options'] and collect values."""
         
         # Process user input from previous form
-        if user_input is not None:
-            if self._option_index > 0:
-                # Store data from the previous calendar
-                prev_cid = self._option_calendars[self._option_index - 1]
-                normalized = {}
-                
-                _LOGGER.debug(f"Processing options for {prev_cid}, raw input: {user_input}")
-                
-                # Get the key mapping for this calendar
-                key_mapping = self._option_key_mapping.get(prev_cid, {})
-                
-                # Process each input value (keys don't have prefix anymore)
-                for input_key, value in user_input.items():
-                    # Look up the actual config key from our mapping
-                    if input_key in key_mapping:
-                        actual_key = key_mapping[input_key]
-                        normalized[actual_key] = value
-                        _LOGGER.debug(f"Mapped '{input_key}' to '{actual_key}' with value: {value}")
-                    else:
-                        # Fallback: use as is (shouldn't happen with proper mapping)
-                        normalized[input_key] = value
-                        _LOGGER.warning(f"No mapping found for '{input_key}', using as-is")
-                
-                self._selected_options[prev_cid] = normalized
-                _LOGGER.info(f"Stored options for {prev_cid}: {normalized}")
+        if user_input is not None and self._option_index > 0:
+            # Store data from the previous calendar (index already incremented)
+            prev_cid = self._option_calendars[self._option_index - 1]
+            normalized = {}
+            
+            _LOGGER.debug(f"Processing options for {prev_cid}, raw input: {user_input}")
+            
+            # Get the key mapping for this calendar
+            key_mapping = self._option_key_mapping.get(prev_cid, {})
+            
+            # Process each input value
+            for input_key, value in user_input.items():
+                # Look up the actual config key from our mapping
+                if input_key in key_mapping:
+                    actual_key = key_mapping[input_key]
+                    normalized[actual_key] = value
+                    _LOGGER.debug(f"Mapped '{input_key}' to '{actual_key}' with value: {value}")
+                else:
+                    # Fallback: use as is
+                    normalized[input_key] = value
+                    _LOGGER.warning(f"No mapping found for '{input_key}', using as-is")
+            
+            self._selected_options[prev_cid] = normalized
+            _LOGGER.info(f"Stored options for {prev_cid}: {normalized}")
 
         # Check if we're done with all calendars
         if self._option_index >= len(self._option_calendars):
@@ -419,6 +418,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         
         _LOGGER.debug(f"Configuring options for calendar {cid} ({name}), options: {list(opts.keys())}")
         
+        # Increment index for next iteration BEFORE showing form
+        self._option_index += 1
+        
+        _LOGGER.debug(f"Configuring options for calendar {cid} ({name}), options: {list(opts.keys())}")
+        
+        # Increment index for next iteration BEFORE showing form
+        self._option_index += 1
+        
         # Create mapping for this calendar's options
         current_mapping = {}
         
@@ -443,6 +450,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     label = self._lcal(meta["label"], None, key)
                 else:
                     label = key
+                
+                # Store mapping: displayed label -> actual config key
+                current_mapping[label] = key
+                
+                _LOGGER.debug(f"Building field {key}: type={typ}, default={default}, label={label}, desc={option_desc[:50]}")
+                
+                # Create the field with description in vol.Optional
+                field_key = vol.Optional(label, default=default if default is not None else "", description=option_desc if option_desc else None)
                 
                 # Store mapping: displayed label -> actual config key
                 current_mapping[label] = key
@@ -540,27 +555,23 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # If no valid options, skip to next
         if not schema_dict:
             _LOGGER.debug(f"No valid config options for {cid}, skipping")
-            self._option_index += 1
             return await self.async_step_plugin_options()
-        
-        # Increment index for next iteration
-        self._option_index += 1
         
         schema = vol.Schema(schema_dict)
         
-        # Build description with calendar name as header
-        header_text = f"# ⚙️ {name}\n\n"
-        if desc:
-            header_text += f"_{desc}_\n\n"
-        header_text += "Configure the options for this calendar:"
+        # Build description text with markdown formatting
+        description_text = f"""## ⚙️ Configure: {name}
+
+{desc if desc else 'Configure the options for this calendar.'}
+
+Please adjust the settings below according to your preferences:
+"""
         
         return self.async_show_form(
             step_id="plugin_options",
             data_schema=schema,
             description_placeholders={
-                "plugin": name,
-                "details": header_text,
-                "description": f"Options for {name}"
+                "description": description_text
             }
         )
 
@@ -644,13 +655,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Simple schema with just a confirmation
         schema = vol.Schema({})
         
+        disclaimer_text = f"""## {disclaimer["title"]}
+
+{disclaimer["content"]}
+
+**Click 'Submit' to acknowledge and complete the setup.**
+"""
+        
         return self.async_show_form(
             step_id="disclaimer",
             data_schema=schema,
             description_placeholders={
-                "title": disclaimer["title"],
-                "content": disclaimer["content"],
-                "button_text": disclaimer["button"]
+                "description": disclaimer_text
             }
         )
 
