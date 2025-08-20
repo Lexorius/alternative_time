@@ -45,11 +45,18 @@ async def async_setup_entry(
     selected_calendars = config_entry.data.get("calendars", [])
     name = config_entry.data.get("name", "Alternative Time")
     
+    # Debug logging für plugin_options
+    plugin_options = config_entry.data.get("plugin_options", {})
+    _LOGGER.info(f"=== Setting up Alternative Time '{name}' ===")
+    _LOGGER.debug(f"Config Entry ID: {entry_id[:8]}...")
+    _LOGGER.debug(f"Selected calendars: {selected_calendars}")
+    _LOGGER.info(f"Plugin options available: {list(plugin_options.keys())}")
+    for cal_id, opts in plugin_options.items():
+        _LOGGER.debug(f"  {cal_id}: {opts}")
+    
     if not selected_calendars:
         _LOGGER.warning("No calendars selected")
         return
-    
-    _LOGGER.info(f"Setting up sensors for calendars: {selected_calendars} (entry: {entry_id[:8]}...)")
     
     # Clear cache to force re-discovery
     global _DISCOVERED_CALENDARS_CACHE
@@ -62,19 +69,28 @@ async def async_setup_entry(
         _LOGGER.error("No calendars could be discovered!")
         return
     
-    _LOGGER.info(f"Discovered calendars: {list(discovered_calendars.keys())}")
+    _LOGGER.info(f"Discovered {len(discovered_calendars)} calendars: {list(discovered_calendars.keys())}")
     
     # Create sensors for selected calendars
     sensors = []
     entities_to_exclude = []  # Track entities for recorder exclusion
     
     for calendar_id in selected_calendars:
+        _LOGGER.debug(f"Processing calendar: {calendar_id}")
+        
         if calendar_id not in discovered_calendars:
             _LOGGER.error(f"Calendar '{calendar_id}' is enabled but not found in registry")
             _LOGGER.debug(f"Available calendars: {list(discovered_calendars.keys())}")
             continue
         
         calendar_info = discovered_calendars[calendar_id]
+        
+        # Debug: Check if we have options for this calendar
+        calendar_plugin_options = plugin_options.get(calendar_id, {})
+        if calendar_plugin_options:
+            _LOGGER.info(f"Calendar {calendar_id} has options: {calendar_plugin_options}")
+        else:
+            _LOGGER.debug(f"Calendar {calendar_id} has no custom options")
         
         try:
             # Import the calendar module asynchronously
@@ -100,8 +116,22 @@ async def async_setup_entry(
             
             # Create sensor instance - store calendar_id for later lookup
             sensor = sensor_class(name, hass)
+            
+            # WICHTIG: Setze die IDs VOR dem Aufruf von get_plugin_options
             sensor._calendar_id = calendar_id  # Store for plugin options lookup
             sensor._config_entry_id = entry_id  # Store entry ID
+            
+            # Debug: Verify the sensor can get its options
+            _LOGGER.debug(f"Sensor {calendar_id} initialized:")
+            _LOGGER.debug(f"  - _calendar_id: {sensor._calendar_id}")
+            _LOGGER.debug(f"  - _config_entry_id: {sensor._config_entry_id}")
+            
+            # Test if sensor can retrieve its options
+            test_options = sensor.get_plugin_options()
+            if test_options:
+                _LOGGER.info(f"✓ Sensor {calendar_id} successfully retrieved options: {test_options}")
+            else:
+                _LOGGER.debug(f"  Sensor {calendar_id} has no options or using defaults")
             
             # WICHTIG: Unique ID muss entry_id enthalten um Kollisionen zu vermeiden
             # Überschreibe die unique_id, die vom Kalender gesetzt wurde
@@ -109,11 +139,11 @@ async def async_setup_entry(
                 # Füge die entry_id zur unique_id hinzu für Eindeutigkeit
                 base_unique_id = sensor._attr_unique_id
                 sensor._attr_unique_id = f"{entry_id}_{base_unique_id}"
-                _LOGGER.debug(f"Set unique_id for {calendar_id}: {sensor._attr_unique_id}")
+                _LOGGER.debug(f"Set unique_id for {calendar_id}: {sensor._attr_unique_id[:30]}...")
             else:
                 # Falls keine unique_id gesetzt wurde, erstelle eine
                 sensor._attr_unique_id = f"{entry_id}_{name}_{calendar_id}"
-                _LOGGER.debug(f"Created unique_id for {calendar_id}: {sensor._attr_unique_id}")
+                _LOGGER.debug(f"Created unique_id for {calendar_id}: {sensor._attr_unique_id[:30]}...")
             
             sensors.append(sensor)
             
@@ -122,7 +152,7 @@ async def async_setup_entry(
             if update_interval < 60:  # Exclude sensors that update more than once per minute
                 entities_to_exclude.append(sensor.entity_id)
             
-            _LOGGER.info(f"Created sensor for calendar: {calendar_id} with unique_id: {sensor._attr_unique_id[:20]}...")
+            _LOGGER.info(f"✓ Created sensor for calendar: {calendar_id}")
             
         except Exception as e:
             _LOGGER.error(f"Failed to create sensor for calendar {calendar_id}: {e}")
@@ -132,12 +162,14 @@ async def async_setup_entry(
     
     if sensors:
         async_add_entities(sensors)
-        _LOGGER.info(f"Added {len(sensors)} sensors to Home Assistant")
+        _LOGGER.info(f"=== Successfully added {len(sensors)} sensors to Home Assistant ===")
         
         # Register recorder exclusions if needed
         # WICHTIG: Diese Zeile ist auskommentiert, um den Recorder-Fehler zu vermeiden
         # if entities_to_exclude:
         #     await register_recorder_exclusion(hass, entities_to_exclude)
+    else:
+        _LOGGER.warning("No sensors were created!")
 
 
 async def async_discover_all_calendars(hass: HomeAssistant) -> Dict[str, Dict[str, Any]]:
@@ -353,16 +385,33 @@ class AlternativeTimeSensorBase(SensorEntity):
             self._update_interval = 3600  # Default 1 hour
     
     def get_plugin_options(self) -> Dict[str, Any]:
-        """Get plugin options for this sensor."""
+        """Get plugin options for this sensor with detailed debugging."""
+        # Basis-Debug nur wenn wirklich ein Problem besteht
         if not self._config_entry_id or not self._calendar_id:
+            _LOGGER.debug(f"get_plugin_options called for {self.__class__.__name__}")
+            _LOGGER.debug(f"  _config_entry_id: {self._config_entry_id}")
+            _LOGGER.debug(f"  _calendar_id: {self._calendar_id}")
+            
+            if not self._config_entry_id:
+                _LOGGER.warning(f"{self.__class__.__name__}: No config_entry_id set - called too early?")
+            if not self._calendar_id:
+                _LOGGER.warning(f"{self.__class__.__name__}: No calendar_id set - called too early?")
             return {}
         
         config_entry = _CONFIG_ENTRIES.get(self._config_entry_id)
         if not config_entry:
+            _LOGGER.error(f"Config entry {self._config_entry_id} not found in _CONFIG_ENTRIES")
+            _LOGGER.debug(f"Available entries: {list(_CONFIG_ENTRIES.keys())}")
             return {}
         
         plugin_options = config_entry.data.get("plugin_options", {})
-        return plugin_options.get(self._calendar_id, {})
+        calendar_options = plugin_options.get(self._calendar_id, {})
+        
+        # Nur loggen wenn tatsächlich Optionen vorhanden sind
+        if calendar_options:
+            _LOGGER.debug(f"{self.__class__.__name__} ({self._calendar_id}) loaded options: {calendar_options}")
+        
+        return calendar_options
     
     @property
     def update_interval(self) -> int:
@@ -443,6 +492,9 @@ class AlternativeTimeSensorBase(SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Schedule periodic updates in a non-blocking way."""
+        # Log when entity is added
+        _LOGGER.debug(f"{self._attr_name} added to Home Assistant")
+        
         # Determine interval from CALENDAR_INFO or class constant
         interval = None
         try:
@@ -458,17 +510,22 @@ class AlternativeTimeSensorBase(SensorEntity):
         except Exception:
             seconds = 3600
 
+        _LOGGER.debug(f"{self._attr_name} will update every {seconds} seconds")
+
         # Avoid platform-wide polling
         self._attr_should_poll = False
 
         # Start scheduler
         from datetime import timedelta as _td
         self._unsub_timer = async_track_time_interval(self._hass, self._async_timer_tick, _td(seconds=seconds))
+        
         # Trigger first run
         self._hass.async_create_task(self._async_timer_tick(None))
 
     async def async_will_remove_from_hass(self) -> None:
         """Cancel the scheduled timer when entity is removed."""
+        _LOGGER.debug(f"{self._attr_name} being removed from Home Assistant")
+        
         unsub = getattr(self, "_unsub_timer", None)
         if unsub:
             try:
