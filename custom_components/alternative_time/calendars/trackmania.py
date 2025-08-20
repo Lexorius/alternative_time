@@ -1,4 +1,3 @@
-
 """Trackmania Events (COTD, Weekly Shorts, Bonk Cup) - Version 1.1 with extended translations."""
 from __future__ import annotations
 
@@ -172,10 +171,10 @@ class TrackmaniaEventsSensor(AlternativeTimeSensorBase):
 
         # Options (could later be loaded from config flow)
         self._tz_name = "Europe/Berlin"
-        self._enable_cotd = True
-        self._enable_weekly_shorts = True
-        self._enable_bonk = True
         self._horizon_days = 14
+        self._show_cotd = self.get_config("show_cotd", True)
+        self._show_weekly = self.get_config("show_weekly", True)
+        self._show_bonk = self.get_config("show_bonk", True)
 
         # Cached attributes
         self._tm_events: Dict[str, Any] = {}

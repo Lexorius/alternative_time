@@ -49,7 +49,7 @@ async def async_setup_entry(
         _LOGGER.warning("No calendars selected")
         return
     
-    _LOGGER.info(f"Setting up sensors for calendars: {selected_calendars}")
+    _LOGGER.info(f"Setting up sensors for calendars: {selected_calendars} (entry: {entry_id[:8]}...)")
     
     # Clear cache to force re-discovery
     global _DISCOVERED_CALENDARS_CACHE
@@ -102,6 +102,19 @@ async def async_setup_entry(
             sensor = sensor_class(name, hass)
             sensor._calendar_id = calendar_id  # Store for plugin options lookup
             sensor._config_entry_id = entry_id  # Store entry ID
+            
+            # WICHTIG: Unique ID muss entry_id enthalten um Kollisionen zu vermeiden
+            # Überschreibe die unique_id, die vom Kalender gesetzt wurde
+            if hasattr(sensor, '_attr_unique_id'):
+                # Füge die entry_id zur unique_id hinzu für Eindeutigkeit
+                base_unique_id = sensor._attr_unique_id
+                sensor._attr_unique_id = f"{entry_id}_{base_unique_id}"
+                _LOGGER.debug(f"Set unique_id for {calendar_id}: {sensor._attr_unique_id}")
+            else:
+                # Falls keine unique_id gesetzt wurde, erstelle eine
+                sensor._attr_unique_id = f"{entry_id}_{name}_{calendar_id}"
+                _LOGGER.debug(f"Created unique_id for {calendar_id}: {sensor._attr_unique_id}")
+            
             sensors.append(sensor)
             
             # Track entity for recorder exclusion if it updates frequently
@@ -109,7 +122,7 @@ async def async_setup_entry(
             if update_interval < 60:  # Exclude sensors that update more than once per minute
                 entities_to_exclude.append(sensor.entity_id)
             
-            _LOGGER.info(f"Created sensor for calendar: {calendar_id}")
+            _LOGGER.info(f"Created sensor for calendar: {calendar_id} with unique_id: {sensor._attr_unique_id[:20]}...")
             
         except Exception as e:
             _LOGGER.error(f"Failed to create sensor for calendar {calendar_id}: {e}")
@@ -122,7 +135,7 @@ async def async_setup_entry(
         _LOGGER.info(f"Added {len(sensors)} sensors to Home Assistant")
         
         # Register recorder exclusions if needed
-        # WICHTIG: Diese Zeile ist auskommentiert, um den Fehler zu vermeiden
+        # WICHTIG: Diese Zeile ist auskommentiert, um den Recorder-Fehler zu vermeiden
         # if entities_to_exclude:
         #     await register_recorder_exclusion(hass, entities_to_exclude)
 
