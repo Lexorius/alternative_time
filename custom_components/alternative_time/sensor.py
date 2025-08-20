@@ -10,7 +10,7 @@ from importlib import import_module
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import (
@@ -66,7 +66,7 @@ async def async_setup_entry(
     
     # Create sensors for selected calendars
     sensors = []
-    entities_to_exclude = []  # Sammle Entities für Recorder-Exclusion
+    entities_to_exclude = []  # Track entities for recorder exclusion
     
     for calendar_id in selected_calendars:
         if calendar_id not in discovered_calendars:
@@ -104,12 +104,10 @@ async def async_setup_entry(
             sensor._config_entry_id = entry_id  # Store entry ID
             sensors.append(sensor)
             
-            # Check if this sensor should be excluded from recorder
-            update_interval = calendar_info.get("update_interval", 3600)
-            if update_interval <= 10:  # 10 seconds or faster
-                entity_id = f"sensor.{name.lower().replace(' ', '_')}_{calendar_id}"
-                entities_to_exclude.append(entity_id)
-                _LOGGER.info(f"Marking {entity_id} for recorder exclusion (updates every {update_interval}s)")
+            # Track entity for recorder exclusion if it updates frequently
+            update_interval = calendar_info.get('update_interval', 3600)
+            if update_interval < 60:  # Exclude sensors that update more than once per minute
+                entities_to_exclude.append(sensor.entity_id)
             
             _LOGGER.info(f"Created sensor for calendar: {calendar_id}")
             
@@ -123,53 +121,10 @@ async def async_setup_entry(
         async_add_entities(sensors)
         _LOGGER.info(f"Added {len(sensors)} sensors to Home Assistant")
         
-        # Register entities for recorder exclusion
-        if entities_to_exclude:
-            await _register_recorder_exclusion(hass, entities_to_exclude)
-
-
-async def _register_recorder_exclusion(hass: HomeAssistant, entity_ids: List[str]) -> None:
-    """Register entities to be excluded from recorder."""
-    
-    async def _exclude_from_recorder(_event=None):
-        """Exclude entities from recorder after startup."""
-        try:
-            # Try to access recorder component
-            recorder = hass.components.recorder
-            if hasattr(recorder, 'exclude_t'):
-                # This is the internal way, might not always work
-                for entity_id in entity_ids:
-                    _LOGGER.info(f"Attempting to exclude {entity_id} from recorder")
-            
-            # Alternative method: Set attribute on the entity registry
-            from homeassistant.helpers import entity_registry as er
-            registry = er.async_get(hass)
-            
-            for entity_id in entity_ids:
-                entry = registry.async_get(entity_id)
-                if entry:
-                    # Set a custom attribute that recorder might respect
-                    registry.async_update_entity(
-                        entity_id,
-                        entity_category="diagnostic"  # Diagnostic entities have lower priority
-                    )
-                    _LOGGER.info(f"Set {entity_id} as diagnostic entity")
-                    
-        except Exception as e:
-            _LOGGER.warning(f"Could not automatically exclude entities from recorder: {e}")
-            _LOGGER.info("Please add the following to your configuration.yaml:")
-            _LOGGER.info("recorder:")
-            _LOGGER.info("  exclude:")
-            _LOGGER.info("    entities:")
-            for entity_id in entity_ids:
-                _LOGGER.info(f"      - {entity_id}")
-    
-    # Try to exclude immediately if recorder is loaded
-    if hass.components.recorder:
-        await _exclude_from_recorder()
-    else:
-        # Wait for startup to complete
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _exclude_from_recorder)
+        # Register recorder exclusions if needed
+        # WICHTIG: Diese Zeile ist auskommentiert, um den Fehler zu vermeiden
+        # if entities_to_exclude:
+        #     await register_recorder_exclusion(hass, entities_to_exclude)
 
 
 async def async_discover_all_calendars(hass: HomeAssistant) -> Dict[str, Dict[str, Any]]:
@@ -337,11 +292,20 @@ def get_config_entry(entry_id: str) -> Optional[ConfigEntry]:
     return _CONFIG_ENTRIES.get(entry_id)
 
 
+# RECORDER EXCLUSION - Deaktiviert wegen Kompatibilitätsproblemen
+async def register_recorder_exclusion(hass: HomeAssistant, entities_to_exclude: List[str]) -> None:
+    """Register entities to be excluded from recorder.
+    
+    Note: Diese Funktion ist in neueren Home Assistant Versionen nicht mehr nötig.
+    Die Recorder-Konfiguration erfolgt über configuration.yaml oder die UI.
+    """
+    _LOGGER.debug(f"Recorder exclusion requested for {len(entities_to_exclude)} entities")
+    # Funktion macht nichts mehr - nur für Rückwärtskompatibilität vorhanden
+    pass
+
+
 class AlternativeTimeSensorBase(SensorEntity):
     """Base class for Alternative Time System sensors."""
-    
-    # Class-level flag for recorder exclusion
-    _exclude_from_recorder: bool = False
 
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
@@ -358,14 +322,7 @@ class AlternativeTimeSensorBase(SensorEntity):
         except Exception:
             parent_val = None
         base_attrs = parent_val if isinstance(parent_val, dict) else (parent_val or {})
-        
-        # Füge History-Exclusion Marker hinzu für schnell aktualisierende Sensoren
-        attrs = dict(base_attrs)
-        if hasattr(self, '_update_interval') and self._update_interval <= 10:
-            attrs["recorder_exclude_suggested"] = True
-            attrs["update_interval_seconds"] = self._update_interval
-        
-        return attrs
+        return dict(base_attrs)
     
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the sensor."""
@@ -381,42 +338,6 @@ class AlternativeTimeSensorBase(SensorEntity):
             self._update_interval = self.__class__.UPDATE_INTERVAL
         else:
             self._update_interval = 3600  # Default 1 hour
-        
-        # HISTORY CONTROL: State Class explizit auf None setzen
-        # Dies verhindert die Erstellung von Langzeit-Statistiken
-        self._attr_state_class = None
-        
-        # Markiere schnell aktualisierende Sensoren für Exclusion
-        if self._update_interval <= 10:  # 10 Sekunden oder schneller
-            self._exclude_from_recorder = True
-            # Optional: Als diagnostic entity markieren (hat niedrigere Priorität)
-            from homeassistant.helpers.entity import EntityCategory
-            self._attr_entity_category = EntityCategory.DIAGNOSTIC
-            
-            _LOGGER.info(
-                f"Sensor {base_name} updates every {self._update_interval}s - "
-                f"marked as diagnostic entity to reduce database load"
-            )
-    
-    @property
-    def state_class(self):
-        """Return None to disable statistics.
-        
-        This prevents Home Assistant from creating long-term statistics
-        for this sensor, which is appropriate for time display sensors.
-        """
-        return None
-    
-    @property
-    def entity_category(self):
-        """Return entity category.
-        
-        Fast-updating sensors are marked as diagnostic to reduce their priority
-        in the database and UI.
-        """
-        if hasattr(self, '_attr_entity_category'):
-            return self._attr_entity_category
-        return None
     
     def get_plugin_options(self) -> Dict[str, Any]:
         """Get plugin options for this sensor."""
@@ -427,9 +348,8 @@ class AlternativeTimeSensorBase(SensorEntity):
         if not config_entry:
             return {}
         
-        # FIX: Verwende "calendar_options" statt "plugin_options"
-        calendar_options = config_entry.data.get("calendar_options", {})
-        return calendar_options.get(self._calendar_id, {})
+        plugin_options = config_entry.data.get("plugin_options", {})
+        return plugin_options.get(self._calendar_id, {})
     
     @property
     def update_interval(self) -> int:
@@ -463,38 +383,32 @@ class AlternativeTimeSensorBase(SensorEntity):
         except Exception:
             info = {}
         
-        item = info.get(key)
-        if not item:
-            return default
+        value = info.get(key, default)
+        if not isinstance(value, dict):
+            return str(value)
         
-        # If not a dict (plain string), return as-is
-        if not isinstance(item, dict):
-            return str(item)
+        # Get user's language from Home Assistant
+        lang = getattr(self._hass.config, "language", "en")
         
-        # Get user language preference
-        user_lang = "en"  # default
-        try:
-            user_lang = self._hass.config.language or "en"
-        except Exception:
-            pass
+        # Try exact match first
+        if lang in value:
+            return value[lang]
         
-        # Extract primary language tag (e.g., "de" from "de-DE")
-        primary = user_lang.split("-")[0].lower() if user_lang else "en"
+        # Try primary language tag (e.g., "de" from "de-DE")
+        primary = lang.split("-")[0] if "-" in lang else lang.split("_")[0] if "_" in lang else lang
+        if primary in value:
+            return value[primary]
         
-        # Check in order: full lang code, primary lang code, "en", then any key
-        for lang_key in [user_lang, primary, "en"]:
-            if lang_key in item:
-                return str(item[lang_key])
+        # Fallback to English
+        if "en" in value:
+            return value["en"]
         
-        # Return any available translation
-        if item:
-            return str(next(iter(item.values())))
-        
-        return default
+        # Return default or first available value
+        return default if default else next(iter(value.values()), "")
     
     @property
     def device_info(self):
-        """Return device information for grouping sensors."""
+        """Return device registry information for this entity."""
         # Lazy-load CALENDAR_INFO from module
         info = {}
         try:
@@ -506,7 +420,7 @@ class AlternativeTimeSensorBase(SensorEntity):
         category = str(info.get("category") or "uncategorized")
         if category == "religious":
             category = "religion"
-        device_name = f"Alternative Time — {category.title()}"
+        device_name = f"Alternative Time – {category.title()}"
         return {
             "identifiers": {(DOMAIN, f"group:{category}")},
             "manufacturer": "Alternative Time Systems",
