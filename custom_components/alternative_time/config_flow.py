@@ -12,13 +12,24 @@ from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig, SelectSelectorMode
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+    BooleanSelector
+)
 
 from .const import DOMAIN
 
 # Fixed category order for the wizard
 FIXED_CATEGORY_ORDER = [
-    'technical', 'historical', 'cultural', 'military', 'space', 'fantasy', 'scifi', 'religion','gaming', 'uncategorized'
+    'technical', 'historical', 'cultural', 'military', 'space', 'fantasy', 'scifi', 'religion', 'uncategorized', 'gaming'
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,15 +42,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema({
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
     return {"title": data.get("name", "Alternative Time")}
-
-
-def format_key_name(key: str) -> str:
-    """Format a key name to be more readable."""
-    # Replace underscores with spaces and capitalize words
-    formatted = key.replace('_', ' ')
-    # Capitalize first letter of each word
-    formatted = ' '.join(word.capitalize() for word in formatted.split())
-    return formatted
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -58,8 +60,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._option_calendars: List[str] = []
         self._option_index: int = 0
         self._user_input: Dict[str, Any] = {}
-        # NEU: Mapping von Display-Keys zu Original-Keys
-        self._option_key_mapping: Dict[str, str] = {}
 
     def _categories(self) -> List[str]:
         """Get list of available categories from discovered calendars."""
@@ -73,43 +73,112 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         ordered = [c for c in FIXED_CATEGORY_ORDER if c in cats]
         return ordered
 
-    def _lcal(self, info: dict, key: str, default: str = "", lang: str = None) -> str:
+    def _lcal(self, info: dict, key: str, default: str = "") -> str:
         """Get localized value from calendar info."""
-        val = info.get(key, {})
-        if isinstance(val, dict):
-            # Try to get user's language first, fallback to English
-            if lang is None:
-                try:
-                    lang = self.hass.config.language
-                except:
-                    lang = 'en'
-            return val.get(lang, val.get("en", default))
-        return str(val or default)
+        value = info.get(key, default)
+        if isinstance(value, dict):
+            # Get user's language from Home Assistant
+            lang = getattr(self.hass.config, "language", "en")
+            # Try exact match first
+            if lang in value:
+                return value[lang]
+            # Try primary language tag (e.g., "de" from "de-DE")
+            primary = lang.split("-")[0] if "-" in lang else lang.split("_")[0] if "_" in lang else lang
+            if primary in value:
+                return value[primary]
+            # Fallback to English
+            if "en" in value:
+                return value["en"]
+            # Return first available value
+            return next(iter(value.values()), default) if value else default
+        return str(value) if value else default
 
-    def _build_groups(self, calendars: List[str], discovered: Dict[str, Dict[str, Any]]) -> Dict[str, List[str]]:
-        """Build device groups based on calendar categories."""
-        groups = {}
-        for cal_id in calendars:
-            info = discovered.get(cal_id, {})
-            category = str(info.get("category", "uncategorized"))
-            if category == "religious":
-                category = "religion"
-            if category not in groups:
-                groups[category] = []
-            groups[category].append(cal_id)
-        return groups
+    def _details_text(self, calendars: dict) -> str:
+        """Create a detailed text about discovered calendars."""
+        if not calendars:
+            return "No calendars discovered."
+        
+        lines = [f"Found {len(calendars)} calendars:"]
+        
+        # Group by category
+        by_cat = {}
+        for cid, info in calendars.items():
+            cat = str(info.get("category", "uncategorized"))
+            if cat == "religious":
+                cat = "religion"
+            if cat not in by_cat:
+                by_cat[cat] = []
+            by_cat[cat].append((cid, info))
+        
+        # Display by category
+        for cat in sorted(by_cat.keys()):
+            lines.append(f"\n**{cat.title()}:**")
+            for cid, info in by_cat[cat]:
+                name = self._lcal(info, "name", cid)
+                desc = self._lcal(info, "description", "")
+                if desc:
+                    lines.append(f"  • {name}: {desc[:60]}...")
+                else:
+                    lines.append(f"  • {name}")
+        
+        return "\n".join(lines)
 
-    def _details_text(self, discovered: Dict[str, Dict[str, Any]]) -> str:
-        """Generate a details text for a set of discovered calendars."""
-        lines = []
-        for cid, info in sorted(discovered.items()):
-            name = self._lcal(info, "name", default=cid)
-            desc = self._lcal(info, "description", default="")
-            line = f"• {name}"
-            if desc:
-                line += f": {desc}"
-            lines.append(line)
-        return "\n".join(lines) if lines else "No calendars found"
+    def _build_select_options(self, cid: str, key: str, meta: dict, info: dict) -> List[Dict[str, str]]:
+        """Build options for a select field, with special handling for timezone."""
+        # Check if options are directly provided in metadata
+        opts = meta.get("options")
+        if isinstance(opts, list) and opts:
+            # Ensure all values are strings
+            return [{"label": str(o), "value": str(o)} for o in opts]
+        
+        # Special handling for timezone field
+        if key.lower() == "timezone":
+            tzs = []
+            # Get timezone data from plugin info
+            tzdata = info.get("timezone_data", {})
+            
+            # Handle regions dict structure
+            regions = tzdata.get("regions", {})
+            if isinstance(regions, dict):
+                for _region, tz_list in regions.items():
+                    if isinstance(tz_list, list):
+                        tzs.extend([str(x) for x in tz_list])
+            
+            # Also check for direct timezone lists
+            for grp, arr in tzdata.items():
+                if isinstance(arr, list) and grp != "regions":
+                    tzs.extend([str(x) for x in arr])
+            
+            # Remove duplicates while preserving order
+            seen = set()
+            tzs_unique = []
+            for t in tzs:
+                if t not in seen:
+                    seen.add(t)
+                    tzs_unique.append(t)
+            
+            # Ensure system timezone is included and at the top
+            try:
+                sys_tz = getattr(self.hass.config, "time_zone", None) or "UTC"
+            except Exception:
+                sys_tz = "UTC"
+            
+            if sys_tz and sys_tz not in seen:
+                tzs_unique.insert(0, sys_tz)
+            elif sys_tz and tzs_unique and tzs_unique[0] != sys_tz:
+                # Move to front
+                tzs_unique = [sys_tz] + [t for t in tzs_unique if t != sys_tz]
+            
+            if not tzs_unique:
+                tzs_unique = ["UTC"]
+            
+            return [{"label": z, "value": z} for z in tzs_unique]
+        
+        # Fallback: use default as the only option
+        default = meta.get("default")
+        if default is None:
+            default = ""
+        return [{"label": str(default), "value": str(default)}]
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -154,7 +223,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     SelectSelectorConfig(
                         options=options, 
                         multiple=True, 
-                        mode=SelectSelectorMode.LIST  # FIX: Geändert von DROPDOWN zu LIST
+                        mode=SelectSelectorMode.DROPDOWN
                     )
                 )
             })
@@ -167,7 +236,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         
         # Save and proceed
-        selected = user_input.get("categories") or []
+        selected = user_input.get("categories", [])
         self._selected_categories = [c for c in selected if c in categories]
         self._category_order = [c for c in FIXED_CATEGORY_ORDER if c in self._selected_categories]
         self._category_index = 0
@@ -182,19 +251,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Process user input if we're coming back from a form
         if user_input is not None and self._category_index > 0:
             # Save selected for previous category
-            selected = list(user_input.get("calendars") or [])
-            # Get calendars from previous category
-            prev_cat = self._category_order[self._category_index - 1]
-            prev_cals = [
-                cid for cid, info in (self._discovered_calendars or {}).items() 
-                if str(info.get("category") or "uncategorized").replace("religious", "religion") == prev_cat
-            ]
-            selected = [cid for cid in selected if cid in prev_cals]
-            
-            # Merge with existing selections
-            merged = [c for c in self._selected_calendars if c not in prev_cals]
-            merged.extend(selected)
-            self._selected_calendars = merged
+            selected = list(user_input.get("calendars", []))
+            self._selected_calendars.extend(selected)
         
         # Check if we're done with all categories
         if self._category_index >= len(self._category_order):
@@ -202,73 +260,80 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._option_calendars = [
                 cid for cid in self._selected_calendars 
                 if isinstance(
-                    (self._discovered_calendars.get(cid, {}) or {}).get("config_options"), 
+                    self._discovered_calendars.get(cid, {}).get("config_options"), 
                     dict
-                ) and len((self._discovered_calendars.get(cid, {}) or {}).get("config_options", {})) > 0
+                )
             ]
             self._option_index = 0
             
             if self._option_calendars:
                 return await self.async_step_plugin_options()
             
+            # No options to configure, create entry
             data = {
                 **self._user_input,
                 "calendars": self._selected_calendars,
-                "groups": self._build_groups(self._selected_calendars, self._discovered_calendars)
+                "groups": self._build_groups(self._selected_calendars, self._discovered_calendars),
+                "plugin_options": {}
             }
             return self.async_create_entry(
-                title=self._user_input.get("name", "Alternative Time"), 
+                title=self._user_input.get("name", "Alternative Time"),
                 data=data
             )
-
+        
+        # Get current category
         current_cat = self._category_order[self._category_index]
         
-        # Calendars in this category
+        # Get calendars for this category
         cals = [
-            (cid, info) for cid, info in (self._discovered_calendars or {}).items() 
-            if str(info.get("category") or "uncategorized").replace("religious", "religion") == current_cat
+            (cid, info) for cid, info in self._discovered_calendars.items()
+            if str(info.get("category", "uncategorized")).replace("religious", "religion") == current_cat
         ]
         
-        # If category is empty, skip to next
         if not cals:
+            # Skip empty category
             self._category_index += 1
             return await self.async_step_select_calendars_by_category()
         
-        # Build labels with separators between items
+        # Build options dict with detailed labels
         options_dict = {}
-        separator = "─" * 50  # Visual separator
+        separator = "─" * 40
         
-        for i, (cid, info) in enumerate(sorted(cals)):
-            name = self._lcal(info, "name", default=cid)
-            desc = self._lcal(info, "description", default="")
-            upd = info.get("update_interval")
-            upd_txt = f"{int(upd)}s" if isinstance(upd, (int, float)) else ""
-            acc = str(info.get("accuracy") or "")
+        for i, (cid, info) in enumerate(cals):
+            name = self._lcal(info, "name", cid)
+            desc = self._lcal(info, "description", "")
             
-            # Build extra info line
+            # Extra info
             extra_parts = []
-            if upd_txt:
-                extra_parts.append(f"Update: {upd_txt}")
+            interval = info.get("update_interval")
+            if interval:
+                if interval == 1:
+                    extra_parts.append("Updates every second")
+                elif interval < 60:
+                    extra_parts.append(f"Updates every {interval} seconds")
+                elif interval == 60:
+                    extra_parts.append("Updates every minute")
+                elif interval < 3600:
+                    extra_parts.append(f"Updates every {interval // 60} minutes")
+                else:
+                    extra_parts.append(f"Updates every {interval // 3600} hour(s)")
+            
+            acc = info.get("accuracy")
             if acc:
                 extra_parts.append(f"Accuracy: {acc}")
             extra = " • ".join(extra_parts)
             
-            # Format the label with proper line breaks
-            label_parts = []
-            label_parts.append(name)
+            # Format the label
+            label_parts = [name]
             if desc:
-                label_parts.append(f"\n  ↳ {desc}")
+                label_parts.append(f"  ↳ {desc}")
             if extra:
-                label_parts.append(f"\n  ↳ {extra}")
+                label_parts.append(f"  ↳ {extra}")
             
-            # Add separator after each item except the last
-            if i < len(cals) - 1:
-                label_parts.append(f"\n  {separator}")
-            
-            label = "".join(label_parts)
+            label = "\n".join(label_parts)
             options_dict[cid] = label
         
-        # Defaults: keep already chosen in this category, else select all
+        # Defaults: keep already chosen in this category
         already = [cid for cid, _ in cals if cid in self._selected_calendars]
         default = already or [cid for cid, _ in cals]
         
@@ -296,156 +361,149 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Process user input from previous form
         if user_input is not None and self._option_index > 0:
             # Store data from the previous calendar
-            prev_cal_id = self._option_calendars[self._option_index - 1]
+            prev_cid = self._option_calendars[self._option_index - 1]
+            normalized = {}
             
-            # Process the user input for the previous calendar
-            cal_options = {}
+            _LOGGER.debug(f"Processing options for {prev_cid}, raw input: {user_input}")
             
-            _LOGGER.debug(f"Processing options for {prev_cal_id}, raw input: {user_input}")
-            _LOGGER.debug(f"Key mapping: {self._option_key_mapping}")
-            
-            # Verwende das Key-Mapping um die Original-Keys wiederherzustellen
-            for display_key, value in user_input.items():
-                if display_key in self._option_key_mapping:
-                    original_key = self._option_key_mapping[display_key]
-                    # WICHTIG: Bei Select-Feldern könnte der Wert None sein wenn nichts ausgewählt
-                    if value is not None:
-                        cal_options[original_key] = value
-                        _LOGGER.debug(f"Mapped {display_key} -> {original_key} = {value}")
+            # Remove prefix from keys
+            for k, v in user_input.items():
+                if isinstance(k, str) and "] " in k:
+                    raw_key = k.split("] ", 1)[1]
                 else:
-                    _LOGGER.warning(f"No mapping found for display key: {display_key}")
+                    raw_key = k
+                normalized[raw_key] = v
             
-            # Store in selected_options with the actual calendar id
-            if cal_options:
-                self._selected_options[prev_cal_id] = cal_options
-                _LOGGER.debug(f"Stored options for {prev_cal_id}: {cal_options}")
-        
-        # Check if we're done with all option calendars
+            self._selected_options[prev_cid] = normalized
+            _LOGGER.info(f"Stored options for {prev_cid}: {normalized}")
+
+        # Check if we're done with all calendars
         if self._option_index >= len(self._option_calendars):
-            # Done - create the entry with all options
+            # Create final data
             data = {
                 **self._user_input,
                 "calendars": self._selected_calendars,
                 "groups": self._build_groups(self._selected_calendars, self._discovered_calendars),
-                "calendar_options": self._selected_options  # Add per-calendar options
+                "plugin_options": self._selected_options
             }
-            _LOGGER.debug(f"Creating entry with calendar_options: {self._selected_options}")
+            _LOGGER.info(f"Creating entry with plugin_options: {self._selected_options}")
             return self.async_create_entry(
-                title=self._user_input.get("name", "Alternative Time"), 
+                title=self._user_input.get("name", "Alternative Time"),
                 data=data
             )
-        
+
         # Get current calendar to configure
         cid = self._option_calendars[self._option_index]
         info = self._discovered_calendars.get(cid, {})
-        name = self._lcal(info, "name", default=cid)
+        opts = info.get("config_options", {})
         
-        # Get config options for this calendar
-        config_opts = info.get("config_options", {})
+        # Skip calendars without options
+        if not opts:
+            _LOGGER.debug(f"Calendar {cid} has no config options, skipping")
+            self._option_index += 1
+            return await self.async_step_plugin_options()
         
-        # Clear mapping for new calendar
-        self._option_key_mapping = {}
+        # Get calendar name for display
+        name = self._lcal(info, "name", cid)
+        _LOGGER.debug(f"Configuring options for calendar {cid} ({name}), options: {list(opts.keys())}")
         
-        # Build schema for this calendar's options
+        # Build schema dynamically
         schema_dict = {}
-        for key, config in (config_opts or {}).items():
+        for key, meta in opts.items():
+            if not isinstance(meta, dict):
+                _LOGGER.warning(f"Invalid config option metadata for {key} in {cid}")
+                continue
+            
             try:
-                # Get the display label (but keep the original key for later)
-                label = config.get("label")
-                if isinstance(label, dict):
-                    try:
-                        user_lang = self.hass.config.language
-                    except:
-                        user_lang = 'en'
-                    pretty_key = label.get(user_lang, label.get("en", format_key_name(key)))
-                elif label:
-                    pretty_key = label
-                else:
-                    # Format the key name to be more readable
-                    pretty_key = format_key_name(key)
+                typ = meta.get("type", "string")
+                default = meta.get("default")
+                desc = self._lcal(meta, "description", "")
+                label = self._lcal(meta, "label", key)
                 
-                # Full display key with plugin name prefix
-                full_display_key = f"[{name}] {pretty_key}"
+                pretty_prefix = f"[{name}] "
+                pretty_key = pretty_prefix + label
                 
-                # WICHTIG: Speichere das Mapping von Display-Key zu Original-Key
-                self._option_key_mapping[full_display_key] = key
+                _LOGGER.debug(f"Building field {key}: type={typ}, default={default}")
                 
-                typ = config.get("type", "string")
-                default = config.get("default")
-                
-                # Get the translated description
-                desc = config.get("description", "")
-                if isinstance(desc, dict):
-                    try:
-                        user_lang = self.hass.config.language
-                    except:
-                        user_lang = 'en'
-                    desc_text = desc.get(user_lang, desc.get("en", ""))
-                else:
-                    desc_text = desc if desc else ""
-                
-                _LOGGER.debug(f"Building field {key} ({full_display_key}): type={typ}, default={default}")
-                
-                # Build field based on type
-                if typ == "bool" or typ == "boolean":
-                    default_bool = bool(default) if default is not None else False
-                    schema_dict[vol.Optional(full_display_key, default=default_bool, description=desc_text)] = bool
+                # SPECIAL HANDLING FOR TIMEZONE - force it to be a dropdown
+                if key.lower() == "timezone" or typ == "select":
+                    # Build options
+                    options = self._build_select_options(cid, key, meta, info)
                     
-                elif typ == "int" or typ == "integer":
-                    default_num = int(default) if default is not None else 0
-                    min_val = config.get("min")
-                    max_val = config.get("max")
+                    # Special default for timezone
+                    if key.lower() == "timezone":
+                        try:
+                            sys_tz = getattr(self.hass.config, "time_zone", None) or default or "UTC"
+                        except Exception:
+                            sys_tz = default or "UTC"
+                        default = sys_tz
                     
-                    if min_val is not None and max_val is not None:
-                        schema_dict[vol.Optional(full_display_key, default=default_num, description=desc_text)] = vol.All(
-                            vol.Coerce(int),
-                            vol.Range(min=min_val, max=max_val)
-                        )
-                    else:
-                        schema_dict[vol.Optional(full_display_key, default=default_num, description=desc_text)] = vol.Coerce(int)
-                        
-                elif typ == "float" or typ == "number":
-                    default_num = float(default) if default is not None else 0.0
-                    schema_dict[vol.Optional(full_display_key, default=default_num, description=desc_text)] = vol.Coerce(float)
-                
-                elif typ == "select":
-                    # Handle select with options
-                    options = config.get("options", [])
-                    if options:
-                        # WICHTIG: Bei Integer-Options müssen wir sie als Strings behandeln
-                        select_options = []
-                        for opt in options:
-                            if isinstance(opt, dict):
-                                # Option has its own label/value structure
-                                select_options.append(opt)
-                            else:
-                                # Simple value - convert to string for display
-                                opt_str = str(opt)
-                                select_options.append({"label": opt_str, "value": opt_str})
-                        
-                        # Convert default to string if it exists
-                        default_str = str(default) if default is not None else ""
+                    if options and len(options) > 0:
+                        # Ensure all option values are strings
+                        options = [{"label": str(o["label"]), "value": str(o["value"])} for o in options]
                         
                         # Ensure default is in options
-                        option_values = [o["value"] for o in select_options]
+                        default_str = str(default) if default is not None else ""
+                        option_values = [o["value"] for o in options]
                         if default_str not in option_values and option_values:
                             default_str = option_values[0]
+                        else:
+                            default_str = default_str if default_str else (option_values[0] if option_values else "")
                         
-                        _LOGGER.debug(f"Select field {key}: options={select_options}, default={default_str}")
+                        _LOGGER.debug(f"Creating SelectSelector for {key} with {len(options)} options")
                         
-                        # Use vol.In validator with string values
-                        schema_dict[vol.Optional(full_display_key, default=default_str, description=desc_text)] = vol.In(option_values)
+                        schema_dict[vol.Optional(pretty_key, default=default_str)] = SelectSelector(
+                            SelectSelectorConfig(
+                                options=options,
+                                multiple=False,
+                                mode=SelectSelectorMode.DROPDOWN
+                            )
+                        )
                     else:
-                        # Fallback to string if no options
-                        schema_dict[vol.Optional(full_display_key, default=str(default) if default is not None else "", description=desc_text)] = str
+                        # Fallback to text if no options
+                        _LOGGER.warning(f"No options for select field {key} in {cid}, using text")
+                        schema_dict[vol.Optional(pretty_key, default=str(default) if default is not None else "")] = TextSelector(
+                            TextSelectorConfig(type=TextSelectorType.TEXT)
+                        )
+                    continue  # Skip the rest of type handling
+                
+                # BOOLEAN type
+                if typ == "boolean":
+                    schema_dict[vol.Optional(pretty_key, default=bool(default) if default is not None else False)] = BooleanSelector()
+                    
+                # NUMBER types
+                elif typ in ("number", "integer", "float"):
+                    # Handle min/max if present
+                    min_val = meta.get("min")
+                    max_val = meta.get("max")
+                    
+                    if typ == "integer":
+                        default_num = int(default) if default is not None else 0
+                        mode = NumberSelectorMode.BOX
+                    else:
+                        default_num = float(default) if default is not None else 0.0
+                        mode = NumberSelectorMode.BOX
+                    
+                    config = NumberSelectorConfig(mode=mode)
+                    if min_val is not None:
+                        config["min"] = float(min_val)
+                    if max_val is not None:
+                        config["max"] = float(max_val)
+                    
+                    schema_dict[vol.Optional(pretty_key, default=default_num)] = NumberSelector(config)
                         
-                elif typ == "string" or typ == "text":
-                    schema_dict[vol.Optional(full_display_key, default=str(default) if default is not None else "", description=desc_text)] = str
+                # TEXT/STRING types
+                elif typ in ("string", "text"):
+                    schema_dict[vol.Optional(pretty_key, default=str(default) if default is not None else "")] = TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.TEXT)
+                    )
                     
                 else:
                     # Fallback for unknown types
-                    _LOGGER.warning(f"Unknown config option type '{typ}' for {key} in {cid}, using string")
-                    schema_dict[vol.Optional(full_display_key, default=str(default) if default is not None else "", description=desc_text)] = str
+                    _LOGGER.warning(f"Unknown config option type '{typ}' for {key} in {cid}, using text")
+                    schema_dict[vol.Optional(pretty_key, default=str(default) if default is not None else "")] = TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.TEXT)
+                    )
                     
             except Exception as e:
                 _LOGGER.error(f"Error building schema for {key} in {cid}: {e}", exc_info=True)
@@ -472,10 +530,23 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
+    def _build_groups(self, calendars: List[str], discovered: Dict[str, Dict]) -> Dict[str, List[str]]:
+        """Build groups based on calendar categories."""
+        groups = {}
+        for cal_id in calendars:
+            info = discovered.get(cal_id, {})
+            category = info.get("category", "uncategorized")
+            if category == "religious":
+                category = "religion"
+            if category not in groups:
+                groups[category] = []
+            groups[category].append(cal_id)
+        return groups
+
     async def _async_discover_calendars(self) -> None:
         """Discover available calendar implementations asynchronously."""
         try:
-            # Try to import from sensor module first (if already loaded)
+            # Try to import from sensor module first
             try:
                 from .sensor import export_discovered_calendars
                 discovered = await self.hass.async_add_executor_job(
@@ -495,7 +566,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._discovered_calendars = {}
 
     async def _async_direct_discovery(self) -> Dict[str, Dict[str, Any]]:
-        """Directly discover calendar modules from the calendars directory asynchronously."""
+        """Directly discover calendar modules from the calendars directory."""
         discovered = {}
         
         # Get calendars directory path
@@ -578,73 +649,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        # Discover available calendars
-        discovered_calendars = await self._async_discover_calendars()
-        
-        # Get currently selected calendars
-        current_calendars = self.config_entry.data.get("calendars", [])
-        
-        # Create schema for calendar selection
-        calendar_schema = {}
-        for cal_id, cal_info in sorted(discovered_calendars.items()):
-            name = cal_info.get("name", {}).get("en", cal_id)
-            description = cal_info.get("description", {}).get("en", "")
-            label = f"{name}"
-            if description:
-                label = f"{name} - {description[:50]}..."
-            default = cal_id in current_calendars
-            calendar_schema[vol.Optional(cal_id, default=default)] = bool
-
+        # For now, just show a simple message
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(calendar_schema)
+            data_schema=vol.Schema({}),
+            description_placeholders={
+                "info": "Options flow is not yet implemented. Please delete and recreate the integration to change settings."
+            }
         )
-
-    async def _async_discover_calendars(self) -> Dict[str, Dict[str, Any]]:
-        """Discover available calendar implementations asynchronously."""
-        discovered = {}
-        
-        # Get calendars directory path
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        calendars_dir = os.path.join(current_dir, "calendars")
-        
-        if not os.path.exists(calendars_dir):
-            return discovered
-
-        # List files asynchronously
-        files = await self.hass.async_add_executor_job(
-            os.listdir, calendars_dir
-        )
-        
-        for filename in files:
-            if filename.endswith(".py") and not filename.startswith("__"):
-                module_name = filename[:-3]
-                
-                # Skip template and example files
-                if "template" in module_name.lower() or "example" in module_name.lower():
-                    continue
-                
-                try:
-                    # Import module asynchronously
-                    module = await self.hass.async_add_executor_job(
-                        self._import_calendar_module, module_name
-                    )
-                    
-                    if module and hasattr(module, 'CALENDAR_INFO'):
-                        cal_info = module.CALENDAR_INFO
-                        cal_id = cal_info.get('id', module_name)
-                        discovered[cal_id] = cal_info
-                        
-                except Exception as e:
-                    _LOGGER.debug(f"Failed to load calendar {module_name}: {e}")
-                    continue
-        
-        return discovered
-    
-    def _import_calendar_module(self, module_name: str):
-        """Import a calendar module (blocking operation for executor)."""
-        try:
-            module = import_module(f'.calendars.{module_name}', package='custom_components.alternative_time')
-            return module
-        except Exception:
-            return None

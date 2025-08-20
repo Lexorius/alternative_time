@@ -1,5 +1,5 @@
-"""Test Calendar V2 - Enhanced debugging for plugin options
-Version 2.0.0 - Deep debugging of config_entry and options flow
+"""Test Debug Calendar - Fixed ID
+Version 2.1.0 - Corrected calendar ID
 """
 from __future__ import annotations
 
@@ -21,8 +21,8 @@ _LOGGER = logging.getLogger(__name__)
 UPDATE_INTERVAL = 30  # Update every 30 seconds
 
 CALENDAR_INFO = {
-    "id": "test_debug",
-    "version": "2.0.0",
+    "id": "test_debug",  # WICHTIG: Muss mit dem Dateinamen übereinstimmen!
+    "version": "2.1.0",
     "icon": "mdi:bug",
     "category": "technical",
     "accuracy": "debug",
@@ -104,7 +104,7 @@ CALENDAR_INFO = {
 }
 
 
-class DebugTestCalendarSensor(AlternativeTimeSensorBase):
+class TestDebugSensor(AlternativeTimeSensorBase):  # Klassenname geändert
     """Debug test sensor with extensive logging."""
     
     UPDATE_INTERVAL = UPDATE_INTERVAL
