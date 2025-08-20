@@ -1,9 +1,13 @@
-"""Trackmania Events (COTD, Weekly Shorts, Bonk Cup) - Version 1.1 with extended translations."""
+
+"""Trackmania Events (COTD, Weekly Shorts, Bonk Cup)
+Version 1.2 — reads options via get_plugin_options() (no get_config() calls).
+"""
 from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
 from typing import Dict, Any, List
+
 try:
     from zoneinfo import ZoneInfo  # Python 3.9+
 except Exception:  # pragma: no cover
@@ -22,7 +26,7 @@ UPDATE_INTERVAL = 60  # seconds
 
 CALENDAR_INFO = {
     "id": "trackmania",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "icon": "mdi:flag-checkered",
     "category": "gaming",
     "accuracy": "official/community",
@@ -71,85 +75,28 @@ CALENDAR_INFO = {
             "default": "Europe/Berlin",
             "description": {
                 "en": "IANA timezone to compute local event times",
-                "de": "IANA-Zeitzone zur Berechnung lokaler Zeiten",
-                "es": "Zona horaria IANA para calcular los horarios locales",
-                "fr": "Fuseau horaire IANA pour calculer les heures locales",
-                "it": "Fuso orario IANA per calcolare gli orari locali",
-                "nl": "IANA-tijdzone voor lokale tijden",
-                "pt": "Fuso horário IANA para horários locais",
-                "ru": "Часовой пояс IANA для расчёта местного времени",
-                "ja": "ローカル時間計算に使用する IANA タイムゾーン",
-                "zh": "用于计算本地时间的 IANA 时区",
-                "ko": "로컬 시간 계산에 사용할 IANA 표준 시간대"
+                "de": "IANA-Zeitzone zur Berechnung lokaler Zeiten"
             }
         },
         "enable_cotd": {
             "type": "boolean",
             "default": True,
-            "description": {
-                "en": "Enable Cup of the Day",
-                "de": "Cup of the Day aktivieren",
-                "es": "Activar Cup of the Day",
-                "fr": "Activer Cup of the Day",
-                "it": "Abilita Cup of the Day",
-                "nl": "Cup of the Day inschakelen",
-                "pt": "Ativar Cup of the Day",
-                "ru": "Включить Cup of the Day",
-                "ja": "Cup of the Day を有効化",
-                "zh": "启用 Cup of the Day",
-                "ko": "Cup of the Day 활성화"
-            }
+            "description": {"en": "Enable Cup of the Day", "de": "Cup of the Day aktivieren"}
         },
         "enable_weekly_shorts": {
             "type": "boolean",
             "default": True,
-            "description": {
-                "en": "Enable Weekly Shorts (release)",
-                "de": "Weekly Shorts (Release) aktivieren",
-                "es": "Activar Weekly Shorts (lanzamiento)",
-                "fr": "Activer Weekly Shorts (publication)",
-                "it": "Abilita Weekly Shorts (rilascio)",
-                "nl": "Weekly Shorts (release) inschakelen",
-                "pt": "Ativar Weekly Shorts (lançamento)",
-                "ru": "Включить Weekly Shorts (релиз)",
-                "ja": "Weekly Shorts（リリース）を有効化",
-                "zh": "启用 Weekly Shorts（发布）",
-                "ko": "Weekly Shorts(릴리스) 활성화"
-            }
+            "description": {"en": "Enable Weekly Shorts (release)", "de": "Weekly Shorts (Release) aktivieren"}
         },
         "enable_bonk_cup": {
             "type": "boolean",
             "default": True,
-            "description": {
-                "en": "Enable Bonk Cup",
-                "de": "Bonk Cup aktivieren",
-                "es": "Activar Bonk Cup",
-                "fr": "Activer Bonk Cup",
-                "it": "Abilita Bonk Cup",
-                "nl": "Bonk Cup inschakelen",
-                "pt": "Ativar Bonk Cup",
-                "ru": "Включить Bonk Cup",
-                "ja": "Bonk Cup を有効化",
-                "zh": "启用 Bonk Cup",
-                "ko": "Bonk Cup 활성화"
-            }
+            "description": {"en": "Enable Bonk Cup", "de": "Bonk Cup aktivieren"}
         },
         "horizon_days": {
             "type": "number",
             "default": 14,
-            "description": {
-                "en": "How many days ahead to list events",
-                "de": "Wie viele Tage im Voraus Events auflisten",
-                "es": "Cuántos días listar por adelantado",
-                "fr": "Nombre de jours à l’avance à lister",
-                "it": "Quanti giorni in anticipo elencare",
-                "nl": "Aantal dagen vooruit om te tonen",
-                "pt": "Quantos dias à frente listar",
-                "ru": "На сколько дней вперёд показывать события",
-                "ja": "何日先までイベントを表示するか",
-                "zh": "列出未来多少天的赛事",
-                "ko": "며칠 앞까지 이벤트를 표시할지"
-            }
+            "description": {"en": "How many days ahead to list events", "de": "Vorschau in Tagen"}
         }
     }
 }
@@ -169,12 +116,12 @@ class TrackmaniaEventsSensor(AlternativeTimeSensorBase):
         self._attr_unique_id = f"{base_name}_trackmania_events"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:flag-checkered")
 
-        # Options (could later be loaded from config flow)
+        # Defaults; will be overridden from plugin options in update()
         self._tz_name = "Europe/Berlin"
+        self._enable_cotd = True
+        self._enable_weekly_shorts = True
+        self._enable_bonk = True
         self._horizon_days = 14
-        self._show_cotd = self.get_config("show_cotd", True)
-        self._show_weekly = self.get_config("show_weekly", True)
-        self._show_bonk = self.get_config("show_bonk", True)
 
         # Cached attributes
         self._tm_events: Dict[str, Any] = {}
@@ -255,7 +202,25 @@ class TrackmaniaEventsSensor(AlternativeTimeSensorBase):
 
     # -------------------- Calculation & update --------------------
     def update(self) -> None:
+        """Synchronous update for Home Assistant."""
         try:
+            # Pull options from config_entry via AlternativeTimeSensorBase helper if available
+            opts = {}
+            try:
+                if hasattr(self, "get_plugin_options"):
+                    opts = self.get_plugin_options() or {}
+            except Exception:
+                opts = {}
+
+            self._tz_name = opts.get("timezone", self._tz_name)
+            self._enable_cotd = bool(opts.get("enable_cotd", self._enable_cotd))
+            self._enable_weekly_shorts = bool(opts.get("enable_weekly_shorts", self._enable_weekly_shorts))
+            self._enable_bonk = bool(opts.get("enable_bonk_cup", self._enable_bonk))
+            try:
+                self._horizon_days = int(opts.get("horizon_days", self._horizon_days))
+            except Exception:
+                pass
+
             tz = self._tz()
             now = datetime.now(tz)
             upcoming = self._generate_upcoming(now)
