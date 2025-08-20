@@ -456,9 +456,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 
                 _LOGGER.debug(f"Building field {key}: type={typ}, default={default}, label={label}, desc={option_desc[:50]}")
                 
-                # Create the field with description in vol.Optional
-                field_key = vol.Optional(label, default=default if default is not None else "", description=option_desc if option_desc else None)
-                
                 # Store mapping: displayed label -> actual config key
                 current_mapping[label] = key
                 
@@ -559,20 +556,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         
         schema = vol.Schema(schema_dict)
         
-        # Build description text with markdown formatting
-        description_text = f"""## ⚙️ Configure: {name}
-
-{desc if desc else 'Configure the options for this calendar.'}
-
-Please adjust the settings below according to your preferences:
-"""
-        
         return self.async_show_form(
             step_id="plugin_options",
-            data_schema=schema,
-            description_placeholders={
-                "description": description_text
-            }
+            data_schema=schema
         )
 
     async def async_step_disclaimer(
@@ -655,19 +641,9 @@ Please adjust the settings below according to your preferences:
         # Simple schema with just a confirmation
         schema = vol.Schema({})
         
-        disclaimer_text = f"""## {disclaimer["title"]}
-
-{disclaimer["content"]}
-
-**Click 'Submit' to acknowledge and complete the setup.**
-"""
-        
         return self.async_show_form(
             step_id="disclaimer",
-            data_schema=schema,
-            description_placeholders={
-                "description": disclaimer_text
-            }
+            data_schema=schema
         )
 
     def _build_groups(self, calendars: List[str], discovered: Dict[str, Dict]) -> Dict[str, List[str]]:

@@ -2,146 +2,48 @@
   "config": {
     "step": {
       "user": {
-        "title": "Alternative Zeitsysteme v2.5",
-        "description": "Willkommen bei Alternative Zeitsysteme!\n\nDiese Integration entdeckt automatisch alle verfügbaren Kalendermodule.\n\nAuf den nächsten Bildschirmen können Sie auswählen, welche Zeitsysteme aktiviert werden sollen, organisiert nach Kategorien.",
+        "title": "Alternative Zeitsysteme",
+        "description": "Willkommen bei Alternative Zeitsysteme!\n\nDiese Integration bietet verschiedene alternative Kalender und Zeitsysteme für Bildungs- und Unterhaltungszwecke.",
         "data": {
-          "name": "Konfigurationsname"
+          "name": "Name der Integration"
         }
       },
-      "category_technical": {
-        "title": "Technische & Moderne Zeitsysteme",
-        "description": "Konfigurieren Sie technische und computerbasierte Zeitsysteme.\n\nVerfügbar: {calendars}\n\nFortschritt: Schritt {progress}",
+      "select_categories": {
+        "title": "Kalenderkategorien auswählen",
+        "description": "Wählen Sie, welche Kategorien von Kalendern Sie konfigurieren möchten:\n\n{details}",
         "data": {
-          "enable_unix": "Unix-Zeitstempel",
-          "enable_julian": "Julianisches Datum",
-          "enable_decimal": "Dezimalzeit",
-          "enable_hexadecimal": "Hexadezimalzeit",
-          "enable_swatch": "Swatch Internet-Zeit",
-          "enable_timezone": "Zeitzonen-Anzeige",
-          "timezone": "Zeitzone auswählen"
-        },
-        "data_description": {
-          "enable_unix": "Sekunden seit dem 1. Januar 1970 (Unix-Epoche)",
-          "enable_julian": "Astronomische Tageszählung seit 4713 v.Chr.",
-          "enable_decimal": "Französische Revolutionszeit: 10 Stunden, 100 Minuten pro Tag",
-          "enable_hexadecimal": "Tag in 65536 Teile geteilt, Anzeige hexadezimal",
-          "enable_swatch": "Internet-Zeit in Beats @000-@999. Ein Tag = 1000 Beats",
-          "enable_timezone": "Zeit in ausgewählter Zeitzone anzeigen"
+          "categories": "Einzuschließende Kategorien"
         }
       },
-      "category_historical": {
-        "title": "Historische Kalendersysteme",
-        "description": "Konfigurieren Sie antike und historische Kalender.\n\nVerfügbar: {calendars}\n\nFortschritt: Schritt {progress}",
+      "select_calendars_by_category": {
+        "title": "{category} Kalender auswählen",
+        "description": "Wählen Sie Kalender aus der Kategorie {category}:\n\n{details}",
         "data": {
-          "enable_maya": "Maya-Kalender",
-          "enable_egyptian": "Ägyptischer Kalender",
-          "enable_roman": "Römischer Kalender",
-          "enable_attic": "Attischer Kalender"
-        },
-        "data_description": {
-          "enable_maya": "Lange Zählung, Tzolk'in und Haab Kalender",
-          "enable_egyptian": "Altägyptischer Zivilkalender mit 365 Tagen",
-          "enable_roman": "Antiker römischer Kalender mit Kalenden, Nonen und Iden",
-          "enable_attic": "Antiker Athener Lunisolarkalender"
+          "calendars": "Zu aktivierende Kalender"
         }
       },
-      "category_cultural": {
-        "title": "Kulturelle Kalendersysteme",
-        "description": "Konfigurieren Sie regionale und kulturelle Kalender.\n\nVerfügbar: {calendars}\n\nFortschritt: Schritt {progress}",
-        "data": {
-          "enable_suriyakati": "Suriyakati (Thai) Kalender",
-          "enable_minguo": "Minguo (Taiwan) Kalender"
-        },
-        "data_description": {
-          "enable_suriyakati": "Thailändischer Kalender mit buddhistischer Ära (BE = CE + 543)",
-          "enable_minguo": "Taiwan/ROC Kalender (Jahr 1 = 1912 CE)"
-        }
+      "plugin_options": {
+        "title": "Kalender konfigurieren",
+        "description": "Konfigurieren Sie die Optionen für den ausgewählten Kalender"
       },
-      "category_military": {
-        "title": "Militärische Zeitsysteme",
-        "description": "Konfigurieren Sie militärische und taktische Zeitformate.\n\nVerfügbar: {calendars}\n\nFortschritt: Schritt {progress}",
-        "data": {
-          "enable_nato": "NATO-Zeit",
-          "enable_nato_zone": "NATO-Zeit mit Zone",
-          "enable_nato_rescue": "NATO-Rettungsformat"
-        },
-        "data_description": {
-          "enable_nato": "Militärische Datum-Zeit ohne Zone: DDHHMM",
-          "enable_nato_zone": "Vollständige militärische DTG: DDHHMM[Zone] MON YY",
-          "enable_nato_rescue": "Deutsche Rettungsdienst-Notation"
-        }
-      },
-      "category_space": {
-        "title": "Weltraum & Astronomische Zeitsysteme",
-        "description": "Konfigurieren Sie Mars- und weltraumbezogene Kalender.\n\nVerfügbar: {calendars}\n\nFortschritt: Schritt {progress}",
-        "data": {
-          "enable_darian": "Darischer Kalender (Mars)",
-          "enable_mars_time": "Mars Sol-Zeit",
-          "mars_timezone": "Mars-Zeitzone"
-        },
-        "data_description": {
-          "enable_darian": "Mars-Kalender mit 24 Monaten und 668 Sols pro Jahr",
-          "enable_mars_time": "Marsianische Sonnenzeit (Sols)"
-        }
-      },
-      "category_scifi": {
-        "title": "Science-Fiction Zeitsysteme",
-        "description": "Konfigurieren Sie Zeitsysteme aus Science-Fiction-Universen.\n\nVerfügbar: {calendars}\n\nFortschritt: Schritt {progress}",
-        "data": {
-          "enable_stardate": "Star Trek Sternzeit",
-          "enable_eve": "EVE Online Zeit"
-        },
-        "data_description": {
-          "enable_stardate": "Star Trek TNG Sternzeit (z.B. 47634.44)",
-          "enable_eve": "EVE Online New Eden Standardzeit"
-        }
-      },
-      "category_fantasy": {
-        "title": "Fantasy-Welt Kalender",
-        "description": "Konfigurieren Sie Kalender aus Fantasy-Welten und Spielen.\n\nVerfügbar: {calendars}\n\nFortschritt: Schritt {progress}",
-        "data": {
-          "enable_shire": "Auenland-Kalender (HdR)",
-          "enable_rivendell": "Bruchtal-Kalender (HdR)",
-          "enable_tamriel": "Tamriel-Kalender (Elder Scrolls)",
-          "enable_discworld": "Scheibenwelt-Kalender"
-        },
-        "data_description": {
-          "enable_shire": "Hobbit-Kalender aus Herr der Ringe",
-          "enable_rivendell": "Elbischer Kalender aus Herr der Ringe",
-          "enable_tamriel": "Elder Scrolls Kalender mit Monden und Daedrischen Tagen",
-          "enable_discworld": "Terry Pratchetts Scheibenwelt-Kalender"
-        }
-      },
-      "category_uncategorized": {
-        "title": "Weitere Zeitsysteme",
-        "description": "Konfigurieren Sie zusätzliche Zeitsysteme.\n\nVerfügbar: {calendars}\n\nFortschritt: Schritt {progress}",
-        "data": {}
-      },
-      "confirm": {
-        "title": "Konfiguration bestätigen",
-        "description": "Bereit zur Erstellung der Konfiguration: **{name}**\n\nSie haben **{count}** Kalender ausgewählt:\n\n{summary}\n\nKlicken Sie auf Absenden, um die Konfiguration zu erstellen."
+      "disclaimer": {
+        "title": "Wichtiger Hinweis",
+        "description": "## ⚠️ Alternative Zeitsysteme - Haftungsausschluss\n\nDie von dieser Integration bereitgestellten alternativen Kalender und Zeitsysteme dienen **ausschließlich Bildungs- und Unterhaltungszwecken**.\n\n### Bitte beachten Sie:\n• Die Berechnungen sind möglicherweise nicht 100% genau\n• Einige Kalender sind fiktiv oder theoretisch\n• Historische Kalender können Variationen aufweisen\n• Zeitzonen und Umrechnungen sind Näherungswerte\n\n### Fehler gefunden?\nWenn Sie Fehler entdecken oder Verbesserungsvorschläge haben, melden Sie diese bitte in unserem GitHub-Repository:\n\n**https://github.com/Lexorius/alternative_time**\n\nMit dem Fortfahren bestätigen Sie, dass diese Zeitsysteme nicht für kritische Zeiterfassung oder offizielle Zwecke verwendet werden sollten."
       }
     },
     "error": {
-      "unknown": "Unerwarteter Fehler",
-      "no_calendars_found": "Keine Kalendermodule gefunden. Bitte überprüfen Sie das calendars-Verzeichnis.",
-      "no_systems_selected": "Bitte wählen Sie mindestens ein Zeitsystem aus"
+      "unknown": "Ein unerwarteter Fehler ist aufgetreten"
     },
     "abort": {
-      "already_configured": "Alternative Zeitsysteme sind bereits konfiguriert",
-      "user_cancelled": "Konfiguration vom Benutzer abgebrochen"
+      "no_calendars_found": "Keine Kalender-Implementierungen gefunden. Bitte überprüfen Sie die Installation."
     }
   },
   "options": {
     "step": {
       "init": {
         "title": "Alternative Zeitsysteme Optionen",
-        "description": "Ändern Sie Ihre Zeitsystem-Konfiguration.\n\nAktivieren oder deaktivieren Sie Kalender und passen Sie deren Einstellungen an.",
-        "data": {}
+        "description": "Der Options-Flow ist noch nicht implementiert. Bitte löschen und erstellen Sie die Integration neu, um Einstellungen zu ändern."
       }
-    },
-    "error": {
-      "no_systems_selected": "Mindestens ein Zeitsystem muss aktiviert bleiben"
     }
   }
 }

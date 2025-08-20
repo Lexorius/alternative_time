@@ -2,77 +2,48 @@
   "config": {
     "step": {
       "user": {
-        "title": "Alternative Time Systems v2.5",
-        "description": "Welcome to Alternative Time Systems!\n\nThis integration will automatically discover all available calendar modules.\n\nOn the next screens, you can select which time systems to enable, organized by category.",
+        "title": "Alternative Time Systems",
+        "description": "Welcome to Alternative Time Systems!\n\nThis integration provides various alternative calendars and time systems for educational and entertainment purposes.",
         "data": {
-          "name": "Configuration name"
+          "name": "Integration Name"
         }
       },
-      "category_technical": {
-        "title": "Technical & Modern Time Systems",
-        "description": "Configure technical and computer-based time systems.\n\nAvailable: {calendars}\n\nProgress: Step {progress}",
-        "data": {}
+      "select_categories": {
+        "title": "Select Calendar Categories",
+        "description": "Choose which categories of calendars you want to configure:\n\n{details}",
+        "data": {
+          "categories": "Categories to include"
+        }
       },
-      "category_historical": {
-        "title": "Historical Calendar Systems",
-        "description": "Configure ancient and historical calendars.\n\nAvailable: {calendars}\n\nProgress: Step {progress}",
-        "data": {}
+      "select_calendars_by_category": {
+        "title": "Select {category} Calendars",
+        "description": "Choose calendars from the {category} category:\n\n{details}",
+        "data": {
+          "calendars": "Calendars to enable"
+        }
       },
-      "category_cultural": {
-        "title": "Cultural Calendar Systems",
-        "description": "Configure regional and cultural calendars.\n\nAvailable: {calendars}\n\nProgress: Step {progress}",
-        "data": {}
+      "plugin_options": {
+        "title": "Configure Calendar",
+        "description": "Configure options for the selected calendar"
       },
-      "category_military": {
-        "title": "Military Time Systems",
-        "description": "Configure military and tactical time formats.\n\nAvailable: {calendars}\n\nProgress: Step {progress}",
-        "data": {}
-      },
-      "category_space": {
-        "title": "Space & Astronomical Time Systems",
-        "description": "Configure Mars and space-related calendars.\n\nAvailable: {calendars}\n\nProgress: Step {progress}",
-        "data": {}
-      },
-      "category_scifi": {
-        "title": "Science Fiction Time Systems",
-        "description": "Configure time systems from science fiction universes.\n\nAvailable: {calendars}\n\nProgress: Step {progress}",
-        "data": {}
-      },
-      "category_fantasy": {
-        "title": "Fantasy World Calendars",
-        "description": "Configure calendars from fantasy worlds and games.\n\nAvailable: {calendars}\n\nProgress: Step {progress}",
-        "data": {}
-      },
-      "category_uncategorized": {
-        "title": "Other Time Systems",
-        "description": "Configure additional time systems.\n\nAvailable: {calendars}\n\nProgress: Step {progress}",
-        "data": {}
-      },
-      "confirm": {
-        "title": "Confirm Configuration",
-        "description": "Ready to create configuration: **{name}**\n\nYou have selected **{count}** calendar(s):\n\n{summary}\n\nClick Submit to create the configuration."
+      "disclaimer": {
+        "title": "Important Notice",
+        "description": "## ⚠️ Alternative Time Systems - Disclaimer\n\nThe alternative calendars and time systems provided by this integration are for **educational and entertainment purposes only**.\n\n### Please note:\n• The calculations might not be 100% accurate\n• Some calendars are fictional or theoretical\n• Historical calendars may have variations\n• Time zones and conversions are approximations\n\n### Found an issue?\nIf you discover any errors or have suggestions for improvements, please report them on our GitHub repository:\n\n**https://github.com/Lexorius/alternative_time**\n\nBy continuing, you acknowledge that these time systems should not be used for critical time-keeping or official purposes."
       }
     },
     "error": {
-      "unknown": "Unexpected error",
-      "no_calendars_found": "No calendar modules were discovered. Please check the calendars directory.",
-      "no_systems_selected": "Please select at least one time system"
+      "unknown": "Unexpected error occurred"
     },
     "abort": {
-      "already_configured": "Alternative Time is already configured",
-      "user_cancelled": "Configuration cancelled by user"
+      "no_calendars_found": "No calendar implementations found. Please check the installation."
     }
   },
   "options": {
     "step": {
       "init": {
         "title": "Alternative Time Options",
-        "description": "Modify your time system configuration.\n\nEnable or disable calendars and adjust their settings.",
-        "data": {}
+        "description": "Options flow is not yet implemented. Please delete and recreate the integration to change settings."
       }
-    },
-    "error": {
-      "no_systems_selected": "At least one time system must remain enabled"
     }
   }
 }
