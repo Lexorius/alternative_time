@@ -76,24 +76,34 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return ordered
 
     def _lcal(self, info: dict, key: str, default: str = "") -> str:
-        """Get localized value from calendar info."""
-        value = info.get(key, default)
-        if isinstance(value, dict):
-            # Get user's language from Home Assistant
-            lang = getattr(self.hass.config, "language", "en")
-            # Try exact match first
-            if lang in value:
-                return value[lang]
-            # Try primary language tag (e.g., "de" from "de-DE")
-            primary = lang.split("-")[0] if "-" in lang else lang.split("_")[0] if "_" in lang else lang
-            if primary in value:
-                return value[primary]
-            # Fallback to English
-            if "en" in value:
-                return value["en"]
-            # Return first available value
-            return next(iter(value.values()), default) if value else default
-        return str(value) if value else default
+        """Get localized value from calendar info or option metadata."""
+        # Handle both direct values and nested dictionaries
+        if isinstance(info, dict) and key in info:
+            value = info[key]
+        else:
+            value = info if isinstance(info, dict) else default
+            
+        if not isinstance(value, dict):
+            return str(value) if value else default
+        
+        # Get user's language from Home Assistant
+        lang = getattr(self.hass.config, "language", "en")
+        
+        # Try exact match first
+        if lang in value:
+            return value[lang]
+        
+        # Try primary language tag (e.g., "de" from "de-DE")
+        primary = lang.split("-")[0] if "-" in lang else lang.split("_")[0] if "_" in lang else lang
+        if primary in value:
+            return value[primary]
+        
+        # Fallback to English
+        if "en" in value:
+            return value["en"]
+        
+        # Return first available value
+        return next(iter(value.values()), default) if value else default
 
     def _details_text(self, calendars: dict) -> str:
         """Create a detailed text about discovered calendars."""
@@ -272,6 +282,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_plugin_options()
             
             # No options to configure, go to disclaimer
+            _LOGGER.info("No plugin options to configure, moving to disclaimer")
             return await self.async_step_disclaimer()
         
         # Get current category
@@ -352,34 +363,36 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Iterate selected calendars that expose CALENDAR_INFO['config_options'] and collect values."""
         
         # Process user input from previous form
-        if user_input is not None and self._option_index > 0:
-            # Store data from the previous calendar
-            prev_cid = self._option_calendars[self._option_index - 1]
-            normalized = {}
-            
-            _LOGGER.debug(f"Processing options for {prev_cid}, raw input: {user_input}")
-            
-            # Get the key mapping for this calendar
-            key_mapping = self._option_key_mapping.get(prev_cid, {})
-            
-            # Process each input value (keys don't have prefix anymore)
-            for input_key, value in user_input.items():
-                # Look up the actual config key from our mapping
-                if input_key in key_mapping:
-                    actual_key = key_mapping[input_key]
-                    normalized[actual_key] = value
-                    _LOGGER.debug(f"Mapped '{input_key}' to '{actual_key}' with value: {value}")
-                else:
-                    # Fallback: use as is (shouldn't happen with proper mapping)
-                    normalized[input_key] = value
-                    _LOGGER.warning(f"No mapping found for '{input_key}', using as-is")
-            
-            self._selected_options[prev_cid] = normalized
-            _LOGGER.info(f"Stored options for {prev_cid}: {normalized}")
+        if user_input is not None:
+            if self._option_index > 0:
+                # Store data from the previous calendar
+                prev_cid = self._option_calendars[self._option_index - 1]
+                normalized = {}
+                
+                _LOGGER.debug(f"Processing options for {prev_cid}, raw input: {user_input}")
+                
+                # Get the key mapping for this calendar
+                key_mapping = self._option_key_mapping.get(prev_cid, {})
+                
+                # Process each input value (keys don't have prefix anymore)
+                for input_key, value in user_input.items():
+                    # Look up the actual config key from our mapping
+                    if input_key in key_mapping:
+                        actual_key = key_mapping[input_key]
+                        normalized[actual_key] = value
+                        _LOGGER.debug(f"Mapped '{input_key}' to '{actual_key}' with value: {value}")
+                    else:
+                        # Fallback: use as is (shouldn't happen with proper mapping)
+                        normalized[input_key] = value
+                        _LOGGER.warning(f"No mapping found for '{input_key}', using as-is")
+                
+                self._selected_options[prev_cid] = normalized
+                _LOGGER.info(f"Stored options for {prev_cid}: {normalized}")
 
         # Check if we're done with all calendars
         if self._option_index >= len(self._option_calendars):
             # Go to disclaimer before creating entry
+            _LOGGER.info("All plugin options processed, moving to disclaimer")
             return await self.async_step_disclaimer()
 
         # Get current calendar to configure
@@ -393,9 +406,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._option_index += 1
             return await self.async_step_plugin_options()
         
-        # Get calendar name for display
-        name = self._lcal(info, "name", cid)
-        desc = self._lcal(info, "description", "")
+        # Get calendar name and description for display
+        if "name" in info:
+            name = self._lcal(info["name"], None, cid)
+        else:
+            name = cid
+            
+        if "description" in info:
+            desc = self._lcal(info["description"], None, "")
+        else:
+            desc = ""
         
         _LOGGER.debug(f"Configuring options for calendar {cid} ({name}), options: {list(opts.keys())}")
         
@@ -412,8 +432,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 typ = meta.get("type", "string")
                 default = meta.get("default")
-                option_desc = self._lcal(meta, "description", "")
-                label = self._lcal(meta, "label", key)
+                
+                # Get localized descriptions and labels
+                if "description" in meta:
+                    option_desc = self._lcal(meta["description"], None, "")
+                else:
+                    option_desc = ""
+                    
+                if "label" in meta:
+                    label = self._lcal(meta["label"], None, key)
+                else:
+                    label = key
                 
                 # Store mapping: displayed label -> actual config key
                 current_mapping[label] = key
@@ -539,6 +568,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Show disclaimer before creating the entry."""
+        
+        _LOGGER.info("Showing disclaimer step")
         
         if user_input is not None:
             # User acknowledged disclaimer, create entry
