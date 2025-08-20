@@ -1,15 +1,17 @@
 {
   "domain": "alternative_time",
   "name": "Alternative Time Systems",
-  "codeowners": ["@Lexorius"],
+  "codeowners": [
+    "@Lexorius"
+  ],
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://github.com/Lexorius/alternative_time",
   "iot_class": "calculated",
   "issue_tracker": "https://github.com/Lexorius/alternative_time/issues",
-    "requirements": [
+  "requirements": [
     "pytz>=2023.3",
     "LunarCalendar>=0.0.9"
   ],
-  "version": "2.5.0.23"
+  "version": "v2.5.0.28"
 }
