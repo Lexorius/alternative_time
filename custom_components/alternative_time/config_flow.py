@@ -271,17 +271,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if self._option_calendars:
                 return await self.async_step_plugin_options()
             
-            # No options to configure, create entry
-            data = {
-                **self._user_input,
-                "calendars": self._selected_calendars,
-                "groups": self._build_groups(self._selected_calendars, self._discovered_calendars),
-                "plugin_options": {}
-            }
-            return self.async_create_entry(
-                title=self._user_input.get("name", "Alternative Time"),
-                data=data
-            )
+            # No options to configure, go to disclaimer
+            return await self.async_step_disclaimer()
         
         # Get current category
         current_cat = self._category_order[self._category_index]
@@ -371,41 +362,25 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Get the key mapping for this calendar
             key_mapping = self._option_key_mapping.get(prev_cid, {})
             
-            # Process each input value
+            # Process each input value (keys don't have prefix anymore)
             for input_key, value in user_input.items():
-                # Remove the prefix if present
-                if isinstance(input_key, str) and "] " in input_key:
-                    display_label = input_key.split("] ", 1)[1]
-                else:
-                    display_label = input_key
-                
                 # Look up the actual config key from our mapping
-                if display_label in key_mapping:
-                    actual_key = key_mapping[display_label]
+                if input_key in key_mapping:
+                    actual_key = key_mapping[input_key]
                     normalized[actual_key] = value
-                    _LOGGER.debug(f"Mapped '{display_label}' to '{actual_key}' with value: {value}")
+                    _LOGGER.debug(f"Mapped '{input_key}' to '{actual_key}' with value: {value}")
                 else:
                     # Fallback: use as is (shouldn't happen with proper mapping)
-                    normalized[display_label] = value
-                    _LOGGER.warning(f"No mapping found for '{display_label}', using as-is")
+                    normalized[input_key] = value
+                    _LOGGER.warning(f"No mapping found for '{input_key}', using as-is")
             
             self._selected_options[prev_cid] = normalized
             _LOGGER.info(f"Stored options for {prev_cid}: {normalized}")
 
         # Check if we're done with all calendars
         if self._option_index >= len(self._option_calendars):
-            # Create final data
-            data = {
-                **self._user_input,
-                "calendars": self._selected_calendars,
-                "groups": self._build_groups(self._selected_calendars, self._discovered_calendars),
-                "plugin_options": self._selected_options
-            }
-            _LOGGER.info(f"Creating entry with plugin_options: {self._selected_options}")
-            return self.async_create_entry(
-                title=self._user_input.get("name", "Alternative Time"),
-                data=data
-            )
+            # Go to disclaimer before creating entry
+            return await self.async_step_disclaimer()
 
         # Get current calendar to configure
         cid = self._option_calendars[self._option_index]
@@ -420,12 +395,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         
         # Get calendar name for display
         name = self._lcal(info, "name", cid)
+        desc = self._lcal(info, "description", "")
+        
         _LOGGER.debug(f"Configuring options for calendar {cid} ({name}), options: {list(opts.keys())}")
         
         # Create mapping for this calendar's options
         current_mapping = {}
         
-        # Build schema dynamically
+        # Build schema dynamically (without prefix in keys)
         schema_dict = {}
         for key, meta in opts.items():
             if not isinstance(meta, dict):
@@ -435,12 +412,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 typ = meta.get("type", "string")
                 default = meta.get("default")
-                desc = self._lcal(meta, "description", "")
+                option_desc = self._lcal(meta, "description", "")
                 label = self._lcal(meta, "label", key)
-                
-                # Create display key with prefix
-                pretty_prefix = f"[{name}] "
-                pretty_key = pretty_prefix + label
                 
                 # Store mapping: displayed label -> actual config key
                 current_mapping[label] = key
@@ -474,7 +447,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         
                         _LOGGER.debug(f"Creating SelectSelector for {key} with {len(options)} options")
                         
-                        schema_dict[vol.Optional(pretty_key, default=default_str)] = SelectSelector(
+                        schema_dict[vol.Optional(label, default=default_str, description=option_desc)] = SelectSelector(
                             SelectSelectorConfig(
                                 options=options,
                                 multiple=False,
@@ -484,14 +457,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     else:
                         # Fallback to text if no options
                         _LOGGER.warning(f"No options for select field {key} in {cid}, using text")
-                        schema_dict[vol.Optional(pretty_key, default=str(default) if default is not None else "")] = TextSelector(
+                        schema_dict[vol.Optional(label, default=str(default) if default is not None else "", description=option_desc)] = TextSelector(
                             TextSelectorConfig(type=TextSelectorType.TEXT)
                         )
                     continue  # Skip the rest of type handling
                 
                 # BOOLEAN type
                 if typ == "boolean":
-                    schema_dict[vol.Optional(pretty_key, default=bool(default) if default is not None else False)] = BooleanSelector()
+                    schema_dict[vol.Optional(label, default=bool(default) if default is not None else False, description=option_desc)] = BooleanSelector()
                     
                 # NUMBER types
                 elif typ in ("number", "integer", "float"):
@@ -512,18 +485,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     if max_val is not None:
                         config["max"] = float(max_val)
                     
-                    schema_dict[vol.Optional(pretty_key, default=default_num)] = NumberSelector(config)
+                    schema_dict[vol.Optional(label, default=default_num, description=option_desc)] = NumberSelector(config)
                         
                 # TEXT/STRING types
                 elif typ in ("string", "text"):
-                    schema_dict[vol.Optional(pretty_key, default=str(default) if default is not None else "")] = TextSelector(
+                    schema_dict[vol.Optional(label, default=str(default) if default is not None else "", description=option_desc)] = TextSelector(
                         TextSelectorConfig(type=TextSelectorType.TEXT)
                     )
                     
                 else:
                     # Fallback for unknown types
                     _LOGGER.warning(f"Unknown config option type '{typ}' for {key} in {cid}, using text")
-                    schema_dict[vol.Optional(pretty_key, default=str(default) if default is not None else "")] = TextSelector(
+                    schema_dict[vol.Optional(label, default=str(default) if default is not None else "", description=option_desc)] = TextSelector(
                         TextSelectorConfig(type=TextSelectorType.TEXT)
                     )
                     
@@ -546,13 +519,107 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         
         schema = vol.Schema(schema_dict)
         
+        # Build description with calendar name as header
+        header_text = f"# ⚙️ {name}\n\n"
+        if desc:
+            header_text += f"_{desc}_\n\n"
+        header_text += "Configure the options for this calendar:"
+        
         return self.async_show_form(
             step_id="plugin_options",
             data_schema=schema,
             description_placeholders={
                 "plugin": name,
-                "details": self._details_text({cid: info}),
-                "description": f"Configure options for {name}"
+                "details": header_text,
+                "description": f"Options for {name}"
+            }
+        )
+
+    async def async_step_disclaimer(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Show disclaimer before creating the entry."""
+        
+        if user_input is not None:
+            # User acknowledged disclaimer, create entry
+            data = {
+                **self._user_input,
+                "calendars": self._selected_calendars,
+                "groups": self._build_groups(self._selected_calendars, self._discovered_calendars),
+                "plugin_options": self._selected_options
+            }
+            _LOGGER.info(f"Creating entry with plugin_options: {self._selected_options}")
+            return self.async_create_entry(
+                title=self._user_input.get("name", "Alternative Time"),
+                data=data
+            )
+        
+        # Get language
+        lang = getattr(self.hass.config, "language", "en")
+        primary = lang.split("-")[0] if "-" in lang else lang.split("_")[0] if "_" in lang else lang
+        
+        # Disclaimer text in multiple languages
+        disclaimers = {
+            "en": {
+                "title": "⚠️ Important Notice",
+                "content": (
+                    "## Alternative Time Systems - Disclaimer\n\n"
+                    "The alternative calendars and time systems provided by this integration are for "
+                    "**educational and entertainment purposes only**.\n\n"
+                    "### Please note:\n"
+                    "• The calculations might not be 100% accurate\n"
+                    "• Some calendars are fictional or theoretical\n"
+                    "• Historical calendars may have variations\n"
+                    "• Time zones and conversions are approximations\n\n"
+                    "### Found an issue?\n"
+                    "If you discover any errors or have suggestions for improvements, "
+                    "please report them on our GitHub repository:\n\n"
+                    "**https://github.com/Lexorius/alternative_time**\n\n"
+                    "By continuing, you acknowledge that these time systems should not be used "
+                    "for critical time-keeping or official purposes."
+                ),
+                "button": "I understand and accept"
+            },
+            "de": {
+                "title": "⚠️ Wichtiger Hinweis",
+                "content": (
+                    "## Alternative Zeitsysteme - Haftungsausschluss\n\n"
+                    "Die von dieser Integration bereitgestellten alternativen Kalender und Zeitsysteme dienen "
+                    "**ausschließlich Bildungs- und Unterhaltungszwecken**.\n\n"
+                    "### Bitte beachten Sie:\n"
+                    "• Die Berechnungen sind möglicherweise nicht 100% genau\n"
+                    "• Einige Kalender sind fiktiv oder theoretisch\n"
+                    "• Historische Kalender können Variationen aufweisen\n"
+                    "• Zeitzonen und Umrechnungen sind Näherungswerte\n\n"
+                    "### Fehler gefunden?\n"
+                    "Wenn Sie Fehler entdecken oder Verbesserungsvorschläge haben, "
+                    "melden Sie diese bitte in unserem GitHub-Repository:\n\n"
+                    "**https://github.com/Lexorius/alternative_time**\n\n"
+                    "Mit dem Fortfahren bestätigen Sie, dass diese Zeitsysteme nicht für "
+                    "kritische Zeiterfassung oder offizielle Zwecke verwendet werden sollten."
+                ),
+                "button": "Ich verstehe und akzeptiere"
+            }
+        }
+        
+        # Get appropriate disclaimer
+        if primary in disclaimers:
+            disclaimer = disclaimers[primary]
+        elif lang in disclaimers:
+            disclaimer = disclaimers[lang]
+        else:
+            disclaimer = disclaimers["en"]
+        
+        # Simple schema with just a confirmation
+        schema = vol.Schema({})
+        
+        return self.async_show_form(
+            step_id="disclaimer",
+            data_schema=schema,
+            description_placeholders={
+                "title": disclaimer["title"],
+                "content": disclaimer["content"],
+                "button_text": disclaimer["button"]
             }
         )
 
