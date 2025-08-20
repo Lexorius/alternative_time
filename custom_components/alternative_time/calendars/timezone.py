@@ -1,4 +1,4 @@
-"""Timezone sensor implementation - Version 2.5."""
+"""Timezone sensor implementation - Version 2.5.1 - Fixed constructor."""
 from __future__ import annotations
 
 from datetime import datetime
@@ -27,7 +27,7 @@ UPDATE_INTERVAL = 1
 # Complete calendar information for auto-discovery
 CALENDAR_INFO = {
     "id": "timezone",
-    "version": "2.5.0",
+    "version": "2.5.1",
     "icon": "mdi:clock-time-four-outline",
     "category": "technical",
     "accuracy": "precise",
@@ -63,7 +63,7 @@ CALENDAR_INFO = {
         "ko": "전 세계 다양한 시간대의 시간 표시"
     },
     
-    # Timezone data
+    # Timezone data for dropdown
     "timezone_data": {
         "regions": {
             "Americas": [
@@ -117,30 +117,6 @@ CALENDAR_INFO = {
     # Additional metadata
     "reference_url": "https://en.wikipedia.org/wiki/Time_zone",
     "documentation_url": "https://www.timeanddate.com/time/map/",
-    "origin": "IANA Time Zone Database",
-    "created_by": "International standards",
-    
-    # Example format
-    "example": "14:30:00 CET (UTC+1)",
-    "example_meaning": "2:30 PM Central European Time",
-    
-    # Related calendars
-    "related": ["unix", "julian", "gregorian"],
-    
-    # Tags for searching and filtering
-    "tags": [
-        "timezone", "world", "clock", "time", "global",
-        "utc", "gmt", "dst", "international", "travel"
-    ],
-    
-    # Special features
-    "features": {
-        "supports_dst": True,
-        "supports_abbreviations": True,
-        "supports_offsets": True,
-        "precision": "second",
-        "real_time": True
-    },
     
     # Configuration options
     "config_options": {
@@ -235,49 +211,53 @@ class TimezoneSensor(AlternativeTimeSensorBase):
     # Class-level update interval
     UPDATE_INTERVAL = 1  # Update every second
     
-    def __init__(self, base_name: str, timezone: str, hass: HomeAssistant) -> None:
-        """Initialize the timezone sensor."""
+    def __init__(self, base_name: str, hass: HomeAssistant) -> None:
+        """Initialize the timezone sensor with standard 2-parameter signature."""
         super().__init__(base_name, hass)
         
         # Store CALENDAR_INFO as instance variable
         self._calendar_info = CALENDAR_INFO
         
-        self._timezone_str = timezone
-        
-        # WICHTIG: Timezone wird NICHT im __init__ geladen (blocking call)
-        # Wird stattdessen lazy beim ersten Update oder in async_added_to_hass geladen
-        self._timezone = None
-        self._timezone_initialized = False
-        
         # Get translated name from metadata
         calendar_name = self._translate('name', 'World Timezones')
         
+        # Defaults - werden in update() überschrieben
+        self._timezone_str = "UTC"
+        self._show_offset = True
+        self._show_dst = True
+        self._format_24h = True
+        self._show_date = False
+        
         # Set sensor attributes
-        self._attr_name = f"{base_name} {calendar_name} ({timezone})"
-        self._attr_unique_id = f"{base_name}_timezone_{timezone.replace('/', '_')}"
+        self._attr_name = f"{base_name} {calendar_name}"
+        self._attr_unique_id = f"{base_name}_timezone"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:clock-time-four-outline")
         
-        # Get plugin options
-        options = self.get_plugin_options()
-        
-        # Configuration options with defaults
-        self._show_offset = options.get("show_offset", True)
-        self._show_dst = options.get("show_dst", True)
-        self._format_24h = options.get("format_24h", True)
-        self._show_date = options.get("show_date", False)
+        # Timezone wird lazy geladen
+        self._timezone = None
+        self._timezone_initialized = False
         
         # Timezone data
         self._timezone_data = CALENDAR_INFO["timezone_data"]
         
         # Initialize state
-        self._state = None
+        self._state = "Initializing..."
         self._tz_info = {}
+        
+        # Flag für erstes Update
+        self._first_update = True
         
         _LOGGER.debug(f"Initialized Timezone sensor: {self._attr_name}")
     
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
+        
+        # Lade Optionen beim Hinzufügen
+        options = self.get_plugin_options()
+        if options:
+            _LOGGER.debug(f"Timezone sensor loaded options: {options}")
+            self._timezone_str = options.get("timezone", "UTC")
         
         # Initialisiere Timezone async
         if HAS_PYTZ and not self._timezone_initialized:
@@ -287,10 +267,21 @@ class TimezoneSensor(AlternativeTimeSensorBase):
                     pytz.timezone, self._timezone_str
                 )
                 self._timezone_initialized = True
-                _LOGGER.debug(f"Loaded timezone {self._timezone_str}")
+                _LOGGER.info(f"Loaded timezone: {self._timezone_str}")
+                
+                # Update Name mit Timezone
+                calendar_name = self._translate('name', 'World Timezones')
+                self._attr_name = f"{self._base_name} {calendar_name} ({self._timezone_str})"
+                
             except Exception as e:
-                _LOGGER.warning(f"Could not load timezone {self._timezone_str}: {e}")
-                self._timezone = None
+                _LOGGER.warning(f"Could not load timezone {self._timezone_str}: {e}, using UTC")
+                try:
+                    self._timezone = await self._hass.async_add_executor_job(
+                        pytz.timezone, "UTC"
+                    )
+                    self._timezone_str = "UTC"
+                except:
+                    self._timezone = None
                 self._timezone_initialized = True  # Prevent retry
     
     @property
@@ -316,6 +307,14 @@ class TimezoneSensor(AlternativeTimeSensorBase):
             # Add timezone database info
             attrs["timezone_id"] = self._timezone_str
             attrs["database"] = "IANA tzdata"
+            
+            # Add config info
+            attrs["config"] = {
+                "show_offset": self._show_offset,
+                "show_dst": self._show_dst,
+                "format_24h": self._format_24h,
+                "show_date": self._show_date
+            }
         
         return attrs
     
@@ -398,12 +397,44 @@ class TimezoneSensor(AlternativeTimeSensorBase):
     
     def update(self) -> None:
         """Update the sensor."""
-        if HAS_PYTZ and self._timezone and self._timezone_initialized:
+        # Lade Optionen bei jedem Update
+        options = self.get_plugin_options()
+        
+        # Debug beim ersten Update
+        if self._first_update:
+            if options:
+                _LOGGER.info(f"Timezone sensor options: {options}")
+            else:
+                _LOGGER.debug("Timezone sensor using defaults")
+            self._first_update = False
+        
+        # Aktualisiere Konfiguration
+        new_timezone = options.get("timezone", "UTC")
+        self._show_offset = bool(options.get("show_offset", True))
+        self._show_dst = bool(options.get("show_dst", True))
+        self._format_24h = bool(options.get("format_24h", True))
+        self._show_date = bool(options.get("show_date", False))
+        
+        # Prüfe ob Timezone geändert wurde
+        if new_timezone != self._timezone_str and HAS_PYTZ:
+            _LOGGER.info(f"Timezone changed from {self._timezone_str} to {new_timezone}")
+            self._timezone_str = new_timezone
+            try:
+                self._timezone = pytz.timezone(self._timezone_str)
+                # Update Name
+                calendar_name = self._translate('name', 'World Timezones')
+                self._attr_name = f"{self._base_name} {calendar_name} ({self._timezone_str})"
+            except Exception as e:
+                _LOGGER.error(f"Failed to load timezone {self._timezone_str}: {e}")
+                self._timezone = None
+        
+        # Update state
+        if HAS_PYTZ and self._timezone:
             now_tz = datetime.now(self._timezone)
             self._tz_info = self._calculate_timezone_info(now_tz)
             self._state = self._tz_info["full_display"]
         else:
-            # Fallback without pytz or before timezone is loaded
+            # Fallback without pytz
             now = datetime.now()
             self._state = now.strftime("%H:%M:%S") + f" {self._timezone_str}"
             self._tz_info = {
