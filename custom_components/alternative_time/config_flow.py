@@ -60,6 +60,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._option_calendars: List[str] = []
         self._option_index: int = 0
         self._user_input: Dict[str, Any] = {}
+        # Store mapping between displayed labels and actual keys for each calendar
+        self._option_key_mapping: Dict[str, Dict[str, str]] = {}
 
     def _categories(self) -> List[str]:
         """Get list of available categories from discovered calendars."""
@@ -366,13 +368,26 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             
             _LOGGER.debug(f"Processing options for {prev_cid}, raw input: {user_input}")
             
-            # Remove prefix from keys
-            for k, v in user_input.items():
-                if isinstance(k, str) and "] " in k:
-                    raw_key = k.split("] ", 1)[1]
+            # Get the key mapping for this calendar
+            key_mapping = self._option_key_mapping.get(prev_cid, {})
+            
+            # Process each input value
+            for input_key, value in user_input.items():
+                # Remove the prefix if present
+                if isinstance(input_key, str) and "] " in input_key:
+                    display_label = input_key.split("] ", 1)[1]
                 else:
-                    raw_key = k
-                normalized[raw_key] = v
+                    display_label = input_key
+                
+                # Look up the actual config key from our mapping
+                if display_label in key_mapping:
+                    actual_key = key_mapping[display_label]
+                    normalized[actual_key] = value
+                    _LOGGER.debug(f"Mapped '{display_label}' to '{actual_key}' with value: {value}")
+                else:
+                    # Fallback: use as is (shouldn't happen with proper mapping)
+                    normalized[display_label] = value
+                    _LOGGER.warning(f"No mapping found for '{display_label}', using as-is")
             
             self._selected_options[prev_cid] = normalized
             _LOGGER.info(f"Stored options for {prev_cid}: {normalized}")
@@ -407,6 +422,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         name = self._lcal(info, "name", cid)
         _LOGGER.debug(f"Configuring options for calendar {cid} ({name}), options: {list(opts.keys())}")
         
+        # Create mapping for this calendar's options
+        current_mapping = {}
+        
         # Build schema dynamically
         schema_dict = {}
         for key, meta in opts.items():
@@ -420,10 +438,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 desc = self._lcal(meta, "description", "")
                 label = self._lcal(meta, "label", key)
                 
+                # Create display key with prefix
                 pretty_prefix = f"[{name}] "
                 pretty_key = pretty_prefix + label
                 
-                _LOGGER.debug(f"Building field {key}: type={typ}, default={default}")
+                # Store mapping: displayed label -> actual config key
+                current_mapping[label] = key
+                
+                _LOGGER.debug(f"Building field {key}: type={typ}, default={default}, label={label}")
                 
                 # SPECIAL HANDLING FOR TIMEZONE - force it to be a dropdown
                 if key.lower() == "timezone" or typ == "select":
@@ -508,6 +530,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except Exception as e:
                 _LOGGER.error(f"Error building schema for {key} in {cid}: {e}", exc_info=True)
                 continue
+        
+        # Store the mapping for this calendar
+        self._option_key_mapping[cid] = current_mapping
+        _LOGGER.debug(f"Key mapping for {cid}: {current_mapping}")
         
         # If no valid options, skip to next
         if not schema_dict:
