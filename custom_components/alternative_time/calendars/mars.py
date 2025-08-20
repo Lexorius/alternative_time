@@ -570,3 +570,4 @@ class MarsTimeSensor(AlternativeTimeSensorBase):
         self._state = f"{self._mars_time_info['local_time']} {self._mars_timezone}"
 
         _LOGGER.debug(f"Updated Mars Time to {self._state}")
+    
