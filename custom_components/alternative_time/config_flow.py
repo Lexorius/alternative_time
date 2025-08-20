@@ -18,7 +18,7 @@ from .const import DOMAIN
 
 # Fixed category order for the wizard
 FIXED_CATEGORY_ORDER = [
-    'technical', 'historical', 'cultural', 'military', 'space', 'fantasy', 'scifi', 'religion', 'uncategorized'
+    'technical', 'historical', 'cultural', 'military', 'space', 'fantasy', 'scifi', 'religion','gaming', 'uncategorized'
 ]
 
 _LOGGER = logging.getLogger(__name__)
