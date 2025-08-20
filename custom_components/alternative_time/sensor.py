@@ -114,10 +114,10 @@ async def async_setup_entry(
                 _LOGGER.error(f"No sensor class found in calendar module: {calendar_id}")
                 continue
             
-            # Create sensor instance - store calendar_id for later lookup
+            # Create sensor instance - ALLE Sensoren bekommen nur (base_name, hass)
             sensor = sensor_class(name, hass)
             
-            # WICHTIG: Setze die IDs VOR dem Aufruf von get_plugin_options
+            # WICHTIG: Setze die IDs SOFORT nach der Erstellung
             sensor._calendar_id = calendar_id  # Store for plugin options lookup
             sensor._config_entry_id = entry_id  # Store entry ID
             

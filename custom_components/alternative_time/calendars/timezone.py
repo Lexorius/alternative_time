@@ -443,4 +443,4 @@ class TimezoneSensor(AlternativeTimeSensorBase):
                 "error": "pytz not available or timezone not loaded"
             }
         
-        _LOGGER.debug(f"Updated Timezone to {self._state}")
+        _LOGGER.debug(f"Updated Timezone to {self._state}") 
