@@ -1,4 +1,4 @@
-"""Timezone sensor implementation - Version 2.5.1 - Fixed constructor."""
+"""Timezone sensor implementation - Version 2.5.2 - Fully fixed."""
 from __future__ import annotations
 
 from datetime import datetime
@@ -27,7 +27,7 @@ UPDATE_INTERVAL = 1
 # Complete calendar information for auto-discovery
 CALENDAR_INFO = {
     "id": "timezone",
-    "version": "2.5.1",
+    "version": "2.5.2",
     "icon": "mdi:clock-time-four-outline",
     "category": "technical",
     "accuracy": "precise",
@@ -63,7 +63,7 @@ CALENDAR_INFO = {
         "ko": "전 세계 다양한 시간대의 시간 표시"
     },
     
-    # Timezone data for dropdown
+    # Timezone data for dropdown population in config_flow
     "timezone_data": {
         "regions": {
             "Americas": [
@@ -72,9 +72,13 @@ CALENDAR_INFO = {
                 "America/Denver",
                 "America/Los_Angeles",
                 "America/Toronto",
+                "America/Vancouver",
                 "America/Mexico_City",
                 "America/Sao_Paulo",
-                "America/Buenos_Aires"
+                "America/Buenos_Aires",
+                "America/Santiago",
+                "America/Lima",
+                "America/Bogota"
             ],
             "Europe": [
                 "Europe/London",
@@ -85,7 +89,17 @@ CALENDAR_INFO = {
                 "Europe/Madrid",
                 "Europe/Amsterdam",
                 "Europe/Stockholm",
-                "Europe/Zurich"
+                "Europe/Oslo",
+                "Europe/Copenhagen",
+                "Europe/Warsaw",
+                "Europe/Vienna",
+                "Europe/Zurich",
+                "Europe/Brussels",
+                "Europe/Prague",
+                "Europe/Budapest",
+                "Europe/Athens",
+                "Europe/Istanbul",
+                "Europe/Kiev"
             ],
             "Asia": [
                 "Asia/Tokyo",
@@ -95,21 +109,52 @@ CALENDAR_INFO = {
                 "Asia/Dubai",
                 "Asia/Kolkata",
                 "Asia/Bangkok",
-                "Asia/Seoul"
+                "Asia/Seoul",
+                "Asia/Taipei",
+                "Asia/Manila",
+                "Asia/Jakarta",
+                "Asia/Ho_Chi_Minh",
+                "Asia/Kuala_Lumpur",
+                "Asia/Tel_Aviv",
+                "Asia/Riyadh",
+                "Asia/Tehran",
+                "Asia/Karachi"
             ],
             "Pacific": [
                 "Pacific/Auckland",
                 "Pacific/Sydney",
                 "Australia/Melbourne",
+                "Australia/Brisbane",
                 "Australia/Perth",
+                "Australia/Adelaide",
+                "Australia/Darwin",
                 "Pacific/Honolulu",
-                "Pacific/Fiji"
+                "Pacific/Fiji",
+                "Pacific/Guam",
+                "Pacific/Tahiti",
+                "Pacific/Noumea"
             ],
             "Africa": [
                 "Africa/Cairo",
                 "Africa/Johannesburg",
                 "Africa/Lagos",
-                "Africa/Nairobi"
+                "Africa/Nairobi",
+                "Africa/Casablanca",
+                "Africa/Algiers",
+                "Africa/Tunis",
+                "Africa/Cape_Town",
+                "Africa/Accra",
+                "Africa/Addis_Ababa"
+            ],
+            "Other": [
+                "UTC",
+                "GMT",
+                "Atlantic/Reykjavik",
+                "Atlantic/Azores",
+                "Atlantic/Cape_Verde",
+                "Indian/Mauritius",
+                "Indian/Maldives",
+                "Antarctica/McMurdo"
             ]
         }
     },
@@ -117,13 +162,37 @@ CALENDAR_INFO = {
     # Additional metadata
     "reference_url": "https://en.wikipedia.org/wiki/Time_zone",
     "documentation_url": "https://www.timeanddate.com/time/map/",
+    "origin": "IANA Time Zone Database",
+    "created_by": "International standards",
     
-    # Configuration options
+    # Example format
+    "example": "14:30:00 CET (UTC+1)",
+    "example_meaning": "2:30 PM Central European Time",
+    
+    # Related calendars
+    "related": ["unix", "julian", "gregorian"],
+    
+    # Tags for searching and filtering
+    "tags": [
+        "timezone", "world", "clock", "time", "global",
+        "utc", "gmt", "dst", "international", "travel"
+    ],
+    
+    # Special features
+    "features": {
+        "supports_dst": True,
+        "supports_abbreviations": True,
+        "supports_offsets": True,
+        "precision": "second",
+        "real_time": True
+    },
+    
+    # Configuration options for this calendar
     "config_options": {
         "timezone": {
-            "type": "select",
+            "type": "select",  # WICHTIG: Muss "select" sein für Dropdown
             "default": "UTC",
-            "options": [],  # Will be populated from timezone_data
+            "options": [],  # Wird vom config_flow aus timezone_data befüllt
             "label": {
                 "en": "Timezone",
                 "de": "Zeitzone",
@@ -256,8 +325,19 @@ class TimezoneSensor(AlternativeTimeSensorBase):
         # Lade Optionen beim Hinzufügen
         options = self.get_plugin_options()
         if options:
-            _LOGGER.debug(f"Timezone sensor loaded options: {options}")
+            _LOGGER.debug(f"Timezone sensor loaded options in async_added_to_hass: {options}")
             self._timezone_str = options.get("timezone", "UTC")
+            self._show_offset = bool(options.get("show_offset", True))
+            self._show_dst = bool(options.get("show_dst", True))
+            self._format_24h = bool(options.get("format_24h", True))
+            self._show_date = bool(options.get("show_date", False))
+        else:
+            # Versuche System-Timezone zu verwenden
+            try:
+                self._timezone_str = self._hass.config.time_zone or "UTC"
+                _LOGGER.info(f"Using system timezone: {self._timezone_str}")
+            except:
+                self._timezone_str = "UTC"
         
         # Initialisiere Timezone async
         if HAS_PYTZ and not self._timezone_initialized:
@@ -280,6 +360,7 @@ class TimezoneSensor(AlternativeTimeSensorBase):
                         pytz.timezone, "UTC"
                     )
                     self._timezone_str = "UTC"
+                    self._attr_name = f"{self._base_name} {calendar_name} (UTC)"
                 except:
                     self._timezone = None
                 self._timezone_initialized = True  # Prevent retry
@@ -310,6 +391,7 @@ class TimezoneSensor(AlternativeTimeSensorBase):
             
             # Add config info
             attrs["config"] = {
+                "timezone": self._timezone_str,
                 "show_offset": self._show_offset,
                 "show_dst": self._show_dst,
                 "format_24h": self._format_24h,
@@ -334,9 +416,16 @@ class TimezoneSensor(AlternativeTimeSensorBase):
         # Calculate UTC offset
         offset = now_tz.strftime("%z")
         if offset:
-            hours = int(offset[:3])
-            minutes = int(offset[3:]) if len(offset) > 3 else 0
-            offset_display = f"UTC{hours:+d}:{minutes:02d}" if minutes else f"UTC{hours:+d}"
+            # Parse offset string (e.g., "+0100" or "-0500")
+            sign = offset[0]
+            hours = int(offset[1:3])
+            minutes = int(offset[3:5]) if len(offset) >= 5 else 0
+            
+            # Format with sign
+            if minutes:
+                offset_display = f"UTC{sign}{hours:02d}:{minutes:02d}"
+            else:
+                offset_display = f"UTC{sign}{hours}"
         else:
             offset_display = "UTC"
         
@@ -349,17 +438,20 @@ class TimezoneSensor(AlternativeTimeSensorBase):
                 is_dst = False
         
         # Build display string
-        display_parts = [time_display, tz_abbr]
+        display_parts = []
+        
+        if self._show_date:
+            date_str = now_tz.strftime("%Y-%m-%d")
+            display_parts.append(date_str)
+        
+        display_parts.append(time_display)
+        display_parts.append(tz_abbr)
         
         if self._show_offset:
             display_parts.append(f"({offset_display})")
         
         if self._show_dst and is_dst:
             display_parts.append("DST")
-        
-        if self._show_date:
-            date_str = now_tz.strftime("%Y-%m-%d")
-            display_parts.insert(0, date_str)
         
         full_display = " ".join(display_parts)
         
@@ -390,7 +482,8 @@ class TimezoneSensor(AlternativeTimeSensorBase):
             "minute": now_tz.minute,
             "second": now_tz.second,
             "full_display": full_display,
-            "iso_format": now_tz.isoformat()
+            "iso_format": now_tz.isoformat(),
+            "unix_timestamp": int(now_tz.timestamp())
         }
         
         return result
@@ -403,36 +496,49 @@ class TimezoneSensor(AlternativeTimeSensorBase):
         # Debug beim ersten Update
         if self._first_update:
             if options:
-                _LOGGER.info(f"Timezone sensor options: {options}")
+                _LOGGER.info(f"Timezone sensor options in first update: {options}")
             else:
-                _LOGGER.debug("Timezone sensor using defaults")
+                _LOGGER.debug("Timezone sensor using defaults (no options configured)")
             self._first_update = False
         
         # Aktualisiere Konfiguration
-        new_timezone = options.get("timezone", "UTC")
-        self._show_offset = bool(options.get("show_offset", True))
-        self._show_dst = bool(options.get("show_dst", True))
-        self._format_24h = bool(options.get("format_24h", True))
-        self._show_date = bool(options.get("show_date", False))
-        
-        # Prüfe ob Timezone geändert wurde
-        if new_timezone != self._timezone_str and HAS_PYTZ:
-            _LOGGER.info(f"Timezone changed from {self._timezone_str} to {new_timezone}")
-            self._timezone_str = new_timezone
-            try:
-                self._timezone = pytz.timezone(self._timezone_str)
-                # Update Name
-                calendar_name = self._translate('name', 'World Timezones')
-                self._attr_name = f"{self._base_name} {calendar_name} ({self._timezone_str})"
-            except Exception as e:
-                _LOGGER.error(f"Failed to load timezone {self._timezone_str}: {e}")
-                self._timezone = None
+        if options:
+            new_timezone = options.get("timezone", self._timezone_str)
+            self._show_offset = bool(options.get("show_offset", True))
+            self._show_dst = bool(options.get("show_dst", True))
+            self._format_24h = bool(options.get("format_24h", True))
+            self._show_date = bool(options.get("show_date", False))
+            
+            # Prüfe ob Timezone geändert wurde
+            if new_timezone != self._timezone_str and HAS_PYTZ:
+                _LOGGER.info(f"Timezone changed from {self._timezone_str} to {new_timezone}")
+                self._timezone_str = new_timezone
+                try:
+                    self._timezone = pytz.timezone(self._timezone_str)
+                    # Update Name
+                    calendar_name = self._translate('name', 'World Timezones')
+                    self._attr_name = f"{self._base_name} {calendar_name} ({self._timezone_str})"
+                    self._timezone_initialized = True
+                except Exception as e:
+                    _LOGGER.error(f"Failed to load timezone {self._timezone_str}: {e}")
+                    # Fallback to previous or UTC
+                    if not self._timezone:
+                        try:
+                            self._timezone = pytz.timezone("UTC")
+                            self._timezone_str = "UTC"
+                        except:
+                            self._timezone = None
         
         # Update state
         if HAS_PYTZ and self._timezone:
-            now_tz = datetime.now(self._timezone)
-            self._tz_info = self._calculate_timezone_info(now_tz)
-            self._state = self._tz_info["full_display"]
+            try:
+                now_tz = datetime.now(self._timezone)
+                self._tz_info = self._calculate_timezone_info(now_tz)
+                self._state = self._tz_info["full_display"]
+            except Exception as e:
+                _LOGGER.error(f"Error calculating timezone info: {e}")
+                self._state = f"Error: {self._timezone_str}"
+                self._tz_info = {"error": str(e)}
         else:
             # Fallback without pytz
             now = datetime.now()
@@ -443,4 +549,4 @@ class TimezoneSensor(AlternativeTimeSensorBase):
                 "error": "pytz not available or timezone not loaded"
             }
         
-        _LOGGER.debug(f"Updated Timezone to {self._state}") 
+        _LOGGER.debug(f"Updated Timezone to {self._state}")
