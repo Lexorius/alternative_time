@@ -547,51 +547,57 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         
         # Store the mapping for this calendar
         self._option_key_mapping[cid] = current_mapping
-        _LOGGER.debug(f"Key mapping for {cid}: {current_mapping}")
+        _LOGGER.info(f"Key mapping for {cid}: {current_mapping}")
         
         # If no valid options, skip to next
         if not schema_dict:
-            _LOGGER.debug(f"No valid config options for {cid}, skipping")
+            _LOGGER.info(f"No valid config options for {cid}, skipping")
             self._option_index += 1
             return await self.async_step_plugin_options()
         
         # Increment index AFTER we know we're showing the form
         self._option_index += 1
+        _LOGGER.info(f"Incremented index to {self._option_index} after showing form for {cid}")
         
-        schema = vol.Schema(schema_dict)
-        
-        return self.async_show_form(
-            step_id="plugin_options",
-            data_schema=schema
-        )
+        try:
+            schema = vol.Schema(schema_dict)
+            
+            return self.async_show_form(
+                step_id="plugin_options",
+                data_schema=schema
+            )
+        except Exception as e:
+            _LOGGER.error(f"Error creating form for {cid}: {e}", exc_info=True)
+            # Skip this calendar on error
+            return await self.async_step_plugin_options()
 
     async def async_step_disclaimer(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Show disclaimer before creating the entry."""
         
-        _LOGGER.info("Showing disclaimer step")
+        _LOGGER.info("=== async_step_disclaimer called ===")
+        _LOGGER.info(f"user_input: {user_input}")
+        _LOGGER.info(f"selected_calendars: {self._selected_calendars}")
+        _LOGGER.info(f"plugin_options: {self._selected_options}")
         
         try:
             if user_input is not None:
                 # User acknowledged disclaimer, create entry
+                _LOGGER.info("User acknowledged disclaimer, creating entry")
                 data = {
                     **self._user_input,
                     "calendars": self._selected_calendars,
                     "groups": self._build_groups(self._selected_calendars, self._discovered_calendars),
                     "plugin_options": self._selected_options
                 }
-                _LOGGER.info(f"Creating entry with data: {data}")
+                _LOGGER.info(f"Creating entry with title: {self._user_input.get('name', 'Alternative Time')}")
                 return self.async_create_entry(
                     title=self._user_input.get("name", "Alternative Time"),
                     data=data
                 )
             
-            # Get language
-            lang = getattr(self.hass.config, "language", "en")
-            primary = lang.split("-")[0] if "-" in lang else lang.split("_")[0] if "_" in lang else lang
-            
-            _LOGGER.debug(f"Showing disclaimer for language: {lang} (primary: {primary})")
+            _LOGGER.info("Showing disclaimer form")
             
             # Simple schema with just a confirmation
             schema = vol.Schema({})
@@ -602,18 +608,23 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             
         except Exception as e:
-            _LOGGER.error(f"Error in disclaimer step: {e}", exc_info=True)
+            _LOGGER.error(f"Critical error in disclaimer step: {e}", exc_info=True)
             # Try to create entry without disclaimer on error
-            data = {
-                **self._user_input,
-                "calendars": self._selected_calendars,
-                "groups": self._build_groups(self._selected_calendars, self._discovered_calendars),
-                "plugin_options": self._selected_options
-            }
-            return self.async_create_entry(
-                title=self._user_input.get("name", "Alternative Time"),
-                data=data
-            )
+            _LOGGER.info("Attempting to create entry despite error")
+            try:
+                data = {
+                    "name": self._user_input.get("name", "Alternative Time"),
+                    "calendars": self._selected_calendars,
+                    "groups": self._build_groups(self._selected_calendars, self._discovered_calendars),
+                    "plugin_options": self._selected_options
+                }
+                return self.async_create_entry(
+                    title=self._user_input.get("name", "Alternative Time"),
+                    data=data
+                )
+            except Exception as e2:
+                _LOGGER.error(f"Failed to create entry: {e2}", exc_info=True)
+                return self.async_abort(reason="unknown")
         
         # Get language
         lang = getattr(self.hass.config, "language", "en")
