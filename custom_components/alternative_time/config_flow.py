@@ -552,7 +552,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # If no valid options, skip to next
         if not schema_dict:
             _LOGGER.debug(f"No valid config options for {cid}, skipping")
+            self._option_index += 1
             return await self.async_step_plugin_options()
+        
+        # Increment index AFTER we know we're showing the form
+        self._option_index += 1
         
         schema = vol.Schema(schema_dict)
         
@@ -568,15 +572,44 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         
         _LOGGER.info("Showing disclaimer step")
         
-        if user_input is not None:
-            # User acknowledged disclaimer, create entry
+        try:
+            if user_input is not None:
+                # User acknowledged disclaimer, create entry
+                data = {
+                    **self._user_input,
+                    "calendars": self._selected_calendars,
+                    "groups": self._build_groups(self._selected_calendars, self._discovered_calendars),
+                    "plugin_options": self._selected_options
+                }
+                _LOGGER.info(f"Creating entry with data: {data}")
+                return self.async_create_entry(
+                    title=self._user_input.get("name", "Alternative Time"),
+                    data=data
+                )
+            
+            # Get language
+            lang = getattr(self.hass.config, "language", "en")
+            primary = lang.split("-")[0] if "-" in lang else lang.split("_")[0] if "_" in lang else lang
+            
+            _LOGGER.debug(f"Showing disclaimer for language: {lang} (primary: {primary})")
+            
+            # Simple schema with just a confirmation
+            schema = vol.Schema({})
+            
+            return self.async_show_form(
+                step_id="disclaimer",
+                data_schema=schema
+            )
+            
+        except Exception as e:
+            _LOGGER.error(f"Error in disclaimer step: {e}", exc_info=True)
+            # Try to create entry without disclaimer on error
             data = {
                 **self._user_input,
                 "calendars": self._selected_calendars,
                 "groups": self._build_groups(self._selected_calendars, self._discovered_calendars),
                 "plugin_options": self._selected_options
             }
-            _LOGGER.info(f"Creating entry with plugin_options: {self._selected_options}")
             return self.async_create_entry(
                 title=self._user_input.get("name", "Alternative Time"),
                 data=data
@@ -772,4 +805,4 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             description_placeholders={
                 "info": "Options flow is not yet implemented. Please delete and recreate the integration to change settings."
             }
-        )   
+        )
