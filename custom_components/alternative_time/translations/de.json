@@ -28,7 +28,10 @@
       },
       "disclaimer": {
         "title": "Wichtiger Hinweis",
-        "description": "## ⚠️ Alternative Zeitsysteme - Haftungsausschluss\n\nDie von dieser Integration bereitgestellten alternativen Kalender und Zeitsysteme dienen **ausschließlich Bildungs- und Unterhaltungszwecken**.\n\n### Bitte beachten Sie:\n• Die Berechnungen sind möglicherweise nicht 100% genau\n• Einige Kalender sind fiktiv oder theoretisch\n• Historische Kalender können Variationen aufweisen\n• Zeitzonen und Umrechnungen sind Näherungswerte\n\n### Fehler gefunden?\nWenn Sie Fehler entdecken oder Verbesserungsvorschläge haben, melden Sie diese bitte in unserem GitHub-Repository:\n\n**https://github.com/Lexorius/alternative_time**\n\nMit dem Fortfahren bestätigen Sie, dass diese Zeitsysteme nicht für kritische Zeiterfassung oder offizielle Zwecke verwendet werden sollten."
+        "description": "{disclaimer_text}",
+        "data": {
+          "acknowledge": "Ich verstehe und akzeptiere den Haftungsausschluss"
+        }
       }
     },
     "error": {
