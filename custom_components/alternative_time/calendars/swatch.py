@@ -1,4 +1,4 @@
-"""Swatch Internet Time Calendar implementation - Version 2.8."""
+"""Swatch Internet Time Calendar implementation - Version 2.9."""
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -27,7 +27,7 @@ UPDATE_INTERVAL = 1
 # Complete calendar information for auto-discovery
 CALENDAR_INFO = {
     "id": "swatch",
-    "version": "2.8.0",
+    "version": "2.9.0",
     "icon": "mdi:web-clock",
     "category": "technical",
     "accuracy": "commercial",
@@ -160,11 +160,11 @@ class SwatchTimeSensor(AlternativeTimeSensorBase):
         self._attr_unique_id = f"{base_name}_swatch"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:web-clock")
         
-        # Get plugin options
-        options = self.get_plugin_options()
-        
-        # Configuration option with default "beat"
-        self._precision = options.get("precision", "beat")
+        # Configuration option with default from CALENDAR_INFO
+        # Options will be loaded later in async_added_to_hass
+        config_defaults = CALENDAR_INFO.get("config_options", {})
+        precision_default = config_defaults.get("precision", {}).get("default", "beat")
+        self._precision = precision_default
         
         # Swatch data
         self._swatch_data = CALENDAR_INFO["swatch_data"]
@@ -176,13 +176,39 @@ class SwatchTimeSensor(AlternativeTimeSensorBase):
         
         # Initialize state
         self._state = None
+        self._swatch_time = {}
+        
+        # Flag to track if options have been loaded
+        self._options_loaded = False
         
         _LOGGER.debug(f"Initialized Swatch Internet Time sensor: {self._attr_name}")
-        _LOGGER.debug(f"  Precision: {self._precision}")
+        _LOGGER.debug(f"  Default Precision: {self._precision}")
+    
+    def _load_options(self) -> None:
+        """Load plugin options after IDs are set."""
+        if self._options_loaded:
+            return
+            
+        try:
+            options = self.get_plugin_options()
+            if options:
+                # Update configuration from plugin options
+                self._precision = options.get("precision", self._precision)
+                
+                _LOGGER.debug(f"Swatch sensor loaded options: precision={self._precision}")
+            else:
+                _LOGGER.debug("Swatch sensor using default options - no custom options found")
+                
+            self._options_loaded = True
+        except Exception as e:
+            _LOGGER.debug(f"Swatch sensor could not load options yet: {e}")
     
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
+        
+        # Try to load options now that IDs should be set
+        self._load_options()
         
         # Initialisiere Timezone async
         if HAS_PYTZ and not self._bmt_initialized:
@@ -209,7 +235,7 @@ class SwatchTimeSensor(AlternativeTimeSensorBase):
         attrs = super().extra_state_attributes
         
         # Add Swatch-specific attributes
-        if hasattr(self, '_swatch_time'):
+        if self._swatch_time:
             attrs.update(self._swatch_time)
             
             # Add description in user's language
@@ -280,6 +306,10 @@ class SwatchTimeSensor(AlternativeTimeSensorBase):
     
     def update(self) -> None:
         """Update the sensor."""
+        # Ensure options are loaded (in case async_added_to_hass hasn't run yet)
+        if not self._options_loaded:
+            self._load_options()
+        
         now = datetime.now()
         self._swatch_time = self._calculate_swatch_time(now)
         
