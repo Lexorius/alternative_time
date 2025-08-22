@@ -19,14 +19,14 @@ UPDATE_INTERVAL = 3600
 
 # Complete calendar information for auto-discovery
 CALENDAR_INFO = {
-    "id": "minguo",
+    "id": "minguo_taiwan",
     "version": "2.5.0",
     "icon": "mdi:calendar-text",
     "category": "cultural",
     "accuracy": "official",
     "update_interval": UPDATE_INTERVAL,
     
-    # Multi-language names
+    # Multi-language names (English primary)
     "name": {
         "en": "Minguo Calendar (Taiwan)",
         "de": "Minguo-Kalender (Taiwan)",
@@ -42,20 +42,20 @@ CALENDAR_INFO = {
         "ko": "민국 달력 (대만)"
     },
     
-    # Short descriptions for UI
+    # Short descriptions for UI (English primary)
     "description": {
-        "en": "Taiwan/ROC calendar, Year 1 = 1912 CE (e.g. 民國114年)",
-        "de": "Taiwan/ROC Kalender, Jahr 1 = 1912 CE (z.B. 民國114年)",
-        "es": "Calendario de Taiwán/ROC, Año 1 = 1912 CE (ej. 民國114年)",
-        "fr": "Calendrier de Taïwan/ROC, Année 1 = 1912 CE (ex. 民國114年)",
-        "it": "Calendario Taiwan/ROC, Anno 1 = 1912 CE (es. 民國114年)",
-        "nl": "Taiwan/ROC kalender, Jaar 1 = 1912 CE (bijv. 民國114年)",
-        "pt": "Calendário de Taiwan/ROC, Ano 1 = 1912 CE (ex. 民國114年)",
-        "ru": "Календарь Тайвань/КР, Год 1 = 1912 н.э. (напр. 民國114年)",
-        "ja": "台湾/中華民国暦、元年 = 西暦1912年（例：民國114年）",
-        "zh": "台湾/中华民国历法，元年 = 公元1912年（例：民國114年）",
-        "zh-tw": "中華民國曆法，民國元年 = 西元1912年（例：民國114年）",
-        "ko": "대만/중화민국 달력, 1년 = 서기 1912년 (예: 民國114年)"
+        "en": "Taiwan/ROC calendar, Year 1 = 1912 CE (founding of Republic of China)",
+        "de": "Taiwan/ROC Kalender, Jahr 1 = 1912 n.Chr. (Gründung der Republik China)",
+        "es": "Calendario de Taiwán/ROC, Año 1 = 1912 EC (fundación de la República de China)",
+        "fr": "Calendrier de Taïwan/ROC, Année 1 = 1912 EC (fondation de la République de Chine)",
+        "it": "Calendario Taiwan/ROC, Anno 1 = 1912 EC (fondazione della Repubblica di Cina)",
+        "nl": "Taiwan/ROC kalender, Jaar 1 = 1912 CE (stichting Republiek China)",
+        "pt": "Calendário de Taiwan/ROC, Ano 1 = 1912 EC (fundação da República da China)",
+        "ru": "Календарь Тайвань/КР, Год 1 = 1912 н.э. (основание Китайской Республики)",
+        "ja": "台湾/中華民国暦、元年 = 西暦1912年（中華民国建国）",
+        "zh": "台湾/中华民国历法，元年 = 公元1912年（中华民国成立）",
+        "zh-tw": "中華民國曆法，民國元年 = 西元1912年（中華民國成立）",
+        "ko": "대만/중화민국 달력, 1년 = 서기 1912년 (중화민국 건국)"
     },
     
     # Detailed information for documentation
@@ -69,6 +69,15 @@ CALENDAR_INFO = {
             "before_epoch": "Years before 1912 are denoted as 民前 (before the Republic)",
             "holidays": "Includes traditional Chinese festivals and ROC national holidays"
         },
+        "de": {
+            "overview": "Der Minguo-Kalender ist der offizielle Kalender in Taiwan (Republik China)",
+            "epoch": "Jahr 1 entspricht 1912 n.Chr., dem Gründungsjahr der Republik China",
+            "structure": "Verwendet die gleichen Monate und Tage wie der gregorianische Kalender, nur die Jahreszählung unterscheidet sich",
+            "usage": "Offizielle Dokumente, Regierungsunterlagen und tägliches Leben in Taiwan",
+            "conversion": "Minguo-Jahr = Gregorianisches Jahr - 1911",
+            "before_epoch": "Jahre vor 1912 werden als 民前 (vor der Republik) bezeichnet",
+            "holidays": "Umfasst traditionelle chinesische Feste und ROC-Nationalfeiertage"
+        },
         "zh-tw": {
             "overview": "民國紀年是中華民國（臺灣）的官方曆法",
             "epoch": "民國元年對應西元1912年，即中華民國成立之年",
@@ -77,118 +86,213 @@ CALENDAR_INFO = {
             "conversion": "民國年 = 西元年 - 1911",
             "before_epoch": "1912年之前的年份標記為民前",
             "holidays": "包含傳統中國節日和中華民國國定假日"
-        },
-        "de": {
-            "overview": "Der Minguo-Kalender ist der offizielle Kalender in Taiwan (Republik China)",
-            "epoch": "Jahr 1 entspricht 1912 n.Chr., dem Gründungsjahr der Republik China",
-            "structure": "Verwendet dieselben Monate und Tage wie der gregorianische Kalender, nur die Jahreszählung unterscheidet sich",
-            "usage": "Offizielle Dokumente, Regierungsunterlagen und tägliches Leben in Taiwan",
-            "conversion": "Minguo-Jahr = Gregorianisches Jahr - 1911",
-            "before_epoch": "Jahre vor 1912 werden als 民前 (vor der Republik) bezeichnet",
-            "holidays": "Umfasst traditionelle chinesische Feste und ROC-Nationalfeiertage"
         }
     },
     
     # Minguo-specific data
     "minguo_data": {
-        "epoch_year": 1912,
-        "founding_date": "1912-01-01",
-        
-        # Month names in Traditional Chinese
-        "chinese_months": [
-            "一月", "二月", "三月", "四月", "五月", "六月",
-            "七月", "八月", "九月", "十月", "十一月", "十二月"
+        # Chinese months (traditional names)
+        "months": [
+            {"chinese": "一月", "formal": "正月", "english": "January"},
+            {"chinese": "二月", "formal": "二月", "english": "February"},
+            {"chinese": "三月", "formal": "三月", "english": "March"},
+            {"chinese": "四月", "formal": "四月", "english": "April"},
+            {"chinese": "五月", "formal": "五月", "english": "May"},
+            {"chinese": "六月", "formal": "六月", "english": "June"},
+            {"chinese": "七月", "formal": "七月", "english": "July"},
+            {"chinese": "八月", "formal": "八月", "english": "August"},
+            {"chinese": "九月", "formal": "九月", "english": "September"},
+            {"chinese": "十月", "formal": "十月", "english": "October"},
+            {"chinese": "十一月", "formal": "十一月", "english": "November"},
+            {"chinese": "十二月", "formal": "十二月", "english": "December"}
         ],
         
-        # Weekday names in Traditional Chinese
-        "chinese_weekdays": [
-            "星期一", "星期二", "星期三", "星期四",
-            "星期五", "星期六", "星期日"
+        # Chinese weekdays
+        "weekdays": [
+            {"chinese": "星期日", "short": "日", "english": "Sunday"},
+            {"chinese": "星期一", "short": "一", "english": "Monday"},
+            {"chinese": "星期二", "short": "二", "english": "Tuesday"},
+            {"chinese": "星期三", "short": "三", "english": "Wednesday"},
+            {"chinese": "星期四", "short": "四", "english": "Thursday"},
+            {"chinese": "星期五", "short": "五", "english": "Friday"},
+            {"chinese": "星期六", "short": "六", "english": "Saturday"}
         ],
         
-        # Important dates in ROC calendar
+        # ROC National Holidays
         "holidays": {
-            (1, 1): {"name": "中華民國開國紀念日", "emoji": "🎊", "en": "Founding Day of ROC"},
-            (2, 28): {"name": "和平紀念日", "emoji": "🕊️", "en": "Peace Memorial Day"},
-            (3, 29): {"name": "革命先烈紀念日", "emoji": "🌹", "en": "Youth Day"},
-            (4, 4): {"name": "兒童節", "emoji": "👶", "en": "Children's Day"},
-            (4, 5): {"name": "清明節", "emoji": "🏔️", "en": "Tomb Sweeping Day"},
-            (5, 1): {"name": "勞動節", "emoji": "👷", "en": "Labor Day"},
-            (9, 28): {"name": "孔子誕辰紀念日", "emoji": "📚", "en": "Confucius' Birthday"},
-            (10, 10): {"name": "國慶日", "emoji": "🇹🇼", "en": "National Day"},
-            (10, 25): {"name": "臺灣光復節", "emoji": "🎌", "en": "Retrocession Day"},
-            (10, 31): {"name": "蔣公誕辰紀念日", "emoji": "🎖️", "en": "Chiang Kai-shek's Birthday"},
-            (11, 12): {"name": "國父誕辰紀念日", "emoji": "🏛️", "en": "Sun Yat-sen's Birthday"},
-            (12, 25): {"name": "行憲紀念日", "emoji": "📜", "en": "Constitution Day"}
+            (1, 1): {"chinese": "元旦", "english": "New Year's Day"},
+            (2, 28): {"chinese": "和平紀念日", "english": "Peace Memorial Day"},
+            (3, 29): {"chinese": "青年節", "english": "Youth Day"},
+            (4, 4): {"chinese": "兒童節", "english": "Children's Day"},
+            (4, 5): {"chinese": "清明節", "english": "Tomb Sweeping Day"},
+            (5, 1): {"chinese": "勞動節", "english": "Labor Day"},
+            (10, 10): {"chinese": "國慶日", "english": "National Day (Double Ten)"},
+            (10, 25): {"chinese": "光復節", "english": "Retrocession Day"},
+            (11, 12): {"chinese": "國父誕辰", "english": "Sun Yat-sen's Birthday"},
+            (12, 25): {"chinese": "行憲紀念日", "english": "Constitution Day"}
         },
         
-        # Era names
-        "eras": {
-            "republic": {"chinese": "民國", "english": "Republic Era"},
-            "before": {"chinese": "民前", "english": "Before Republic"}
+        # Chinese number system
+        "chinese_numbers": {
+            0: "零", 1: "一", 2: "二", 3: "三", 4: "四",
+            5: "五", 6: "六", 7: "七", 8: "八", 9: "九",
+            10: "十", 100: "百", 1000: "千"
         },
         
-        # Number characters
-        "chinese_numbers": ["〇", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"]
+        # Era information
+        "era": {
+            "chinese": "民國",
+            "english": "Republic",
+            "abbreviation": "ROC",
+            "founding_year": 1912
+        }
     },
     
     # Additional metadata
-    "reference_url": "https://en.wikipedia.org/wiki/Republic_of_China_calendar",
+    "reference_url": "https://en.wikipedia.org/wiki/Minguo_calendar",
     "documentation_url": "https://www.taiwan.gov.tw",
     "origin": "Republic of China (Taiwan)",
-    "created_by": "Government of Republic of China",
-    "introduced": "January 1, 1912",
+    "created_by": "Republic of China government",
+    "official_since": "1912 CE",
     
     # Example format
-    "example": "民國 114年3月15日",
-    "example_meaning": "Republic Year 114, March 15 (= 2025-03-15 CE)",
+    "example": "Republic Year 114, December 25 | 民國114年12月25日",
+    "example_meaning": "December 25, 2025 CE in Minguo calendar",
     
     # Related calendars
-    "related": ["gregorian", "chinese", "japanese"],
+    "related": ["gregorian", "chinese", "lunar"],
     
     # Tags for searching and filtering
     "tags": [
-        "cultural", "taiwan", "roc", "republic_of_china", "official",
-        "minguo", "chinese", "taiwanese", "asian", "modern"
+        "cultural", "taiwan", "roc", "minguo", "chinese",
+        "official", "asian", "republic", "formosa"
     ],
     
     # Special features
     "features": {
-        "official_calendar": True,
-        "gregorian_based": True,
-        "traditional_holidays": True,
+        "era_based": True,
         "chinese_characters": True,
+        "dual_numbering": True,
         "precision": "day"
     },
     
     # Configuration options for this calendar
     "config_options": {
-        "show_chinese": {
-            "type": "boolean",
-            "default": True,
+        "display_language": {
+            "type": "select",
+            "default": "english",
+            "options": ["english", "chinese", "combined"],
+            "label": {
+                "en": "Display Language",
+                "de": "Anzeigesprache",
+                "es": "Idioma de visualización",
+                "fr": "Langue d'affichage",
+                "it": "Lingua di visualizzazione",
+                "nl": "Weergavetaal",
+                "pt": "Idioma de exibição",
+                "ru": "Язык отображения",
+                "ja": "表示言語",
+                "zh": "显示语言",
+                "zh-tw": "顯示語言",
+                "ko": "표시 언어"
+            },
             "description": {
-                "en": "Show date in Chinese characters",
-                "de": "Datum in chinesischen Zeichen anzeigen",
-                "zh-tw": "顯示中文日期"
+                "en": "Choose how to display the date (English, Chinese characters, or combined)",
+                "de": "Wählen Sie, wie das Datum angezeigt werden soll (Englisch, chinesische Zeichen oder kombiniert)",
+                "zh-tw": "選擇日期顯示方式（英文、中文或混合）"
+            }
+        },
+        "use_chinese_numbers": {
+            "type": "boolean",
+            "default": False,
+            "label": {
+                "en": "Use Chinese Numbers",
+                "de": "Chinesische Zahlen verwenden",
+                "es": "Usar números chinos",
+                "fr": "Utiliser les chiffres chinois",
+                "it": "Usa numeri cinesi",
+                "nl": "Gebruik Chinese cijfers",
+                "pt": "Usar números chineses",
+                "ru": "Использовать китайские цифры",
+                "ja": "漢数字を使用",
+                "zh": "使用中文数字",
+                "zh-tw": "使用中文數字",
+                "ko": "한자 숫자 사용"
+            },
+            "description": {
+                "en": "Display numbers using Chinese characters (一二三)",
+                "de": "Zahlen mit chinesischen Zeichen anzeigen (一二三)",
+                "zh-tw": "使用中文數字顯示（一二三）"
             }
         },
         "show_holidays": {
             "type": "boolean",
             "default": True,
+            "label": {
+                "en": "Show ROC Holidays",
+                "de": "ROC-Feiertage anzeigen",
+                "es": "Mostrar días festivos de ROC",
+                "fr": "Afficher les jours fériés ROC",
+                "it": "Mostra festività ROC",
+                "nl": "Toon ROC feestdagen",
+                "pt": "Mostrar feriados ROC",
+                "ru": "Показывать праздники КР",
+                "ja": "中華民国の祝日を表示",
+                "zh": "显示中华民国节日",
+                "zh-tw": "顯示中華民國節日",
+                "ko": "중화민국 공휴일 표시"
+            },
             "description": {
-                "en": "Show ROC national holidays",
-                "de": "ROC-Nationalfeiertage anzeigen",
-                "zh-tw": "顯示國定假日"
+                "en": "Display Republic of China national holidays",
+                "de": "Nationalfeiertage der Republik China anzeigen",
+                "zh-tw": "顯示中華民國國定假日"
             }
         },
-        "date_format": {
+        "format": {
             "type": "select",
-            "default": "traditional",
-            "options": ["traditional", "numeric", "mixed"],
+            "default": "full",
+            "options": ["full", "medium", "short", "formal"],
+            "label": {
+                "en": "Date Format",
+                "de": "Datumsformat",
+                "es": "Formato de fecha",
+                "fr": "Format de date",
+                "it": "Formato data",
+                "nl": "Datumformaat",
+                "pt": "Formato de data",
+                "ru": "Формат даты",
+                "ja": "日付形式",
+                "zh": "日期格式",
+                "zh-tw": "日期格式",
+                "ko": "날짜 형식"
+            },
             "description": {
-                "en": "Date format style",
-                "de": "Datumsformat-Stil",
-                "zh-tw": "日期格式樣式"
+                "en": "Choose how detailed the date display should be",
+                "de": "Wählen Sie, wie detailliert die Datumsanzeige sein soll",
+                "zh-tw": "選擇日期顯示的詳細程度"
+            }
+        },
+        "show_before_epoch": {
+            "type": "boolean",
+            "default": False,
+            "label": {
+                "en": "Show Pre-Republic Years",
+                "de": "Vor-Republik-Jahre anzeigen",
+                "es": "Mostrar años pre-República",
+                "fr": "Afficher les années pré-République",
+                "it": "Mostra anni pre-Repubblica",
+                "nl": "Toon pre-Republiek jaren",
+                "pt": "Mostrar anos pré-República",
+                "ru": "Показывать годы до Республики",
+                "ja": "民国前を表示",
+                "zh": "显示民前年份",
+                "zh-tw": "顯示民前年份",
+                "ko": "민국 이전 연도 표시"
+            },
+            "description": {
+                "en": "Display years before 1912 as 民前 (before the Republic)",
+                "de": "Jahre vor 1912 als 民前 (vor der Republik) anzeigen",
+                "zh-tw": "將1912年之前的年份顯示為民前"
             }
         }
     }
@@ -199,29 +303,66 @@ class MinguoCalendarSensor(AlternativeTimeSensorBase):
     """Sensor for displaying Minguo Calendar (Taiwan/ROC)."""
     
     # Class-level update interval
-    UPDATE_INTERVAL = 3600  # Update every hour
+    UPDATE_INTERVAL = UPDATE_INTERVAL
     
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the Minguo calendar sensor."""
         super().__init__(base_name, hass)
         
         # Get translated name from metadata
-        calendar_name = self._translate('name', 'Minguo Calendar')
+        calendar_name = self._translate('name', 'Minguo Calendar (Taiwan)')
         
         # Set sensor attributes
         self._attr_name = f"{base_name} {calendar_name}"
-        self._attr_unique_id = f"{base_name}_minguo_calendar"
+        self._attr_unique_id = f"{base_name}_minguo_taiwan"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:calendar-text")
         
-        # Configuration options
-        self._show_chinese = True
+        # Default configuration options
+        self._display_language = "english"
+        self._use_chinese_numbers = False
         self._show_holidays = True
-        self._date_format = "traditional"
+        self._format = "full"
+        self._show_before_epoch = False
         
         # Minguo data
         self._minguo_data = CALENDAR_INFO["minguo_data"]
         
+        # Track if options have been loaded
+        self._options_loaded = False
+        
         _LOGGER.debug(f"Initialized Minguo Calendar sensor: {self._attr_name}")
+    
+    def _load_options(self) -> None:
+        """Load configuration options from config entry."""
+        if self._options_loaded:
+            return
+            
+        try:
+            options = self.get_plugin_options()
+            if options:
+                # Update configuration from plugin options
+                self._display_language = options.get("display_language", self._display_language)
+                self._use_chinese_numbers = options.get("use_chinese_numbers", self._use_chinese_numbers)
+                self._show_holidays = options.get("show_holidays", self._show_holidays)
+                self._format = options.get("format", self._format)
+                self._show_before_epoch = options.get("show_before_epoch", self._show_before_epoch)
+                
+                _LOGGER.debug(f"Minguo calendar loaded options: language={self._display_language}, "
+                            f"chinese_numbers={self._use_chinese_numbers}, holidays={self._show_holidays}, "
+                            f"format={self._format}, before_epoch={self._show_before_epoch}")
+            else:
+                _LOGGER.debug("Minguo calendar using default options - no custom options found")
+                
+            self._options_loaded = True
+        except Exception as e:
+            _LOGGER.debug(f"Minguo calendar could not load options yet: {e}")
+    
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        
+        # Try to load options now that IDs should be set
+        self._load_options()
     
     @property
     def state(self):
@@ -243,118 +384,171 @@ class MinguoCalendarSensor(AlternativeTimeSensorBase):
             # Add reference
             attrs["reference"] = CALENDAR_INFO.get('reference_url', '')
             
-            # Add epoch information
-            attrs["epoch_year"] = self._minguo_data["epoch_year"]
+            # Add configuration status
+            attrs["config"] = {
+                "display_language": self._display_language,
+                "use_chinese_numbers": self._use_chinese_numbers,
+                "show_holidays": self._show_holidays,
+                "format": self._format,
+                "show_before_epoch": self._show_before_epoch
+            }
         
         return attrs
     
-    def _number_to_chinese(self, num: int) -> str:
+    def _to_chinese_number(self, n: int) -> str:
         """Convert number to Chinese characters."""
-        if num == 0:
-            return self._minguo_data["chinese_numbers"][0]
+        if not self._use_chinese_numbers:
+            return str(n)
+        
+        chinese_nums = self._minguo_data["chinese_numbers"]
+        
+        if n == 0:
+            return chinese_nums[0]
         
         result = ""
-        if num >= 100:
-            hundreds = num // 100
-            result += self._minguo_data["chinese_numbers"][hundreds] + "百"
-            num %= 100
         
-        if num >= 10:
-            tens = num // 10
-            if tens > 1:
-                result += self._minguo_data["chinese_numbers"][tens]
-            result += "十"
-            num %= 10
+        # Handle thousands
+        if n >= 1000:
+            thousands = n // 1000
+            if thousands > 1:
+                result += self._to_chinese_number(thousands)
+            result += chinese_nums[1000]
+            n %= 1000
         
-        if num > 0:
-            result += self._minguo_data["chinese_numbers"][num]
+        # Handle hundreds
+        if n >= 100:
+            hundreds = n // 100
+            if hundreds > 1:
+                result += chinese_nums[hundreds]
+            result += chinese_nums[100]
+            n %= 100
+        
+        # Handle tens
+        if n >= 10:
+            tens = n // 10
+            if tens > 1 or result:  # Add tens digit if > 1 or if we have higher places
+                result += chinese_nums[tens]
+            result += chinese_nums[10]
+            n %= 10
+        
+        # Handle ones
+        if n > 0:
+            result += chinese_nums[n]
         
         return result
     
     def _calculate_minguo_date(self, earth_date: datetime) -> Dict[str, Any]:
         """Calculate Minguo Calendar date from standard date."""
         
+        # Load options if not loaded yet
+        self._load_options()
+        
         # Calculate Minguo year
-        minguo_year = earth_date.year - 1911
+        founding_year = self._minguo_data["era"]["founding_year"]
+        minguo_year = earth_date.year - founding_year + 1
         
-        # Get Chinese month and weekday names
-        month_chinese = self._minguo_data["chinese_months"][earth_date.month - 1]
-        weekday_chinese = self._minguo_data["chinese_weekdays"][earth_date.weekday()]
+        # Handle years before the Republic
+        is_before_epoch = minguo_year < 1
+        if is_before_epoch:
+            minguo_year = abs(minguo_year - 1)  # Convert to positive years before
         
-        # Determine era
-        if minguo_year > 0:
-            era = self._minguo_data["eras"]["republic"]["chinese"]
-            era_english = self._minguo_data["eras"]["republic"]["english"]
-            display_year = minguo_year
-        else:
-            era = self._minguo_data["eras"]["before"]["chinese"]
-            era_english = self._minguo_data["eras"]["before"]["english"]
-            display_year = abs(minguo_year - 1)
+        # Get month and weekday data
+        month_data = self._minguo_data["months"][earth_date.month - 1]
+        weekday_index = (earth_date.weekday() + 1) % 7  # Adjust for Sunday = 0
+        weekday_data = self._minguo_data["weekdays"][weekday_index]
         
         # Check for holidays
-        holiday_info = self._minguo_data["holidays"].get((earth_date.month, earth_date.day), {})
-        holiday = ""
-        holiday_english = ""
-        if holiday_info:
-            holiday = f"{holiday_info['emoji']} {holiday_info['name']}"
-            holiday_english = holiday_info['en']
+        holiday_data = self._minguo_data["holidays"].get((earth_date.month, earth_date.day))
         
-        # Convert year to Chinese if needed
-        year_chinese = self._number_to_chinese(display_year) if self._show_chinese else str(display_year)
-        day_chinese = self._number_to_chinese(earth_date.day) if self._show_chinese else str(earth_date.day)
+        # Format date based on display language and format
+        if self._format == "short":
+            # Short format
+            if self._display_language == "chinese":
+                if is_before_epoch and self._show_before_epoch:
+                    formatted = f"民前{self._to_chinese_number(minguo_year)}年{earth_date.month}月{earth_date.day}日"
+                else:
+                    formatted = f"民國{self._to_chinese_number(minguo_year)}年{earth_date.month}月{earth_date.day}日"
+            else:
+                if is_before_epoch and self._show_before_epoch:
+                    formatted = f"Before ROC {minguo_year}, {earth_date.month}/{earth_date.day}"
+                else:
+                    formatted = f"ROC {minguo_year}, {earth_date.month}/{earth_date.day}"
+        elif self._format == "medium":
+            # Medium format
+            if self._display_language == "chinese":
+                if is_before_epoch and self._show_before_epoch:
+                    formatted = f"民前{self._to_chinese_number(minguo_year)}年{month_data['chinese']}{earth_date.day}日"
+                else:
+                    formatted = f"民國{self._to_chinese_number(minguo_year)}年{month_data['chinese']}{earth_date.day}日"
+            else:
+                if is_before_epoch and self._show_before_epoch:
+                    formatted = f"Before Republic Year {minguo_year}, {month_data['english']} {earth_date.day}"
+                else:
+                    formatted = f"Republic Year {minguo_year}, {month_data['english']} {earth_date.day}"
+        elif self._format == "formal":
+            # Formal format (official style)
+            if self._display_language == "chinese":
+                if is_before_epoch and self._show_before_epoch:
+                    formatted = f"中華民國前{self._to_chinese_number(minguo_year)}年{month_data['formal']}{self._to_chinese_number(earth_date.day)}日"
+                else:
+                    formatted = f"中華民國{self._to_chinese_number(minguo_year)}年{month_data['formal']}{self._to_chinese_number(earth_date.day)}日"
+            else:
+                if is_before_epoch and self._show_before_epoch:
+                    formatted = f"Before Republic of China Year {minguo_year}, {month_data['english']} {earth_date.day}"
+                else:
+                    formatted = f"Republic of China Year {minguo_year}, {month_data['english']} {earth_date.day}"
+        else:  # full
+            # Full format
+            if self._display_language == "chinese":
+                if is_before_epoch and self._show_before_epoch:
+                    formatted = f"民前{self._to_chinese_number(minguo_year)}年{month_data['chinese']}{earth_date.day}日 {weekday_data['chinese']}"
+                else:
+                    formatted = f"民國{self._to_chinese_number(minguo_year)}年{month_data['chinese']}{earth_date.day}日 {weekday_data['chinese']}"
+            elif self._display_language == "combined":
+                if is_before_epoch and self._show_before_epoch:
+                    formatted = f"Before ROC {minguo_year}, {month_data['english']} {earth_date.day} | 民前{minguo_year}年{earth_date.month}月{earth_date.day}日"
+                else:
+                    formatted = f"ROC {minguo_year}, {month_data['english']} {earth_date.day} | 民國{minguo_year}年{earth_date.month}月{earth_date.day}日"
+            else:  # english
+                if is_before_epoch and self._show_before_epoch:
+                    formatted = f"Before Republic Year {minguo_year}, {weekday_data['english']}, {month_data['english']} {earth_date.day}"
+                else:
+                    formatted = f"Republic Year {minguo_year}, {weekday_data['english']}, {month_data['english']} {earth_date.day}"
         
-        # Format dates based on style
-        if self._date_format == "traditional":
-            # Traditional Chinese format
-            full_date_chinese = f"{era}{year_chinese}年{month_chinese}{day_chinese}日"
-            full_date_numeric = f"{era} {display_year}年{earth_date.month}月{earth_date.day}日"
-        elif self._date_format == "numeric":
-            # Numeric format
-            full_date_chinese = f"{era} {display_year}/{earth_date.month:02d}/{earth_date.day:02d}"
-            full_date_numeric = f"{era} {display_year}/{earth_date.month:02d}/{earth_date.day:02d}"
-        else:  # mixed
-            # Mixed format
-            full_date_chinese = f"{era}{display_year}年{month_chinese}{earth_date.day}日"
-            full_date_numeric = f"{era} {display_year}年{earth_date.month}月{earth_date.day}日"
-        
-        # Determine season
-        if earth_date.month in [3, 4, 5]:
-            season = "春季"  # Spring
-            season_emoji = "🌸"
-        elif earth_date.month in [6, 7, 8]:
-            season = "夏季"  # Summer
-            season_emoji = "☀️"
-        elif earth_date.month in [9, 10, 11]:
-            season = "秋季"  # Autumn
-            season_emoji = "🍂"
-        else:
-            season = "冬季"  # Winter
-            season_emoji = "❄️"
+        # Handle years not in Minguo era for display
+        if is_before_epoch and not self._show_before_epoch:
+            # Fallback to showing Gregorian year
+            formatted = f"{earth_date.year} CE (Pre-ROC)"
         
         result = {
-            "year": display_year,
-            "year_chinese": year_chinese,
-            "era": era,
-            "era_english": era_english,
-            "month": earth_date.month,
-            "month_chinese": month_chinese,
-            "day": earth_date.day,
-            "day_chinese": day_chinese,
-            "weekday": weekday_chinese,
-            "season": f"{season_emoji} {season}",
+            "minguo_year": minguo_year if not is_before_epoch else f"-{minguo_year}",
             "gregorian_year": earth_date.year,
-            "gregorian_date": earth_date.strftime("%Y-%m-%d"),
-            "time": earth_date.strftime("%H:%M:%S"),
-            "full_date_chinese": full_date_chinese,
-            "full_date_numeric": full_date_numeric,
-            "full_display": full_date_chinese if self._show_chinese else full_date_numeric
+            "is_before_epoch": is_before_epoch,
+            "day": earth_date.day,
+            "month": earth_date.month,
+            "month_chinese": month_data["chinese"],
+            "month_formal": month_data["formal"],
+            "month_english": month_data["english"],
+            "weekday_chinese": weekday_data["chinese"],
+            "weekday_english": weekday_data["english"],
+            "formatted": formatted,
+            "gregorian_date": earth_date.strftime("%Y-%m-%d")
         }
         
-        # Add holiday if present and enabled
-        if self._show_holidays and holiday:
-            result["holiday"] = holiday
-            result["holiday_english"] = holiday_english
-            result["full_display"] += f" {holiday}"
+        # Add Chinese numbers if enabled
+        if self._use_chinese_numbers:
+            result["day_chinese"] = self._to_chinese_number(earth_date.day)
+            result["year_chinese"] = self._to_chinese_number(minguo_year)
+        
+        # Add holiday if applicable and enabled
+        if self._show_holidays and holiday_data:
+            result["holiday_chinese"] = holiday_data["chinese"]
+            result["holiday_english"] = holiday_data["english"]
+        
+        # Add era information
+        result["era_chinese"] = self._minguo_data["era"]["chinese"]
+        result["era_english"] = self._minguo_data["era"]["english"]
+        result["era_abbreviation"] = self._minguo_data["era"]["abbreviation"]
         
         return result
     
@@ -363,10 +557,7 @@ class MinguoCalendarSensor(AlternativeTimeSensorBase):
         now = datetime.now()
         self._minguo_date = self._calculate_minguo_date(now)
         
-        # Set state based on format preference
-        if self._show_chinese:
-            self._state = self._minguo_date["full_date_chinese"]
-        else:
-            self._state = self._minguo_date["full_date_numeric"]
+        # Set state to formatted date
+        self._state = self._minguo_date["formatted"]
         
         _LOGGER.debug(f"Updated Minguo Calendar to {self._state}")
