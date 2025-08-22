@@ -148,8 +148,8 @@ CALENDAR_INFO = {
         
         # Glyphs (Unicode approximations)
         "glyphs": {
-            "numbers": ["𝋠", "𝋡", "𝋢", "𝋣", "𝋤", "𝋥", "𝋦", "𝋧", "𝋨", "𝋩", "𝋪", "𝋫", "𝋬", "𝋭", "𝋮", "𝋯", "𝋰", "𝋱", "𝋲", "𝋳"],
-            "zero": "𝋠"
+            "numbers": ["𐋠", "𐋡", "𐋢", "𐋣", "𐋤", "𐋥", "𐋦", "𐋧", "𐋨", "𐋩", "𐋪", "𐋫", "𐋬", "𐋭", "𐋮", "𐋯", "𐋰", "𐋱", "𐋲", "𐋳"],
+            "zero": "𐋠"
         }
     },
     
@@ -190,63 +190,72 @@ CALENDAR_INFO = {
             "type": "boolean",
             "default": True,
             "label": {
-                "en": "Show Meanings",
-                "de": "Bedeutungen anzeigen",
-                "es": "Mostrar significados",
-                "fr": "Afficher les significations",
-                "it": "Mostra significati",
-                "nl": "Toon betekenissen",
-                "pt": "Mostrar significados",
-                "ru": "Показать значения",
-                "ja": "意味を表示",
-                "zh": "显示含义",
-                "ko": "의미 표시"
+                "en": "Show Day Meanings",
+                "de": "Tagesbedeutungen anzeigen",
+                "es": "Mostrar significados de días",
+                "fr": "Afficher les significations des jours",
+                "it": "Mostra significati dei giorni",
+                "nl": "Toon dagbetekenissen",
+                "pt": "Mostrar significados dos dias",
+                "ru": "Показывать значения дней",
+                "ja": "日の意味を表示",
+                "zh": "显示日期含义",
+                "ko": "날짜 의미 표시"
             },
             "description": {
-                "en": "Show meanings of day and month names",
-                "de": "Zeige Bedeutungen der Tages- und Monatsnamen",
-                "es": "Mostrar significados de nombres de días y meses",
-                "fr": "Afficher les significations des noms de jours et de mois",
-                "it": "Mostra i significati dei nomi di giorni e mesi",
-                "nl": "Toon betekenissen van dag- en maandnamen",
-                "pt": "Mostrar significados dos nomes de dias e meses",
-                "ru": "Показать значения названий дней и месяцев",
-                "ja": "日と月の名前の意味を表示",
-                "zh": "显示日和月名称的含义",
-                "ko": "일과 월 이름의 의미 표시"
+                "en": "Display the meanings of Tzolk'in day names and Haab month names",
+                "de": "Zeige die Bedeutungen der Tzolk'in-Tagesnamen und Haab-Monatsnamen",
+                "es": "Mostrar los significados de los nombres de días Tzolk'in y meses Haab",
+                "fr": "Afficher les significations des noms de jours Tzolk'in et de mois Haab"
             }
         },
         "show_glyphs": {
             "type": "boolean",
             "default": False,
             "label": {
-                "en": "Show Glyphs",
-                "de": "Glyphen anzeigen",
-                "es": "Mostrar glifos",
-                "fr": "Afficher les glyphes",
-                "it": "Mostra glifi",
-                "nl": "Toon glyphs",
-                "pt": "Mostrar glifos",
-                "ru": "Показать глифы",
-                "ja": "グリフを表示",
-                "zh": "显示字形",
-                "ko": "글리프 표시"
+                "en": "Show Maya Glyphs",
+                "de": "Maya-Glyphen anzeigen",
+                "es": "Mostrar glifos mayas",
+                "fr": "Afficher les glyphes mayas",
+                "it": "Mostra glifi maya",
+                "nl": "Toon Maya glyphs",
+                "pt": "Mostrar glifos maias",
+                "ru": "Показывать глифы майя",
+                "ja": "マヤ文字を表示",
+                "zh": "显示玛雅字形",
+                "ko": "마야 상형문자 표시"
             },
             "description": {
-                "en": "Show Unicode approximations of Maya glyphs",
-                "de": "Zeige Unicode-Näherungen der Maya-Glyphen",
-                "es": "Mostrar aproximaciones Unicode de glifos mayas",
-                "fr": "Afficher les approximations Unicode des glyphes mayas",
-                "it": "Mostra approssimazioni Unicode dei glifi maya",
-                "nl": "Toon Unicode-benaderingen van Maya glyphs",
-                "pt": "Mostrar aproximações Unicode de glifos maias",
-                "ru": "Показать Unicode-приближения глифов майя",
-                "ja": "マヤグリフのUnicode近似を表示",
-                "zh": "显示玛雅字形的Unicode近似",
-                "ko": "마야 글리프의 유니코드 근사치 표시"
+                "en": "Display Maya number glyphs (Unicode approximations)",
+                "de": "Maya-Zahlenglyphen anzeigen (Unicode-Näherungen)",
+                "es": "Mostrar glifos numéricos mayas (aproximaciones Unicode)",
+                "fr": "Afficher les glyphes numériques mayas (approximations Unicode)"
             }
         },
-        "correlation_constant": {
+        "show_venus_cycle": {
+            "type": "boolean",
+            "default": True,
+            "label": {
+                "en": "Show Venus Cycle",
+                "de": "Venus-Zyklus anzeigen",
+                "es": "Mostrar ciclo de Venus",
+                "fr": "Afficher le cycle de Vénus",
+                "it": "Mostra ciclo di Venere",
+                "nl": "Toon Venus cyclus",
+                "pt": "Mostrar ciclo de Vênus",
+                "ru": "Показывать цикл Венеры",
+                "ja": "金星周期を表示",
+                "zh": "显示金星周期",
+                "ko": "금성 주기 표시"
+            },
+            "description": {
+                "en": "Display the current Venus phase (important in Maya astronomy)",
+                "de": "Zeige die aktuelle Venusphase (wichtig in der Maya-Astronomie)",
+                "es": "Mostrar la fase actual de Venus (importante en la astronomía maya)",
+                "fr": "Afficher la phase actuelle de Vénus (importante dans l'astronomie maya)"
+            }
+        },
+        "correlation": {
             "type": "select",
             "default": "GMT",
             "options": ["GMT", "Thompson", "Spinden"],
@@ -256,7 +265,7 @@ CALENDAR_INFO = {
                 "es": "Constante de correlación",
                 "fr": "Constante de corrélation",
                 "it": "Costante di correlazione",
-                "nl": "Correlatieconstante",
+                "nl": "Correlatie constante",
                 "pt": "Constante de correlação",
                 "ru": "Константа корреляции",
                 "ja": "相関定数",
@@ -264,17 +273,34 @@ CALENDAR_INFO = {
                 "ko": "상관 상수"
             },
             "description": {
-                "en": "Select correlation constant for date conversion (GMT is most accepted)",
-                "de": "Wähle Korrelationskonstante für Datumsumrechnung (GMT ist am weitesten akzeptiert)",
-                "es": "Seleccionar constante de correlación para conversión de fecha (GMT es la más aceptada)",
-                "fr": "Sélectionner la constante de corrélation pour la conversion de date (GMT est la plus acceptée)",
-                "it": "Seleziona la costante di correlazione per la conversione della data (GMT è la più accettata)",
-                "nl": "Selecteer correlatieconstante voor datumconversie (GMT is meest geaccepteerd)",
-                "pt": "Selecionar constante de correlação para conversão de data (GMT é a mais aceita)",
-                "ru": "Выберите константу корреляции для преобразования даты (GMT наиболее принята)",
-                "ja": "日付変換の相関定数を選択（GMTが最も受け入れられています）",
-                "zh": "选择日期转换的相关常数（GMT最被接受）",
-                "ko": "날짜 변환을 위한 상관 상수 선택 (GMT가 가장 널리 받아들여짐)"
+                "en": "Choose the correlation constant for converting dates (GMT is most accepted)",
+                "de": "Wähle die Korrelationskonstante für die Datumsumrechnung (GMT ist am meisten akzeptiert)",
+                "es": "Elegir la constante de correlación para convertir fechas (GMT es la más aceptada)",
+                "fr": "Choisir la constante de corrélation pour convertir les dates (GMT est la plus acceptée)"
+            }
+        },
+        "format": {
+            "type": "select",
+            "default": "full",
+            "options": ["full", "long_count", "calendar_round", "minimal"],
+            "label": {
+                "en": "Display Format",
+                "de": "Anzeigeformat",
+                "es": "Formato de visualización",
+                "fr": "Format d'affichage",
+                "it": "Formato di visualizzazione",
+                "nl": "Weergaveformaat",
+                "pt": "Formato de exibição",
+                "ru": "Формат отображения",
+                "ja": "表示形式",
+                "zh": "显示格式",
+                "ko": "표시 형식"
+            },
+            "description": {
+                "en": "Choose how to display the Maya date",
+                "de": "Wähle, wie das Maya-Datum angezeigt werden soll",
+                "es": "Elegir cómo mostrar la fecha maya",
+                "fr": "Choisir comment afficher la date maya"
             }
         }
     }
@@ -299,26 +325,27 @@ class MayaCalendarSensor(AlternativeTimeSensorBase):
         self._attr_unique_id = f"{base_name}_maya_calendar"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:pyramid")
         
-        # Configuration options with defaults from CALENDAR_INFO
-        config_defaults = CALENDAR_INFO.get("config_options", {})
-        self._show_meanings = config_defaults.get("show_meanings", {}).get("default", True)
-        self._show_glyphs = config_defaults.get("show_glyphs", {}).get("default", False)
-        self._correlation = config_defaults.get("correlation_constant", {}).get("default", "GMT")
+        # Default configuration options
+        self._show_meanings = True
+        self._show_glyphs = False
+        self._show_venus_cycle = True
+        self._correlation = "GMT"
+        self._format = "full"
         
         # Maya data
         self._maya_data = CALENDAR_INFO["maya_data"]
         
-        # Flag to track if options have been loaded
+        # Track if options have been loaded
         self._options_loaded = False
         
         # Initialize state
-        self._state = None
         self._maya_date = {}
+        self._state = "Initializing..."
         
         _LOGGER.debug(f"Initialized Maya Calendar sensor: {self._attr_name}")
     
     def _load_options(self) -> None:
-        """Load plugin options after IDs are set."""
+        """Load configuration options from config entry."""
         if self._options_loaded:
             return
             
@@ -328,10 +355,13 @@ class MayaCalendarSensor(AlternativeTimeSensorBase):
                 # Update configuration from plugin options
                 self._show_meanings = options.get("show_meanings", self._show_meanings)
                 self._show_glyphs = options.get("show_glyphs", self._show_glyphs)
-                self._correlation = options.get("correlation_constant", self._correlation)
+                self._show_venus_cycle = options.get("show_venus_cycle", self._show_venus_cycle)
+                self._correlation = options.get("correlation", self._correlation)
+                self._format = options.get("format", self._format)
                 
-                _LOGGER.debug(f"Maya sensor loaded options: show_meanings={self._show_meanings}, "
-                            f"show_glyphs={self._show_glyphs}, correlation={self._correlation}")
+                _LOGGER.debug(f"Maya sensor loaded options: meanings={self._show_meanings}, "
+                            f"glyphs={self._show_glyphs}, venus={self._show_venus_cycle}, "
+                            f"correlation={self._correlation}, format={self._format}")
             else:
                 _LOGGER.debug("Maya sensor using default options - no custom options found")
                 
@@ -368,6 +398,15 @@ class MayaCalendarSensor(AlternativeTimeSensorBase):
             
             # Add correlation constant used
             attrs["correlation_used"] = self._correlation
+            
+            # Add configuration status
+            attrs["config"] = {
+                "show_meanings": self._show_meanings,
+                "show_glyphs": self._show_glyphs,
+                "show_venus_cycle": self._show_venus_cycle,
+                "correlation": self._correlation,
+                "format": self._format
+            }
         
         return attrs
     
@@ -458,6 +497,9 @@ class MayaCalendarSensor(AlternativeTimeSensorBase):
     def _calculate_maya_date(self, earth_date: datetime) -> Dict[str, Any]:
         """Calculate Maya calendar date from Gregorian date."""
         
+        # Load options if not loaded yet
+        self._load_options()
+        
         # Convert to Julian Day Number
         jdn = self._gregorian_to_julian_day(earth_date)
         
@@ -473,8 +515,15 @@ class MayaCalendarSensor(AlternativeTimeSensorBase):
         haab_day, haab_month = self._calculate_haab(jdn)
         haab_str = f"{haab_day} {haab_month}"
         
-        # Format complete date
-        formatted = f"{long_count_str} | {tzolkin_str} | {haab_str}"
+        # Format complete date based on format setting
+        if self._format == "minimal":
+            formatted = f"{long_count_str}"
+        elif self._format == "long_count":
+            formatted = f"{long_count_str} ({tzolkin_str})"
+        elif self._format == "calendar_round":
+            formatted = f"{tzolkin_str} | {haab_str}"
+        else:  # full
+            formatted = f"{long_count_str} | {tzolkin_str} | {haab_str}"
         
         result = {
             "long_count": long_count_str,
@@ -512,7 +561,7 @@ class MayaCalendarSensor(AlternativeTimeSensorBase):
         
         # Calculate Calendar Round position (52 Haab years = 73 Tzolk'in years)
         tzolkin_position = (tzolkin_number - 1) * 20 + self._maya_data["tzolkin"]["names"].index(tzolkin_name)
-        haab_position = haab_day + (self._maya_data["haab"]["month_names"].index(haab_month) * 20)
+        haab_position = haab_day + (self._maya_data["haab"]["month_names"].index(haab_month) * 20 if haab_month != "Wayeb" else 360)
         
         # The Calendar Round repeats every 18,980 days (52 × 365 = 73 × 260)
         calendar_round_day = (jdn - self._maya_data["correlation"][self._correlation]) % self._maya_data["calendar_round"]
@@ -523,22 +572,23 @@ class MayaCalendarSensor(AlternativeTimeSensorBase):
         katun_lord = self._maya_data["tzolkin"]["names"][(current_katun * 2) % 20]
         result["katun_lord"] = f"K'atun {current_katun} {katun_lord}"
         
-        # Add Venus cycle (important in Maya astronomy)
-        # Venus cycle is 584 days, synchronized with Calendar Round
-        venus_day = (jdn - self._maya_data["correlation"][self._correlation]) % 584
-        venus_phase = ""
-        if venus_day < 8:
-            venus_phase = "First appearance as Morning Star"
-        elif venus_day < 263:
-            venus_phase = "Morning Star"
-        elif venus_day < 263 + 50:
-            venus_phase = "Superior conjunction (invisible)"
-        elif venus_day < 263 + 50 + 8:
-            venus_phase = "First appearance as Evening Star"
-        else:
-            venus_phase = "Evening Star"
-        
-        result["venus_phase"] = venus_phase
+        # Add Venus cycle if configured
+        if self._show_venus_cycle:
+            # Venus cycle is 584 days, synchronized with Calendar Round
+            venus_day = (jdn - self._maya_data["correlation"][self._correlation]) % 584
+            venus_phase = ""
+            if venus_day < 8:
+                venus_phase = "First appearance as Morning Star"
+            elif venus_day < 263:
+                venus_phase = "Morning Star"
+            elif venus_day < 263 + 50:
+                venus_phase = "Superior conjunction (invisible)"
+            elif venus_day < 263 + 50 + 8:
+                venus_phase = "First appearance as Evening Star"
+            else:
+                venus_phase = "Evening Star"
+            
+            result["venus_phase"] = venus_phase
         
         return result
     

@@ -195,28 +195,129 @@ CALENDAR_INFO = {
         "show_hieroglyphs": {
             "type": "boolean",
             "default": True,
-            "description": {
-                "en": "Show hieroglyphic numbers",
+            "label": {
+                "en": "Show Hieroglyphic Numbers",
                 "de": "Hieroglyphische Zahlen anzeigen",
+                "es": "Mostrar números jeroglíficos",
+                "fr": "Afficher les nombres hiéroglyphiques",
+                "it": "Mostra numeri geroglifici",
+                "nl": "Toon hiëroglifische nummers",
+                "pt": "Mostrar números hieroglíficos",
+                "ru": "Показывать иероглифические числа",
+                "ja": "ヒエログリフ数字を表示",
+                "zh": "显示象形文字数字",
+                "ko": "상형문자 숫자 표시",
                 "ar": "عرض الأرقام الهيروغليفية"
+            },
+            "description": {
+                "en": "Display day numbers using ancient Egyptian hieroglyphs",
+                "de": "Tageszahlen mit altägyptischen Hieroglyphen anzeigen",
+                "es": "Mostrar números de días usando jeroglíficos del antiguo Egipto",
+                "fr": "Afficher les numéros de jour en hiéroglyphes égyptiens anciens",
+                "ar": "عرض أرقام الأيام باستخدام الهيروغليفية المصرية القديمة"
             }
         },
         "show_dynasty": {
             "type": "boolean",
             "default": True,
+            "label": {
+                "en": "Show Dynasty Information",
+                "de": "Dynastie-Informationen anzeigen",
+                "es": "Mostrar información de dinastía",
+                "fr": "Afficher les informations de dynastie",
+                "it": "Mostra informazioni sulla dinastia",
+                "nl": "Toon dynastie informatie",
+                "pt": "Mostrar informações da dinastia",
+                "ru": "Показывать информацию о династии",
+                "ja": "王朝情報を表示",
+                "zh": "显示王朝信息",
+                "ko": "왕조 정보 표시",
+                "ar": "عرض معلومات السلالة"
+            },
             "description": {
-                "en": "Show dynasty and regnal year",
-                "de": "Dynastie und Regierungsjahr anzeigen",
-                "ar": "عرض السلالة وسنة الحكم"
+                "en": "Include dynasty and regnal year in the display",
+                "de": "Dynastie und Regierungsjahr in der Anzeige einbeziehen",
+                "es": "Incluir dinastía y año de reinado en la pantalla",
+                "fr": "Inclure la dynastie et l'année de règne dans l'affichage",
+                "ar": "تضمين السلالة وسنة الحكم في العرض"
             }
         },
         "show_nile_status": {
             "type": "boolean",
             "default": True,
+            "label": {
+                "en": "Show Nile Status",
+                "de": "Nil-Status anzeigen",
+                "es": "Mostrar estado del Nilo",
+                "fr": "Afficher l'état du Nil",
+                "it": "Mostra stato del Nilo",
+                "nl": "Toon Nijl status",
+                "pt": "Mostrar status do Nilo",
+                "ru": "Показывать статус Нила",
+                "ja": "ナイル川の状態を表示",
+                "zh": "显示尼罗河状态",
+                "ko": "나일강 상태 표시",
+                "ar": "عرض حالة النيل"
+            },
             "description": {
-                "en": "Show Nile flood status",
-                "de": "Nil-Flutstatus anzeigen",
-                "ar": "عرض حالة فيضان النيل"
+                "en": "Display the seasonal Nile flood status (Inundation/Emergence/Harvest)",
+                "de": "Saisonalen Nil-Flutstatus anzeigen (Überschwemmung/Aussaat/Ernte)",
+                "es": "Mostrar el estado estacional de la inundación del Nilo",
+                "fr": "Afficher l'état saisonnier de la crue du Nil",
+                "ar": "عرض حالة فيضان النيل الموسمية (الفيضان/الإنبات/الحصاد)"
+            }
+        },
+        "format": {
+            "type": "select",
+            "default": "full",
+            "options": ["full", "medium", "short"],
+            "label": {
+                "en": "Display Format",
+                "de": "Anzeigeformat",
+                "es": "Formato de visualización",
+                "fr": "Format d'affichage",
+                "it": "Formato di visualizzazione",
+                "nl": "Weergaveformaat",
+                "pt": "Formato de exibição",
+                "ru": "Формат отображения",
+                "ja": "表示形式",
+                "zh": "显示格式",
+                "ko": "표시 형식",
+                "ar": "تنسيق العرض"
+            },
+            "description": {
+                "en": "Choose how detailed the calendar display should be",
+                "de": "Wählen Sie, wie detailliert die Kalenderanzeige sein soll",
+                "es": "Elija qué tan detallada debe ser la visualización del calendario",
+                "fr": "Choisissez le niveau de détail de l'affichage du calendrier",
+                "ar": "اختر مدى تفصيل عرض التقويم"
+            }
+        },
+        "dynasty_offset": {
+            "type": "number",
+            "default": 0,
+            "min": -30,
+            "max": 30,
+            "label": {
+                "en": "Dynasty Offset",
+                "de": "Dynastie-Versatz",
+                "es": "Desplazamiento de dinastía",
+                "fr": "Décalage de dynastie",
+                "it": "Offset dinastia",
+                "nl": "Dynastie verschuiving",
+                "pt": "Deslocamento de dinastia",
+                "ru": "Смещение династии",
+                "ja": "王朝オフセット",
+                "zh": "王朝偏移",
+                "ko": "왕조 오프셋",
+                "ar": "إزاحة السلالة"
+            },
+            "description": {
+                "en": "Adjust the simulated dynasty number (for role-playing or historical scenarios)",
+                "de": "Simulierte Dynastienummer anpassen (für Rollenspiele oder historische Szenarien)",
+                "es": "Ajustar el número de dinastía simulado (para juegos de rol o escenarios históricos)",
+                "fr": "Ajuster le numéro de dynastie simulé (pour jeux de rôle ou scénarios historiques)",
+                "ar": "ضبط رقم السلالة المحاكاة (للعب الأدوار أو السيناريوهات التاريخية)"
             }
         }
     }
@@ -227,7 +328,7 @@ class EgyptianCalendarSensor(AlternativeTimeSensorBase):
     """Sensor for displaying Ancient Egyptian Calendar."""
     
     # Class-level update interval
-    UPDATE_INTERVAL = 3600  # Update every hour
+    UPDATE_INTERVAL = UPDATE_INTERVAL
     
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the Egyptian calendar sensor."""
@@ -241,15 +342,52 @@ class EgyptianCalendarSensor(AlternativeTimeSensorBase):
         self._attr_unique_id = f"{base_name}_egyptian"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:pyramid")
         
-        # Configuration options
+        # Default configuration options
         self._show_hieroglyphs = True
         self._show_dynasty = True
         self._show_nile_status = True
+        self._format = "full"
+        self._dynasty_offset = 0
         
         # Egyptian data
         self._egyptian_data = CALENDAR_INFO["egyptian_data"]
         
+        # Track if options have been loaded
+        self._options_loaded = False
+        
         _LOGGER.debug(f"Initialized Egyptian Calendar sensor: {self._attr_name}")
+    
+    def _load_options(self) -> None:
+        """Load configuration options from config entry."""
+        if self._options_loaded:
+            return
+            
+        try:
+            options = self.get_plugin_options()
+            if options:
+                # Update configuration from plugin options
+                self._show_hieroglyphs = options.get("show_hieroglyphs", self._show_hieroglyphs)
+                self._show_dynasty = options.get("show_dynasty", self._show_dynasty)
+                self._show_nile_status = options.get("show_nile_status", self._show_nile_status)
+                self._format = options.get("format", self._format)
+                self._dynasty_offset = options.get("dynasty_offset", self._dynasty_offset)
+                
+                _LOGGER.debug(f"Egyptian sensor loaded options: hieroglyphs={self._show_hieroglyphs}, "
+                            f"dynasty={self._show_dynasty}, nile={self._show_nile_status}, "
+                            f"format={self._format}, dynasty_offset={self._dynasty_offset}")
+            else:
+                _LOGGER.debug("Egyptian sensor using default options - no custom options found")
+                
+            self._options_loaded = True
+        except Exception as e:
+            _LOGGER.debug(f"Egyptian sensor could not load options yet: {e}")
+    
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        
+        # Try to load options now that IDs should be set
+        self._load_options()
     
     @property
     def state(self):
@@ -270,6 +408,15 @@ class EgyptianCalendarSensor(AlternativeTimeSensorBase):
             
             # Add reference
             attrs["reference"] = CALENDAR_INFO.get('reference_url', '')
+            
+            # Add configuration status
+            attrs["config"] = {
+                "show_hieroglyphs": self._show_hieroglyphs,
+                "show_dynasty": self._show_dynasty,
+                "show_nile_status": self._show_nile_status,
+                "format": self._format,
+                "dynasty_offset": self._dynasty_offset
+            }
         
         return attrs
     
@@ -295,6 +442,9 @@ class EgyptianCalendarSensor(AlternativeTimeSensorBase):
     def _calculate_egyptian_date(self, earth_date: datetime) -> Dict[str, Any]:
         """Calculate Ancient Egyptian Calendar date from standard date."""
         
+        # Load options if not loaded yet
+        self._load_options()
+        
         # Egyptian new year around July 19 (Sirius rising)
         new_year_data = self._egyptian_data["new_year"]
         egyptian_new_year = datetime(earth_date.year, new_year_data["month"], new_year_data["day"])
@@ -303,8 +453,8 @@ class EgyptianCalendarSensor(AlternativeTimeSensorBase):
         
         days_since_new_year = (earth_date - egyptian_new_year).days
         
-        # Simulate dynasty and regnal year
-        dynasty = (earth_date.year - 2000) // 30 + 1
+        # Simulate dynasty and regnal year with offset
+        dynasty = (earth_date.year - 2000) // 30 + 1 + self._dynasty_offset
         regnal_year = ((earth_date.year - 2000) % 30) + 1
         
         # Check for epagomenal days (last 5 days of year)
@@ -313,6 +463,14 @@ class EgyptianCalendarSensor(AlternativeTimeSensorBase):
             if epagomenal_day <= 5 and epagomenal_day > 0:
                 god_birthday = self._egyptian_data["epagomenal_gods"][epagomenal_day - 1]
                 
+                # Format based on display setting
+                if self._format == "short":
+                    full_date = f"Epagomenal {epagomenal_day} - {god_birthday}"
+                elif self._format == "medium":
+                    full_date = f"Year {regnal_year} | Epagomenal Day {epagomenal_day} - {god_birthday}"
+                else:  # full
+                    full_date = f"Dynasty {dynasty}, Year {regnal_year} | Epagomenal Day {epagomenal_day} - Birthday of {god_birthday} 🎉"
+                
                 result = {
                     "epagomenal": True,
                     "epagomenal_day": epagomenal_day,
@@ -320,7 +478,7 @@ class EgyptianCalendarSensor(AlternativeTimeSensorBase):
                     "dynasty": dynasty,
                     "regnal_year": regnal_year,
                     "gregorian_date": earth_date.strftime("%Y-%m-%d"),
-                    "full_date": f"Dynasty {dynasty}, Year {regnal_year} | Epagomenal Day {epagomenal_day} - Birthday of {god_birthday} 🎉"
+                    "full_date": full_date
                 }
                 return result
             
@@ -361,19 +519,34 @@ class EgyptianCalendarSensor(AlternativeTimeSensorBase):
         # Get Nile status
         nile_data = self._egyptian_data["nile_status"][month_data["season"]]
         
-        # Format the date
+        # Format the date based on format setting
         date_parts = []
         
-        if self._show_dynasty:
-            date_parts.append(f"Dynasty {dynasty} Year {regnal_year}")
-        
-        date_parts.append(f"{hieroglyph_day} {day_of_month} {month_data['name']} ({month_data['season']})")
-        date_parts.append(f"{decan_data['name']} Day {day_in_decan}")
-        date_parts.append(f"{time_symbol} {egyptian_hour}")
-        date_parts.append(month_data['god'])
-        
-        if self._show_nile_status:
-            date_parts.append(f"{nile_data['emoji']} {nile_data['status']}")
+        if self._format == "short":
+            # Short format: just day and month
+            date_parts.append(f"{day_of_month} {month_data['name']}")
+            if self._show_nile_status:
+                date_parts.append(f"{nile_data['emoji']}")
+        elif self._format == "medium":
+            # Medium format: month, day, season
+            if self._show_dynasty:
+                date_parts.append(f"Year {regnal_year}")
+            date_parts.append(f"{hieroglyph_day if self._show_hieroglyphs else day_of_month} {month_data['name']}")
+            date_parts.append(f"({month_data['season']})")
+            if self._show_nile_status:
+                date_parts.append(f"{nile_data['emoji']}")
+        else:  # full
+            # Full format: all details
+            if self._show_dynasty:
+                date_parts.append(f"Dynasty {dynasty} Year {regnal_year}")
+            
+            date_parts.append(f"{hieroglyph_day if self._show_hieroglyphs else ''} {day_of_month} {month_data['name']} ({month_data['season']})")
+            date_parts.append(f"{decan_data['name']} Day {day_in_decan}")
+            date_parts.append(f"{time_symbol} {egyptian_hour}")
+            date_parts.append(month_data['god'])
+            
+            if self._show_nile_status:
+                date_parts.append(f"{nile_data['emoji']} {nile_data['status']}")
         
         full_date = " | ".join(date_parts)
         
