@@ -1,4 +1,4 @@
-"""Star Wars Galactic Standard Calendar implementation - Version 2.5."""
+"""Star Wars Galactic Calendar implementation - Version 2.6."""
 from __future__ import annotations
 
 from datetime import datetime
@@ -6,18 +6,7 @@ import logging
 from typing import Dict, Any
 
 from homeassistant.core import HomeAssistant
-from homeassistant.config_entries import ConfigEntry
-
-# WICHTIG: Import der Basis-Klasse direkt aus sensor.py
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-try:
-    from ..sensor import AlternativeTimeSensorBase
-except ImportError:
-    # Fallback für direkten Import
-    from sensor import AlternativeTimeSensorBase
+from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,13 +14,13 @@ _LOGGER = logging.getLogger(__name__)
 # CALENDAR METADATA
 # ============================================
 
-# Update interval in seconds (3600 seconds = 1 hour)
+# Update interval in seconds (3600 seconds = 1 hour for galactic dates)
 UPDATE_INTERVAL = 3600
 
 # Complete calendar information for auto-discovery
 CALENDAR_INFO = {
     "id": "star_wars",
-    "version": "2.5.0",
+    "version": "2.6.0",
     "icon": "mdi:death-star-variant",
     "category": "scifi",
     "accuracy": "fictional",
@@ -47,144 +36,187 @@ CALENDAR_INFO = {
         "nl": "Star Wars Galactische Kalender",
         "pt": "Calendário Galáctico Star Wars",
         "ru": "Галактический календарь Звездных войн",
-        "ja": "スター・ウォーズ銀河標準暦",
-        "zh": "星球大战银河标准历",
-        "ko": "스타워즈 은하 표준력"
+        "ja": "スター・ウォーズ銀河暦",
+        "zh": "星球大战银河历",
+        "ko": "스타워즈 은하력"
     },
     
     # Short descriptions for UI
     "description": {
-        "en": "Galactic Standard Calendar from Star Wars (e.g. 35:3:21 GrS)",
-        "de": "Galaktischer Standardkalender aus Star Wars (z.B. 35:3:21 GrS)",
-        "es": "Calendario Estándar Galáctico de Star Wars (ej. 35:3:21 GrS)",
-        "fr": "Calendrier Standard Galactique de Star Wars (ex. 35:3:21 GrS)",
-        "it": "Calendario Standard Galattico di Star Wars (es. 35:3:21 GrS)",
-        "nl": "Galactische Standaard Kalender uit Star Wars (bijv. 35:3:21 GrS)",
-        "pt": "Calendário Padrão Galáctico de Star Wars (ex. 35:3:21 GrS)",
-        "ru": "Галактический стандартный календарь из Звездных войн (напр. 35:3:21 GrS)",
-        "ja": "スター・ウォーズの銀河標準暦（例：35:3:21 GrS）",
-        "zh": "星球大战银河标准历（例：35:3:21 GrS）",
-        "ko": "스타워즈 은하 표준력 (예: 35:3:21 GrS)"
+        "en": "Galactic Standard Calendar with 368-day years (e.g. 35:3:8 ABY)",
+        "de": "Galaktischer Standardkalender mit 368-Tage-Jahren (z.B. 35:3:8 NSY)",
+        "es": "Calendario Estándar Galáctico con años de 368 días (ej. 35:3:8 DBY)",
+        "fr": "Calendrier Standard Galactique avec années de 368 jours (ex. 35:3:8 ABY)",
+        "it": "Calendario Standard Galattico con anni di 368 giorni (es. 35:3:8 ABY)",
+        "nl": "Galactische Standaard Kalender met 368-dagen jaren (bijv. 35:3:8 ABY)",
+        "pt": "Calendário Padrão Galáctico com anos de 368 dias (ex. 35:3:8 DBY)",
+        "ru": "Галактический стандартный календарь с 368-дневными годами (напр. 35:3:8 ПБЯ)",
+        "ja": "368日年の銀河標準暦（例：35:3:8 ABY）",
+        "zh": "368天年的银河标准历（例：35:3:8 ABY）",
+        "ko": "368일 연도의 은하 표준 달력 (예: 35:3:8 ABY)"
     },
     
-    # Star Wars-specific data
+    # Star Wars calendar data
     "star_wars_data": {
-        # Galactic Standard months
+        # Galactic Standard Calendar structure
+        "days_per_year": 368,
+        "months_per_year": 10,
+        "weeks_per_month": 7,
+        "days_per_week": 5,
+        "days_per_month": 35,  # 7 weeks * 5 days
+        "festival_weeks": 3,    # 3 festival weeks
+        "holidays": 3,          # 3 separate holidays
+        
+        # Month names
         "months": [
-            {"num": 1, "name": "Month 1", "festival": "New Year Fete Week", "days": 35},
-            {"num": 2, "name": "Month 2", "festival": None, "days": 35},
-            {"num": 3, "name": "Month 3", "festival": None, "days": 35},
-            {"num": 4, "name": "Month 4", "festival": None, "days": 35},
-            {"num": 5, "name": "Month 5", "festival": "Festival of Stars Week", "days": 35},
-            {"num": 6, "name": "Month 6", "festival": None, "days": 35},
-            {"num": 7, "name": "Month 7", "festival": None, "days": 35},
-            {"num": 8, "name": "Month 8", "festival": None, "days": 35},
-            {"num": 9, "name": "Month 9", "festival": None, "days": 35},
-            {"num": 10, "name": "Month 10", "festival": "Festival of Life Week", "days": 35}
+            "Elona", "Kelona", "Selona", "Telona", "Nelona",
+            "Helona", "Melona", "Yelona", "Relona", "Welona"
         ],
         
-        # Days of the week
+        # Day names (5-day week)
         "weekdays": [
-            {"name": "Primeday", "abbr": "Pri", "work": True},
-            {"name": "Centaxday", "abbr": "Cen", "work": True},
-            {"name": "Taungsday", "abbr": "Tau", "work": True},
-            {"name": "Zhellday", "abbr": "Zhe", "work": True},
-            {"name": "Benduday", "abbr": "Ben", "work": False}
+            "Primeday", "Centaxday", "Taungsday", "Zhellday", "Benduday"
         ],
         
-        # Week types
-        "week_types": [
-            "First Week",
-            "Second Week", 
-            "Third Week",
-            "Fourth Week",
-            "Fifth Week",
-            "Sixth Week",
-            "Seventh Week"
-        ],
+        # Festival weeks (between months)
+        "festivals": {
+            "1": "Festival of Stars",    # After month 1
+            "5": "Festival of Life",     # After month 5  
+            "9": "Festival of Worlds"    # After month 9
+        },
         
-        # Galactic holidays (in addition to festival weeks)
-        "holidays": [
-            {"name": "Empire Day", "date": (6, 24), "era": "Imperial"},
-            {"name": "Republic Day", "date": (3, 14), "era": "Republic"},
-            {"name": "Boonta Eve", "date": (4, 15), "era": "All"}
-        ],
+        # Holidays (separate days)
+        "holidays": {
+            "New Year": "Start of Elona",
+            "Republic Day": "Mid-year",
+            "Empire Day": "End of Welona"
+        },
         
         # Era systems
         "eras": {
-            "grs": {"name": "Great ReSynchronization", "abbr": "GrS", "epoch_year": 35},
-            "bby_aby": {"name": "Battle of Yavin", "abbr_before": "BBY", "abbr_after": "ABY", "epoch_year": 0},
-            "btc_atc": {"name": "Treaty of Coruscant", "abbr_before": "BTC", "abbr_after": "ATC", "epoch_year": 3653}
+            "bby": {"name": "Before Battle of Yavin", "abbr": "BBY"},
+            "aby": {"name": "After Battle of Yavin", "abbr": "ABY"},
+            "brs": {"name": "Before Ruusan Reformation", "abbr": "BRS"},
+            "ars": {"name": "After Ruusan Reformation", "abbr": "ARS"},
+            "grs": {"name": "Great ReSynchronization", "abbr": "GrS"}
         },
         
-        # Time periods
-        "time_periods": [
-            {"name": "Night", "hours": (0, 6), "emoji": "🌙"},
-            {"name": "Dawn", "hours": (6, 8), "emoji": "🌅"},
-            {"name": "Morning", "hours": (8, 12), "emoji": "☀️"},
-            {"name": "Midday", "hours": (12, 14), "emoji": "🌞"},
-            {"name": "Afternoon", "hours": (14, 18), "emoji": "🌤️"},
-            {"name": "Dusk", "hours": (18, 20), "emoji": "🌇"},
-            {"name": "Evening", "hours": (20, 24), "emoji": "🌃"}
-        ],
+        # Current year (relative to Battle of Yavin)
+        "current_year_aby": 35,  # 35 years after Episode IV
         
-        # Galactic regions (for flavor)
-        "regions": [
-            "Core Worlds",
-            "Inner Rim",
-            "Mid Rim",
-            "Outer Rim",
-            "Unknown Regions",
-            "Wild Space"
-        ],
-        
-        # Major planets (for time zone reference)
-        "major_planets": {
-            "Coruscant": {"region": "Core Worlds", "timezone": 0, "capital": True},
-            "Tatooine": {"region": "Outer Rim", "timezone": -3, "capital": False},
-            "Naboo": {"region": "Mid Rim", "timezone": 1, "capital": False},
-            "Alderaan": {"region": "Core Worlds", "timezone": 0, "capital": False},
-            "Endor": {"region": "Outer Rim", "timezone": -5, "capital": False},
-            "Hoth": {"region": "Outer Rim", "timezone": -4, "capital": False},
-            "Dagobah": {"region": "Outer Rim", "timezone": -6, "capital": False},
-            "Mandalore": {"region": "Outer Rim", "timezone": -2, "capital": False}
+        # Planet time references
+        "planets": {
+            "Coruscant": {"rotation_hours": 24, "capital": True},
+            "Tatooine": {"rotation_hours": 23, "suns": 2},
+            "Hoth": {"rotation_hours": 23, "climate": "frozen"},
+            "Endor": {"rotation_hours": 18, "moon": True},
+            "Naboo": {"rotation_hours": 26, "moons": 3},
+            "Dagobah": {"rotation_hours": 23, "force_nexus": True}
         }
     },
+    
+    # Additional metadata
+    "reference_url": "https://starwars.fandom.com/wiki/Galactic_Standard_Calendar",
+    "documentation_url": "https://www.starwars.com/databank",
+    "origin": "Lucasfilm / Disney",
+    "created_by": "George Lucas",
+    "introduced": "1977 (in-universe calendar)",
+    
+    # Related calendars
+    "related": ["stardate", "eve_online", "warhammer40k"],
+    
+    # Tags for searching and filtering
+    "tags": [
+        "scifi", "star_wars", "galactic", "space", "fictional",
+        "movies", "disney", "lucasfilm", "jedi", "empire"
+    ],
     
     # Configuration options for this calendar
     "config_options": {
         "era_system": {
             "type": "select",
-            "default": "grs",
-            "options": ["grs", "bby_aby", "btc_atc"],
+            "default": "aby",
+            "options": ["bby", "aby", "brs", "ars", "grs"],
+            "label": {
+                "en": "Era System",
+                "de": "Ära-System",
+                "es": "Sistema de Era",
+                "fr": "Système d'Ère",
+                "it": "Sistema Era",
+                "nl": "Tijdperk Systeem",
+                "pt": "Sistema de Era",
+                "ru": "Система эр",
+                "ja": "時代システム",
+                "zh": "纪元系统",
+                "ko": "시대 체계"
+            },
             "description": {
-                "en": "Era system to use (GrS, BBY/ABY, or BTC/ATC)",
-                "de": "Zu verwendendes Ära-System (GrS, BBY/ABY oder BTC/ATC)"
+                "en": "Choose the era reference system (BBY/ABY = Battle of Yavin)",
+                "de": "Wähle das Ära-Referenzsystem (VSY/NSY = Schlacht von Yavin)"
             }
         },
         "show_week": {
             "type": "boolean",
             "default": True,
+            "label": {
+                "en": "Show Week Number",
+                "de": "Wochennummer anzeigen",
+                "es": "Mostrar número de semana",
+                "fr": "Afficher le numéro de semaine",
+                "it": "Mostra numero settimana",
+                "nl": "Toon weeknummer",
+                "pt": "Mostrar número da semana",
+                "ru": "Показать номер недели",
+                "ja": "週番号を表示",
+                "zh": "显示周数",
+                "ko": "주 번호 표시"
+            },
             "description": {
-                "en": "Show week number and type",
-                "de": "Wochennummer und -typ anzeigen"
+                "en": "Display the week number within the month",
+                "de": "Zeige die Wochennummer innerhalb des Monats"
             }
         },
         "show_festivals": {
             "type": "boolean",
             "default": True,
+            "label": {
+                "en": "Show Festivals",
+                "de": "Festivals anzeigen",
+                "es": "Mostrar festivales",
+                "fr": "Afficher les festivals",
+                "it": "Mostra festival",
+                "nl": "Toon festivals",
+                "pt": "Mostrar festivais",
+                "ru": "Показать фестивали",
+                "ja": "祭りを表示",
+                "zh": "显示节日",
+                "ko": "축제 표시"
+            },
             "description": {
-                "en": "Show festival weeks and holidays",
-                "de": "Festwochen und Feiertage anzeigen"
+                "en": "Display galactic festival weeks",
+                "de": "Zeige galaktische Festivalwochen"
             }
         },
         "planet_time": {
             "type": "select",
             "default": "Coruscant",
-            "options": ["Coruscant", "Tatooine", "Naboo", "Mandalore", "Endor", "Hoth"],
+            "options": ["Coruscant", "Tatooine", "Hoth", "Endor", "Naboo", "Dagobah"],
+            "label": {
+                "en": "Planet Time Reference",
+                "de": "Planeten-Zeitreferenz",
+                "es": "Referencia horaria planetaria",
+                "fr": "Référence temporelle planétaire",
+                "it": "Riferimento orario planetario",
+                "nl": "Planeet tijdreferentie",
+                "pt": "Referência de tempo planetário",
+                "ru": "Планетарное время",
+                "ja": "惑星時間基準",
+                "zh": "行星时间参考",
+                "ko": "행성 시간 기준"
+            },
             "description": {
-                "en": "Planet for local time reference",
-                "de": "Planet für lokale Zeitreferenz"
+                "en": "Choose reference planet for local time",
+                "de": "Wähle Referenzplanet für Ortszeit"
             }
         }
     }
@@ -192,12 +224,12 @@ CALENDAR_INFO = {
 
 
 class StarWarsCalendarSensor(AlternativeTimeSensorBase):
-    """Sensor for displaying Star Wars Galactic Standard Calendar."""
+    """Sensor for displaying Star Wars Galactic Calendar."""
     
     # Class-level update interval
-    UPDATE_INTERVAL = 3600  # Update every hour
+    UPDATE_INTERVAL = UPDATE_INTERVAL
     
-    def __init__(self, base_name: str, hass: HomeAssistant, config_entry: ConfigEntry = None) -> None:
+    def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the Star Wars calendar sensor."""
         super().__init__(base_name, hass)
         
@@ -212,21 +244,54 @@ class StarWarsCalendarSensor(AlternativeTimeSensorBase):
         self._attr_unique_id = f"{base_name}_star_wars"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:death-star-variant")
         
-        # Load configuration options from config_entry if available
-        plugin_options = {}
-        if config_entry and config_entry.data:
-            plugin_options = config_entry.data.get("plugin_options", {}).get("star_wars", {})
-        
-        # Configuration options with defaults
-        self._era_system = plugin_options.get("era_system", "grs")
-        self._show_week = plugin_options.get("show_week", True)
-        self._show_festivals = plugin_options.get("show_festivals", True)
-        self._planet_time = plugin_options.get("planet_time", "Coruscant")
+        # Configuration options with defaults from CALENDAR_INFO
+        config_defaults = CALENDAR_INFO.get("config_options", {})
+        self._era_system = config_defaults.get("era_system", {}).get("default", "aby")
+        self._show_week = config_defaults.get("show_week", {}).get("default", True)
+        self._show_festivals = config_defaults.get("show_festivals", {}).get("default", True)
+        self._planet_time = config_defaults.get("planet_time", {}).get("default", "Coruscant")
         
         # Star Wars data
         self._star_wars_data = CALENDAR_INFO["star_wars_data"]
         
+        # Flag to track if options have been loaded
+        self._options_loaded = False
+        
+        # Initialize state
+        self._state = None
+        self._star_wars_date = {}
+        
         _LOGGER.debug(f"Initialized Star Wars Calendar sensor: {self._attr_name}")
+    
+    def _load_options(self) -> None:
+        """Load plugin options after IDs are set."""
+        if self._options_loaded:
+            return
+            
+        try:
+            options = self.get_plugin_options()
+            if options:
+                # Update configuration from plugin options
+                self._era_system = options.get("era_system", self._era_system)
+                self._show_week = options.get("show_week", self._show_week)
+                self._show_festivals = options.get("show_festivals", self._show_festivals)
+                self._planet_time = options.get("planet_time", self._planet_time)
+                
+                _LOGGER.debug(f"Star Wars sensor loaded options: era={self._era_system}, "
+                            f"planet={self._planet_time}, show_week={self._show_week}")
+            else:
+                _LOGGER.debug("Star Wars sensor using default options - no custom options found")
+                
+            self._options_loaded = True
+        except Exception as e:
+            _LOGGER.debug(f"Star Wars sensor could not load options yet: {e}")
+    
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        
+        # Try to load options now that IDs should be set
+        self._load_options()
     
     @property
     def state(self):
@@ -238,12 +303,8 @@ class StarWarsCalendarSensor(AlternativeTimeSensorBase):
         """Return the state attributes."""
         attrs = super().extra_state_attributes
         
-        # Ensure attrs is a dictionary
-        if attrs is None:
-            attrs = {}
-        
         # Add Star Wars-specific attributes
-        if hasattr(self, '_star_wars_date'):
+        if self._star_wars_date:
             attrs.update(self._star_wars_date)
             
             # Add description in user's language
@@ -261,158 +322,146 @@ class StarWarsCalendarSensor(AlternativeTimeSensorBase):
     def _calculate_star_wars_date(self, earth_date: datetime) -> Dict[str, Any]:
         """Calculate Star Wars Galactic Standard date from Earth date."""
         
-        # Map Earth year to Star Wars year
-        # Using 2024 as Year 35 After Great ReSynchronization (GrS)
-        # This places us in the New Republic era
-        base_earth_year = 2024
-        base_sw_year = 35  # 35 ABY is around The Force Awakens timeline
-        
-        sw_year = base_sw_year + (earth_date.year - base_earth_year)
-        
-        # Calculate day of year (Earth)
+        # Base conversion: Earth year 1977 (A New Hope release) = 0 ABY
+        base_year = 1977
+        earth_year = earth_date.year
         day_of_year = earth_date.timetuple().tm_yday
         
-        # Map to Star Wars calendar (368 days)
-        # Scale Earth's day of year to Star Wars day of year
-        earth_days_in_year = 366 if self._is_leap_year(earth_date.year) else 365
-        sw_day_of_year = int((day_of_year / earth_days_in_year) * 368)
-        if sw_day_of_year == 0:
-            sw_day_of_year = 1
+        # Calculate Galactic year
+        years_since_base = earth_year - base_year
+        galactic_year = years_since_base
         
-        # Determine month and day
-        sw_month = 1
-        days_counted = 0
-        sw_day_in_month = sw_day_of_year
-        
-        for month_data in self._star_wars_data["months"]:
-            month_days = month_data["days"]
-            if month_data["festival"]:
-                month_days += 5  # Festival weeks add 5 days
+        # Adjust for different era systems
+        era_data = self._star_wars_data["eras"][self._era_system]
+        if self._era_system == "bby":
+            galactic_year = -galactic_year if galactic_year <= 0 else None
+            if galactic_year is None:
+                galactic_year = 0  # Battle of Yavin year
+        elif self._era_system == "brs":
+            galactic_year += 1000  # Before Ruusan Reformation
+        elif self._era_system == "ars":
+            galactic_year += 1000  # After Ruusan Reformation  
+        elif self._era_system == "grs":
+            galactic_year += 35  # Great ReSynchronization
             
-            if days_counted + month_days >= sw_day_of_year:
-                sw_month = month_data["num"]
-                sw_day_in_month = sw_day_of_year - days_counted
-                break
-            days_counted += month_days
+        # Convert Earth day of year to Galactic calendar
+        # Galactic year has 368 days, Earth has 365/366
+        galactic_day_of_year = int((day_of_year / 365) * 368)
         
-        # Calculate week and weekday
-        week_num = ((sw_day_in_month - 1) // 5) + 1
-        weekday_index = (sw_day_in_month - 1) % 5
+        # Calculate month and day
+        regular_days = self._star_wars_data["days_per_month"]
         
-        # Check if we're in a festival week
-        month_info = self._star_wars_data["months"][sw_month - 1]
+        # Account for festival weeks
+        total_regular_days = 0
+        month = 0
+        day = 0
+        week = 0
         is_festival = False
-        festival_name = ""
+        festival_name = None
         
-        if month_info["festival"] and week_num == 1:
-            is_festival = True
-            festival_name = month_info["festival"]
-            week_type = "Festival Week"
-        else:
-            week_type = self._star_wars_data["week_types"][min(week_num - 1, 6)]
+        # Track through the year
+        current_position = galactic_day_of_year
         
+        for m in range(1, 11):  # 10 months
+            month_days = regular_days
+            
+            if current_position <= month_days:
+                month = m
+                day = current_position
+                week = ((day - 1) // 5) + 1
+                break
+            
+            current_position -= month_days
+            
+            # Check for festival week after certain months
+            if m in [1, 5, 9] and current_position <= 5:  # Festival week
+                is_festival = True
+                festival_name = self._star_wars_data["festivals"].get(str(m))
+                day = current_position
+                break
+        
+        if month == 0 and not is_festival:
+            # Fallback to last month
+            month = 10
+            day = min(current_position, regular_days)
+        
+        # Get month name
+        month_name = self._star_wars_data["months"][month - 1] if month > 0 else "Festival"
+        
+        # Get weekday
+        weekday_index = (day - 1) % 5
         weekday = self._star_wars_data["weekdays"][weekday_index]
         
-        # Check for holidays
-        holiday = ""
-        for hol in self._star_wars_data["holidays"]:
-            if hol["date"] == (sw_month, sw_day_in_month):
-                holiday = hol["name"]
-                break
-        
-        # Format era
-        era_data = self._star_wars_data["eras"][self._era_system]
-        if self._era_system == "grs":
-            era_str = f"{sw_year} {era_data['abbr']}"
-        elif self._era_system == "bby_aby":
-            if sw_year < era_data["epoch_year"]:
-                era_str = f"{abs(sw_year - era_data['epoch_year'])} {era_data['abbr_before']}"
-            else:
-                era_str = f"{sw_year - era_data['epoch_year']} {era_data['abbr_after']}"
-        else:  # btc_atc
-            if sw_year < era_data["epoch_year"]:
-                era_str = f"{abs(sw_year - era_data['epoch_year'])} {era_data['abbr_before']}"
-            else:
-                era_str = f"{sw_year - era_data['epoch_year']} {era_data['abbr_after']}"
-        
-        # Get time period
-        hour = earth_date.hour
-        time_period = None
-        for period in self._star_wars_data["time_periods"]:
-            start, end = period["hours"]
-            if start <= hour < end:
-                time_period = period
-                break
-        
-        # Get planet info
-        planet_info = self._star_wars_data["major_planets"].get(self._planet_time, {})
-        region = planet_info.get("region", "Unknown Regions")
-        
-        # Build date string
-        date_str = f"{sw_year}:{sw_month}:{sw_day_in_month:02d} {era_data['abbr']}"
-        
-        # Build full display
-        display_parts = [date_str]
-        if self._show_week:
-            display_parts.append(f"{weekday['name']} | {week_type}")
-        
-        if is_festival and self._show_festivals:
-            display_parts.append(f"🎉 {festival_name}")
-        
-        if holiday and self._show_festivals:
-            display_parts.append(f"🎊 {holiday}")
-        
-        if time_period:
-            display_parts.append(f"{time_period['emoji']} {time_period['name']}")
-        
-        full_display = " | ".join(display_parts)
+        # Format the date
+        if is_festival and festival_name:
+            formatted = f"{festival_name} Day {day}, Year {galactic_year} {era_data['abbr']}"
+        else:
+            formatted = f"{galactic_year}:{month}:{day} {era_data['abbr']}"
         
         result = {
-            "year": sw_year,
-            "month": sw_month,
-            "day": sw_day_in_month,
-            "era": era_str,
+            "year": galactic_year,
+            "era": era_data["abbr"],
             "era_name": era_data["name"],
-            "weekday": weekday["name"],
-            "weekday_abbr": weekday["abbr"],
-            "is_workday": weekday["work"],
-            "week_number": week_num,
-            "week_type": week_type,
-            "is_festival": is_festival,
-            "festival_name": festival_name if is_festival else "",
-            "holiday": holiday,
-            "time_period": time_period["name"] if time_period else "",
-            "planet": self._planet_time,
-            "region": region,
-            "standard_time": earth_date.strftime("%H:%M:%S"),
-            "gregorian_date": earth_date.strftime("%Y-%m-%d"),
-            "full_display": full_display
+            "month": month,
+            "month_name": month_name,
+            "day": day,
+            "weekday": weekday,
+            "formatted": formatted,
+            "standard_format": f"{galactic_year}:{month}:{day} {era_data['abbr']}"
         }
         
-        # Add Force-related flavor text based on day
-        force_messages = [
+        # Add week number if configured
+        if self._show_week and not is_festival:
+            result["week"] = week
+            result["week_display"] = f"Week {week} of {month_name}"
+        
+        # Add festival info if configured
+        if self._show_festivals and is_festival:
+            result["festival"] = festival_name
+            result["festival_day"] = day
+        
+        # Add planet-specific time
+        planet_data = self._star_wars_data["planets"].get(self._planet_time, {})
+        if planet_data:
+            rotation_hours = planet_data.get("rotation_hours", 24)
+            # Calculate local planet hour
+            earth_hour = earth_date.hour
+            planet_hour = int((earth_hour / 24) * rotation_hours)
+            result["planet_time"] = f"{planet_hour:02d}:00 {self._planet_time} Time"
+            
+            # Add planet info
+            if planet_data.get("capital"):
+                result["planet_note"] = "Galactic Capital"
+            elif planet_data.get("suns"):
+                result["planet_note"] = f"Binary star system"
+            elif planet_data.get("force_nexus"):
+                result["planet_note"] = "Strong in the Force"
+        
+        # Add a Star Wars quote based on day
+        quotes = [
             "May the Force be with you",
-            "The Force is strong today",
-            "Trust in the Force",
-            "Feel the Force flow through you",
-            "The dark side clouds everything",
             "Do or do not, there is no try",
-            "The Force will guide you"
+            "The Force will be with you, always",
+            "I find your lack of faith disturbing",
+            "Never tell me the odds",
+            "This is the way",
+            "I have a bad feeling about this"
         ]
-        result["force_message"] = force_messages[sw_day_in_month % len(force_messages)]
+        quote_index = galactic_day_of_year % len(quotes)
+        result["daily_wisdom"] = quotes[quote_index]
         
         return result
     
-    def _is_leap_year(self, year: int) -> bool:
-        """Check if Earth year is a leap year."""
-        return year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)
-    
     def update(self) -> None:
         """Update the sensor."""
+        # Ensure options are loaded (in case async_added_to_hass hasn't run yet)
+        if not self._options_loaded:
+            self._load_options()
+        
         now = datetime.now()
         self._star_wars_date = self._calculate_star_wars_date(now)
         
-        # Set state to formatted date
-        self._state = self._star_wars_date["full_display"]
+        # Set state to formatted Star Wars date
+        self._state = self._star_wars_date["formatted"]
         
         _LOGGER.debug(f"Updated Star Wars Calendar to {self._state}")

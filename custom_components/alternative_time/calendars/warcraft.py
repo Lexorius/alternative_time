@@ -1,23 +1,12 @@
-"""World of Warcraft Azeroth Calendar implementation - Version 2.5."""
+"""World of Warcraft Calendar implementation - Version 2.6."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 from typing import Dict, Any
 
 from homeassistant.core import HomeAssistant
-from homeassistant.config_entries import ConfigEntry
-
-# WICHTIG: Import der Basis-Klasse direkt aus sensor.py
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-try:
-    from ..sensor import AlternativeTimeSensorBase
-except ImportError:
-    # Fallback für direkten Import
-    from sensor import AlternativeTimeSensorBase
+from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,15 +14,15 @@ _LOGGER = logging.getLogger(__name__)
 # CALENDAR METADATA
 # ============================================
 
-# Update interval in seconds (3600 seconds = 1 hour)
+# Update interval in seconds (3600 seconds = 1 hour for game world dates)
 UPDATE_INTERVAL = 3600
 
 # Complete calendar information for auto-discovery
 CALENDAR_INFO = {
     "id": "warcraft",
-    "version": "2.5.0",
+    "version": "2.6.0",
     "icon": "mdi:sword",
-    "category": "fantasy",
+    "category": "gaming",
     "accuracy": "fictional",
     "update_interval": UPDATE_INTERVAL,
     
@@ -42,10 +31,10 @@ CALENDAR_INFO = {
         "en": "World of Warcraft Calendar",
         "de": "World of Warcraft Kalender",
         "es": "Calendario de World of Warcraft",
-        "fr": "Calendrier de World of Warcraft",
+        "fr": "Calendrier World of Warcraft",
         "it": "Calendario di World of Warcraft",
         "nl": "World of Warcraft Kalender",
-        "pt": "Calendário de World of Warcraft",
+        "pt": "Calendário World of Warcraft",
         "ru": "Календарь World of Warcraft",
         "ja": "ワールド・オブ・ウォークラフト暦",
         "zh": "魔兽世界日历",
@@ -62,114 +51,101 @@ CALENDAR_INFO = {
         "nl": "Azeroth kalender met seizoensgebonden evenementen en maanfasen",
         "pt": "Calendário de Azeroth com eventos sazonais e fases da lua",
         "ru": "Календарь Азерота с сезонными событиями и фазами луны",
-        "ja": "季節イベントと月相を含むアゼロスの暦",
-        "zh": "艾泽拉斯日历，包含季节活动和月相",
-        "ko": "계절 이벤트와 달의 위상이 있는 아제로스 달력"
+        "ja": "季節のイベントと月相を含むアゼロスカレンダー",
+        "zh": "包含季节活动和月相的艾泽拉斯日历",
+        "ko": "계절 이벤트와 달의 위상이 포함된 아제로스 달력"
     },
     
-    # Warcraft-specific data
+    # Warcraft-specific calendar data
     "warcraft_data": {
-        # Azeroth months (similar to Earth but with fantasy names)
+        # Months in Azeroth
         "months": [
-            {"num": 1, "name": "Deepwood", "season": "Winter", "emoji": "❄️"},
-            {"num": 2, "name": "Snowdown", "season": "Winter", "emoji": "⛄"},
-            {"num": 3, "name": "Thawing", "season": "Spring", "emoji": "🌱"},
-            {"num": 4, "name": "Blooming", "season": "Spring", "emoji": "🌸"},
-            {"num": 5, "name": "Growing", "season": "Spring", "emoji": "🌿"},
-            {"num": 6, "name": "Brightleaf", "season": "Summer", "emoji": "☀️"},
-            {"num": 7, "name": "Highsun", "season": "Summer", "emoji": "🌞"},
-            {"num": 8, "name": "Harvest", "season": "Summer", "emoji": "🌾"},
-            {"num": 9, "name": "Brewtime", "season": "Autumn", "emoji": "🍺"},
-            {"num": 10, "name": "Harvestfall", "season": "Autumn", "emoji": "🍂"},
-            {"num": 11, "name": "Twilight", "season": "Autumn", "emoji": "🌆"},
-            {"num": 12, "name": "Starfall", "season": "Winter", "emoji": "⭐"}
+            {"name": "January", "days": 31, "season": "Winter"},
+            {"name": "February", "days": 28, "season": "Winter"},
+            {"name": "March", "days": 31, "season": "Spring"},
+            {"name": "April", "days": 30, "season": "Spring"},
+            {"name": "May", "days": 31, "season": "Spring"},
+            {"name": "June", "days": 30, "season": "Summer"},
+            {"name": "July", "days": 31, "season": "Summer"},
+            {"name": "August", "days": 31, "season": "Summer"},
+            {"name": "September", "days": 30, "season": "Fall"},
+            {"name": "October", "days": 31, "season": "Fall"},
+            {"name": "November", "days": 30, "season": "Fall"},
+            {"name": "December", "days": 31, "season": "Winter"}
         ],
         
         # Days of the week in Azeroth
         "weekdays": [
-            {"name": "Day of the Sun", "abbr": "Sun", "element": "Light"},
-            {"name": "Day of the Moon", "abbr": "Moon", "element": "Shadow"},
-            {"name": "Day of the Earth", "abbr": "Earth", "element": "Earth"},
-            {"name": "Day of the Wind", "abbr": "Wind", "element": "Air"},
-            {"name": "Day of the Tides", "abbr": "Tide", "element": "Water"},
-            {"name": "Day of the Flame", "abbr": "Flame", "element": "Fire"},
-            {"name": "Day of the Wisp", "abbr": "Wisp", "element": "Spirit"}
+            "Day of the Sun",
+            "Day of the Moon", 
+            "Day of the Earth",
+            "Day of the Storm",
+            "Day of the Sky",
+            "Day of the Stars",
+            "Day of the Wisp"
         ],
         
-        # Major seasonal events (mapped to real dates)
+        # Special annual events
         "events": {
-            (1, 1): {"name": "New Year", "faction": "Both", "emoji": "🎊"},
-            (1, 25): {"name": "Lunar Festival", "faction": "Both", "emoji": "🏮"},
-            (2, 14): {"name": "Love is in the Air", "faction": "Both", "emoji": "💕"},
-            (3, 17): {"name": "Noblegarden", "faction": "Both", "emoji": "🥚"},
-            (5, 1): {"name": "Children's Week", "faction": "Both", "emoji": "👶"},
-            (6, 21): {"name": "Midsummer Fire Festival", "faction": "Both", "emoji": "🔥"},
-            (7, 4): {"name": "Fireworks Spectacular", "faction": "Both", "emoji": "🎆"},
-            (8, 15): {"name": "Call of the Scarab", "faction": "Both", "emoji": "🪲"},
-            (9, 20): {"name": "Brewfest", "faction": "Both", "emoji": "🍺"},
-            (9, 19): {"name": "Harvest Festival", "faction": "Both", "emoji": "🌾"},
-            (10, 18): {"name": "Hallow's End", "faction": "Both", "emoji": "🎃"},
-            (11, 1): {"name": "Day of the Dead", "faction": "Both", "emoji": "💀"},
-            (11, 21): {"name": "Pilgrim's Bounty", "faction": "Both", "emoji": "🦃"},
-            (12, 15): {"name": "Feast of Winter Veil", "faction": "Both", "emoji": "🎄"}
+            "1-1": "New Year",
+            "1-23": "Lunar Festival Start",
+            "2-14": "Love is in the Air",
+            "3-17": "Noblegarden",
+            "4-30": "Children's Week Start",
+            "6-21": "Midsummer Fire Festival Start",
+            "7-4": "Fireworks Spectacular",
+            "9-19": "Harvest Festival",
+            "9-20": "Brewfest Start",
+            "10-18": "Hallow's End Start",
+            "11-1": "Day of the Dead",
+            "11-7": "Pilgrim's Bounty Start",
+            "12-15": "Winter Veil Start"
         },
         
-        # Moon phases (two moons)
+        # Moons of Azeroth
         "moons": {
             "white_lady": {
-                "name": "White Lady",
+                "name": "The White Lady",
                 "cycle_days": 28,
-                "phases": ["🌑 New", "🌒 Waxing Crescent", "🌓 First Quarter", "🌔 Waxing Gibbous",
-                          "🌕 Full", "🌖 Waning Gibbous", "🌗 Last Quarter", "🌘 Waning Crescent"]
+                "phases": ["New", "Waxing Crescent", "First Quarter", "Waxing Gibbous", 
+                          "Full", "Waning Gibbous", "Last Quarter", "Waning Crescent"]
             },
             "blue_child": {
-                "name": "Blue Child",
+                "name": "The Blue Child",
                 "cycle_days": 35,
-                "phases": ["🔵 Hidden", "🔵 Rising", "🔵 Peak", "🔵 Setting"]
+                "phases": ["Hidden", "Visible"]
             }
         },
         
-        # Regions and their time differences
-        "regions": {
-            "Eastern Kingdoms": {"offset": 0, "capital": "Stormwind", "faction": "Alliance"},
-            "Kalimdor": {"offset": -3, "capital": "Orgrimmar", "faction": "Horde"},
-            "Northrend": {"offset": 2, "capital": "Dalaran", "faction": "Neutral"},
-            "Pandaria": {"offset": -5, "capital": "Shrine", "faction": "Neutral"},
-            "Broken Isles": {"offset": 1, "capital": "Dalaran", "faction": "Neutral"},
-            "Shadowlands": {"offset": 0, "capital": "Oribos", "faction": "Neutral"}
-        },
-        
-        # Time periods
-        "time_periods": [
-            {"name": "Dawn", "hours": (5, 8), "emoji": "🌅", "activity": "Daily quests reset"},
-            {"name": "Morning", "hours": (8, 12), "emoji": "☀️", "activity": "Peak trading"},
-            {"name": "Noon", "hours": (12, 14), "emoji": "🌞", "activity": "PvP battles"},
-            {"name": "Afternoon", "hours": (14, 17), "emoji": "🌤️", "activity": "Dungeon runs"},
-            {"name": "Dusk", "hours": (17, 20), "emoji": "🌇", "activity": "Guild events"},
-            {"name": "Evening", "hours": (20, 23), "emoji": "🌃", "activity": "Raid time"},
-            {"name": "Night", "hours": (23, 5), "emoji": "🌙", "activity": "Rare spawns"}
-        ],
-        
-        # Faction-specific details
-        "factions": {
-            "Alliance": {"greeting": "For the Alliance!", "color": "Blue", "emoji": "🦁"},
-            "Horde": {"greeting": "For the Horde!", "color": "Red", "emoji": "⚔️"},
-            "Neutral": {"greeting": "Balance in all things", "color": "Green", "emoji": "☯️"}
-        },
-        
-        # Dragon Aspects (for flavor)
-        "dragon_aspects": [
-            {"name": "Alexstrasza", "domain": "Life", "day": 1},
-            {"name": "Ysera", "domain": "Dreams", "day": 2},
-            {"name": "Nozdormu", "domain": "Time", "day": 3},
-            {"name": "Malygos", "domain": "Magic", "day": 4},
-            {"name": "Neltharion", "domain": "Earth", "day": 5}
-        ],
-        
-        # Current year in Azeroth timeline
+        # Timeline reference (Years since the Dark Portal opened)
+        "epoch_event": "Opening of the Dark Portal",
         "current_year": 35,  # Year 35 after the Dark Portal
-        "year_name": "Year of the Phoenix"
+        
+        # Dragon Aspects and their domains
+        "dragon_aspects": {
+            "Alexstrasza": "Life",
+            "Ysera": "Dreams",
+            "Nozdormu": "Time",
+            "Kalecgos": "Magic",
+            "Wrathion": "Earth"
+        }
     },
+    
+    # Additional metadata
+    "reference_url": "https://wowpedia.fandom.com/wiki/Calendar",
+    "documentation_url": "https://worldofwarcraft.com/",
+    "origin": "Blizzard Entertainment",
+    "created_by": "World of Warcraft Team",
+    "introduced": "2004",
+    
+    # Related calendars
+    "related": ["elder_scrolls", "star_wars"],
+    
+    # Tags for searching and filtering
+    "tags": [
+        "gaming", "fantasy", "warcraft", "azeroth", "blizzard",
+        "mmorpg", "seasonal", "events", "moons", "dragons"
+    ],
     
     # Configuration options for this calendar
     "config_options": {
@@ -177,42 +153,107 @@ CALENDAR_INFO = {
             "type": "select",
             "default": "Neutral",
             "options": ["Alliance", "Horde", "Neutral"],
+            "label": {
+                "en": "Faction",
+                "de": "Fraktion",
+                "es": "Facción",
+                "fr": "Faction",
+                "it": "Fazione",
+                "nl": "Factie",
+                "pt": "Facção",
+                "ru": "Фракция",
+                "ja": "陣営",
+                "zh": "阵营",
+                "ko": "진영"
+            },
             "description": {
-                "en": "Your faction allegiance",
-                "de": "Deine Fraktionszugehörigkeit"
+                "en": "Choose your faction for specific holidays",
+                "de": "Wähle deine Fraktion für spezifische Feiertage"
             }
         },
         "region": {
             "type": "select",
             "default": "Eastern Kingdoms",
             "options": ["Eastern Kingdoms", "Kalimdor", "Northrend", "Pandaria", "Broken Isles", "Shadowlands"],
+            "label": {
+                "en": "Region",
+                "de": "Region",
+                "es": "Región",
+                "fr": "Région",
+                "it": "Regione",
+                "nl": "Regio",
+                "pt": "Região",
+                "ru": "Регион",
+                "ja": "地域",
+                "zh": "地区",
+                "ko": "지역"
+            },
             "description": {
-                "en": "Current region for time reference",
-                "de": "Aktuelle Region für Zeitreferenz"
+                "en": "Select your current region in Azeroth",
+                "de": "Wähle deine aktuelle Region in Azeroth"
             }
         },
         "show_events": {
             "type": "boolean",
             "default": True,
+            "label": {
+                "en": "Show Events",
+                "de": "Events anzeigen",
+                "es": "Mostrar eventos",
+                "fr": "Afficher les événements",
+                "it": "Mostra eventi",
+                "nl": "Toon evenementen",
+                "pt": "Mostrar eventos",
+                "ru": "Показать события",
+                "ja": "イベントを表示",
+                "zh": "显示事件",
+                "ko": "이벤트 표시"
+            },
             "description": {
-                "en": "Show seasonal events",
-                "de": "Saisonale Events anzeigen"
+                "en": "Display seasonal and special events",
+                "de": "Zeige saisonale und besondere Events"
             }
         },
         "show_moons": {
             "type": "boolean",
             "default": True,
+            "label": {
+                "en": "Show Moon Phases",
+                "de": "Mondphasen anzeigen",
+                "es": "Mostrar fases lunares",
+                "fr": "Afficher les phases lunaires",
+                "it": "Mostra fasi lunari",
+                "nl": "Toon maanfasen",
+                "pt": "Mostrar fases da lua",
+                "ru": "Показать фазы луны",
+                "ja": "月相を表示",
+                "zh": "显示月相",
+                "ko": "달의 위상 표시"
+            },
             "description": {
-                "en": "Show moon phases",
-                "de": "Mondphasen anzeigen"
+                "en": "Show phases of Azeroth's moons",
+                "de": "Zeige Phasen der Monde von Azeroth"
             }
         },
         "show_dragon_aspect": {
             "type": "boolean",
             "default": True,
+            "label": {
+                "en": "Show Dragon Aspect",
+                "de": "Drachenaspekt anzeigen",
+                "es": "Mostrar aspecto dragón",
+                "fr": "Afficher l'aspect dragon",
+                "it": "Mostra aspetto drago",
+                "nl": "Toon drakenaspect",
+                "pt": "Mostrar aspecto dragão",
+                "ru": "Показать аспект дракона",
+                "ja": "ドラゴンアスペクトを表示",
+                "zh": "显示龙族守护者",
+                "ko": "용의 위상 표시"
+            },
             "description": {
-                "en": "Show dragon aspect of the day",
-                "de": "Drachenaspekt des Tages anzeigen"
+                "en": "Display the current Dragon Aspect blessing",
+                "de": "Zeige den aktuellen Drachenaspekt-Segen"
             }
         }
     }
@@ -220,12 +261,12 @@ CALENDAR_INFO = {
 
 
 class WarcraftCalendarSensor(AlternativeTimeSensorBase):
-    """Sensor for displaying World of Warcraft Azeroth Calendar."""
+    """Sensor for displaying World of Warcraft Calendar."""
     
     # Class-level update interval
-    UPDATE_INTERVAL = 3600  # Update every hour
+    UPDATE_INTERVAL = UPDATE_INTERVAL
     
-    def __init__(self, base_name: str, hass: HomeAssistant, config_entry: ConfigEntry = None) -> None:
+    def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the Warcraft calendar sensor."""
         super().__init__(base_name, hass)
         
@@ -240,22 +281,56 @@ class WarcraftCalendarSensor(AlternativeTimeSensorBase):
         self._attr_unique_id = f"{base_name}_warcraft"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:sword")
         
-        # Load configuration options from config_entry if available
-        plugin_options = {}
-        if config_entry and config_entry.data:
-            plugin_options = config_entry.data.get("plugin_options", {}).get("warcraft", {})
-        
-        # Configuration options with defaults
-        self._faction = plugin_options.get("faction", "Neutral")
-        self._region = plugin_options.get("region", "Eastern Kingdoms")
-        self._show_events = plugin_options.get("show_events", True)
-        self._show_moons = plugin_options.get("show_moons", True)
-        self._show_dragon_aspect = plugin_options.get("show_dragon_aspect", True)
+        # Configuration options with defaults from CALENDAR_INFO
+        config_defaults = CALENDAR_INFO.get("config_options", {})
+        self._faction = config_defaults.get("faction", {}).get("default", "Neutral")
+        self._region = config_defaults.get("region", {}).get("default", "Eastern Kingdoms")
+        self._show_events = config_defaults.get("show_events", {}).get("default", True)
+        self._show_moons = config_defaults.get("show_moons", {}).get("default", True)
+        self._show_dragon_aspect = config_defaults.get("show_dragon_aspect", {}).get("default", True)
         
         # Warcraft data
         self._warcraft_data = CALENDAR_INFO["warcraft_data"]
         
+        # Flag to track if options have been loaded
+        self._options_loaded = False
+        
+        # Initialize state
+        self._state = None
+        self._warcraft_date = {}
+        
         _LOGGER.debug(f"Initialized Warcraft Calendar sensor: {self._attr_name}")
+    
+    def _load_options(self) -> None:
+        """Load plugin options after IDs are set."""
+        if self._options_loaded:
+            return
+            
+        try:
+            options = self.get_plugin_options()
+            if options:
+                # Update configuration from plugin options
+                self._faction = options.get("faction", self._faction)
+                self._region = options.get("region", self._region)
+                self._show_events = options.get("show_events", self._show_events)
+                self._show_moons = options.get("show_moons", self._show_moons)
+                self._show_dragon_aspect = options.get("show_dragon_aspect", self._show_dragon_aspect)
+                
+                _LOGGER.debug(f"Warcraft sensor loaded options: faction={self._faction}, "
+                            f"region={self._region}, show_events={self._show_events}")
+            else:
+                _LOGGER.debug("Warcraft sensor using default options - no custom options found")
+                
+            self._options_loaded = True
+        except Exception as e:
+            _LOGGER.debug(f"Warcraft sensor could not load options yet: {e}")
+    
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        
+        # Try to load options now that IDs should be set
+        self._load_options()
     
     @property
     def state(self):
@@ -267,12 +342,8 @@ class WarcraftCalendarSensor(AlternativeTimeSensorBase):
         """Return the state attributes."""
         attrs = super().extra_state_attributes
         
-        # Ensure attrs is a dictionary
-        if attrs is None:
-            attrs = {}
-        
         # Add Warcraft-specific attributes
-        if hasattr(self, '_warcraft_date'):
+        if self._warcraft_date:
             attrs.update(self._warcraft_date)
             
             # Add description in user's language
@@ -290,159 +361,138 @@ class WarcraftCalendarSensor(AlternativeTimeSensorBase):
     def _calculate_moon_phase(self, days_since_epoch: int, moon_data: dict) -> str:
         """Calculate moon phase based on cycle."""
         cycle_position = days_since_epoch % moon_data["cycle_days"]
-        phase_index = int((cycle_position / moon_data["cycle_days"]) * len(moon_data["phases"]))
-        if phase_index >= len(moon_data["phases"]):
-            phase_index = len(moon_data["phases"]) - 1
-        return moon_data["phases"][phase_index]
+        
+        if "phases" in moon_data and len(moon_data["phases"]) > 2:
+            # For moons with multiple phases (White Lady)
+            phase_length = moon_data["cycle_days"] / len(moon_data["phases"])
+            phase_index = int(cycle_position / phase_length)
+            return moon_data["phases"][min(phase_index, len(moon_data["phases"]) - 1)]
+        else:
+            # For binary visibility (Blue Child)
+            if cycle_position < moon_data["cycle_days"] / 2:
+                return "Visible"
+            else:
+                return "Hidden"
     
-    def _get_dragon_aspect(self, day: int) -> Dict[str, str]:
-        """Get dragon aspect for the day."""
-        aspects = self._warcraft_data["dragon_aspects"]
-        aspect_index = (day - 1) % len(aspects)
+    def _get_current_event(self, month: int, day: int) -> str:
+        """Get current event if any."""
+        date_key = f"{month}-{day}"
+        events = self._warcraft_data["events"]
+        
+        # Check for exact date match
+        if date_key in events:
+            return events[date_key]
+        
+        # Check for ongoing events (simplified - in reality would need date ranges)
+        ongoing_events = {
+            (1, 23, 2, 10): "Lunar Festival",
+            (6, 21, 7, 5): "Midsummer Fire Festival",
+            (9, 20, 10, 6): "Brewfest",
+            (10, 18, 11, 1): "Hallow's End",
+            (11, 7, 11, 30): "Pilgrim's Bounty",
+            (12, 15, 1, 2): "Winter Veil"
+        }
+        
+        for (start_m, start_d, end_m, end_d), event in ongoing_events.items():
+            if start_m <= month <= end_m:
+                if (month == start_m and day >= start_d) or (month == end_m and day <= end_d) or (start_m < month < end_m):
+                    return event
+        
+        return None
+    
+    def _get_dragon_aspect_blessing(self, day_of_year: int) -> tuple:
+        """Get current Dragon Aspect blessing (rotates every 73 days)."""
+        aspects = list(self._warcraft_data["dragon_aspects"].items())
+        aspect_index = (day_of_year // 73) % len(aspects)
         return aspects[aspect_index]
     
     def _calculate_warcraft_date(self, earth_date: datetime) -> Dict[str, Any]:
         """Calculate Warcraft calendar date from Earth date."""
         
-        # Current year in Azeroth (Year 35 after Dark Portal)
-        azeroth_year = self._warcraft_data["current_year"]
-        year_name = self._warcraft_data["year_name"]
+        # Calculate day of year
+        day_of_year = earth_date.timetuple().tm_yday
         
-        # Get month and day (following Earth calendar)
-        month_data = self._warcraft_data["months"][earth_date.month - 1]
+        # Map to Warcraft calendar (using Earth calendar as base for simplicity)
+        month = earth_date.month
         day = earth_date.day
+        year = self._warcraft_data["current_year"]
+        
+        # Get month data
+        month_data = self._warcraft_data["months"][month - 1]
+        month_name = month_data["name"]
+        season = month_data["season"]
         
         # Get weekday
-        weekday_index = earth_date.weekday()
-        if weekday_index == 6:  # Sunday
-            weekday_index = 0
-        else:
-            weekday_index += 1
-        weekday_data = self._warcraft_data["weekdays"][weekday_index]
+        weekday = self._warcraft_data["weekdays"][earth_date.weekday()]
         
-        # Check for events
-        event_data = self._warcraft_data["events"].get((earth_date.month, earth_date.day))
-        event = ""
-        if event_data and self._show_events:
-            # Check if event is faction-specific
-            if event_data["faction"] in ["Both", self._faction]:
-                event = f"{event_data['emoji']} {event_data['name']}"
+        # Calculate days since epoch for moon phases
+        epoch_date = datetime(2004, 11, 23)  # WoW release date
+        days_since_epoch = (earth_date - epoch_date).days
         
         # Calculate moon phases
-        days_since_epoch = (earth_date - datetime(2000, 1, 1)).days
-        white_lady_phase = ""
-        blue_child_phase = ""
+        white_lady_phase = self._calculate_moon_phase(
+            days_since_epoch, 
+            self._warcraft_data["moons"]["white_lady"]
+        )
+        blue_child_phase = self._calculate_moon_phase(
+            days_since_epoch,
+            self._warcraft_data["moons"]["blue_child"]
+        )
         
-        if self._show_moons:
-            white_lady_phase = self._calculate_moon_phase(
-                days_since_epoch, 
-                self._warcraft_data["moons"]["white_lady"]
-            )
-            blue_child_phase = self._calculate_moon_phase(
-                days_since_epoch,
-                self._warcraft_data["moons"]["blue_child"]
-            )
-        
-        # Get time period
-        hour = earth_date.hour
-        time_period = None
-        for period in self._warcraft_data["time_periods"]:
-            start, end = period["hours"]
-            if start <= hour < end or (start > end and (hour >= start or hour < end)):
-                time_period = period
-                break
-        
-        # Get region info
-        region_data = self._warcraft_data["regions"].get(self._region, {})
-        region_capital = region_data.get("capital", "Unknown")
-        region_faction = region_data.get("faction", "Neutral")
-        
-        # Get faction info
-        faction_data = self._warcraft_data["factions"].get(self._faction, {})
-        faction_greeting = faction_data.get("greeting", "")
-        faction_emoji = faction_data.get("emoji", "")
-        
-        # Get dragon aspect
-        dragon_aspect = None
-        if self._show_dragon_aspect:
-            dragon_aspect = self._get_dragon_aspect(day)
-        
-        # Build date string
-        date_parts = [
-            f"Year {azeroth_year}",
-            weekday_data["name"],
-            f"{day}{'st' if day == 1 else 'nd' if day == 2 else 'rd' if day == 3 else 'th'} of {month_data['name']}"
-        ]
-        
-        # Add event if present
-        if event:
-            date_parts.append(event)
-        
-        # Add moon phases
-        if self._show_moons:
-            date_parts.append(f"White Lady: {white_lady_phase}")
-            if earth_date.day % 7 == 0:  # Blue Child visible every 7 days
-                date_parts.append(f"Blue Child: {blue_child_phase}")
-        
-        # Add time period
-        if time_period:
-            date_parts.append(f"{time_period['emoji']} {time_period['name']}")
-        
-        full_display = " | ".join(date_parts)
+        # Format the date
+        formatted = f"Year {year}, {weekday}, {day} {month_name}"
         
         result = {
-            "year": azeroth_year,
-            "year_name": year_name,
-            "month": earth_date.month,
-            "month_name": month_data["name"],
-            "season": month_data["season"],
-            "season_emoji": month_data["emoji"],
+            "year": year,
+            "month": month,
+            "month_name": month_name,
             "day": day,
-            "weekday": weekday_data["name"],
-            "weekday_abbr": weekday_data["abbr"],
-            "element": weekday_data["element"],
-            "event": event,
-            "white_lady_phase": white_lady_phase,
-            "blue_child_phase": blue_child_phase,
-            "time_period": time_period["name"] if time_period else "",
-            "time_activity": time_period["activity"] if time_period else "",
-            "region": self._region,
-            "region_capital": region_capital,
-            "region_faction": region_faction,
-            "faction_greeting": faction_greeting,
-            "faction_emoji": faction_emoji,
-            "gregorian_date": earth_date.strftime("%Y-%m-%d"),
-            "time": earth_date.strftime("%H:%M:%S"),
-            "full_display": full_display
+            "weekday": weekday,
+            "season": season,
+            "formatted": formatted,
+            "full_date": f"{formatted} ({season})"
         }
         
-        # Add dragon aspect if enabled
-        if dragon_aspect:
-            result["dragon_aspect"] = dragon_aspect["name"]
-            result["dragon_domain"] = dragon_aspect["domain"]
-            result["dragon_message"] = f"Under the protection of {dragon_aspect['name']}, Aspect of {dragon_aspect['domain']}"
+        # Add event if configured
+        if self._show_events:
+            event = self._get_current_event(month, day)
+            if event:
+                result["current_event"] = event
+                result["full_date"] += f" - {event}"
         
-        # Add special messages based on time
-        if time_period:
-            if time_period["name"] == "Dawn":
-                result["special_message"] = "Daily quests have reset!"
-            elif time_period["name"] == "Evening":
-                result["special_message"] = "Raid time! Gather your guild!"
-            elif time_period["name"] == "Night":
-                result["special_message"] = "Rare spawns may appear..."
+        # Add moon phases if configured
+        if self._show_moons:
+            result["white_lady_phase"] = white_lady_phase
+            result["blue_child_phase"] = blue_child_phase
+            result["moons"] = f"White Lady: {white_lady_phase}, Blue Child: {blue_child_phase}"
         
-        # Add faction war cry
-        if self._faction != "Neutral":
-            result["war_cry"] = faction_greeting
+        # Add Dragon Aspect if configured
+        if self._show_dragon_aspect:
+            aspect_name, aspect_domain = self._get_dragon_aspect_blessing(day_of_year)
+            result["dragon_aspect"] = aspect_name
+            result["aspect_domain"] = aspect_domain
+            result["blessing"] = f"Blessed by {aspect_name}, Aspect of {aspect_domain}"
+        
+        # Add faction-specific greeting
+        faction_greetings = {
+            "Alliance": "For the Alliance!",
+            "Horde": "For the Horde!",
+            "Neutral": "Safe travels, adventurer"
+        }
+        result["greeting"] = faction_greetings.get(self._faction, "Safe travels")
         
         return result
     
     def update(self) -> None:
         """Update the sensor."""
+        # Ensure options are loaded (in case async_added_to_hass hasn't run yet)
+        if not self._options_loaded:
+            self._load_options()
+        
         now = datetime.now()
         self._warcraft_date = self._calculate_warcraft_date(now)
         
-        # Set state to formatted date
-        self._state = self._warcraft_date["full_display"]
+        # Set state to formatted Warcraft date
+        self._state = self._warcraft_date["formatted"]
         
         _LOGGER.debug(f"Updated Warcraft Calendar to {self._state}")
