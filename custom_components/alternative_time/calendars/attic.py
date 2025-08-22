@@ -181,28 +181,153 @@ CALENDAR_INFO = {
         "show_greek": {
             "type": "boolean",
             "default": True,
-            "description": {
-                "en": "Show period names in Greek",
-                "de": "Periodennamen auf Griechisch anzeigen",
+            "label": {
+                "en": "Show Greek Period Names",
+                "de": "Griechische Periodennamen anzeigen",
+                "es": "Mostrar nombres de períodos en griego",
+                "fr": "Afficher les noms de périodes en grec",
+                "it": "Mostra nomi dei periodi in greco",
+                "nl": "Toon Griekse periodenamen",
+                "pt": "Mostrar nomes de períodos em grego",
+                "ru": "Показывать греческие названия периодов",
+                "ja": "ギリシャ語の期間名を表示",
+                "zh": "显示希腊文期间名称",
+                "ko": "그리스어 기간 이름 표시",
                 "el": "Εμφάνιση ονομάτων περιόδων στα ελληνικά"
+            },
+            "description": {
+                "en": "Display period names in Greek script (ἱσταμένου) or transliteration (histamenou)",
+                "de": "Periodennamen in griechischer Schrift (ἱσταμένου) oder Transliteration (histamenou) anzeigen",
+                "es": "Mostrar nombres de períodos en escritura griega (ἱσταμένου) o transliteración (histamenou)",
+                "fr": "Afficher les noms de périodes en écriture grecque (ἱσταμένου) ou translittération (histamenou)",
+                "el": "Εμφάνιση ονομάτων περιόδων με ελληνικούς χαρακτήρες (ἱσταμένου) ή μεταγραφή (histamenou)"
             }
         },
         "show_festivals": {
             "type": "boolean",
             "default": True,
-            "description": {
-                "en": "Show Athenian festivals",
+            "label": {
+                "en": "Show Athenian Festivals",
                 "de": "Athenische Feste anzeigen",
+                "es": "Mostrar festivales atenienses",
+                "fr": "Afficher les fêtes athéniennes",
+                "it": "Mostra feste ateniesi",
+                "nl": "Toon Atheense festivals",
+                "pt": "Mostrar festivais atenienses",
+                "ru": "Показывать афинские праздники",
+                "ja": "アテナイの祭りを表示",
+                "zh": "显示雅典节日",
+                "ko": "아테네 축제 표시",
                 "el": "Εμφάνιση αθηναϊκών εορτών"
+            },
+            "description": {
+                "en": "Display major Athenian religious festivals and celebrations",
+                "de": "Wichtige athenische religiöse Feste und Feiertage anzeigen",
+                "es": "Mostrar los principales festivales religiosos y celebraciones atenienses",
+                "fr": "Afficher les principales fêtes religieuses et célébrations athéniennes",
+                "el": "Εμφάνιση των κύριων αθηναϊκών θρησκευτικών εορτών και γιορτών"
             }
         },
         "show_meanings": {
             "type": "boolean",
             "default": False,
+            "label": {
+                "en": "Show Month Meanings",
+                "de": "Monatsbedeutungen anzeigen",
+                "es": "Mostrar significados de meses",
+                "fr": "Afficher les significations des mois",
+                "it": "Mostra significati dei mesi",
+                "nl": "Toon maandbetekenissen",
+                "pt": "Mostrar significados dos meses",
+                "ru": "Показывать значения месяцев",
+                "ja": "月の意味を表示",
+                "zh": "显示月份含义",
+                "ko": "월 의미 표시",
+                "el": "Εμφάνιση σημασίας μηνών"
+            },
             "description": {
-                "en": "Show month name meanings",
-                "de": "Monatsnamen-Bedeutungen anzeigen",
-                "el": "Εμφάνιση σημασίας ονομάτων μηνών"
+                "en": "Display the meanings/etymology of month names",
+                "de": "Die Bedeutungen/Etymologie der Monatsnamen anzeigen",
+                "es": "Mostrar los significados/etimología de los nombres de los meses",
+                "fr": "Afficher les significations/étymologie des noms de mois",
+                "el": "Εμφάνιση της σημασίας/ετυμολογίας των ονομάτων των μηνών"
+            }
+        },
+        "format": {
+            "type": "select",
+            "default": "full",
+            "options": ["full", "simple", "compact", "detailed"],
+            "label": {
+                "en": "Display Format",
+                "de": "Anzeigeformat",
+                "es": "Formato de visualización",
+                "fr": "Format d'affichage",
+                "it": "Formato di visualizzazione",
+                "nl": "Weergaveformaat",
+                "pt": "Formato de exibição",
+                "ru": "Формат отображения",
+                "ja": "表示形式",
+                "zh": "显示格式",
+                "ko": "표시 형식",
+                "el": "Μορφή εμφάνισης"
+            },
+            "description": {
+                "en": "Choose how detailed the Attic date should be displayed",
+                "de": "Wählen Sie, wie detailliert das attische Datum angezeigt werden soll",
+                "es": "Elija qué tan detallada debe ser la fecha ática",
+                "fr": "Choisissez le niveau de détail de la date attique",
+                "el": "Επιλέξτε πόσο λεπτομερής θα είναι η εμφάνιση της αττικής ημερομηνίας"
+            }
+        },
+        "archon_list": {
+            "type": "select",
+            "default": "sample",
+            "options": ["sample", "historical", "rotating"],
+            "label": {
+                "en": "Archon List",
+                "de": "Archontenliste",
+                "es": "Lista de Arcontes",
+                "fr": "Liste des Archontes",
+                "it": "Lista degli Arconti",
+                "nl": "Archontenlijst",
+                "pt": "Lista de Arcontes",
+                "ru": "Список архонтов",
+                "ja": "アルコンリスト",
+                "zh": "执政官名单",
+                "ko": "아르콘 목록",
+                "el": "Κατάλογος Αρχόντων"
+            },
+            "description": {
+                "en": "Choose which list of Archons to use (sample names, historical, or rotating)",
+                "de": "Wählen Sie, welche Archontenliste verwendet werden soll (Beispielnamen, historisch oder rotierend)",
+                "es": "Elija qué lista de Arcontes usar (nombres de muestra, históricos o rotativos)",
+                "fr": "Choisissez quelle liste d'Archontes utiliser (noms d'exemple, historiques ou rotatifs)",
+                "el": "Επιλέξτε ποια λίστα Αρχόντων να χρησιμοποιήσετε (δείγμα ονομάτων, ιστορική ή εναλλασσόμενη)"
+            }
+        },
+        "show_season": {
+            "type": "boolean",
+            "default": True,
+            "label": {
+                "en": "Show Season",
+                "de": "Jahreszeit anzeigen",
+                "es": "Mostrar estación",
+                "fr": "Afficher la saison",
+                "it": "Mostra stagione",
+                "nl": "Toon seizoen",
+                "pt": "Mostrar estação",
+                "ru": "Показывать время года",
+                "ja": "季節を表示",
+                "zh": "显示季节",
+                "ko": "계절 표시",
+                "el": "Εμφάνιση εποχής"
+            },
+            "description": {
+                "en": "Display the current season in Greek",
+                "de": "Die aktuelle Jahreszeit auf Griechisch anzeigen",
+                "es": "Mostrar la estación actual en griego",
+                "fr": "Afficher la saison actuelle en grec",
+                "el": "Εμφάνιση της τρέχουσας εποχής στα ελληνικά"
             }
         }
     }
@@ -213,7 +338,7 @@ class AtticCalendarSensor(AlternativeTimeSensorBase):
     """Sensor for displaying Attic Calendar (Ancient Athens)."""
     
     # Class-level update interval
-    UPDATE_INTERVAL = 3600  # Update every hour
+    UPDATE_INTERVAL = UPDATE_INTERVAL
     
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the Attic calendar sensor."""
@@ -227,15 +352,55 @@ class AtticCalendarSensor(AlternativeTimeSensorBase):
         self._attr_unique_id = f"{base_name}_attic_calendar"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:pillar")
         
-        # Configuration options
+        # Default configuration options
         self._show_greek = True
         self._show_festivals = True
         self._show_meanings = False
+        self._format = "full"
+        self._archon_list = "sample"
+        self._show_season = True
         
         # Attic data
         self._attic_data = CALENDAR_INFO["attic_data"]
         
+        # Track if options have been loaded
+        self._options_loaded = False
+        
         _LOGGER.debug(f"Initialized Attic Calendar sensor: {self._attr_name}")
+    
+    def _load_options(self) -> None:
+        """Load configuration options from config entry."""
+        if self._options_loaded:
+            return
+            
+        try:
+            options = self.get_plugin_options()
+            if options:
+                # Update configuration from plugin options
+                self._show_greek = options.get("show_greek", self._show_greek)
+                self._show_festivals = options.get("show_festivals", self._show_festivals)
+                self._show_meanings = options.get("show_meanings", self._show_meanings)
+                self._format = options.get("format", self._format)
+                self._archon_list = options.get("archon_list", self._archon_list)
+                self._show_season = options.get("show_season", self._show_season)
+                
+                _LOGGER.debug(f"Attic sensor loaded options: greek={self._show_greek}, "
+                            f"festivals={self._show_festivals}, meanings={self._show_meanings}, "
+                            f"format={self._format}, archon_list={self._archon_list}, "
+                            f"season={self._show_season}")
+            else:
+                _LOGGER.debug("Attic sensor using default options - no custom options found")
+                
+            self._options_loaded = True
+        except Exception as e:
+            _LOGGER.debug(f"Attic sensor could not load options yet: {e}")
+    
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        
+        # Try to load options now that IDs should be set
+        self._load_options()
     
     @property
     def state(self):
@@ -256,11 +421,24 @@ class AtticCalendarSensor(AlternativeTimeSensorBase):
             
             # Add reference
             attrs["reference"] = CALENDAR_INFO.get('reference_url', '')
+            
+            # Add configuration status
+            attrs["config"] = {
+                "show_greek": self._show_greek,
+                "show_festivals": self._show_festivals,
+                "show_meanings": self._show_meanings,
+                "format": self._format,
+                "archon_list": self._archon_list,
+                "show_season": self._show_season
+            }
         
         return attrs
     
     def _calculate_attic_date(self, earth_date: datetime) -> Dict[str, Any]:
         """Calculate Attic Calendar date from standard date."""
+        
+        # Load options if not loaded yet
+        self._load_options()
         
         # Simplified calculation - actual Attic calendar was complex
         # We approximate by starting the year around July (summer solstice)
@@ -296,8 +474,16 @@ class AtticCalendarSensor(AlternativeTimeSensorBase):
         period_greek = dekad_data["greek"] if self._show_greek else dekad_data["transliteration"]
         period_meaning = dekad_data["meaning"]
         
-        # Select archon (chief magistrate) - rotates yearly
-        archon = self._attic_data["archons"][earth_date.year % len(self._attic_data["archons"])]
+        # Select archon (chief magistrate) based on list type
+        if self._archon_list == "historical":
+            # Could add historical archon list here
+            archon = self._attic_data["archons"][earth_date.year % len(self._attic_data["archons"])]
+        elif self._archon_list == "rotating":
+            # Rotate through the list based on year
+            archon = self._attic_data["archons"][earth_date.year % len(self._attic_data["archons"])]
+        else:  # sample
+            # Use a fixed archon for simplicity
+            archon = self._attic_data["archons"][earth_date.year % len(self._attic_data["archons"])]
         
         # Calculate Olympiad (4-year cycle)
         years_since_epoch = earth_date.year - self._attic_data["olympiad_epoch"]
@@ -309,8 +495,32 @@ class AtticCalendarSensor(AlternativeTimeSensorBase):
         if self._show_festivals and month_name in self._attic_data["festivals"]:
             festivals = self._attic_data["festivals"][month_name]
         
-        # Format the date
-        full_date = f"{day_display} {period_greek} {month_name} | {archon} | Ol.{olympiad_number}.{olympiad_year}"
+        # Determine season if enabled
+        season = ""
+        if self._show_season:
+            if month_index in [0, 1, 2]:
+                season = "θέρος (Summer)"
+            elif month_index in [3, 4, 5]:
+                season = "φθινόπωρον (Autumn)"
+            elif month_index in [6, 7, 8]:
+                season = "χειμών (Winter)"
+            else:
+                season = "ἔαρ (Spring)"
+        
+        # Format the date based on format setting
+        if self._format == "compact":
+            full_date = f"{day_display} {period_greek[:3]}. {month_name[:3]}. | Ol.{olympiad_number}.{olympiad_year}"
+        elif self._format == "simple":
+            full_date = f"{day_display} {month_name} | Ol.{olympiad_number}.{olympiad_year}"
+        elif self._format == "detailed":
+            full_date = f"{day_display} {period_greek} ({period_meaning}) {month_name}"
+            if self._show_meanings:
+                full_date += f" ({month_meaning})"
+            full_date += f" | {archon} | Ol.{olympiad_number}.{olympiad_year}"
+            if self._show_season:
+                full_date += f" | {season}"
+        else:  # full
+            full_date = f"{day_display} {period_greek} {month_name} | {archon} | Ol.{olympiad_number}.{olympiad_year}"
         
         result = {
             "day": day_display,
@@ -336,15 +546,9 @@ class AtticCalendarSensor(AlternativeTimeSensorBase):
             result["festivals"] = ", ".join(festivals)
             result["festival_day"] = f"🏛️ Festival day: {festivals[0]}"
         
-        # Add season
-        if month_index in [0, 1, 2]:
-            result["season"] = "θέρος (Summer)"
-        elif month_index in [3, 4, 5]:
-            result["season"] = "φθινόπωρον (Autumn)"
-        elif month_index in [6, 7, 8]:
-            result["season"] = "χειμών (Winter)"
-        else:
-            result["season"] = "ἔαρ (Spring)"
+        # Add season if enabled
+        if self._show_season:
+            result["season"] = season
         
         return result
     
