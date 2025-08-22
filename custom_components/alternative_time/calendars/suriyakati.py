@@ -19,43 +19,43 @@ UPDATE_INTERVAL = 3600
 
 # Complete calendar information for auto-discovery
 CALENDAR_INFO = {
-    "id": "suriyakati",
+    "id": "suriyakati_thai",
     "version": "2.5.0",
     "icon": "mdi:buddhism",
     "category": "cultural",
     "accuracy": "official",
     "update_interval": UPDATE_INTERVAL,
     
-    # Multi-language names
+    # Multi-language names (English primary)
     "name": {
-        "en": "Suriyakati Calendar",
-        "de": "Suriyakati-Kalender",
-        "es": "Calendario Suriyakati",
-        "fr": "Calendrier Suriyakati",
-        "it": "Calendario Suriyakati",
-        "nl": "Suriyakati Kalender",
-        "pt": "Calendário Suriyakati",
-        "ru": "Календарь Сурьякати",
-        "ja": "スーリヤカティ暦",
-        "zh": "素里亚卡提历",
-        "ko": "수리야카티 달력",
+        "en": "Thai Buddhist Calendar",
+        "de": "Thailändischer Buddhistischer Kalender",
+        "es": "Calendario Budista Tailandés",
+        "fr": "Calendrier Bouddhiste Thaïlandais",
+        "it": "Calendario Buddista Thailandese",
+        "nl": "Thaise Boeddhistische Kalender",
+        "pt": "Calendário Budista Tailandês",
+        "ru": "Тайский буддийский календарь",
+        "ja": "タイ仏教暦",
+        "zh": "泰国佛历",
+        "ko": "태국 불교 달력",
         "th": "ปฏิทินสุริยคติไทย"
     },
     
-    # Short descriptions for UI
+    # Short descriptions for UI (English primary)
     "description": {
-        "en": "Thai Buddhist calendar with BE year (543 years ahead)",
-        "de": "Thailändischer buddhistischer Kalender mit BE-Jahr (543 Jahre voraus)",
-        "es": "Calendario budista tailandés con año BE (543 años adelante)",
-        "fr": "Calendrier bouddhiste thaïlandais avec année BE (543 ans d'avance)",
-        "it": "Calendario buddista thailandese con anno BE (543 anni avanti)",
-        "nl": "Thaise boeddhistische kalender met BE-jaar (543 jaar vooruit)",
-        "pt": "Calendário budista tailandês com ano BE (543 anos à frente)",
-        "ru": "Тайский буддийский календарь с годом BE (на 543 года вперед)",
-        "ja": "仏暦（BE）年のタイ仏教暦（543年先）",
-        "zh": "泰国佛历，BE年（提前543年）",
-        "ko": "BE 연도의 태국 불교 달력 (543년 앞)",
-        "th": "ปฏิทินพุทธศักราชไทย (พ.ศ. = ค.ศ. + 543)"
+        "en": "Thai solar calendar with Buddhist Era year (BE = CE + 543)",
+        "de": "Thailändischer Sonnenkalender mit buddhistischer Ära (BE = CE + 543)",
+        "es": "Calendario solar tailandés con Era Budista (EB = EC + 543)",
+        "fr": "Calendrier solaire thaïlandais avec Ère Bouddhiste (EB = EC + 543)",
+        "it": "Calendario solare thailandese con Era Buddista (EB = EC + 543)",
+        "nl": "Thaise zonnekalender met Boeddhistische Era (BE = CE + 543)",
+        "pt": "Calendário solar tailandês com Era Budista (EB = EC + 543)",
+        "ru": "Тайский солнечный календарь с буддийской эрой (БЭ = НЭ + 543)",
+        "ja": "仏暦年のタイ太陽暦（BE = CE + 543）",
+        "zh": "泰国太阳历，佛历纪年（BE = CE + 543）",
+        "ko": "불기 연도의 태국 태양력 (BE = CE + 543)",
+        "th": "ปฏิทินสุริยคติไทย พุทธศักราช (พ.ศ. = ค.ศ. + 543)"
     },
     
     # Detailed information for documentation
@@ -89,102 +89,78 @@ CALENDAR_INFO = {
             "structure": "ปฏิทินสุริยคติเหมือนเกรกอเรียนแต่ใช้พุทธศักราช",
             "year": "พุทธศักราช (พ.ศ.) = คริสต์ศักราช (ค.ศ.) + 543",
             "new_year": "ปีใหม่ทางการ 1 มกราคม, สงกรานต์ 13-15 เมษายน",
-            "months": "12 เดือนชื่อไทยมาจากภาษาสันสกฤต",
-            "weeks": "สัปดาห์ 7 วันตามดาวเคราะห์",
-            "zodiac": "12 นักษัตรคล้ายจีน",
-            "colors": "แต่ละวันมีสีประจำ",
+            "months": "12 เดือน ชื่อไทยมาจากภาษาสันสกฤต",
+            "weeks": "สัปดาห์ละ 7 วัน ตามดาวเคราะห์",
+            "zodiac": "12 นักษัตร คล้ายปีนักษัตรจีน",
+            "colors": "แต่ละวันมีสีประจำวัน",
             "holy_days": "วันพระตามจันทรคติ",
-            "usage": "ใช้อย่างเป็นทางการในไทยทุกหน่วยงาน"
+            "usage": "ใช้อย่างเป็นทางการในประเทศไทย"
         }
     },
     
-    # Suriyakati-specific data
-    "suriyakati_data": {
-        # Thai month names with meanings
+    # Thai-specific data
+    "thai_data": {
+        # Thai months (solar calendar)
         "months": [
-            {"thai": "มกราคม", "roman": "Makarakhom", "sanskrit": "Makara", "meaning": "Capricorn", "days": 31},
-            {"thai": "กุมภาพันธ์", "roman": "Kumphaphan", "sanskrit": "Kumbha", "meaning": "Aquarius", "days": 28},
-            {"thai": "มีนาคม", "roman": "Minakhom", "sanskrit": "Mina", "meaning": "Pisces", "days": 31},
-            {"thai": "เมษายน", "roman": "Mesayon", "sanskrit": "Mesha", "meaning": "Aries", "days": 30},
-            {"thai": "พฤษภาคม", "roman": "Phruetsaphakhom", "sanskrit": "Vrishabha", "meaning": "Taurus", "days": 31},
-            {"thai": "มิถุนายน", "roman": "Mithunayon", "sanskrit": "Mithuna", "meaning": "Gemini", "days": 30},
-            {"thai": "กรกฎาคม", "roman": "Karakadakhom", "sanskrit": "Karkata", "meaning": "Cancer", "days": 31},
-            {"thai": "สิงหาคม", "roman": "Singhakhom", "sanskrit": "Simha", "meaning": "Leo", "days": 31},
-            {"thai": "กันยายน", "roman": "Kanyayon", "sanskrit": "Kanya", "meaning": "Virgo", "days": 30},
-            {"thai": "ตุลาคม", "roman": "Tulakhom", "sanskrit": "Tula", "meaning": "Libra", "days": 31},
-            {"thai": "พฤศจิกายน", "roman": "Phruetsachikayon", "sanskrit": "Vrishchika", "meaning": "Scorpio", "days": 30},
-            {"thai": "ธันวาคม", "roman": "Thanwakhom", "sanskrit": "Dhanu", "meaning": "Sagittarius", "days": 31}
+            {"name": "มกราคม", "roman": "Makarakhom", "english": "January", "abbr": "ม.ค."},
+            {"name": "กุมภาพันธ์", "roman": "Kumphaphan", "english": "February", "abbr": "ก.พ."},
+            {"name": "มีนาคม", "roman": "Minakhom", "english": "March", "abbr": "มี.ค."},
+            {"name": "เมษายน", "roman": "Mesayon", "english": "April", "abbr": "เม.ย."},
+            {"name": "พฤษภาคม", "roman": "Phruetsaphakhom", "english": "May", "abbr": "พ.ค."},
+            {"name": "มิถุนายน", "roman": "Mithunayon", "english": "June", "abbr": "มิ.ย."},
+            {"name": "กรกฎาคม", "roman": "Karakadakhom", "english": "July", "abbr": "ก.ค."},
+            {"name": "สิงหาคม", "roman": "Singhakhom", "english": "August", "abbr": "ส.ค."},
+            {"name": "กันยายน", "roman": "Kanyayon", "english": "September", "abbr": "ก.ย."},
+            {"name": "ตุลาคม", "roman": "Tulakhom", "english": "October", "abbr": "ต.ค."},
+            {"name": "พฤศจิกายน", "roman": "Phruetsachikayon", "english": "November", "abbr": "พ.ย."},
+            {"name": "ธันวาคม", "roman": "Thanwakhom", "english": "December", "abbr": "ธ.ค."}
         ],
         
-        # Thai weekdays with planetary associations
+        # Thai weekdays
         "weekdays": [
-            {"thai": "วันอาทิตย์", "roman": "Wan Athit", "planet": "Sun", "color": "Red", "emoji": "☀️"},
-            {"thai": "วันจันทร์", "roman": "Wan Chan", "planet": "Moon", "color": "Yellow", "emoji": "🌙"},
-            {"thai": "วันอังคาร", "roman": "Wan Angkhan", "planet": "Mars", "color": "Pink", "emoji": "♂️"},
-            {"thai": "วันพุธ", "roman": "Wan Phut", "planet": "Mercury", "color": "Green", "emoji": "☿️"},
-            {"thai": "วันพฤหัสบดี", "roman": "Wan Pharuehat", "planet": "Jupiter", "color": "Orange", "emoji": "♃"},
-            {"thai": "วันศุกร์", "roman": "Wan Suk", "planet": "Venus", "color": "Blue", "emoji": "♀️"},
-            {"thai": "วันเสาร์", "roman": "Wan Sao", "planet": "Saturn", "color": "Purple", "emoji": "♄"}
+            {"name": "อาทิตย์", "roman": "Wan Athit", "english": "Sunday", "planet": "Sun", "color": "Red"},
+            {"name": "จันทร์", "roman": "Wan Chan", "english": "Monday", "planet": "Moon", "color": "Yellow"},
+            {"name": "อังคาร", "roman": "Wan Angkhan", "english": "Tuesday", "planet": "Mars", "color": "Pink"},
+            {"name": "พุธ", "roman": "Wan Phut", "english": "Wednesday", "planet": "Mercury", "color": "Green"},
+            {"name": "พฤหัสบดี", "roman": "Wan Phruehatsabodi", "english": "Thursday", "planet": "Jupiter", "color": "Orange"},
+            {"name": "ศุกร์", "roman": "Wan Suk", "english": "Friday", "planet": "Venus", "color": "Blue"},
+            {"name": "เสาร์", "roman": "Wan Sao", "english": "Saturday", "planet": "Saturn", "color": "Purple"}
         ],
         
-        # Thai zodiac animals (12-year cycle)
+        # Thai zodiac animals (similar to Chinese)
         "zodiac": [
-            {"thai": "ชวด", "roman": "Chuad", "animal": "Rat", "emoji": "🐀"},
-            {"thai": "ฉลู", "roman": "Chalu", "animal": "Ox", "emoji": "🐂"},
-            {"thai": "ขาล", "roman": "Khan", "animal": "Tiger", "emoji": "🐅"},
-            {"thai": "เถาะ", "roman": "Tho", "animal": "Rabbit", "emoji": "🐰"},
-            {"thai": "มะโรง", "roman": "Marong", "animal": "Dragon", "emoji": "🐉"},
-            {"thai": "มะเส็ง", "roman": "Maseng", "animal": "Snake", "emoji": "🐍"},
-            {"thai": "มะเมีย", "roman": "Mamia", "animal": "Horse", "emoji": "🐴"},
-            {"thai": "มะแม", "roman": "Mamae", "animal": "Goat", "emoji": "🐐"},
-            {"thai": "วอก", "roman": "Wok", "animal": "Monkey", "emoji": "🐵"},
-            {"thai": "ระกา", "roman": "Raka", "animal": "Rooster", "emoji": "🐓"},
-            {"thai": "จอ", "roman": "Cho", "animal": "Dog", "emoji": "🐕"},
-            {"thai": "กุน", "roman": "Kun", "animal": "Pig", "emoji": "🐷"}
+            {"thai": "ชวด", "roman": "Chuat", "english": "Rat", "emoji": "🐀"},
+            {"thai": "ฉลู", "roman": "Chalu", "english": "Ox", "emoji": "🐂"},
+            {"thai": "ขาล", "roman": "Khan", "english": "Tiger", "emoji": "🐅"},
+            {"thai": "เถาะ", "roman": "Tho", "english": "Rabbit", "emoji": "🐰"},
+            {"thai": "มะโรง", "roman": "Marong", "english": "Dragon", "emoji": "🐉"},
+            {"thai": "มะเส็ง", "roman": "Maseng", "english": "Snake", "emoji": "🐍"},
+            {"thai": "มะเมีย", "roman": "Mamia", "english": "Horse", "emoji": "🐴"},
+            {"thai": "มะแม", "roman": "Mamae", "english": "Goat", "emoji": "🐐"},
+            {"thai": "วอก", "roman": "Wok", "english": "Monkey", "emoji": "🐵"},
+            {"thai": "ระกา", "roman": "Raka", "english": "Rooster", "emoji": "🐓"},
+            {"thai": "จอ", "roman": "Cho", "english": "Dog", "emoji": "🐕"},
+            {"thai": "กุน", "roman": "Kun", "english": "Pig", "emoji": "🐖"}
         ],
         
         # Thai numerals
-        "thai_digits": "๐๑๒๓๔๕๖๗๘๙",
+        "thai_digits": ["๐", "๑", "๒", "๓", "๔", "๕", "๖", "๗", "๘", "๙"],
         
-        # Important Thai holidays
+        # Major Thai holidays
         "holidays": {
-            (1, 1): {"thai": "วันขึ้นปีใหม่", "english": "New Year's Day", "type": "public"},
-            (2, 14): {"thai": "วันวาเลนไทน์", "english": "Valentine's Day", "type": "observance"},
-            (4, 6): {"thai": "วันจักรี", "english": "Chakri Day", "type": "public"},
-            (4, 13): {"thai": "วันสงกรานต์", "english": "Songkran", "type": "public"},
-            (4, 14): {"thai": "วันสงกรานต์", "english": "Songkran", "type": "public"},
-            (4, 15): {"thai": "วันสงกรานต์", "english": "Songkran", "type": "public"},
-            (5, 1): {"thai": "วันแรงงาน", "english": "Labour Day", "type": "public"},
-            (5, 4): {"thai": "วันฉัตรมงคล", "english": "Coronation Day", "type": "public"},
-            (7, 28): {"thai": "วันเฉลิมพระชนมพรรษา ร.10", "english": "King's Birthday", "type": "public"},
-            (8, 12): {"thai": "วันแม่แห่งชาติ", "english": "Mother's Day", "type": "public"},
-            (10, 13): {"thai": "วันคล้ายวันสวรรคต ร.9", "english": "Memorial Day R.9", "type": "public"},
-            (10, 23): {"thai": "วันปิยมหาราช", "english": "Chulalongkorn Day", "type": "public"},
-            (12, 5): {"thai": "วันพ่อแห่งชาติ", "english": "Father's Day", "type": "public"},
-            (12, 10): {"thai": "วันรัฐธรรมนูญ", "english": "Constitution Day", "type": "public"},
-            (12, 31): {"thai": "วันสิ้นปี", "english": "New Year's Eve", "type": "public"}
-        },
-        
-        # Buddhist holy days (simplified - actual dates follow lunar calendar)
-        "buddhist_days": {
-            "uposatha": "วันพระ",  # Buddhist holy day (4 per lunar month)
-            "makha_bucha": "วันมาฆบูชา",  # Full moon of 3rd lunar month
-            "visakha_bucha": "วันวิสาขบูชา",  # Full moon of 6th lunar month
-            "asanha_bucha": "วันอาสาฬหบูชา",  # Full moon of 8th lunar month
-            "khao_phansa": "วันเข้าพรรษา",  # Beginning of Buddhist Lent
-            "ok_phansa": "วันออกพรรษา"  # End of Buddhist Lent
-        },
-        
-        # Time periods
-        "time_periods": {
-            (0, 6): {"thai": "ตี", "roman": "ti", "meaning": "Late night", "emoji": "🌙"},
-            (6, 7): {"thai": "เช้าตรู่", "roman": "chao tru", "meaning": "Dawn", "emoji": "🌅"},
-            (7, 12): {"thai": "เช้า", "roman": "chao", "meaning": "Morning", "emoji": "☀️"},
-            (12, 13): {"thai": "เที่ยง", "roman": "thiang", "meaning": "Noon", "emoji": "🌞"},
-            (13, 16): {"thai": "บ่าย", "roman": "bai", "meaning": "Afternoon", "emoji": "🌤️"},
-            (16, 18): {"thai": "เย็น", "roman": "yen", "meaning": "Evening", "emoji": "🌇"},
-            (18, 20): {"thai": "ค่ำ", "roman": "kham", "meaning": "Early night", "emoji": "🌆"},
-            (20, 24): {"thai": "ดึก", "roman": "duek", "meaning": "Late night", "emoji": "🌌"}
+            (1, 1): {"thai": "วันขึ้นปีใหม่", "english": "New Year's Day"},
+            (2, 14): {"thai": "วันวาเลนไทน์", "english": "Valentine's Day"},
+            (4, 6): {"thai": "วันจักรี", "english": "Chakri Day"},
+            (4, 13): {"thai": "วันสงกรานต์", "english": "Songkran Festival"},
+            (5, 1): {"thai": "วันแรงงาน", "english": "Labour Day"},
+            (5, 4): {"thai": "วันฉัตรมงคล", "english": "Coronation Day"},
+            (7, 28): {"thai": "วันเฉลิมพระชนมพรรษา", "english": "King's Birthday"},
+            (8, 12): {"thai": "วันแม่", "english": "Mother's Day"},
+            (10, 13): {"thai": "วันคล้ายวันสวรรคต", "english": "Memorial Day"},
+            (10, 23): {"thai": "วันปิยมหาราช", "english": "Chulalongkorn Day"},
+            (12, 5): {"thai": "วันพ่อ", "english": "Father's Day"},
+            (12, 10): {"thai": "วันรัฐธรรมนูญ", "english": "Constitution Day"},
+            (12, 31): {"thai": "วันสิ้นปี", "english": "New Year's Eve"}
         }
     },
     
@@ -196,7 +172,7 @@ CALENDAR_INFO = {
     "official_since": "1888 CE (2431 BE)",
     
     # Example format
-    "example": "๒๕ ธันวาคม ๒๕๖๘ | 25 Thanwakhom 2568 BE",
+    "example": "25 December 2568 BE | ๒๕ ธันวาคม ๒๕๖๘",
     "example_meaning": "25th December 2568 Buddhist Era (2025 CE)",
     
     # Related calendars
@@ -204,67 +180,160 @@ CALENDAR_INFO = {
     
     # Tags for searching and filtering
     "tags": [
-        "cultural", "buddhist", "thai", "thailand", "official",
-        "solar", "suriyakati", "be", "songkran", "lunar"
+        "cultural", "buddhist", "thai", "thailand", "solar",
+        "official", "asian", "southeast_asia", "be", "songkran"
     ],
     
     # Special features
     "features": {
         "buddhist_era": True,
         "thai_numerals": True,
-        "planetary_days": True,
-        "zodiac_cycle": True,
-        "lunar_holidays": True,
-        "color_associations": True,
+        "zodiac_animals": True,
+        "day_colors": True,
+        "lunar_holy_days": True,
         "precision": "day"
     },
     
     # Configuration options for this calendar
     "config_options": {
+        "display_language": {
+            "type": "select",
+            "default": "english",
+            "options": ["english", "thai", "romanized", "combined"],
+            "label": {
+                "en": "Display Language",
+                "de": "Anzeigesprache",
+                "es": "Idioma de visualización",
+                "fr": "Langue d'affichage",
+                "it": "Lingua di visualizzazione",
+                "nl": "Weergavetaal",
+                "pt": "Idioma de exibição",
+                "ru": "Язык отображения",
+                "ja": "表示言語",
+                "zh": "显示语言",
+                "ko": "표시 언어",
+                "th": "ภาษาที่แสดง"
+            },
+            "description": {
+                "en": "Choose how to display the date (English, Thai script, romanized Thai, or combined)",
+                "de": "Wählen Sie, wie das Datum angezeigt werden soll (Englisch, Thai-Schrift, romanisiertes Thai oder kombiniert)",
+                "th": "เลือกวิธีแสดงวันที่ (อังกฤษ, อักษรไทย, ภาษาไทยเป็นอักษรโรมัน, หรือผสม)"
+            }
+        },
         "use_thai_numerals": {
             "type": "boolean",
             "default": True,
+            "label": {
+                "en": "Use Thai Numerals",
+                "de": "Thai-Ziffern verwenden",
+                "es": "Usar números tailandeses",
+                "fr": "Utiliser les chiffres thaïs",
+                "it": "Usa numeri thailandesi",
+                "nl": "Gebruik Thaise cijfers",
+                "pt": "Usar números tailandeses",
+                "ru": "Использовать тайские цифры",
+                "ja": "タイ数字を使用",
+                "zh": "使用泰文数字",
+                "ko": "태국 숫자 사용",
+                "th": "ใช้ตัวเลขไทย"
+            },
             "description": {
-                "en": "Use Thai numerals (๐-๙)",
-                "de": "Thailändische Ziffern verwenden (๐-๙)",
-                "th": "ใช้เลขไทย (๐-๙)"
+                "en": "Display numbers using Thai numerals (๐-๙)",
+                "de": "Zahlen mit thailändischen Ziffern anzeigen (๐-๙)",
+                "th": "แสดงตัวเลขเป็นเลขไทย (๐-๙)"
             }
         },
         "show_zodiac": {
             "type": "boolean",
             "default": True,
-            "description": {
-                "en": "Show zodiac animal",
+            "label": {
+                "en": "Show Zodiac Animal",
                 "de": "Tierkreiszeichen anzeigen",
+                "es": "Mostrar animal del zodiaco",
+                "fr": "Afficher l'animal du zodiaque",
+                "it": "Mostra animale zodiacale",
+                "nl": "Toon dierenriem dier",
+                "pt": "Mostrar animal do zodíaco",
+                "ru": "Показывать животное зодиака",
+                "ja": "干支を表示",
+                "zh": "显示生肖",
+                "ko": "띠 동물 표시",
                 "th": "แสดงปีนักษัตร"
+            },
+            "description": {
+                "en": "Display the Thai zodiac animal for the current year",
+                "de": "Das thailändische Tierkreiszeichen für das aktuelle Jahr anzeigen",
+                "th": "แสดงปีนักษัตรของปีปัจจุบัน"
             }
         },
-        "show_color": {
+        "show_day_color": {
             "type": "boolean",
             "default": True,
-            "description": {
-                "en": "Show daily color",
+            "label": {
+                "en": "Show Day Color",
                 "de": "Tagesfarbe anzeigen",
+                "es": "Mostrar color del día",
+                "fr": "Afficher la couleur du jour",
+                "it": "Mostra colore del giorno",
+                "nl": "Toon dagkleur",
+                "pt": "Mostrar cor do dia",
+                "ru": "Показывать цвет дня",
+                "ja": "曜日の色を表示",
+                "zh": "显示日期颜色",
+                "ko": "요일 색상 표시",
                 "th": "แสดงสีประจำวัน"
+            },
+            "description": {
+                "en": "Display the traditional lucky color for each day of the week",
+                "de": "Die traditionelle Glücksfarbe für jeden Wochentag anzeigen",
+                "th": "แสดงสีประจำวันตามประเพณี"
             }
         },
         "show_buddhist_days": {
             "type": "boolean",
-            "default": True,
-            "description": {
-                "en": "Show Buddhist holy days",
+            "default": False,
+            "label": {
+                "en": "Show Buddhist Holy Days",
                 "de": "Buddhistische Feiertage anzeigen",
+                "es": "Mostrar días sagrados budistas",
+                "fr": "Afficher les jours saints bouddhistes",
+                "it": "Mostra giorni sacri buddisti",
+                "nl": "Toon Boeddhistische heilige dagen",
+                "pt": "Mostrar dias sagrados budistas",
+                "ru": "Показывать буддийские святые дни",
+                "ja": "仏教の聖日を表示",
+                "zh": "显示佛教圣日",
+                "ko": "불교 성일 표시",
                 "th": "แสดงวันพระ"
+            },
+            "description": {
+                "en": "Display Buddhist Uposatha days (lunar-based holy days)",
+                "de": "Buddhistische Uposatha-Tage anzeigen (mondbasierte heilige Tage)",
+                "th": "แสดงวันพระ (วันธรรมสวนะตามจันทรคติ)"
             }
         },
-        "language": {
+        "format": {
             "type": "select",
-            "default": "both",
-            "options": ["thai", "roman", "both"],
+            "default": "full",
+            "options": ["full", "medium", "short", "numeric"],
+            "label": {
+                "en": "Date Format",
+                "de": "Datumsformat",
+                "es": "Formato de fecha",
+                "fr": "Format de date",
+                "it": "Formato data",
+                "nl": "Datumformaat",
+                "pt": "Formato de data",
+                "ru": "Формат даты",
+                "ja": "日付形式",
+                "zh": "日期格式",
+                "ko": "날짜 형식",
+                "th": "รูปแบบวันที่"
+            },
             "description": {
-                "en": "Display language",
-                "de": "Anzeigesprache",
-                "th": "ภาษาที่แสดง"
+                "en": "Choose how detailed the date display should be",
+                "de": "Wählen Sie, wie detailliert die Datumsanzeige sein soll",
+                "th": "เลือกความละเอียดในการแสดงวันที่"
             }
         }
     }
@@ -272,34 +341,72 @@ CALENDAR_INFO = {
 
 
 class SuriyakatiCalendarSensor(AlternativeTimeSensorBase):
-    """Sensor for displaying Suriyakati Calendar (Thai Buddhist)."""
+    """Sensor for displaying Thai Buddhist Calendar (Suriyakati)."""
     
     # Class-level update interval
-    UPDATE_INTERVAL = 3600  # Update every hour
+    UPDATE_INTERVAL = UPDATE_INTERVAL
     
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the Suriyakati calendar sensor."""
         super().__init__(base_name, hass)
         
         # Get translated name from metadata
-        calendar_name = self._translate('name', 'Suriyakati Calendar')
+        calendar_name = self._translate('name', 'Thai Buddhist Calendar')
         
         # Set sensor attributes
         self._attr_name = f"{base_name} {calendar_name}"
-        self._attr_unique_id = f"{base_name}_suriyakati"
+        self._attr_unique_id = f"{base_name}_suriyakati_thai"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:buddhism")
         
-        # Configuration options
+        # Default configuration options
+        self._display_language = "english"
         self._use_thai_numerals = True
         self._show_zodiac = True
-        self._show_color = True
-        self._show_buddhist_days = True
-        self._language = "both"  # thai, roman, or both
+        self._show_day_color = True
+        self._show_buddhist_days = False
+        self._format = "full"
         
-        # Suriyakati data
-        self._suriyakati_data = CALENDAR_INFO["suriyakati_data"]
+        # Thai data
+        self._thai_data = CALENDAR_INFO["thai_data"]
         
-        _LOGGER.debug(f"Initialized Suriyakati Calendar sensor: {self._attr_name}")
+        # Track if options have been loaded
+        self._options_loaded = False
+        
+        _LOGGER.debug(f"Initialized Thai Buddhist Calendar sensor: {self._attr_name}")
+    
+    def _load_options(self) -> None:
+        """Load configuration options from config entry."""
+        if self._options_loaded:
+            return
+            
+        try:
+            options = self.get_plugin_options()
+            if options:
+                # Update configuration from plugin options
+                self._display_language = options.get("display_language", self._display_language)
+                self._use_thai_numerals = options.get("use_thai_numerals", self._use_thai_numerals)
+                self._show_zodiac = options.get("show_zodiac", self._show_zodiac)
+                self._show_day_color = options.get("show_day_color", self._show_day_color)
+                self._show_buddhist_days = options.get("show_buddhist_days", self._show_buddhist_days)
+                self._format = options.get("format", self._format)
+                
+                _LOGGER.debug(f"Thai calendar loaded options: language={self._display_language}, "
+                            f"numerals={self._use_thai_numerals}, zodiac={self._show_zodiac}, "
+                            f"color={self._show_day_color}, buddhist={self._show_buddhist_days}, "
+                            f"format={self._format}")
+            else:
+                _LOGGER.debug("Thai calendar using default options - no custom options found")
+                
+            self._options_loaded = True
+        except Exception as e:
+            _LOGGER.debug(f"Thai calendar could not load options yet: {e}")
+    
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        
+        # Try to load options now that IDs should be set
+        self._load_options()
     
     @property
     def state(self):
@@ -311,9 +418,9 @@ class SuriyakatiCalendarSensor(AlternativeTimeSensorBase):
         """Return the state attributes."""
         attrs = super().extra_state_attributes
         
-        # Add Suriyakati-specific attributes
-        if hasattr(self, '_suriyakati_date'):
-            attrs.update(self._suriyakati_date)
+        # Add Thai-specific attributes
+        if hasattr(self, '_thai_date'):
+            attrs.update(self._thai_date)
             
             # Add description in user's language
             attrs["description"] = self._translate('description')
@@ -321,9 +428,15 @@ class SuriyakatiCalendarSensor(AlternativeTimeSensorBase):
             # Add reference
             attrs["reference"] = CALENDAR_INFO.get('reference_url', '')
             
-            # Add calendar system info
-            attrs["calendar_system"] = "Solar (Suriyakati)"
-            attrs["era"] = "Buddhist Era (BE)"
+            # Add configuration status
+            attrs["config"] = {
+                "display_language": self._display_language,
+                "use_thai_numerals": self._use_thai_numerals,
+                "show_zodiac": self._show_zodiac,
+                "show_day_color": self._show_day_color,
+                "show_buddhist_days": self._show_buddhist_days,
+                "format": self._format
+            }
         
         return attrs
     
@@ -332,7 +445,7 @@ class SuriyakatiCalendarSensor(AlternativeTimeSensorBase):
         if not self._use_thai_numerals:
             return str(n)
         
-        thai_digits = self._suriyakati_data["thai_digits"]
+        thai_digits = self._thai_data["thai_digits"]
         return ''.join(thai_digits[int(d)] for d in str(n))
     
     def _get_buddhist_day(self, day: int, month: int) -> str:
@@ -342,136 +455,123 @@ class SuriyakatiCalendarSensor(AlternativeTimeSensorBase):
         lunar_approximation = (day + month * 2) % 30
         
         if lunar_approximation == 8:
-            return "🌓 วันพระ (First Quarter)"
+            return "🌓 Uposatha (First Quarter)"
         elif lunar_approximation == 15:
-            return "🌕 วันพระ (Full Moon)"
+            return "🌕 Uposatha (Full Moon)"
         elif lunar_approximation == 23:
-            return "🌗 วันพระ (Last Quarter)"
+            return "🌗 Uposatha (Last Quarter)"
         elif lunar_approximation in [29, 30, 0, 1]:
-            return "🌑 วันพระ (New Moon)"
+            return "🌑 Uposatha (New Moon)"
         
         return ""
     
-    def _get_time_period(self, hour: int) -> Dict[str, str]:
-        """Get Thai time period for the hour."""
-        for (start, end), period in self._suriyakati_data["time_periods"].items():
-            if start <= hour < end or (start > end and (hour >= start or hour < end)):
-                return period
-        return {"thai": "เที่ยงคืน", "roman": "thiang khuen", "meaning": "Midnight", "emoji": "🕛"}
-    
-    def _calculate_suriyakati_date(self, earth_date: datetime) -> Dict[str, Any]:
-        """Calculate Suriyakati Calendar date from standard date."""
+    def _calculate_thai_date(self, earth_date: datetime) -> Dict[str, Any]:
+        """Calculate Thai Buddhist Calendar date from standard date."""
+        
+        # Load options if not loaded yet
+        self._load_options()
         
         # Calculate Buddhist Era year
         buddhist_year = earth_date.year + 543
         
         # Get month data
-        month_data = self._suriyakati_data["months"][earth_date.month - 1]
+        month_data = self._thai_data["months"][earth_date.month - 1]
         
         # Get weekday (Thai week starts on Sunday)
         weekday_index = (earth_date.weekday() + 1) % 7
-        weekday_data = self._suriyakati_data["weekdays"][weekday_index]
+        weekday_data = self._thai_data["weekdays"][weekday_index]
         
         # Calculate zodiac animal
         # Thai zodiac aligned so 2024 CE (2567 BE) = Year of the Dragon (index 4)
         zodiac_index = (buddhist_year - 3) % 12
-        zodiac_data = self._suriyakati_data["zodiac"][zodiac_index]
+        zodiac_data = self._thai_data["zodiac"][zodiac_index]
         
         # Check for holidays
-        holiday_data = self._suriyakati_data["holidays"].get((earth_date.month, earth_date.day))
+        holiday_data = self._thai_data["holidays"].get((earth_date.month, earth_date.day))
         
-        # Get Buddhist holy day
+        # Get Buddhist holy day if enabled
         buddhist_day = self._get_buddhist_day(earth_date.day, earth_date.month) if self._show_buddhist_days else ""
         
-        # Get time period
-        time_period = self._get_time_period(earth_date.hour)
-        
-        # Convert numbers to Thai if enabled
-        thai_day = self._to_thai_number(earth_date.day)
-        thai_year = self._to_thai_number(buddhist_year)
-        
-        # Format date based on language setting
-        if self._language == "thai":
-            date_parts = [
-                f"{thai_day} {month_data['thai']} {thai_year}",
-                weekday_data['thai']
-            ]
-        elif self._language == "roman":
-            date_parts = [
-                f"{earth_date.day} {month_data['roman']} {buddhist_year} BE",
-                weekday_data['roman']
-            ]
-        else:  # both
-            date_parts = [
-                f"{thai_day} {month_data['thai']} {thai_year}",
-                f"{earth_date.day} {month_data['roman']} {buddhist_year} BE"
-            ]
-        
-        # Add zodiac if enabled
-        if self._show_zodiac:
-            zodiac_str = f"{zodiac_data['emoji']} {zodiac_data['thai']} ({zodiac_data['animal']})"
-            date_parts.append(zodiac_str)
-        
-        # Add color if enabled
-        if self._show_color:
-            color_str = f"🎨 {weekday_data['color']}"
-            date_parts.append(color_str)
-        
-        # Add time period
-        date_parts.append(f"{time_period['emoji']} {time_period['thai']} ({time_period['meaning']})")
-        
-        # Add Buddhist day if applicable
-        if buddhist_day:
-            date_parts.append(buddhist_day)
-        
-        # Add holiday if applicable
-        if holiday_data:
-            holiday_str = f"🎉 {holiday_data['thai']} ({holiday_data['english']})"
-            date_parts.append(holiday_str)
-        
-        full_date = " | ".join(date_parts)
+        # Format date based on display language and format
+        if self._format == "numeric":
+            # Numeric format
+            if self._use_thai_numerals:
+                formatted = f"{self._to_thai_number(earth_date.day)}/{self._to_thai_number(earth_date.month)}/{self._to_thai_number(buddhist_year)}"
+            else:
+                formatted = f"{earth_date.day}/{earth_date.month}/{buddhist_year}"
+        elif self._format == "short":
+            # Short format
+            if self._display_language == "thai":
+                formatted = f"{self._to_thai_number(earth_date.day)} {month_data['abbr']} {self._to_thai_number(buddhist_year)}"
+            else:
+                formatted = f"{earth_date.day} {month_data['english'][:3]} {buddhist_year} BE"
+        elif self._format == "medium":
+            # Medium format
+            if self._display_language == "thai":
+                formatted = f"{self._to_thai_number(earth_date.day)} {month_data['name']} {self._to_thai_number(buddhist_year)}"
+            elif self._display_language == "romanized":
+                formatted = f"{earth_date.day} {month_data['roman']} {buddhist_year} BE"
+            else:
+                formatted = f"{earth_date.day} {month_data['english']} {buddhist_year} BE"
+        else:  # full
+            # Full format
+            if self._display_language == "thai":
+                formatted = f"{weekday_data['name']} {self._to_thai_number(earth_date.day)} {month_data['name']} พ.ศ. {self._to_thai_number(buddhist_year)}"
+            elif self._display_language == "romanized":
+                formatted = f"{weekday_data['roman']}, {earth_date.day} {month_data['roman']} {buddhist_year} BE"
+            elif self._display_language == "combined":
+                formatted = f"{earth_date.day} {month_data['english']} {buddhist_year} BE | {self._to_thai_number(earth_date.day)} {month_data['name']} {self._to_thai_number(buddhist_year)}"
+            else:  # english
+                formatted = f"{weekday_data['english']}, {earth_date.day} {month_data['english']} {buddhist_year} BE"
         
         result = {
             "buddhist_year": buddhist_year,
-            "common_year": earth_date.year,
-            "month_thai": month_data["thai"],
-            "month_roman": month_data["roman"],
-            "month_number": earth_date.month,
+            "gregorian_year": earth_date.year,
             "day": earth_date.day,
-            "day_thai": thai_day,
-            "weekday_thai": weekday_data["thai"],
-            "weekday_roman": weekday_data["roman"],
-            "weekday_planet": weekday_data["planet"],
-            "weekday_color": weekday_data["color"],
-            "zodiac_thai": zodiac_data["thai"],
-            "zodiac_animal": zodiac_data["animal"],
-            "time_period_thai": time_period["thai"],
-            "time_period_meaning": time_period["meaning"],
-            "gregorian_date": earth_date.strftime("%Y-%m-%d"),
-            "full_date": full_date
+            "month": earth_date.month,
+            "month_english": month_data["english"],
+            "month_thai": month_data["name"],
+            "month_romanized": month_data["roman"],
+            "weekday_english": weekday_data["english"],
+            "weekday_thai": weekday_data["name"],
+            "weekday_romanized": weekday_data["roman"],
+            "formatted": formatted,
+            "gregorian_date": earth_date.strftime("%Y-%m-%d")
         }
         
+        # Add Thai numerals if enabled
+        if self._use_thai_numerals:
+            result["day_thai"] = self._to_thai_number(earth_date.day)
+            result["year_thai"] = self._to_thai_number(buddhist_year)
+        
+        # Add zodiac if enabled
+        if self._show_zodiac:
+            result["zodiac_thai"] = zodiac_data["thai"]
+            result["zodiac_english"] = zodiac_data["english"]
+            result["zodiac_emoji"] = zodiac_data["emoji"]
+        
+        # Add day color if enabled
+        if self._show_day_color:
+            result["day_color"] = weekday_data["color"]
+            result["day_planet"] = weekday_data["planet"]
+        
+        # Add Buddhist holy day if applicable
+        if buddhist_day:
+            result["buddhist_day"] = buddhist_day
+        
+        # Add holiday if applicable
         if holiday_data:
             result["holiday_thai"] = holiday_data["thai"]
             result["holiday_english"] = holiday_data["english"]
-            result["holiday_type"] = holiday_data["type"]
-        
-        if buddhist_day:
-            result["buddhist_holy_day"] = buddhist_day
         
         return result
     
     def update(self) -> None:
         """Update the sensor."""
         now = datetime.now()
-        self._suriyakati_date = self._calculate_suriyakati_date(now)
+        self._thai_date = self._calculate_thai_date(now)
         
-        # Set state to main date line
-        if self._language == "thai":
-            self._state = f"{self._suriyakati_date['day_thai']} {self._suriyakati_date['month_thai']} {self._to_thai_number(self._suriyakati_date['buddhist_year'])}"
-        elif self._language == "roman":
-            self._state = f"{self._suriyakati_date['day']} {self._suriyakati_date['month_roman']} {self._suriyakati_date['buddhist_year']} BE"
-        else:
-            self._state = f"{self._suriyakati_date['buddhist_year']} BE"
+        # Set state to formatted date
+        self._state = self._thai_date["formatted"]
         
-        _LOGGER.debug(f"Updated Suriyakati Calendar to {self._state}")
+        _LOGGER.debug(f"Updated Thai Buddhist Calendar to {self._state}")
