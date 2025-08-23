@@ -353,6 +353,9 @@ class SynodicCalendarSensor(AlternativeTimeSensorBase):
         self._state = "Initializing..."
         self._synodic_calendar = {}
         
+        # Initialize user language (will be set by base class or config)
+        self._user_language = "en"
+        
         _LOGGER.debug(f"Initialized Synodic Calendar sensor: {self._attr_name}")
     
     def _load_options(self) -> None:
@@ -410,17 +413,27 @@ class SynodicCalendarSensor(AlternativeTimeSensorBase):
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes."""
-        attrs = super().extra_state_attributes
+        # Get base attributes safely
+        try:
+            attrs = super().extra_state_attributes
+        except:
+            attrs = {}
         
         # Add Synodic-specific attributes
-        if hasattr(self, '_synodic_calendar'):
+        if hasattr(self, '_synodic_calendar') and self._synodic_calendar:
             attrs.update(self._synodic_calendar)
             
             # Add description in user's language
-            attrs["description"] = self._translate('description')
+            if hasattr(self, '_translate'):
+                attrs["description"] = self._translate('description')
+            else:
+                attrs["description"] = CALENDAR_INFO["description"].get("en", "")
             
             # Add disclaimer
-            attrs["disclaimer"] = self._translate('disclaimer')
+            attrs["disclaimer"] = CALENDAR_INFO["disclaimer"].get(
+                getattr(self, '_user_language', 'en'), 
+                CALENDAR_INFO["disclaimer"]["en"]
+            )
             
             # Add reference
             attrs["reference"] = CALENDAR_INFO.get('reference_url', '')
@@ -447,7 +460,8 @@ class SynodicCalendarSensor(AlternativeTimeSensorBase):
     
     def _translate_dict(self, translations: Dict[str, str]) -> str:
         """Get translation for current language from a dict."""
-        lang = self._user_language if self._user_language else "en"
+        # Fallback to 'en' if _user_language is not set
+        lang = getattr(self, '_user_language', 'en') or 'en'
         if lang in translations:
             return translations[lang]
         elif lang[:2] in translations:
