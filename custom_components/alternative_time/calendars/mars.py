@@ -1,4 +1,9 @@
-"""Mars Time (Darian Calendar) implementation - Version 2.6."""
+"""Mars Time (MSD & Local Solar Time) implementation - Version 3.0.
+Improved config options with better defaults and user-friendly timezone display.
+
+Mars Sol Date (MSD) tracking and local solar time with multiple timezone support.
+Includes mission sol counters for rover landing sites.
+"""
 from __future__ import annotations
 
 from datetime import datetime
@@ -21,17 +26,11 @@ UPDATE_INTERVAL = 60
 # Complete calendar information for auto-discovery
 CALENDAR_INFO = {
     "id": "mars",
-    "version": "2.6.0",
+    "version": "3.0.0",
     "icon": "mdi:rocket-launch",
     "category": "space",
     "accuracy": "scientific",
     "update_interval": UPDATE_INTERVAL,
-
-    # Optional UI header (used by the config wizard to render a heading/intro)
-    "header": {
-        "en": "# 🚀 Mars Time (Darian)\n\n_Configure Mars time with localized timezones and mission context._",
-        "de": "# 🚀 Marszeit (Darian)\n\n_Konfiguriere Mars-Zeit mit lokalisierten Zeitzonen und Missions-Kontext._",
-    },
 
     # Multi-language names
     "name": {
@@ -63,16 +62,6 @@ CALENDAR_INFO = {
         "ko": "화성 솔 날짜(MSD)와 화성 현지 태양시",
     },
 
-    # ===== Extra data consumed by the config flow (builds the timezone dropdown) =====
-    # If present, the wizard uses these groups to populate the "timezone" selector.
-    "timezone_data": {
-        "regions": {
-            "Standard": ["MTC"],
-            "Provinces": ["AMT", "OLY", "ELY", "CHA", "MAR", "ARA", "THR", "HEL"],
-            "Missions": ["VIK", "PTH", "OPP", "SPI", "CUR", "PER"],
-        }
-    },
-
     # Mars-specific data
     "mars_data": {
         # Physical constants
@@ -81,119 +70,198 @@ CALENDAR_INFO = {
         "j2000_epoch": 946727935.816,          # J2000 epoch in Unix timestamp
         "mars_epoch_msd": 44796.0,             # MSD at J2000 epoch
 
-        # === Localized Mars timezones ===
-        # Each entry provides:
-        # - abbr: short code
-        # - longitude: reference meridian (degrees East, −West)
-        # - names: localized long name
-        # - description: localized extra label (area/feature)
-        # - group: for UI grouping (Standard/Provinces/Missions)
+        # Mars timezones with full descriptions for dropdown
         "timezones": {
+            # Standard Time
             "MTC": {
                 "abbr": "MTC",
                 "longitude": 0,
                 "group": "Standard",
-                "names": {"en": "Mars Coordinated Time", "de": "Mars-Koordinierte Zeit"},
-                "description": {"en": "Prime Meridian (0°)", "de": "Nullmeridian (0°)"},
+                "name": "Mars Coordinated Time",
+                "dropdown_label": {
+                    "en": "MTC - Mars Coordinated Time (Prime Meridian 0°)",
+                    "de": "MTC - Mars-Koordinierte Zeit (Nullmeridian 0°)",
+                    "es": "MTC - Tiempo Coordinado de Marte (Meridiano Principal 0°)",
+                    "fr": "MTC - Temps Coordonné Martien (Méridien Principal 0°)",
+                }
             },
+            
+            # Geographic Locations
             "AMT": {
                 "abbr": "AMT",
                 "longitude": -158,
                 "group": "Provinces",
-                "names": {"en": "Amazonis Time", "de": "Amazonis-Zeit"},
-                "description": {"en": "Amazonis Planitia (~158°W)", "de": "Amazonis Planitia (~158°W)"},
+                "name": "Amazonis Time",
+                "dropdown_label": {
+                    "en": "AMT - Amazonis Time (Amazonis Planitia ~158°W)",
+                    "de": "AMT - Amazonis-Zeit (Amazonis Planitia ~158°W)",
+                    "es": "AMT - Hora de Amazonis (Amazonis Planitia ~158°O)",
+                    "fr": "AMT - Heure d'Amazonis (Amazonis Planitia ~158°O)",
+                }
             },
             "OLY": {
                 "abbr": "OLY",
                 "longitude": -134,
                 "group": "Provinces",
-                "names": {"en": "Olympus Time", "de": "Olympus-Zeit"},
-                "description": {"en": "Olympus Mons (~134°W)", "de": "Olympus Mons (~134°W)"},
+                "name": "Olympus Time",
+                "dropdown_label": {
+                    "en": "OLY - Olympus Time (Olympus Mons ~134°W)",
+                    "de": "OLY - Olympus-Zeit (Olympus Mons ~134°W)",
+                    "es": "OLY - Hora del Olimpo (Olympus Mons ~134°O)",
+                    "fr": "OLY - Heure d'Olympus (Olympus Mons ~134°O)",
+                }
             },
             "ELY": {
                 "abbr": "ELY",
-                "longitude": 135,
+                "longitude": 147,
                 "group": "Provinces",
-                "names": {"en": "Elysium Time", "de": "Elysium-Zeit"},
-                "description": {"en": "Elysium Planitia (~135°E)", "de": "Elysium Planitia (~135°O)"},
+                "name": "Elysium Time",
+                "dropdown_label": {
+                    "en": "ELY - Elysium Time (Elysium Planitia ~147°E)",
+                    "de": "ELY - Elysium-Zeit (Elysium Planitia ~147°O)",
+                    "es": "ELY - Hora del Elíseo (Elysium Planitia ~147°E)",
+                    "fr": "ELY - Heure d'Elysium (Elysium Planitia ~147°E)",
+                }
             },
             "CHA": {
                 "abbr": "CHA",
-                "longitude": -33,
+                "longitude": -30,
                 "group": "Provinces",
-                "names": {"en": "Chryse Time", "de": "Chryse-Zeit"},
-                "description": {"en": "Chryse Planitia (~33°W)", "de": "Chryse Planitia (~33°W)"},
+                "name": "Chryse Time",
+                "dropdown_label": {
+                    "en": "CHA - Chryse Time (Chryse Planitia ~30°W)",
+                    "de": "CHA - Chryse-Zeit (Chryse Planitia ~30°W)",
+                    "es": "CHA - Hora de Chryse (Chryse Planitia ~30°O)",
+                    "fr": "CHA - Heure de Chryse (Chryse Planitia ~30°O)",
+                }
             },
             "MAR": {
                 "abbr": "MAR",
-                "longitude": -59,
+                "longitude": -70,
                 "group": "Provinces",
-                "names": {"en": "Marineris Time", "de": "Marineris-Zeit"},
-                "description": {"en": "Valles Marineris (~59°W)", "de": "Valles Marineris (~59°W)"},
+                "name": "Mariner Time",
+                "dropdown_label": {
+                    "en": "MAR - Mariner Time (Mariner Valley ~70°W)",
+                    "de": "MAR - Mariner-Zeit (Mariner-Tal ~70°W)",
+                    "es": "MAR - Hora del Mariner (Valle Mariner ~70°O)",
+                    "fr": "MAR - Heure de Mariner (Vallée Mariner ~70°O)",
+                }
             },
             "ARA": {
                 "abbr": "ARA",
                 "longitude": 20,
                 "group": "Provinces",
-                "names": {"en": "Arabia Time", "de": "Arabia-Zeit"},
-                "description": {"en": "Arabia Terra (~20°E)", "de": "Arabia Terra (~20°O)"},
+                "name": "Arabia Time",
+                "dropdown_label": {
+                    "en": "ARA - Arabia Time (Arabia Terra ~20°E)",
+                    "de": "ARA - Arabia-Zeit (Arabia Terra ~20°O)",
+                    "es": "ARA - Hora de Arabia (Arabia Terra ~20°E)",
+                    "fr": "ARA - Heure d'Arabia (Arabia Terra ~20°E)",
+                }
             },
             "THR": {
                 "abbr": "THR",
-                "longitude": -125,
+                "longitude": -110,
                 "group": "Provinces",
-                "names": {"en": "Tharsis Time", "de": "Tharsis-Zeit"},
-                "description": {"en": "Tharsis region (~125°W)", "de": "Region Tharsis (~125°W)"},
+                "name": "Tharsis Time",
+                "dropdown_label": {
+                    "en": "THR - Tharsis Time (Tharsis Region ~110°W)",
+                    "de": "THR - Tharsis-Zeit (Tharsis-Region ~110°W)",
+                    "es": "THR - Hora de Tharsis (Región Tharsis ~110°O)",
+                    "fr": "THR - Heure de Tharsis (Région Tharsis ~110°O)",
+                }
             },
             "HEL": {
                 "abbr": "HEL",
                 "longitude": 70,
                 "group": "Provinces",
-                "names": {"en": "Hellas Time", "de": "Hellas-Zeit"},
-                "description": {"en": "Hellas Planitia (~70°E)", "de": "Hellas Planitia (~70°O)"},
+                "name": "Hellas Time",
+                "dropdown_label": {
+                    "en": "HEL - Hellas Time (Hellas Basin ~70°E)",
+                    "de": "HEL - Hellas-Zeit (Hellas-Becken ~70°O)",
+                    "es": "HEL - Hora de Hellas (Cuenca Hellas ~70°E)",
+                    "fr": "HEL - Heure d'Hellas (Bassin Hellas ~70°E)",
+                }
             },
-            # Mission landing zones (nominal longitudes)
+            
+            # Mission Landing Sites
             "VIK": {
                 "abbr": "VIK",
-                "longitude": -48.0,
+                "longitude": -48,
                 "group": "Missions",
-                "names": {"en": "Viking Lander Time", "de": "Viking-Lander-Zeit"},
-                "description": {"en": "Viking landers (Chryse/Utopia)", "de": "Viking-Lander (Chryse/Utopia)"},
+                "name": "Viking 1 Site",
+                "mission": "Viking 1",
+                "dropdown_label": {
+                    "en": "VIK - Viking 1 Landing Site (Chryse Planitia ~48°W)",
+                    "de": "VIK - Viking 1 Landeplatz (Chryse Planitia ~48°W)",
+                    "es": "VIK - Sitio de Viking 1 (Chryse Planitia ~48°O)",
+                    "fr": "VIK - Site de Viking 1 (Chryse Planitia ~48°O)",
+                }
             },
             "PTH": {
                 "abbr": "PTH",
-                "longitude": -33.55,
+                "longitude": -33.5,
                 "group": "Missions",
-                "names": {"en": "Pathfinder Time", "de": "Pathfinder-Zeit"},
-                "description": {"en": "Mars Pathfinder (Ares Vallis)", "de": "Mars Pathfinder (Ares Vallis)"},
+                "name": "Pathfinder Site",
+                "mission": "Pathfinder",
+                "dropdown_label": {
+                    "en": "PTH - Pathfinder Landing Site (Ares Vallis ~33.5°W)",
+                    "de": "PTH - Pathfinder Landeplatz (Ares Vallis ~33.5°W)",
+                    "es": "PTH - Sitio del Pathfinder (Ares Vallis ~33.5°O)",
+                    "fr": "PTH - Site de Pathfinder (Ares Vallis ~33.5°O)",
+                }
             },
             "OPP": {
                 "abbr": "OPP",
-                "longitude": -5.53,
+                "longitude": -5.5,
                 "group": "Missions",
-                "names": {"en": "Opportunity Time", "de": "Opportunity-Zeit"},
-                "description": {"en": "MER-B Opportunity (Meridiani)", "de": "MER-B Opportunity (Meridiani)"},
+                "name": "Opportunity Site",
+                "mission": "Opportunity",
+                "dropdown_label": {
+                    "en": "OPP - Opportunity Landing Site (Meridiani Planum ~5.5°W)",
+                    "de": "OPP - Opportunity Landeplatz (Meridiani Planum ~5.5°W)",
+                    "es": "OPP - Sitio de Opportunity (Meridiani Planum ~5.5°O)",
+                    "fr": "OPP - Site d'Opportunity (Meridiani Planum ~5.5°O)",
+                }
             },
             "SPI": {
                 "abbr": "SPI",
-                "longitude": 175.47,
+                "longitude": 175.5,
                 "group": "Missions",
-                "names": {"en": "Spirit Time", "de": "Spirit-Zeit"},
-                "description": {"en": "MER-A Spirit (Gusev Crater)", "de": "MER-A Spirit (Gusev-Krater)"},
+                "name": "Spirit Site",
+                "mission": "Spirit",
+                "dropdown_label": {
+                    "en": "SPI - Spirit Landing Site (Gusev Crater ~175.5°E)",
+                    "de": "SPI - Spirit Landeplatz (Gusev-Krater ~175.5°O)",
+                    "es": "SPI - Sitio de Spirit (Cráter Gusev ~175.5°E)",
+                    "fr": "SPI - Site de Spirit (Cratère Gusev ~175.5°E)",
+                }
             },
             "CUR": {
                 "abbr": "CUR",
-                "longitude": 137.44,
+                "longitude": 137.4,
                 "group": "Missions",
-                "names": {"en": "Curiosity Time", "de": "Curiosity-Zeit"},
-                "description": {"en": "MSL Curiosity (Gale Crater)", "de": "MSL Curiosity (Gale-Krater)"},
+                "name": "Curiosity Site",
+                "mission": "Curiosity",
+                "dropdown_label": {
+                    "en": "CUR - Curiosity Landing Site (Gale Crater ~137.4°E)",
+                    "de": "CUR - Curiosity Landeplatz (Gale-Krater ~137.4°O)",
+                    "es": "CUR - Sitio de Curiosity (Cráter Gale ~137.4°E)",
+                    "fr": "CUR - Site de Curiosity (Cratère Gale ~137.4°E)",
+                }
             },
             "PER": {
                 "abbr": "PER",
-                "longitude": 77.45,
+                "longitude": 77.5,
                 "group": "Missions",
-                "names": {"en": "Perseverance Time", "de": "Perseverance-Zeit"},
-                "description": {"en": "Mars 2020 Perseverance (Jezero)", "de": "Mars 2020 Perseverance (Jezero)"},
+                "name": "Perseverance Site",
+                "mission": "Perseverance",
+                "dropdown_label": {
+                    "en": "PER - Perseverance Landing Site (Jezero Crater ~77.5°E)",
+                    "de": "PER - Perseverance Landeplatz (Jezero-Krater ~77.5°O)",
+                    "es": "PER - Sitio de Perseverance (Cráter Jezero ~77.5°E)",
+                    "fr": "PER - Site de Perseverance (Cratère Jezero ~77.5°E)",
+                }
             },
         },
 
@@ -208,14 +276,168 @@ CALENDAR_INFO = {
             "Perseverance": 52304,
         },
 
-        # Map timezone -> canonical mission name (for sol counters in attributes)
-        "timezone_missions": {
-            "VIK": "Viking 1",
-            "PTH": "Pathfinder",
-            "OPP": "Opportunity",
-            "SPI": "Spirit",
-            "CUR": "Curiosity",
-            "PER": "Perseverance",
+        # Mars seasons (Northern Hemisphere)
+        "seasons": {
+            "spring": {"ls_start": 0, "ls_end": 90, "name": {"en": "Northern Spring", "de": "Nördlicher Frühling"}},
+            "summer": {"ls_start": 90, "ls_end": 180, "name": {"en": "Northern Summer", "de": "Nördlicher Sommer"}},
+            "autumn": {"ls_start": 180, "ls_end": 270, "name": {"en": "Northern Autumn", "de": "Nördlicher Herbst"}},
+            "winter": {"ls_start": 270, "ls_end": 360, "name": {"en": "Northern Winter", "de": "Nördlicher Winter"}},
+        },
+    },
+
+    # Configuration options for config_flow
+    "config_options": {
+        "timezone": {
+            "type": "select",
+            "default": "MTC",
+            "options": ["MTC", "AMT", "OLY", "ELY", "CHA", "MAR", "ARA", "THR", "HEL", "VIK", "PTH", "OPP", "SPI", "CUR", "PER"],
+            "label": {
+                "en": "Mars Timezone",
+                "de": "Mars-Zeitzone",
+                "es": "Zona horaria de Marte",
+                "fr": "Fuseau horaire martien",
+                "it": "Fuso orario marziano",
+                "nl": "Mars tijdzone",
+                "pt": "Fuso horário de Marte",
+                "ru": "Часовой пояс Марса",
+                "ja": "火星タイムゾーン",
+                "zh": "火星时区",
+                "ko": "화성 시간대",
+            },
+            "description": {
+                "en": "Choose Mars timezone or mission landing site",
+                "de": "Wähle Mars-Zeitzone oder Missions-Landeplatz",
+                "es": "Elige zona horaria de Marte o sitio de aterrizaje",
+                "fr": "Choisissez le fuseau horaire martien ou le site d'atterrissage",
+                "it": "Scegli il fuso orario marziano o il sito di atterraggio",
+                "nl": "Kies Mars tijdzone of missie landingsplaats",
+                "pt": "Escolha o fuso horário de Marte ou local de pouso",
+                "ru": "Выберите часовой пояс Марса или место посадки миссии",
+                "ja": "火星のタイムゾーンまたは着陸地点を選択",
+                "zh": "选择火星时区或任务着陆点",
+                "ko": "화성 시간대 또는 임무 착륙 지점 선택",
+            },
+        },
+        "display_format": {
+            "type": "select",
+            "default": "time_with_sol",
+            "options": ["time_only", "time_with_sol", "full_date"],
+            "label": {
+                "en": "Display Format",
+                "de": "Anzeigeformat",
+                "es": "Formato de visualización",
+                "fr": "Format d'affichage",
+                "it": "Formato di visualizzazione",
+                "nl": "Weergaveformaat",
+                "pt": "Formato de exibição",
+                "ru": "Формат отображения",
+                "ja": "表示形式",
+                "zh": "显示格式",
+                "ko": "표시 형식",
+            },
+            "description": {
+                "en": "Choose how to display Mars time",
+                "de": "Wähle wie die Marszeit angezeigt wird",
+                "es": "Elige cómo mostrar la hora de Marte",
+                "fr": "Choisissez comment afficher l'heure martienne",
+                "it": "Scegli come visualizzare l'ora marziana",
+                "nl": "Kies hoe Mars tijd wordt weergegeven",
+                "pt": "Escolha como exibir a hora de Marte",
+                "ru": "Выберите формат отображения марсианского времени",
+                "ja": "火星時間の表示方法を選択",
+                "zh": "选择如何显示火星时间",
+                "ko": "화성 시간 표시 방법 선택",
+            },
+        },
+        "show_season": {
+            "type": "boolean",
+            "default": True,
+            "label": {
+                "en": "Show Season",
+                "de": "Jahreszeit anzeigen",
+                "es": "Mostrar estación",
+                "fr": "Afficher la saison",
+                "it": "Mostra stagione",
+                "nl": "Toon seizoen",
+                "pt": "Mostrar estação",
+                "ru": "Показать сезон",
+                "ja": "季節を表示",
+                "zh": "显示季节",
+                "ko": "계절 표시",
+            },
+            "description": {
+                "en": "Display current Martian season",
+                "de": "Zeige aktuelle Mars-Jahreszeit",
+                "es": "Mostrar la estación marciana actual",
+                "fr": "Afficher la saison martienne actuelle",
+                "it": "Mostra la stagione marziana attuale",
+                "nl": "Toon huidige Mars seizoen",
+                "pt": "Mostrar estação marciana atual",
+                "ru": "Показывать текущий марсианский сезон",
+                "ja": "現在の火星の季節を表示",
+                "zh": "显示当前火星季节",
+                "ko": "현재 화성 계절 표시",
+            },
+        },
+        "show_mission_sol": {
+            "type": "boolean",
+            "default": True,
+            "label": {
+                "en": "Show Mission Sol",
+                "de": "Missions-Sol anzeigen",
+                "es": "Mostrar sol de misión",
+                "fr": "Afficher sol de mission",
+                "it": "Mostra sol missione",
+                "nl": "Toon missie sol",
+                "pt": "Mostrar sol da missão",
+                "ru": "Показать сол миссии",
+                "ja": "ミッションソルを表示",
+                "zh": "显示任务火星日",
+                "ko": "임무 솔 표시",
+            },
+            "description": {
+                "en": "Show sol count for mission landing sites",
+                "de": "Zeige Sol-Zähler für Missions-Landeplätze",
+                "es": "Mostrar contador de sol para sitios de aterrizaje",
+                "fr": "Afficher le compteur de sol pour les sites d'atterrissage",
+                "it": "Mostra contatore sol per i siti di atterraggio",
+                "nl": "Toon sol teller voor missie landingsplaatsen",
+                "pt": "Mostrar contador de sol para locais de pouso",
+                "ru": "Показывать счетчик солов для мест посадки миссий",
+                "ja": "着陸地点のソルカウンターを表示",
+                "zh": "显示任务着陆点的火星日计数",
+                "ko": "임무 착륙 지점의 솔 카운터 표시",
+            },
+        },
+        "show_earth_time": {
+            "type": "boolean",
+            "default": False,
+            "label": {
+                "en": "Show Earth Time",
+                "de": "Erdzeit anzeigen",
+                "es": "Mostrar hora terrestre",
+                "fr": "Afficher l'heure terrestre",
+                "it": "Mostra ora terrestre",
+                "nl": "Toon Aardse tijd",
+                "pt": "Mostrar hora terrestre",
+                "ru": "Показать земное время",
+                "ja": "地球時間を表示",
+                "zh": "显示地球时间",
+                "ko": "지구 시간 표시",
+            },
+            "description": {
+                "en": "Also display Earth UTC time",
+                "de": "Zeige auch Erd-UTC Zeit",
+                "es": "Mostrar también hora UTC terrestre",
+                "fr": "Afficher aussi l'heure UTC terrestre",
+                "it": "Mostra anche l'ora UTC terrestre",
+                "nl": "Toon ook Aardse UTC tijd",
+                "pt": "Mostrar também hora UTC terrestre",
+                "ru": "Показывать также земное время UTC",
+                "ja": "地球のUTC時間も表示",
+                "zh": "同时显示地球UTC时间",
+                "ko": "지구 UTC 시간도 표시",
+            },
         },
     },
 
@@ -224,120 +446,42 @@ CALENDAR_INFO = {
     "documentation_url": "https://www.giss.nasa.gov/tools/mars24/",
     "origin": "NASA/JPL",
     "created_by": "Various Mars missions",
-
-    # Example format
-    "example": "Sol 52304, 14:26:35 MTC",
-    "example_meaning": "Mars Sol Date 52304, Mars Coordinated Time",
-
+    
     # Related calendars
-    "related": ["julian", "gregorian", "unix"],
-
+    "related": ["darian", "julian", "gregorian"],
+    
     # Tags for searching and filtering
     "tags": [
-        "mars",
-        "space",
-        "planetary",
-        "sol",
-        "msd",
-        "nasa",
-        "jpl",
-        "scientific",
-        "astronomical",
-        "mission",
-        "exploration",
-        "rover",
-        "perseverance",
-        "curiosity",
-        "mtc",
+        "mars", "space", "planetary", "sol", "msd", "nasa", "jpl",
+        "scientific", "astronomical", "mission", "exploration", "rover",
+        "perseverance", "curiosity", "mtc"
     ],
-
-    # Special features
-    "features": {
-        "supports_timezones": True,
-        "supports_missions": True,
-        "supports_seasons": True,
-        "continuous_count": True,
-        "precision": "second",
-        "solar_longitude": True,
-    },
-
-    # Configuration options for this calendar
-    # NOTE: we intentionally omit an explicit "options" list for "timezone"
-    # so the config flow can auto-build the select from "timezone_data".
-    "config_options": {
-        "timezone": {
-            "type": "select",
-            "default": "MTC",
-            "label": {
-                "en": "Mars timezone",
-                "de": "Mars-Zeitzone",
-                "fr": "Fuseau horaire martien",
-                "es": "Zona horaria marciana",
-            },
-            "description": {
-                "en": "Choose Mars timezone (localized labels shown in attributes).",
-                "de": "Mars-Zeitzone wählen (lokalisierte Bezeichnungen in den Attributen).",
-                "fr": "Choisissez le fuseau horaire martien (libellés localisés dans les attributs).",
-                "es": "Elige la zona horaria marciana (etiquetas localizadas en atributos).",
-            },
-        },
-        "show_mission_sol": {
-            "type": "boolean",
-            "default": True,
-            "label": {
-                "en": "Show mission sol",
-                "de": "Missions-Sol anzeigen",
-                "fr": "Afficher sol de mission",
-                "es": "Mostrar sol de misión",
-            },
-            "description": {
-                "en": "Show mission sol for selected timezone (if applicable).",
-                "de": "Zeige Missions-Sol für die gewählte Zeitzone (falls zutreffend).",
-                "fr": "Afficher le sol de mission pour le fuseau choisi (si applicable).",
-                "es": "Mostrar el sol de misión para la zona elegida (si procede).",
-            },
-        },
-        "show_solar_longitude": {
-            "type": "boolean",
-            "default": True,
-            "label": {
-                "en": "Show solar longitude (Ls)",
-                "de": "Sonnenlänge (Ls) anzeigen",
-                "fr": "Afficher la longitude solaire (Ls)",
-                "es": "Mostrar longitud solar (Ls)",
-            },
-            "description": {
-                "en": "Include Ls/EoT diagnostics in attributes.",
-                "de": "Ls/EoT-Diagnose in den Attributen anzeigen.",
-                "fr": "Inclure Ls/EoT dans les attributs.",
-                "es": "Incluir Ls/EoT en los atributos.",
-            },
-        },
-        "show_earth_time": {
-            "type": "boolean",
-            "default": False,
-            "label": {
-                "en": "Show Earth time (UTC)",
-                "de": "Erdzeit (UTC) anzeigen",
-                "fr": "Afficher l'heure terrestre (UTC)",
-                "es": "Mostrar hora terrestre (UTC)",
-            },
-            "description": {
-                "en": "Also show Earth UTC time in attributes.",
-                "de": "Auch Erd-UTC in den Attributen anzeigen.",
-                "fr": "Afficher aussi l'heure UTC terrestre dans les attributs.",
-                "es": "Mostrar además la hora UTC terrestre en los atributos.",
-            },
-        },
+    
+    # Extended notes
+    "notes": {
+        "en": (
+            "Mars Sol Date (MSD) counts sols since December 29, 1873. "
+            "A sol is approximately 24 hours 39 minutes. "
+            "Mission sols count from each rover's landing date."
+        ),
+        "de": (
+            "Mars Sol Date (MSD) zählt Sols seit dem 29. Dezember 1873. "
+            "Ein Sol dauert etwa 24 Stunden 39 Minuten. "
+            "Missions-Sols zählen ab dem Landedatum jedes Rovers."
+        ),
     },
 }
 
 
+# ============================================
+# SENSOR CLASS
+# ============================================
+
 class MarsTimeSensor(AlternativeTimeSensorBase):
-    """Sensor for displaying Mars time with localized timezone metadata."""
+    """Sensor for displaying Mars time with timezone support."""
 
     # Class-level update interval
-    UPDATE_INTERVAL = 60  # Update every minute
+    UPDATE_INTERVAL = UPDATE_INTERVAL
 
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the Mars time sensor."""
@@ -354,220 +498,245 @@ class MarsTimeSensor(AlternativeTimeSensorBase):
         self._attr_unique_id = f"{base_name}_mars_time"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:rocket-launch")
 
-        # Options (will be refreshed on each update, in case user changes them)
-        self._mars_timezone = "MTC"
-        self._show_mission_sol = True
-        self._show_solar_longitude = True
-        self._show_earth_time = False
+        # Configuration options with defaults
+        config_defaults = CALENDAR_INFO.get("config_options", {})
+        self._mars_timezone = config_defaults.get("timezone", {}).get("default", "MTC")
+        self._display_format = config_defaults.get("display_format", {}).get("default", "time_with_sol")
+        self._show_season = config_defaults.get("show_season", {}).get("default", True)
+        self._show_mission_sol = config_defaults.get("show_mission_sol", {}).get("default", True)
+        self._show_earth_time = config_defaults.get("show_earth_time", {}).get("default", False)
 
         # Mars data
         self._mars_data = CALENDAR_INFO["mars_data"]
+
+        # Flag to track if options have been loaded
+        self._options_loaded = False
 
         # Initialize state
         self._state = None
         self._mars_time_info: Dict[str, Any] = {}
 
         _LOGGER.debug(f"Initialized Mars Time sensor: {self._attr_name}")
-
-    # ---------- Utilities ----------
-
-    def _lang(self) -> str:
-        """Primary language code ('de', 'en', ...)."""
-        try:
-            lang = getattr(self._hass.config, "language", "en")
-        except Exception:
-            lang = "en"
-        # primary tag
-        if "-" in lang:
-            return lang.split("-")[0]
-        if "_" in lang:
-            return lang.split("_")[0]
-        return lang or "en"
-
-    def _tz_entry(self, abbr: str) -> Optional[Dict[str, Any]]:
-        return self._mars_data.get("timezones", {}).get(abbr)
-
-    def _tz_localized_name(self, abbr: str) -> str:
-        tz = self._tz_entry(abbr) or {}
-        names = tz.get("names")
-        if isinstance(names, dict):
-            return names.get(self._lang(), names.get("en", abbr))
-        return str(names or abbr)
-
-    def _tz_localized_desc(self, abbr: str) -> str:
-        tz = self._tz_entry(abbr) or {}
-        desc = tz.get("description")
-        if isinstance(desc, dict):
-            return desc.get(self._lang(), desc.get("en", ""))
-        return str(desc or "")
+    
+    def _load_options(self) -> None:
+        """Load plugin options after IDs are set."""
+        if self._options_loaded:
+            return
+            
+        # Get plugin options from config entry
+        plugin_options = self._get_plugin_options()
+        
+        if plugin_options:
+            _LOGGER.debug(f"Loading Mars options: {plugin_options}")
+            
+            # Apply options using set_options method
+            self.set_options(
+                timezone=plugin_options.get("timezone"),
+                display_format=plugin_options.get("display_format"),
+                show_season=plugin_options.get("show_season"),
+                show_mission_sol=plugin_options.get("show_mission_sol"),
+                show_earth_time=plugin_options.get("show_earth_time")
+            )
+        
+        self._options_loaded = True
+    
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
+        
+        # Load options after entity is registered
+        self._load_options()
+        
+        _LOGGER.debug(f"Mars sensor added to hass with options: "
+                     f"timezone={self._mars_timezone}, format={self._display_format}, "
+                     f"season={self._show_season}, mission_sol={self._show_mission_sol}")
+    
+    def set_options(
+        self,
+        *,
+        timezone: Optional[str] = None,
+        display_format: Optional[str] = None,
+        show_season: Optional[bool] = None,
+        show_mission_sol: Optional[bool] = None,
+        show_earth_time: Optional[bool] = None
+    ) -> None:
+        """Set calendar options from config flow."""
+        if timezone is not None:
+            if timezone in self._mars_data.get("timezones", {}):
+                self._mars_timezone = timezone
+                _LOGGER.debug(f"Set timezone to: {timezone}")
+            else:
+                _LOGGER.warning(f"Invalid timezone: {timezone}, keeping {self._mars_timezone}")
+        
+        if display_format is not None and display_format in ["time_only", "time_with_sol", "full_date"]:
+            self._display_format = display_format
+            _LOGGER.debug(f"Set display_format to: {display_format}")
+        
+        if show_season is not None:
+            self._show_season = bool(show_season)
+            _LOGGER.debug(f"Set show_season to: {show_season}")
+        
+        if show_mission_sol is not None:
+            self._show_mission_sol = bool(show_mission_sol)
+            _LOGGER.debug(f"Set show_mission_sol to: {show_mission_sol}")
+        
+        if show_earth_time is not None:
+            self._show_earth_time = bool(show_earth_time)
+            _LOGGER.debug(f"Set show_earth_time to: {show_earth_time}")
 
     # ---------- HA properties ----------
 
     @property
     def state(self):
-        """Return the state of the sensor (short: local time + code)."""
+        """Return the state of the sensor."""
         return self._state
 
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
-        """Return the state attributes (rich, localized metadata)."""
+        """Return the state attributes."""
         attrs = super().extra_state_attributes
-
-        if hasattr(self, "_mars_time_info"):
+        
+        if self._mars_time_info:
             attrs.update(self._mars_time_info)
-
-            # Add description in user's language
-            attrs["description"] = self._translate("description")
-
-            # Add reference
-            attrs["reference"] = CALENDAR_INFO.get("reference_url", "")
-
-            # Localized timezone details
-            tz = self._mars_timezone
-            attrs["timezone_code"] = tz
-            attrs["timezone_name"] = self._tz_localized_name(tz)
-            attrs["timezone_description"] = self._tz_localized_desc(tz)
-
-            tz_meta = self._tz_entry(tz) or {}
-            attrs["timezone_longitude"] = tz_meta.get("longitude", 0)
-            attrs["timezone_offset_hours"] = round((tz_meta.get("longitude", 0) / 15.0), 3)
-            attrs["timezone_group"] = tz_meta.get("group", "")
-
-            # Catalog of all timezones (localized) for UI/frontend usage
-            catalog = {}
-            for code, meta in (self._mars_data.get("timezones") or {}).items():
-                catalog[code] = {
-                    "name": self._tz_localized_name(code),
-                    "description": self._tz_localized_desc(code),
-                    "longitude": meta.get("longitude", 0),
-                    "group": meta.get("group", ""),
-                }
-            attrs["timezone_catalog"] = catalog
-
+            
+            # Add metadata
+            attrs["calendar_type"] = "Mars Sol Time"
+            attrs["accuracy"] = CALENDAR_INFO.get("accuracy", "scientific")
+            attrs["reference"] = CALENDAR_INFO.get("reference_url")
+            attrs["notes"] = self._translate("notes")
+            
+            # Add configuration state
+            attrs["config_timezone"] = self._mars_timezone
+            attrs["config_display_format"] = self._display_format
+            attrs["config_show_season"] = self._show_season
+            attrs["config_show_mission_sol"] = self._show_mission_sol
+            attrs["config_show_earth_time"] = self._show_earth_time
+        
         return attrs
 
-    # ---------- Core calculations ----------
+    # ---------- Calculation methods ----------
 
     def _calculate_mars_time(self, earth_utc: datetime) -> Dict[str, Any]:
-        """Calculate Mars time from Earth UTC time."""
-        # Convert to Unix timestamp
+        """Calculate Mars time from Earth UTC."""
+        # Get timezone data
+        tz_data = self._mars_data["timezones"].get(self._mars_timezone, self._mars_data["timezones"]["MTC"])
+        timezone_offset = tz_data["longitude"] / 15.0  # Convert degrees to hours
+        
+        # Calculate MSD (Mars Sol Date)
         unix_timestamp = earth_utc.timestamp()
-
-        # Calculate Mars Sol Date (MSD)
-        # MSD = (Unix timestamp - J2000 epoch) / seconds per sol + MSD at J2000
-        elapsed_seconds = unix_timestamp - self._mars_data["j2000_epoch"]
-        elapsed_sols = elapsed_seconds / self._mars_data["sol_duration_seconds"]
-        msd = self._mars_data["mars_epoch_msd"] + elapsed_sols
-
-        # Calculate Mars Coordinated Time (MTC) - Mean Solar Time at Prime Meridian
-        sol_fraction = msd % 1
+        seconds_since_j2000 = unix_timestamp - self._mars_data["j2000_epoch"]
+        sols_since_j2000 = seconds_since_j2000 / self._mars_data["sol_duration_seconds"]
+        msd = self._mars_data["mars_epoch_msd"] + sols_since_j2000
+        
+        # Calculate MTC (Mars Coordinated Time)
+        sol_fraction = msd % 1.0
         mtc_hours = int(sol_fraction * 24)
-        mtc_minutes = int((sol_fraction * 24 - mtc_hours) * 60)
-        mtc_seconds = int(((sol_fraction * 24 - mtc_hours) * 60 - mtc_minutes) * 60)
+        mtc_minutes = int((sol_fraction * 24 * 60) % 60)
+        mtc_seconds = int((sol_fraction * 24 * 60 * 60) % 60)
         mtc_time = f"{mtc_hours:02d}:{mtc_minutes:02d}:{mtc_seconds:02d}"
-
-        # Solar longitude (Ls) – simplified seasonal indicator
-        mars_year_fraction = (msd / self._mars_data["tropical_year_sols"]) % 1
-        ls = mars_year_fraction * 360.0  # Degrees
-
-        # Determine season (hemispheric)
-        if 0 <= ls < 90:
-            season = "Northern Spring / Southern Fall"
-        elif 90 <= ls < 180:
-            season = "Northern Summer / Southern Winter"
-        elif 180 <= ls < 270:
-            season = "Northern Fall / Southern Spring"
-        else:
-            season = "Northern Winter / Southern Summer"
-
-        # Local solar time for selected timezone
-        tz_meta = self._tz_entry(self._mars_timezone) or {"longitude": 0}
-        tz_long = float(tz_meta.get("longitude", 0))
-        timezone_offset = tz_long / 15.0  # Convert longitude to hours (Mars: 15° per local hour)
-
-        # Equation of time correction (simplified)
-        # Mars' eccentric orbit causes larger variations
-        eot_degrees = 2.861 * math.sin(2 * math.radians(ls)) - 0.071 * math.sin(4 * math.radians(ls))
-        eot_minutes = eot_degrees * 4.0  # Convert degrees to minutes of time
-
-        # Subsolar longitude (approx.)
-        subsolar_longitude = (sol_fraction * 360.0 + eot_degrees) % 360.0
-
-        # Local Mean Solar Time (LMST)
-        lmst_hours = (mtc_hours + timezone_offset) % 24
-        lmst_minutes = mtc_minutes
-        lmst_seconds = mtc_seconds
-
-        # Local True Solar Time (LTST) applying EoT
-        total_minutes = lmst_hours * 60.0 + lmst_minutes + eot_minutes
-        ltst_hours = int(total_minutes // 60) % 24
-        ltst_minutes = int(total_minutes % 60)
-
-        local_time = f"{ltst_hours:02d}:{ltst_minutes:02d}:{lmst_seconds:02d}"
-
-        # Sunrise/sunset crude estimate (equatorial assumption)
-        sunrise_hour = 6 - int(eot_minutes / 60.0)
-        sunset_hour = 18 - int(eot_minutes / 60.0)
-        sunrise_time = f"{sunrise_hour:02d}:00"
-        sunset_time = f"{sunset_hour:02d}:00"
-
-        # Mission sol lookup by timezone (if mapped)
-        mission_name = (self._mars_data.get("timezone_missions") or {}).get(self._mars_timezone)
-        mission_sol: Optional[int] = None
-        if mission_name:
-            landing_msd = (self._mars_data.get("missions") or {}).get(mission_name)
-            if landing_msd is not None:
-                mission_sol = int(msd - int(landing_msd))
-
-        # Result payload
+        
+        # Calculate local Mars time
+        local_hours = int((sol_fraction * 24 + timezone_offset) % 24)
+        local_time = f"{local_hours:02d}:{mtc_minutes:02d}:{mtc_seconds:02d}"
+        
+        # Calculate solar longitude (Ls) for seasons
+        # Simplified calculation
+        mars_year_fraction = (msd / self._mars_data["tropical_year_sols"]) % 1.0
+        ls = mars_year_fraction * 360.0
+        
+        # Determine season
+        season = None
+        if self._show_season:
+            for season_key, season_data in self._mars_data["seasons"].items():
+                if season_data["ls_start"] <= ls < season_data["ls_end"]:
+                    season = self._translate_dict(season_data["name"], "Northern Spring")
+                    break
+        
+        # Calculate mission sol if applicable
+        mission_sol = None
+        mission_name = None
+        if self._show_mission_sol:
+            mission_name = tz_data.get("mission")
+            if mission_name and mission_name in self._mars_data["missions"]:
+                landing_msd = self._mars_data["missions"][mission_name]
+                mission_sol = int(msd - landing_msd)
+        
+        # Build result
         result: Dict[str, Any] = {
             "msd": round(msd, 4),
             "sol_number": int(msd),
             "mtc": mtc_time,
             "local_time": local_time,
-            "timezone_offset": round(timezone_offset, 4),
-            "season": season,
-            "sunrise": sunrise_time,
-            "sunset": sunset_time,
-            "full_display": f"{local_time} {self._mars_timezone}",
+            "timezone": self._mars_timezone,
+            "timezone_name": tz_data["name"],
+            "timezone_offset": round(timezone_offset, 2),
+            "solar_longitude": round(ls, 1),
         }
-
-        if CALENDAR_INFO["features"].get("solar_longitude") and self._show_solar_longitude:
-            result["solar_longitude"] = round(ls, 1)
-            result["subsolar_longitude"] = round(subsolar_longitude, 1)
-            result["equation_of_time"] = round(eot_minutes, 1)
-
-        if self._show_mission_sol and mission_sol is not None and mission_name:
+        
+        if season and self._show_season:
+            result["season"] = season
+        
+        if mission_sol is not None and mission_name and self._show_mission_sol:
             result["mission_sol"] = mission_sol
             result["mission_name"] = mission_name
-            result["full_display"] += f" (Sol {mission_sol})"
-
+        
         if self._show_earth_time:
             result["earth_time_utc"] = earth_utc.strftime("%Y-%m-%d %H:%M:%S UTC")
-
+        
         return result
+    
+    def _translate_dict(self, data: Dict[str, str], default: str) -> str:
+        """Translate from a dictionary based on current language."""
+        if isinstance(data, dict):
+            lang = self._get_language()
+            return data.get(lang, data.get("en", default))
+        return str(data or default)
+    
+    def _get_language(self) -> str:
+        """Get current language setting."""
+        try:
+            lang = getattr(self._hass.config, "language", "en")
+            if "-" in lang:
+                lang = lang.split("-")[0]
+            if "_" in lang:
+                lang = lang.split("_")[0]
+            return lang
+        except:
+            return "en"
 
-    # ---------- Update loop ----------
+    # ---------- Update method ----------
 
     def update(self) -> None:
         """Update the sensor."""
-        # Refresh options on each update (handles user changes live)
-        opts = self.get_plugin_options() or {}
-        self._mars_timezone = str(opts.get("timezone", self._mars_timezone or "MTC")) or "MTC"
-        self._show_mission_sol = bool(opts.get("show_mission_sol", self._show_mission_sol))
-        self._show_solar_longitude = bool(opts.get("show_solar_longitude", self._show_solar_longitude))
-        self._show_earth_time = bool(opts.get("show_earth_time", self._show_earth_time))
-
-        # Clamp to known codes
-        if self._mars_timezone not in (self._mars_data.get("timezones") or {}):
-            _LOGGER.warning(f"Unknown Mars timezone '{self._mars_timezone}', falling back to MTC")
-            self._mars_timezone = "MTC"
-
+        # Ensure options are loaded
+        if not self._options_loaded:
+            self._load_options()
+        
         now = datetime.utcnow()
         self._mars_time_info = self._calculate_mars_time(now)
-
-        # State: keep terse (time + code). Rich details go to attributes.
-        self._state = f"{self._mars_time_info['local_time']} {self._mars_timezone}"
-
+        
+        # Format state based on display_format
+        if self._display_format == "time_only":
+            # Just the time and timezone
+            self._state = f"{self._mars_time_info['local_time']} {self._mars_timezone}"
+        elif self._display_format == "time_with_sol":
+            # Time with sol number
+            sol = self._mars_time_info['sol_number']
+            self._state = f"Sol {sol}, {self._mars_time_info['local_time']} {self._mars_timezone}"
+        else:  # full_date
+            # Full format with mission sol if available
+            sol = self._mars_time_info['sol_number']
+            mission_info = ""
+            if "mission_sol" in self._mars_time_info:
+                mission_info = f" (Sol {self._mars_time_info['mission_sol']})"
+            self._state = f"MSD {sol}, {self._mars_time_info['local_time']} {self._mars_timezone}{mission_info}"
+        
         _LOGGER.debug(f"Updated Mars Time to {self._state}")
-    
+
+
+# ============================================
+# MODULE EXPORTS
+# ============================================
+
+# Export the sensor class
+__all__ = ["MarsTimeSensor"]
