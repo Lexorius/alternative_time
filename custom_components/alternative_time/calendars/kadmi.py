@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, Optional, List
 import logging
 
-from ..sensor_base import AlternativeTimeSensorBase
+from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
 

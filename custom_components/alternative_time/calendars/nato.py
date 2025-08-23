@@ -8,7 +8,7 @@ from typing import Dict, Any, Optional
 import logging
 import pytz
 
-from ..sensor_base import AlternativeTimeSensorBase
+from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
 
