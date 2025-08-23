@@ -333,6 +333,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         info = self._discovered_calendars.get(cid, {})
         opts = info.get("config_options", {})
         
+        # Get calendar name and description for the form (before any skip logic)
+        calendar_name = self._lcal(info, "name", cid)
+        calendar_desc = self._lcal(info, "description", "")
+        
         # Skip calendars without options
         if not opts:
             _LOGGER.debug(f"Calendar {cid} has no config options, skipping")
@@ -342,8 +346,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Build schema from config_options
         schema_dict = {}
         current_mapping = {}
-        
-        for key, meta in opts.items():
             try:
                 # Get metadata
                 typ = meta.get("type", "string")
@@ -448,7 +450,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             
             return self.async_show_form(
                 step_id="plugin_options",
-                data_schema=schema
+                data_schema=schema,
+                description_placeholders={
+                    "calendar_name": calendar_name,
+                    "calendar_description": calendar_desc
+                }
             )
         except Exception as e:
             _LOGGER.error(f"Error creating form for {cid}: {e}", exc_info=True)
