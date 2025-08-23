@@ -285,11 +285,19 @@ class NATOTimeSensor(AlternativeTimeSensorBase):
     
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the NATO time sensor."""
-        super().__init__(base_name, "nato", CALENDAR_INFO["name"])
+        # WICHTIG: Nur 2 Parameter an die Basisklasse übergeben!
+        super().__init__(base_name, hass)
         
-        self._hass = hass
-        self._attr_icon = CALENDAR_INFO["icon"]
-        self._update_interval = timedelta(seconds=UPDATE_INTERVAL)
+        # Store CALENDAR_INFO as instance variable
+        self._calendar_info = CALENDAR_INFO
+        
+        # Get translated name from metadata
+        calendar_name = self._translate('name', 'NATO Date-Time Group')
+        
+        # Set sensor attributes
+        self._attr_name = f"{base_name} {calendar_name}"
+        self._attr_unique_id = f"{base_name}_nato"
+        self._attr_icon = CALENDAR_INFO.get("icon", "mdi:military-tech")
         
         # Configuration defaults
         self._format_type = "zone"
@@ -302,7 +310,11 @@ class NATOTimeSensor(AlternativeTimeSensorBase):
         # Will be loaded from config
         self._options_loaded = False
         
-        _LOGGER.debug(f"Initialized NATO sensor with base_name: {base_name}")
+        # Initialize state
+        self._state = "Initializing..."
+        self._nato_time = {}
+        
+        _LOGGER.debug(f"Initialized NATO sensor: {self._attr_name}")
     
     def _load_options(self) -> None:
         """Load options from config entry."""
@@ -310,65 +322,33 @@ class NATOTimeSensor(AlternativeTimeSensorBase):
             return
             
         try:
-            # Get the config entry from entity registry
-            entity_registry = self._hass.data.get("entity_registry")
-            if not entity_registry:
-                _LOGGER.debug("Entity registry not available yet")
-                return
+            # Get plugin options using parent method
+            options = self.get_plugin_options()
             
-            # Find our entity
-            entity_id = self.entity_id
-            if not entity_id:
-                _LOGGER.debug("Entity ID not set yet")
-                return
+            if options:
+                # Load configuration values
+                self._format_type = options.get('format_type', 'zone')
+                self._show_zone_name = options.get('show_zone_name', False)
+                self._use_local_zone = options.get('use_local_zone', False)
                 
-            entity_entry = entity_registry.entities.get(entity_id)
-            if not entity_entry:
-                _LOGGER.debug(f"Entity not found in registry: {entity_id}")
-                return
+                # Extended format includes seconds
+                self._show_seconds = (self._format_type == 'extended')
                 
-            # Get config entry
-            config_entry_id = entity_entry.config_entry_id
-            if not config_entry_id:
-                _LOGGER.debug("No config entry ID for entity")
-                return
+                # Aviation format uses uppercase
+                self._uppercase = (self._format_type in ['zone', 'aviation', 'extended'])
                 
-            config_entries = self._hass.config_entries
-            config_entry = config_entries.async_get_entry(config_entry_id)
-            if not config_entry:
-                _LOGGER.debug(f"Config entry not found: {config_entry_id}")
-                return
-            
-            # Get options from config entry data
-            if hasattr(config_entry, 'data') and config_entry.data:
-                plugin_options = config_entry.data.get('plugin_options', {})
-                nato_options = plugin_options.get('nato', {})
+                # Extended format includes full year
+                self._include_year = (self._format_type in ['zone', 'rescue', 'extended'])
                 
-                if nato_options:
-                    # Load configuration values
-                    self._format_type = nato_options.get('format_type', 'zone')
-                    self._show_zone_name = nato_options.get('show_zone_name', False)
-                    self._use_local_zone = nato_options.get('use_local_zone', False)
-                    
-                    # Extended format includes seconds
-                    self._show_seconds = (self._format_type == 'extended')
-                    
-                    # Aviation format uses uppercase
-                    self._uppercase = (self._format_type in ['zone', 'aviation', 'extended'])
-                    
-                    # Extended format includes full year
-                    self._include_year = (self._format_type in ['zone', 'rescue', 'extended'])
-                    
-                    self._options_loaded = True
-                    
-                    _LOGGER.info(
-                        f"NATO options loaded - format: {self._format_type}, "
-                        f"show_zone: {self._show_zone_name}, use_local: {self._use_local_zone}"
-                    )
-                else:
-                    _LOGGER.debug("No NATO options found in config")
+                self._options_loaded = True
+                
+                _LOGGER.info(
+                    f"NATO options loaded - format: {self._format_type}, "
+                    f"show_zone: {self._show_zone_name}, use_local: {self._use_local_zone}"
+                )
             else:
-                _LOGGER.debug("No data in config entry")
+                _LOGGER.debug("NATO sensor using default options")
+                self._options_loaded = True
                 
         except Exception as e:
             _LOGGER.error(f"Error loading NATO options: {e}")
@@ -391,7 +371,7 @@ class NATOTimeSensor(AlternativeTimeSensorBase):
         attrs = super().extra_state_attributes
         
         # Add NATO-specific attributes
-        if hasattr(self, '_nato_time'):
+        if hasattr(self, '_nato_time') and self._nato_time:
             attrs.update(self._nato_time)
             
             # Add description in user's language
