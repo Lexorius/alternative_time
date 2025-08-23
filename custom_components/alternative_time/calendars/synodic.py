@@ -349,6 +349,10 @@ class SynodicCalendarSensor(AlternativeTimeSensorBase):
         # Track if options have been loaded
         self._options_loaded = False
         
+        # Initialize state
+        self._state = "Initializing..."
+        self._synodic_calendar = {}
+        
         _LOGGER.debug(f"Initialized Synodic Calendar sensor: {self._attr_name}")
     
     def _load_options(self) -> None:
@@ -382,6 +386,21 @@ class SynodicCalendarSensor(AlternativeTimeSensorBase):
         
         # Try to load options now that IDs should be set
         self._load_options()
+        
+        # Trigger initial update
+        await self.async_update()
+    
+    async def async_update(self) -> None:
+        """Update the sensor."""
+        try:
+            # Get current time
+            now = datetime.now()
+            # Calculate the synodic calendar
+            self._calculate_time(now)
+            _LOGGER.debug(f"Synodic sensor updated: {self._state}")
+        except Exception as e:
+            _LOGGER.error(f"Error updating synodic sensor: {e}")
+            self._state = f"Error: {str(e)}"
     
     @property
     def state(self):
