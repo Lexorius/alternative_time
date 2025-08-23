@@ -2,146 +2,48 @@
   "config": {
     "step": {
       "user": {
-        "title": "Alternative Time Systems v2.5",
-        "description": "Welcome to Alternative Time Systems!\n\nThis integration will automatically discover all available calendar modules.\n\nOn the next screens, you can select which time systems to enable, organized by category.",
+        "title": "Alternative Time Systems",
+        "description": "Welcome to Alternative Time Systems!\n\nThis integration provides various alternative calendars and time systems for educational and entertainment purposes.",
         "data": {
-          "name": "Configuration name"
+          "name": "Integration Name"
         }
       },
-      "category_technical": {
-        "title": "Technical & Modern Time Systems",
-        "description": "Configure technical and computer-based time systems.\n\nAvailable: {calendars}\n\nProgress: Step {progress}",
+      "select_categories": {
+        "title": "Select Calendar Categories",
+        "description": "Choose which categories of calendars you want to configure:\n\n{details}",
         "data": {
-          "enable_unix": "Unix Timestamp",
-          "enable_julian": "Julian Date",
-          "enable_decimal": "Decimal Time",
-          "enable_hexadecimal": "Hexadecimal Time",
-          "enable_swatch": "Swatch Internet Time",
-          "enable_timezone": "Time Zone Display",
-          "timezone": "Select Time Zone"
-        },
-        "data_description": {
-          "enable_unix": "Seconds since January 1, 1970 (Unix epoch)",
-          "enable_julian": "Astronomical day count since 4713 BCE",
-          "enable_decimal": "French Revolutionary time: 10 hours, 100 minutes per day",
-          "enable_hexadecimal": "Day divided into 65536 parts, displayed in hex",
-          "enable_swatch": "Internet Time in Beats @000-@999. One day = 1000 beats",
-          "enable_timezone": "Display time in selected timezone"
+          "categories": "Categories to include"
         }
       },
-      "category_historical": {
-        "title": "Historical Calendar Systems",
-        "description": "Configure ancient and historical calendars.\n\nAvailable: {calendars}\n\nProgress: Step {progress}",
+      "select_calendars_by_category": {
+        "title": "Select {category} Calendars",
+        "description": "Choose calendars from the {category} category:\n\n{details}",
         "data": {
-          "enable_maya": "Maya Calendar",
-          "enable_egyptian": "Egyptian Calendar",
-          "enable_roman": "Roman Calendar",
-          "enable_attic": "Attic Calendar"
-        },
-        "data_description": {
-          "enable_maya": "Long Count, Tzolk'in and Haab calendars",
-          "enable_egyptian": "Ancient Egyptian civil calendar with 365 days",
-          "enable_roman": "Ancient Roman calendar with Kalends, Nones, and Ides",
-          "enable_attic": "Ancient Athenian lunisolar calendar"
+          "calendars": "Calendars to enable"
         }
       },
-      "category_cultural": {
-        "title": "Cultural Calendar Systems",
-        "description": "Configure regional and cultural calendars.\n\nAvailable: {calendars}\n\nProgress: Step {progress}",
-        "data": {
-          "enable_suriyakati": "Suriyakati (Thai) Calendar",
-          "enable_minguo": "Minguo (Taiwan) Calendar"
-        },
-        "data_description": {
-          "enable_suriyakati": "Thai calendar with Buddhist Era (BE = CE + 543)",
-          "enable_minguo": "Taiwan/ROC calendar (Year 1 = 1912 CE)"
-        }
+      "plugin_options": {
+        "title": "Configure {calendar_name}",
+        "description": "**{calendar_name}**\n\n{calendar_description}\n\nConfigure the options below:"
       },
-      "category_military": {
-        "title": "Military Time Systems",
-        "description": "Configure military and tactical time formats.\n\nAvailable: {calendars}\n\nProgress: Step {progress}",
-        "data": {
-          "enable_nato": "NATO Time",
-          "enable_nato_zone": "NATO Time with Zone",
-          "enable_nato_rescue": "NATO Rescue Format"
-        },
-        "data_description": {
-          "enable_nato": "Military date-time without zone: DDHHMM",
-          "enable_nato_zone": "Full military DTG: DDHHMM[Zone] MON YY",
-          "enable_nato_rescue": "German rescue service notation"
-        }
-      },
-      "category_space": {
-        "title": "Space & Astronomical Time Systems",
-        "description": "Configure Mars and space-related calendars.\n\nAvailable: {calendars}\n\nProgress: Step {progress}",
-        "data": {
-          "enable_darian": "Darian Calendar (Mars)",
-          "enable_mars_time": "Mars Sol Time",
-          "mars_timezone": "Mars Time Zone"
-        },
-        "data_description": {
-          "enable_darian": "Mars calendar with 24 months and 668 sols per year",
-          "enable_mars_time": "Martian solar time (sols)"
-        }
-      },
-      "category_scifi": {
-        "title": "Science Fiction Time Systems",
-        "description": "Configure time systems from science fiction universes.\n\nAvailable: {calendars}\n\nProgress: Step {progress}",
-        "data": {
-          "enable_stardate": "Star Trek Stardate",
-          "enable_eve": "EVE Online Time"
-        },
-        "data_description": {
-          "enable_stardate": "Star Trek TNG stardate (e.g. 47634.44)",
-          "enable_eve": "EVE Online New Eden Standard Time"
-        }
-      },
-      "category_fantasy": {
-        "title": "Fantasy World Calendars",
-        "description": "Configure calendars from fantasy worlds and games.\n\nAvailable: {calendars}\n\nProgress: Step {progress}",
-        "data": {
-          "enable_shire": "Shire Calendar (LOTR)",
-          "enable_rivendell": "Rivendell Calendar (LOTR)",
-          "enable_tamriel": "Tamriel Calendar (Elder Scrolls)",
-          "enable_discworld": "Discworld Calendar"
-        },
-        "data_description": {
-          "enable_shire": "Hobbit calendar from Lord of the Rings",
-          "enable_rivendell": "Elvish calendar from Lord of the Rings",
-          "enable_tamriel": "Elder Scrolls calendar with moons and Daedric days",
-          "enable_discworld": "Terry Pratchett's Discworld calendar"
-        }
-      },
-      "category_uncategorized": {
-        "title": "Other Time Systems",
-        "description": "Configure additional time systems.\n\nAvailable: {calendars}\n\nProgress: Step {progress}",
-        "data": {}
-      },
-      "confirm": {
-        "title": "Confirm Configuration",
-        "description": "Ready to create configuration: **{name}**\n\nYou have selected **{count}** calendar(s):\n\n{summary}\n\nClick Submit to create the configuration."
+      "disclaimer": {
+        "title": "Important Notice",
+        "description": "## ⚠️ Alternative Time Systems - Disclaimer\n\nThe alternative calendars and time systems provided by this integration are for **educational and entertainment purposes only**.\n\n### Please note:\n• The calculations might not be 100% accurate\n• Some calendars are fictional or theoretical\n• Historical calendars may have variations\n• Time zones and conversions are approximations\n\n### Found an issue?\nIf you discover any errors or have suggestions for improvements, please report them on our GitHub repository:\n\n**https://github.com/Lexorius/alternative_time**\n\nBy continuing, you acknowledge that these time systems should not be used for critical time-keeping or official purposes."
       }
     },
     "error": {
-      "unknown": "Unexpected error",
-      "no_calendars_found": "No calendar modules were discovered. Please check the calendars directory.",
-      "no_systems_selected": "Please select at least one time system"
+      "unknown": "Unexpected error occurred"
     },
     "abort": {
-      "already_configured": "Alternative Time is already configured",
-      "user_cancelled": "Configuration cancelled by user"
+      "no_calendars_found": "No calendar implementations found. Please check the installation."
     }
   },
   "options": {
     "step": {
       "init": {
         "title": "Alternative Time Options",
-        "description": "Modify your time system configuration.\n\nEnable or disable calendars and adjust their settings.",
-        "data": {}
+        "description": "Options flow is not yet implemented. Please delete and recreate the integration to change settings."
       }
-    },
-    "error": {
-      "no_systems_selected": "At least one time system must remain enabled"
     }
   }
 }

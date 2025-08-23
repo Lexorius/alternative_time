@@ -1,0 +1,49 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Sistemas de Tempo Alternativos",
+        "description": "Bem-vindo aos Sistemas de Tempo Alternativos!\n\nEsta integração fornece vários calendários alternativos e sistemas temporais para fins educacionais e de entretenimento.",
+        "data": {
+          "name": "Nome da integração"
+        }
+      },
+      "select_categories": {
+        "title": "Selecionar categorias de calendário",
+        "description": "Escolha quais categorias de calendários você deseja configurar:\n\n{details}",
+        "data": {
+          "categories": "Categorias a incluir"
+        }
+      },
+      "select_calendars_by_category": {
+        "title": "Selecionar calendários {category}",
+        "description": "Escolha calendários da categoria {category}:\n\n{details}",
+        "data": {
+          "calendars": "Calendários para ativar"
+        }
+      },
+      "plugin_options": {
+        "title": "Configurar {calendar_name}",
+        "description": "**{calendar_name}**\n\n{calendar_description}\n\nConfigure as opções abaixo:"
+      },
+      "disclaimer": {
+        "title": "Aviso Importante",
+        "description": "## ⚠️ Sistemas de Tempo Alternativos - Aviso Legal\n\nOs calendários alternativos e sistemas temporais fornecidos por esta integração são **apenas para fins educacionais e de entretenimento**.\n\n### Por favor, note:\n• Os cálculos podem não ser 100% precisos\n• Alguns calendários são fictícios ou teóricos\n• Calendários históricos podem ter variações\n• Fusos horários e conversões são aproximações\n\n### Encontrou um problema?\nSe descobrir erros ou tiver sugestões de melhorias, relate-os em nosso repositório GitHub:\n\n**https://github.com/Lexorius/alternative_time**\n\nAo continuar, você reconhece que estes sistemas temporais não devem ser usados para medições de tempo críticas ou fins oficiais."
+      }
+    },
+    "error": {
+      "unknown": "Ocorreu um erro inesperado"
+    },
+    "abort": {
+      "no_calendars_found": "Nenhuma implementação de calendário encontrada. Verifique a instalação."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opções de Tempo Alternativo",
+        "description": "O fluxo de opções ainda não está implementado. Exclua e recrie a integração para alterar as configurações."
+      }
+    }
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "代替時間システム",
+        "description": "代替時間システムへようこそ！\n\nこの統合は、教育および娯楽目的のためのさまざまな代替カレンダーと時間システムを提供します。",
+        "data": {
+          "name": "統合名"
+        }
+      },
+      "select_categories": {
+        "title": "カレンダーカテゴリを選択",
+        "description": "設定したいカレンダーのカテゴリを選択してください：\n\n{details}",
+        "data": {
+          "categories": "含めるカテゴリ"
+        }
+      },
+      "select_calendars_by_category": {
+        "title": "{category}カレンダーを選択",
+        "description": "{category}カテゴリからカレンダーを選択：\n\n{details}",
+        "data": {
+          "calendars": "有効にするカレンダー"
+        }
+      },
+      "plugin_options": {
+        "title": "{calendar_name}を設定",
+        "description": "**{calendar_name}**\n\n{calendar_description}\n\n以下のオプションを設定してください："
+      },
+      "disclaimer": {
+        "title": "重要なお知らせ",
+        "description": "## ⚠️ 代替時間システム - 免責事項\n\nこの統合によって提供される代替カレンダーと時間システムは、**教育および娯楽目的のみ**です。\n\n### ご注意ください：\n• 計算は100％正確ではない可能性があります\n• 一部のカレンダーは架空または理論的なものです\n• 歴史的カレンダーには変動がある場合があります\n• タイムゾーンと変換は近似値です\n\n### 問題を見つけましたか？\nエラーを発見したり、改善の提案がある場合は、GitHubリポジトリで報告してください：\n\n**https://github.com/Lexorius/alternative_time**\n\n続行することで、これらの時間システムが重要な時間測定や公式目的に使用されるべきではないことを認めます。"
+      }
+    },
+    "error": {
+      "unknown": "予期しないエラーが発生しました"
+    },
+    "abort": {
+      "no_calendars_found": "カレンダー実装が見つかりません。インストールを確認してください。"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "代替時間オプション",
+        "description": "オプションフローはまだ実装されていません。設定を変更するには、統合を削除して再作成してください。"
+      }
+    }
+  }
+}

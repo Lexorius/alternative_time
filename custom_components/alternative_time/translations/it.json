@@ -1,0 +1,49 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Sistemi di Tempo Alternativi",
+        "description": "Benvenuto nei Sistemi di Tempo Alternativi!\n\nQuesta integrazione fornisce vari calendari alternativi e sistemi temporali per scopi educativi e di intrattenimento.",
+        "data": {
+          "name": "Nome dell'integrazione"
+        }
+      },
+      "select_categories": {
+        "title": "Seleziona categorie di calendario",
+        "description": "Scegli quali categorie di calendari vuoi configurare:\n\n{details}",
+        "data": {
+          "categories": "Categorie da includere"
+        }
+      },
+      "select_calendars_by_category": {
+        "title": "Seleziona calendari {category}",
+        "description": "Scegli i calendari dalla categoria {category}:\n\n{details}",
+        "data": {
+          "calendars": "Calendari da attivare"
+        }
+      },
+      "plugin_options": {
+        "title": "Configura {calendar_name}",
+        "description": "**{calendar_name}**\n\n{calendar_description}\n\nConfigura le opzioni seguenti:"
+      },
+      "disclaimer": {
+        "title": "Avviso Importante",
+        "description": "## ⚠️ Sistemi di Tempo Alternativi - Disclaimer\n\nI calendari alternativi e i sistemi temporali forniti da questa integrazione sono **solo per scopi educativi e di intrattenimento**.\n\n### Si prega di notare:\n• I calcoli potrebbero non essere accurati al 100%\n• Alcuni calendari sono fittizi o teorici\n• I calendari storici possono avere variazioni\n• I fusi orari e le conversioni sono approssimazioni\n\n### Trovato un problema?\nSe scopri errori o hai suggerimenti per miglioramenti, segnalali nel nostro repository GitHub:\n\n**https://github.com/Lexorius/alternative_time**\n\nContinuando, riconosci che questi sistemi temporali non devono essere utilizzati per misurazioni temporali critiche o per scopi ufficiali."
+      }
+    },
+    "error": {
+      "unknown": "Si è verificato un errore imprevisto"
+    },
+    "abort": {
+      "no_calendars_found": "Nessuna implementazione di calendario trovata. Verifica l'installazione."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opzioni Tempo Alternativo",
+        "description": "Il flusso delle opzioni non è ancora implementato. Elimina e ricrea l'integrazione per modificare le impostazioni."
+      }
+    }
+  }
+}
