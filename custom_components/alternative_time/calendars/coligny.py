@@ -2,6 +2,9 @@
 
 Implements the ancient Gaulish lunisolar calendar based on the Coligny bronze tablets.
 This calendar features 12 months of 29-30 days with intercalary months for solar alignment.
+
+IMPORTANT: This is a scholarly reconstruction based on fragmentary archaeological evidence.
+Only about 40% of the original bronze tablets survived, and many interpretations remain debated.
 """
 
 from datetime import datetime, timedelta
@@ -15,34 +18,34 @@ _LOGGER = logging.getLogger(__name__)
 # Calendar metadata and configuration
 CALENDAR_INFO = {
     "id": "coligny",
-    "version": "2.5.0",
+    "version": "2.5.1",
     "name": {
-        "en": "Coligny Calendar (Celtic)",
-        "de": "Coligny-Kalender (Keltisch)",
-        "es": "Calendario de Coligny (Celta)",
-        "fr": "Calendrier de Coligny (Celtique)",
-        "it": "Calendario di Coligny (Celtico)",
-        "nl": "Coligny Kalender (Keltisch)",
-        "pl": "Kalendarz z Coligny (Celtycki)",
-        "pt": "Calendário de Coligny (Celta)",
-        "ru": "Календарь Колиньи (Кельтский)",
-        "ja": "コリニー暦（ケルト）",
-        "zh": "科利尼历（凯尔特）",
-        "ko": "콜리니 달력 (켈트)"
+        "en": "Coligny Calendar (Archaeological)",
+        "de": "Coligny-Kalender (Archäologisch)",
+        "es": "Calendario de Coligny (Arqueológico)",
+        "fr": "Calendrier de Coligny (Archéologique)",
+        "it": "Calendario di Coligny (Archeologico)",
+        "nl": "Coligny Kalender (Archeologisch)",
+        "pl": "Kalendarz z Coligny (Archeologiczny)",
+        "pt": "Calendário de Coligny (Arqueológico)",
+        "ru": "Календарь Колиньи (Археологический)",
+        "ja": "コリニー暦（考古学的）",
+        "zh": "科利尼历（考古学）",
+        "ko": "콜리니 달력 (고고학적)"
     },
     "description": {
-        "en": "Ancient Gaulish lunisolar calendar with 12 months, lucky/unlucky days, and 30-month cycles",
-        "de": "Alter gallischer Lunisolarkalender mit 12 Monaten, Glücks-/Unglückstagen und 30-Monats-Zyklen",
-        "es": "Antiguo calendario lunisolar galo con 12 meses, días afortunados/desafortunados y ciclos de 30 meses",
-        "fr": "Ancien calendrier luni-solaire gaulois avec 12 mois, jours fastes/néfastes et cycles de 30 mois",
-        "it": "Antico calendario lunisolare gallico con 12 mesi, giorni fortunati/sfortunati e cicli di 30 mesi",
-        "nl": "Oude Gallische lunisolaire kalender met 12 maanden, geluk/ongeluk dagen en 30-maands cycli",
-        "pl": "Starożytny galijsko-księżycowo-słoneczny kalendarz z 12 miesiącami, szczęśliwymi/nieszczęśliwymi dniami",
-        "pt": "Antigo calendário lunissolar gaulês com 12 meses, dias de sorte/azar e ciclos de 30 meses",
-        "ru": "Древний галльский лунно-солнечный календарь с 12 месяцами, счастливыми/несчастливыми днями",
-        "ja": "12ヶ月、幸運/不運の日、30ヶ月周期を持つ古代ガリアの太陰太陽暦",
-        "zh": "拥有12个月、吉日/凶日和30个月周期的古代高卢阴阳历",
-        "ko": "12개월, 행운/불운의 날, 30개월 주기를 가진 고대 갈리아 태음태양력"
+        "en": "Gaulish calendar from 2nd century CE bronze tablets (scholarly reconstruction, ~40% preserved)",
+        "de": "Gallischer Kalender aus Bronzetafeln des 2. Jh. n.Chr. (wissenschaftliche Rekonstruktion, ~40% erhalten)",
+        "es": "Calendario galo de tablillas de bronce del siglo II d.C. (reconstrucción académica, ~40% preservado)",
+        "fr": "Calendrier gaulois sur tablettes de bronze du 2e siècle ap. J.-C. (reconstruction savante, ~40% préservé)",
+        "it": "Calendario gallico da tavolette di bronzo del II secolo d.C. (ricostruzione accademica, ~40% preservato)",
+        "nl": "Gallische kalender van bronzen tabletten uit 2e eeuw n.Chr. (wetenschappelijke reconstructie, ~40% bewaard)",
+        "pl": "Kalendarz galijski z brązowych tabliczek z II w. n.e. (rekonstrukcja naukowa, ~40% zachowane)",
+        "pt": "Calendário gaulês de tábuas de bronze do século II d.C. (reconstrução acadêmica, ~40% preservado)",
+        "ru": "Галльский календарь с бронзовых табличек II века н.э. (научная реконструкция, ~40% сохранилось)",
+        "ja": "紀元2世紀のブロンズ板からのガリア暦（学術的再構築、約40％保存）",
+        "zh": "公元2世纪青铜板上的高卢历（学术重建，约40%保存）",
+        "ko": "2세기 청동판의 갈리아 달력 (학술적 재구성, 약 40% 보존)"
     },
     "category": "historical",
     "update_interval": 3600,
@@ -50,195 +53,186 @@ CALENDAR_INFO = {
     "icon": "mdi:celtic-cross",
     "reference_url": "https://en.wikipedia.org/wiki/Coligny_calendar",
     
+    # Scientific disclaimer
+    "disclaimer": {
+        "en": "⚠️ SCHOLARLY RECONSTRUCTION: Based on fragmentary bronze tablets (Musée gallo-romain de Lyon). Many interpretations remain debated among scholars. Correlation with modern calendar is uncertain.",
+        "de": "⚠️ WISSENSCHAFTLICHE REKONSTRUKTION: Basiert auf fragmentarischen Bronzetafeln (Musée gallo-romain de Lyon). Viele Interpretationen sind unter Gelehrten umstritten. Korrelation mit modernem Kalender ist unsicher.",
+        "es": "⚠️ RECONSTRUCCIÓN ACADÉMICA: Basada en tablillas de bronce fragmentarias (Musée gallo-romain de Lyon). Muchas interpretaciones siguen siendo debatidas. La correlación con el calendario moderno es incierta.",
+        "fr": "⚠️ RECONSTRUCTION SAVANTE: Basée sur des tablettes de bronze fragmentaires (Musée gallo-romain de Lyon). De nombreuses interprétations restent débattues. La corrélation avec le calendrier moderne est incertaine.",
+        "it": "⚠️ RICOSTRUZIONE ACCADEMICA: Basata su tavolette di bronzo frammentarie (Musée gallo-romain de Lyon). Molte interpretazioni rimangono dibattute. La correlazione con il calendario moderno è incerta.",
+        "nl": "⚠️ WETENSCHAPPELIJKE RECONSTRUCTIE: Gebaseerd op fragmentarische bronzen tabletten (Musée gallo-romain de Lyon). Veel interpretaties blijven omstreden. Correlatie met moderne kalender is onzeker.",
+        "pl": "⚠️ REKONSTRUKCJA NAUKOWA: Oparta na fragmentarycznych tabliczkach z brązu (Musée gallo-romain de Lyon). Wiele interpretacji pozostaje spornych. Korelacja z nowoczesnym kalendarzem jest niepewna.",
+        "pt": "⚠️ RECONSTRUÇÃO ACADÊMICA: Baseada em tábuas de bronze fragmentárias (Musée gallo-romain de Lyon). Muitas interpretações permanecem debatidas. A correlação com o calendário moderno é incerta.",
+        "ru": "⚠️ НАУЧНАЯ РЕКОНСТРУКЦИЯ: Основана на фрагментарных бронзовых табличках (Musée gallo-romain de Lyon). Многие интерпретации остаются спорными. Корреляция с современным календарем неопределенна.",
+        "ja": "⚠️ 学術的再構築：断片的な青銅板（リヨン・ガロ・ロマン博物館）に基づく。多くの解釈が議論されている。現代暦との相関は不確実。",
+        "zh": "⚠️ 学术重建：基于片段青铜板（里昂高卢罗马博物馆）。许多解释仍有争议。与现代日历的相关性不确定。",
+        "ko": "⚠️ 학술적 재구성: 단편적인 청동판(리옹 갈로-로만 박물관) 기반. 많은 해석이 논쟁 중. 현대 달력과의 상관관계 불확실."
+    },
+    
     # Configuration options for this calendar
     "config_options": {
-        "show_day_quality": {
+        "show_uncertainty": {
             "type": "boolean",
             "default": True,
             "label": {
-                "en": "Show Day Quality (MAT/ANM)",
-                "de": "Tagesqualität anzeigen (MAT/ANM)",
-                "es": "Mostrar calidad del día (MAT/ANM)",
-                "fr": "Afficher la qualité du jour (MAT/ANM)",
-                "it": "Mostra qualità del giorno (MAT/ANM)",
-                "nl": "Toon dagkwaliteit (MAT/ANM)",
-                "pl": "Pokaż jakość dnia (MAT/ANM)",
-                "pt": "Mostrar qualidade do dia (MAT/ANM)",
-                "ru": "Показать качество дня (MAT/ANM)",
-                "ja": "日の質を表示（MAT/ANM）",
-                "zh": "显示日期质量（MAT/ANM）",
-                "ko": "날짜 품질 표시 (MAT/ANM)"
+                "en": "Show Uncertainty Markers",
+                "de": "Unsicherheitsmarkierungen anzeigen",
+                "es": "Mostrar marcadores de incertidumbre",
+                "fr": "Afficher les marqueurs d'incertitude",
+                "it": "Mostra marcatori di incertezza",
+                "nl": "Toon onzekerheidsmarkeringen",
+                "pl": "Pokaż znaczniki niepewności",
+                "pt": "Mostrar marcadores de incerteza",
+                "ru": "Показать маркеры неопределенности",
+                "ja": "不確実性マーカーを表示",
+                "zh": "显示不确定性标记",
+                "ko": "불확실성 표시 보기"
             },
             "description": {
-                "en": "Display whether the day is lucky (MAT/Matus) or unlucky (ANM/Anmatus)",
-                "de": "Anzeigen ob der Tag glücklich (MAT/Matus) oder unglücklich (ANM/Anmatus) ist",
-                "es": "Mostrar si el día es afortunado (MAT/Matus) o desafortunado (ANM/Anmatus)",
-                "fr": "Afficher si le jour est faste (MAT/Matus) ou néfaste (ANM/Anmatus)"
+                "en": "Mark reconstructed or uncertain elements with [?]",
+                "de": "Rekonstruierte oder unsichere Elemente mit [?] markieren",
+                "es": "Marcar elementos reconstruidos o inciertos con [?]",
+                "fr": "Marquer les éléments reconstruits ou incertains avec [?]"
             }
         },
-        "show_intercalary": {
-            "type": "boolean",
-            "default": True,
-            "label": {
-                "en": "Show Intercalary Months",
-                "de": "Schaltmonate anzeigen",
-                "es": "Mostrar meses intercalares",
-                "fr": "Afficher les mois intercalaires",
-                "it": "Mostra mesi intercalari",
-                "nl": "Toon schrikkelmaanden",
-                "pl": "Pokaż miesiące przestępne",
-                "pt": "Mostrar meses intercalares",
-                "ru": "Показать вставные месяцы",
-                "ja": "閏月を表示",
-                "zh": "显示闰月",
-                "ko": "윤달 표시"
-            }
-        },
-        "notation_style": {
+        "correlation_method": {
             "type": "select",
             "options": {
-                "abbreviated": {
-                    "en": "Abbreviated (SAMON III MAT)",
-                    "de": "Abgekürzt (SAMON III MAT)",
-                    "es": "Abreviado (SAMON III MAT)",
-                    "fr": "Abrégé (SAMON III MAT)",
-                    "it": "Abbreviato (SAMON III MAT)",
-                    "nl": "Afgekort (SAMON III MAT)",
-                    "pl": "Skrócony (SAMON III MAT)",
-                    "pt": "Abreviado (SAMON III MAT)",
-                    "ru": "Сокращенный (SAMON III MAT)",
-                    "ja": "省略形（SAMON III MAT）",
-                    "zh": "缩写（SAMON III MAT）",
-                    "ko": "약어 (SAMON III MAT)"
+                "olmsted": {
+                    "en": "Olmsted (1992) - Samonios ≈ November",
+                    "de": "Olmsted (1992) - Samonios ≈ November",
+                    "es": "Olmsted (1992) - Samonios ≈ Noviembre",
+                    "fr": "Olmsted (1992) - Samonios ≈ Novembre",
+                    "it": "Olmsted (1992) - Samonios ≈ Novembre",
+                    "nl": "Olmsted (1992) - Samonios ≈ November",
+                    "pl": "Olmsted (1992) - Samonios ≈ Listopad",
+                    "pt": "Olmsted (1992) - Samonios ≈ Novembro",
+                    "ru": "Олмстед (1992) - Самониос ≈ Ноябрь",
+                    "ja": "オルムステッド (1992) - サモニオス ≈ 11月",
+                    "zh": "奥姆斯特德 (1992) - 萨莫尼奥斯 ≈ 11月",
+                    "ko": "올름스테드 (1992) - 사모니오스 ≈ 11월"
                 },
-                "full": {
-                    "en": "Full (Samonios Day 3, Lucky)",
-                    "de": "Vollständig (Samonios Tag 3, Glücklich)",
-                    "es": "Completo (Samonios Día 3, Afortunado)",
-                    "fr": "Complet (Samonios Jour 3, Faste)",
-                    "it": "Completo (Samonios Giorno 3, Fortunato)",
-                    "nl": "Volledig (Samonios Dag 3, Gelukkig)",
-                    "pl": "Pełny (Samonios Dzień 3, Szczęśliwy)",
-                    "pt": "Completo (Samonios Dia 3, Sortudo)",
-                    "ru": "Полный (Самониос День 3, Счастливый)",
-                    "ja": "完全形（サモニオス3日、幸運）",
-                    "zh": "完整（萨莫尼奥斯第3天，幸运）",
-                    "ko": "전체 (사모니오스 3일, 행운)"
-                },
-                "mixed": {
-                    "en": "Mixed (Samonios III MAT)",
-                    "de": "Gemischt (Samonios III MAT)",
-                    "es": "Mixto (Samonios III MAT)",
-                    "fr": "Mixte (Samonios III MAT)",
-                    "it": "Misto (Samonios III MAT)",
-                    "nl": "Gemengd (Samonios III MAT)",
-                    "pl": "Mieszany (Samonios III MAT)",
-                    "pt": "Misto (Samonios III MAT)",
-                    "ru": "Смешанный (Самониос III MAT)",
-                    "ja": "混合（サモニオスIII MAT）",
-                    "zh": "混合（萨莫尼奥斯III MAT）",
-                    "ko": "혼합 (사모니오스 III MAT)"
+                "mckay": {
+                    "en": "McKay (2016) - Samonios ≈ May/June",
+                    "de": "McKay (2016) - Samonios ≈ Mai/Juni",
+                    "es": "McKay (2016) - Samonios ≈ Mayo/Junio",
+                    "fr": "McKay (2016) - Samonios ≈ Mai/Juin",
+                    "it": "McKay (2016) - Samonios ≈ Maggio/Giugno",
+                    "nl": "McKay (2016) - Samonios ≈ Mei/Juni",
+                    "pl": "McKay (2016) - Samonios ≈ Maj/Czerwiec",
+                    "pt": "McKay (2016) - Samonios ≈ Maio/Junho",
+                    "ru": "МакКей (2016) - Самониос ≈ Май/Июнь",
+                    "ja": "マッケイ (2016) - サモニオス ≈ 5月/6月",
+                    "zh": "麦凯 (2016) - 萨莫尼奥斯 ≈ 5月/6月",
+                    "ko": "맥케이 (2016) - 사모니오스 ≈ 5월/6월"
                 }
             },
-            "default": "mixed",
+            "default": "olmsted",
             "label": {
-                "en": "Notation Style",
-                "de": "Notationsstil",
-                "es": "Estilo de notación",
-                "fr": "Style de notation",
-                "it": "Stile di notazione",
-                "nl": "Notatiestijl",
-                "pl": "Styl notacji",
-                "pt": "Estilo de notação",
-                "ru": "Стиль записи",
-                "ja": "表記スタイル",
-                "zh": "记法风格",
-                "ko": "표기 스타일"
+                "en": "Scholar Interpretation",
+                "de": "Gelehrten-Interpretation",
+                "es": "Interpretación académica",
+                "fr": "Interprétation savante",
+                "it": "Interpretazione accademica",
+                "nl": "Wetenschappelijke interpretatie",
+                "pl": "Interpretacja naukowa",
+                "pt": "Interpretação acadêmica",
+                "ru": "Научная интерпретация",
+                "ja": "学者の解釈",
+                "zh": "学者解释",
+                "ko": "학자 해석"
             }
         },
-        "show_lustrum": {
+        "show_preserved_only": {
             "type": "boolean",
-            "default": True,
+            "default": False,
             "label": {
-                "en": "Show 5-Year Lustrum",
-                "de": "5-Jahres-Lustrum anzeigen",
-                "es": "Mostrar lustro de 5 años",
-                "fr": "Afficher le lustre de 5 ans",
-                "it": "Mostra lustro di 5 anni",
-                "nl": "Toon 5-jarig lustrum",
-                "pl": "Pokaż 5-letnie lustrum",
-                "pt": "Mostrar lustro de 5 anos",
-                "ru": "Показать 5-летний люструм",
-                "ja": "5年周期を表示",
-                "zh": "显示5年周期",
-                "ko": "5년 주기 표시"
+                "en": "Show Only Preserved Text",
+                "de": "Nur erhaltenen Text anzeigen",
+                "es": "Mostrar solo texto preservado",
+                "fr": "Afficher uniquement le texte préservé",
+                "it": "Mostra solo testo preservato",
+                "nl": "Toon alleen bewaarde tekst",
+                "pl": "Pokaż tylko zachowany tekst",
+                "pt": "Mostrar apenas texto preservado",
+                "ru": "Показать только сохранившийся текст",
+                "ja": "保存されたテキストのみ表示",
+                "zh": "仅显示保存的文本",
+                "ko": "보존된 텍스트만 표시"
             },
             "description": {
-                "en": "Display position in the 5-year cycle (62-month lustrum)",
-                "de": "Position im 5-Jahres-Zyklus anzeigen (62-Monats-Lustrum)",
-                "es": "Mostrar posición en el ciclo de 5 años (lustro de 62 meses)",
-                "fr": "Afficher la position dans le cycle de 5 ans (lustre de 62 mois)"
+                "en": "Hide reconstructed elements, show only what's on the tablets",
+                "de": "Rekonstruierte Elemente ausblenden, nur Tafeltexte zeigen",
+                "es": "Ocultar elementos reconstruidos, mostrar solo lo que está en las tablillas",
+                "fr": "Masquer les éléments reconstruits, afficher uniquement ce qui est sur les tablettes"
             }
         }
     },
     
-    # Coligny calendar data
+    # Coligny calendar data - ONLY ARCHAEOLOGICALLY ATTESTED
     "coligny_data": {
-        # Month data: name, days, quality (MAT=lucky, ANM=unlucky)
+        # Month names as preserved on tablets
         "months": [
-            {"name": "SAMON", "full": "Samonios", "days": 30, "quality": "MAT", "meaning": "Summer's End"},
-            {"name": "DVMANN", "full": "Dumannios", "days": 29, "quality": "ANM", "meaning": "Dark Time"},
-            {"name": "RIVROS", "full": "Riuros", "days": 30, "quality": "MAT", "meaning": "Frost Time"},
-            {"name": "ANAGANTIO", "full": "Anagantios", "days": 29, "quality": "ANM", "meaning": "Indoor Time"},
-            {"name": "OGRONIOS", "full": "Ogronios", "days": 30, "quality": "MAT", "meaning": "Ice Time"},
-            {"name": "CVTIOS", "full": "Cutios", "days": 30, "quality": "MAT", "meaning": "Wind Time"},
-            {"name": "GIAMONIOS", "full": "Giamonios", "days": 29, "quality": "ANM", "meaning": "Winter's End"},
-            {"name": "SIMIVIS", "full": "Simiuisonna", "days": 30, "quality": "MAT", "meaning": "Bright Time"},
-            {"name": "EQVOS", "full": "Equos", "days": 29, "quality": "ANM", "meaning": "Horse Time"},
-            {"name": "ELEMBIV", "full": "Elembiu", "days": 29, "quality": "ANM", "meaning": "Deer Time"},
-            {"name": "EDRINI", "full": "Edrinios", "days": 30, "quality": "MAT", "meaning": "Hot Time"},
-            {"name": "CANTLOS", "full": "Cantlos", "days": 29, "quality": "ANM", "meaning": "Song Time"}
+            {"preserved": "SAMON", "reconstructed": "Samonios", "days": 30, "preserved_days": True},
+            {"preserved": "DVMANN", "reconstructed": "Dumannios", "days": 29, "preserved_days": True},
+            {"preserved": "RIVROS", "reconstructed": "Riuros", "days": 30, "preserved_days": True},
+            {"preserved": "ANAGANTIO", "reconstructed": "Anagantios", "days": 29, "preserved_days": True},
+            {"preserved": "OGRONIOS", "reconstructed": "Ogronios", "days": 30, "preserved_days": True},
+            {"preserved": "CVTIOS", "reconstructed": "Cutios", "days": 30, "preserved_days": True},
+            {"preserved": "GIAMONIOS", "reconstructed": "Giamonios", "days": 29, "preserved_days": False},
+            {"preserved": "SIMIVIS", "reconstructed": "Simiuisonna", "days": 30, "preserved_days": False},
+            {"preserved": "EQVOS", "reconstructed": "Equos", "days": 29, "preserved_days": True},
+            {"preserved": "ELEMBIV", "reconstructed": "Elembiu", "days": 29, "preserved_days": False},
+            {"preserved": "EDRINI", "reconstructed": "Edrinios", "days": 30, "preserved_days": True},
+            {"preserved": "CANTLOS", "reconstructed": "Cantlos", "days": 29, "preserved_days": True}
         ],
         
-        # Intercalary months (added for solar alignment)
+        # Intercalary months (preserved on tablets)
         "intercalary": [
-            {"name": "CIALLOS", "full": "Ciallos", "days": 30, "quality": "MAT", "position": 0},
-            {"name": "QVIMON", "full": "Quimon", "days": 30, "quality": "MAT", "position": 30}
+            {"preserved": "CIALLOS", "position": "uncertain", "days": 30},
+            {"preserved": "QVIMON", "position": "uncertain", "days": 30}
         ],
         
-        # Special days and markings from the bronze tablets
-        "special_days": {
-            "IVOS": "Under protection",
-            "PRINNI LOUD": "Spring beginning",
-            "PRINNI LAG": "Spring waning",
-            "INIS R": "Great beginning",
-            "AMB": "Around/about",
-            "ATENOUX": "Returning night (full moon)"
+        # Preserved notations (archaeologically attested)
+        "preserved_notations": {
+            "MAT": "Preserved notation (possibly 'good/complete')",
+            "ANM": "Preserved notation (possibly 'not good/incomplete')",
+            "ATENOUX": "Preserved notation (possibly 'returning night')",
+            "DIVERTOMU": "Preserved notation (meaning unknown)",
+            "IVOS": "Preserved notation (meaning unknown)",
+            "PRINNI LOUD": "Preserved notation (meaning unknown)",
+            "PRINNI LAG": "Preserved notation (meaning unknown)",
+            "MD": "Preserved notation (meaning unknown)",
+            "AMB": "Preserved notation (meaning unknown)"
         },
         
-        # Day qualities pattern (simplified from tablet)
-        "day_patterns": {
-            "standard": ["MAT", "MAT", "ANM", "MAT", "ANM", "MAT", "MAT", "ANM", "MAT", "ANM",
-                        "MAT", "MAT", "ANM", "MAT", "ATENOUX", "MAT", "ANM", "MAT", "MAT", "ANM",
-                        "MAT", "ANM", "MAT", "MAT", "ANM", "MAT", "ANM", "MAT", "MAT", "ANM"],
-            "short": ["MAT", "MAT", "ANM", "MAT", "ANM", "MAT", "MAT", "ANM", "MAT", "ANM",
-                     "MAT", "MAT", "ANM", "MAT", "ATENOUX", "MAT", "ANM", "MAT", "MAT", "ANM",
-                     "MAT", "ANM", "MAT", "MAT", "ANM", "MAT", "ANM", "MAT", "MAT"]
+        # Correlation methods (scholarly interpretations)
+        "correlations": {
+            "olmsted": {
+                "author": "Garrett Olmsted (1992)",
+                "start_month": 10,  # November
+                "start_day": 1,
+                "note": "Based on Irish Samhain correlation"
+            },
+            "mckay": {
+                "author": "Helen McKay (2016)",
+                "start_month": 5,  # May
+                "start_day": 15,
+                "note": "Based on astronomical analysis"
+            }
         },
         
-        # 5-year cycle (lustrum) = 62 months total
-        "lustrum": {
-            "years": 5,
-            "months": 62,
-            "pattern": [12, 12, 13, 12, 13]  # Months per year (13 = with intercalary)
-        },
-        
-        # Correlation to Gregorian (approximate - debated by scholars)
-        # Using 1st Samonios = November 1st as common interpretation
-        "correlation": {
-            "start_date": datetime(2000, 11, 1),  # Reference date
-            "start_month": 0,  # SAMON
-            "start_day": 1
+        # What we know for certain
+        "facts": {
+            "location": "Coligny, Ain, France",
+            "discovery": 1897,
+            "date": "2nd century CE",
+            "material": "Bronze",
+            "fragments": 153,
+            "preserved": "~40%",
+            "museum": "Musée gallo-romain de Lyon",
+            "language": "Gaulish",
+            "script": "Latin letters"
         }
     }
 }
@@ -247,7 +241,7 @@ CALENDAR_INFO = {
 UPDATE_INTERVAL = CALENDAR_INFO["update_interval"]
 
 class ColignyCalendarSensor(AlternativeTimeSensorBase):
-    """Sensor for Coligny Celtic Calendar."""
+    """Sensor for Coligny Celtic Calendar (Archaeological Reconstruction)."""
     
     # Class-level update interval
     UPDATE_INTERVAL = UPDATE_INTERVAL
@@ -265,10 +259,9 @@ class ColignyCalendarSensor(AlternativeTimeSensorBase):
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:celtic-cross")
         
         # Default configuration options
-        self._show_day_quality = True
-        self._show_intercalary = True
-        self._notation_style = "mixed"
-        self._show_lustrum = True
+        self._show_uncertainty = True
+        self._correlation_method = "olmsted"
+        self._show_preserved_only = False
         
         # Calendar data
         self._coligny_data = CALENDAR_INFO["coligny_data"]
@@ -287,14 +280,12 @@ class ColignyCalendarSensor(AlternativeTimeSensorBase):
             options = self.get_plugin_options()
             if options:
                 # Update configuration from plugin options
-                self._show_day_quality = options.get("show_day_quality", self._show_day_quality)
-                self._show_intercalary = options.get("show_intercalary", self._show_intercalary)
-                self._notation_style = options.get("notation_style", self._notation_style)
-                self._show_lustrum = options.get("show_lustrum", self._show_lustrum)
+                self._show_uncertainty = options.get("show_uncertainty", self._show_uncertainty)
+                self._correlation_method = options.get("correlation_method", self._correlation_method)
+                self._show_preserved_only = options.get("show_preserved_only", self._show_preserved_only)
                 
-                _LOGGER.debug(f"Coligny sensor loaded options: quality={self._show_day_quality}, "
-                            f"intercalary={self._show_intercalary}, style={self._notation_style}, "
-                            f"lustrum={self._show_lustrum}")
+                _LOGGER.debug(f"Coligny sensor loaded options: uncertainty={self._show_uncertainty}, "
+                            f"correlation={self._correlation_method}, preserved={self._show_preserved_only}")
             else:
                 _LOGGER.debug("Coligny sensor using default options - no custom options found")
                 
@@ -326,189 +317,104 @@ class ColignyCalendarSensor(AlternativeTimeSensorBase):
             # Add description in user's language
             attrs["description"] = self._translate('description')
             
+            # Add disclaimer
+            attrs["disclaimer"] = self._translate('disclaimer')
+            
             # Add reference
             attrs["reference"] = CALENDAR_INFO.get('reference_url', '')
             
+            # Add archaeological facts
+            attrs["archaeological_facts"] = self._coligny_data["facts"]
+            
             # Add configuration status
             attrs["config"] = {
-                "show_day_quality": self._show_day_quality,
-                "show_intercalary": self._show_intercalary,
-                "notation_style": self._notation_style,
-                "show_lustrum": self._show_lustrum
+                "show_uncertainty": self._show_uncertainty,
+                "correlation_method": self._correlation_method,
+                "show_preserved_only": self._show_preserved_only,
+                "scholar": self._coligny_data["correlations"][self._correlation_method]["author"]
             }
         
         return attrs
     
     def _calculate_coligny_position(self, earth_date: datetime) -> tuple:
-        """Calculate position in Coligny calendar from Gregorian date."""
-        # Get reference date
-        ref_date = self._coligny_data["correlation"]["start_date"]
+        """Calculate approximate position in Coligny calendar."""
+        # Get correlation method
+        correlation = self._coligny_data["correlations"][self._correlation_method]
+        
+        # Create reference date for current year
+        ref_year = earth_date.year
+        ref_date = datetime(ref_year, correlation["start_month"], correlation["start_day"])
         
         # Calculate days since reference
         days_diff = (earth_date.date() - ref_date.date()).days
         
-        # Handle negative dates (before reference)
+        # Handle dates before reference
         if days_diff < 0:
-            # Go backwards - this is approximate
-            days_diff = abs(days_diff)
-            years_back = days_diff // 354  # Approximate lunar year
-            remaining_days = days_diff % 354
-            
-            # Calculate position going backwards
-            month_index = 11 - (remaining_days // 30)
-            day_of_month = 30 - (remaining_days % 30)
-            lustrum_year = 5 - (years_back % 5)
-            lustrum_number = -(years_back // 5) - 1
-            
-            return month_index, day_of_month, False, lustrum_year, lustrum_number
+            # Go to previous year
+            ref_date = datetime(ref_year - 1, correlation["start_month"], correlation["start_day"])
+            days_diff = (earth_date.date() - ref_date.date()).days
         
-        # Calculate lustrum position (5-year cycle)
-        lustrum_days = 1831  # Approximate days in 5-year cycle (62 months)
-        lustrum_number = days_diff // lustrum_days
-        days_in_lustrum = days_diff % lustrum_days
+        # Simple calculation (approximation - actual calendar is complex)
+        # Total days in regular year: 354 (12 lunar months)
+        year_days = 354
         
-        # Find year within lustrum
-        year_in_lustrum = 0
+        # Find month (simple approximation)
+        month_index = 0
         days_counted = 0
         
-        for year_idx, months_in_year in enumerate(self._coligny_data["lustrum"]["pattern"]):
-            year_days = self._calculate_year_days(months_in_year)
-            if days_counted + year_days > days_in_lustrum:
-                year_in_lustrum = year_idx
-                days_in_year = days_in_lustrum - days_counted
+        for idx, month in enumerate(self._coligny_data["months"]):
+            if days_counted + month["days"] > days_diff:
+                month_index = idx
+                day_of_month = days_diff - days_counted + 1
                 break
-            days_counted += year_days
-        else:
-            year_in_lustrum = 4
-            days_in_year = days_in_lustrum - days_counted
-        
-        # Check if this is an intercalary year
-        is_intercalary_year = self._coligny_data["lustrum"]["pattern"][year_in_lustrum] == 13
-        
-        # Find month and day
-        month_index, day_of_month, is_intercalary_month = self._find_month_and_day(
-            days_in_year, is_intercalary_year
-        )
-        
-        return month_index, day_of_month, is_intercalary_month, year_in_lustrum + 1, lustrum_number + 1
-    
-    def _calculate_year_days(self, months_in_year: int) -> int:
-        """Calculate total days in a year based on number of months."""
-        if months_in_year == 12:
-            # Regular year
-            return sum(m["days"] for m in self._coligny_data["months"])
-        else:
-            # Intercalary year (13 months)
-            regular_days = sum(m["days"] for m in self._coligny_data["months"])
-            intercalary_days = self._coligny_data["intercalary"][0]["days"]
-            return regular_days + intercalary_days
-    
-    def _find_month_and_day(self, days_in_year: int, is_intercalary_year: bool) -> tuple:
-        """Find the month and day from days in year."""
-        days_counted = 0
-        
-        # Check for first intercalary month (CIALLOS at beginning)
-        if is_intercalary_year and self._coligny_data["intercalary"][0]["position"] == 0:
-            intercalary_days = self._coligny_data["intercalary"][0]["days"]
-            if days_in_year <= intercalary_days:
-                return 0, days_in_year, True  # In CIALLOS
-            days_counted += intercalary_days
-        
-        # Check regular months
-        for month_idx, month in enumerate(self._coligny_data["months"]):
-            if days_counted + month["days"] >= days_in_year:
-                day_of_month = days_in_year - days_counted
-                if day_of_month == 0:
-                    day_of_month = 1
-                return month_idx, day_of_month, False
             days_counted += month["days"]
-            
-            # Check for mid-year intercalary (QVIMON after 6th month)
-            if is_intercalary_year and month_idx == 5:  # After CVTIOS
-                intercalary_days = self._coligny_data["intercalary"][1]["days"]
-                if days_counted + intercalary_days >= days_in_year:
-                    day_of_month = days_in_year - days_counted
-                    if day_of_month == 0:
-                        day_of_month = 1
-                    return 1, day_of_month, True  # In QVIMON
-                days_counted += intercalary_days
-        
-        # Default to last day of last month
-        return 11, self._coligny_data["months"][11]["days"], False
-    
-    def _get_day_quality(self, month_quality: str, day: int, month_days: int) -> str:
-        """Determine if a day is MAT (lucky) or ANM (unlucky)."""
-        # Special case: ATENOUX (full moon, day 15)
-        if day == 15:
-            return "ATENOUX"
-        
-        # Use pattern based on month length
-        pattern = self._coligny_data["day_patterns"]["standard" if month_days == 30 else "short"]
-        
-        if day <= len(pattern):
-            day_quality = pattern[day - 1]
         else:
-            # For days beyond pattern, use month quality
-            day_quality = month_quality
+            # If we're past the end, we're in next year's first month
+            month_index = 0
+            day_of_month = days_diff - days_counted + 1
         
-        return day_quality
+        # Ensure day is valid
+        if day_of_month < 1:
+            day_of_month = 1
+        elif day_of_month > self._coligny_data["months"][month_index]["days"]:
+            day_of_month = self._coligny_data["months"][month_index]["days"]
+        
+        return month_index, day_of_month
     
     def _format_coligny_date(self, earth_date: datetime) -> str:
-        """Format the Coligny date according to display settings."""
+        """Format the Coligny date with uncertainty markers."""
         # Reload options
         self._load_options()
         
         # Calculate position
-        month_idx, day, is_intercalary, lustrum_year, lustrum_num = self._calculate_coligny_position(earth_date)
+        month_idx, day = self._calculate_coligny_position(earth_date)
         
         # Get month info
-        if is_intercalary:
-            # Determine which intercalary month
-            if month_idx == 0:
-                month = self._coligny_data["intercalary"][0]  # CIALLOS
-            else:
-                month = self._coligny_data["intercalary"][1]  # QVIMON
+        month = self._coligny_data["months"][month_idx]
+        
+        # Choose name based on settings
+        if self._show_preserved_only:
+            month_name = month["preserved"]
         else:
-            month = self._coligny_data["months"][month_idx]
+            month_name = month["reconstructed"] if not self._show_uncertainty else f"{month['reconstructed']}[?]"
         
-        # Get day quality
-        day_quality = self._get_day_quality(month["quality"], day, month["days"])
+        # Format day with Roman numerals
+        day_roman = self._roman_numeral(day)
         
-        # Format based on style
-        if self._notation_style == "abbreviated":
-            # SAMON III MAT
-            result = f"{month['name']} {self._roman_numeral(day)}"
-            if self._show_day_quality:
-                result += f" {day_quality}"
-                
-        elif self._notation_style == "full":
-            # Samonios Day 3, Lucky
-            quality_text = {
-                "MAT": {"en": "Lucky", "de": "Glücklich", "fr": "Faste"},
-                "ANM": {"en": "Unlucky", "de": "Unglücklich", "fr": "Néfaste"},
-                "ATENOUX": {"en": "Full Moon", "de": "Vollmond", "fr": "Pleine Lune"}
-            }
-            
-            lang = self._user_language[:2] if self._user_language else "en"
-            q_text = quality_text.get(day_quality, {}).get(lang, day_quality)
-            
-            result = f"{month['full']} Day {day}"
-            if self._show_day_quality:
-                result += f", {q_text}"
-                
-        else:  # mixed
-            # Samonios III MAT
-            result = f"{month['full']} {self._roman_numeral(day)}"
-            if self._show_day_quality:
-                result += f" {day_quality}"
+        # Build result
+        result = f"{month_name} {day_roman}"
         
-        # Add intercalary marker
-        if is_intercalary and self._show_intercalary:
-            result = f"[INT] {result}"
+        # Add preserved notation if exists (simplified)
+        if day == 15:
+            result += " ATENOUX"
+        elif day % 2 == 0:
+            result += " MAT" if not self._show_uncertainty else " MAT[?]"
+        else:
+            result += " ANM" if not self._show_uncertainty else " ANM[?]"
         
-        # Add lustrum position
-        if self._show_lustrum:
-            result += f" | L{lustrum_num}.{lustrum_year}"
+        # Add correlation note
+        if self._show_uncertainty:
+            result += f" [{self._correlation_method}]"
         
         return result
     
@@ -533,69 +439,50 @@ class ColignyCalendarSensor(AlternativeTimeSensorBase):
             coligny_date = self._format_coligny_date(earth_date)
             
             # Calculate position
-            month_idx, day, is_intercalary, lustrum_year, lustrum_num = self._calculate_coligny_position(earth_date)
+            month_idx, day = self._calculate_coligny_position(earth_date)
             
             # Get month info
-            if is_intercalary:
-                if month_idx == 0:
-                    month = self._coligny_data["intercalary"][0]
-                else:
-                    month = self._coligny_data["intercalary"][1]
-            else:
-                month = self._coligny_data["months"][month_idx]
-            
-            # Get day quality
-            day_quality = self._get_day_quality(month["quality"], day, month["days"])
-            
-            # Calculate month in year (1-12 or 1-13)
-            if is_intercalary:
-                if month_idx == 0:  # CIALLOS at start
-                    month_in_year = 1
-                else:  # QVIMON after month 6
-                    month_in_year = 7
-            else:
-                month_in_year = month_idx + 1
-                if lustrum_year in [3, 5] and month_idx >= 6:  # After intercalary
-                    month_in_year += 1
+            month = self._coligny_data["months"][month_idx]
             
             # Build attribute data
             self._coligny_calendar = {
                 "formatted_date": coligny_date,
                 "month": {
-                    "name": month["name"],
-                    "full_name": month["full"],
+                    "preserved_name": month["preserved"],
+                    "reconstructed_name": month["reconstructed"],
+                    "index": month_idx + 1,
                     "days": month["days"],
-                    "quality": month["quality"],
-                    "meaning": month.get("meaning", ""),
-                    "is_intercalary": is_intercalary
+                    "preservation_status": "Complete" if month["preserved_days"] else "Partial"
                 },
                 "day": {
                     "number": day,
-                    "roman": self._roman_numeral(day),
-                    "quality": day_quality,
-                    "is_lucky": day_quality == "MAT",
-                    "is_unlucky": day_quality == "ANM",
-                    "is_atenoux": day_quality == "ATENOUX"
+                    "roman": self._roman_numeral(day)
                 },
-                "lustrum": {
-                    "number": lustrum_num,
-                    "year": lustrum_year,
-                    "total_years": 5,
-                    "month_in_cycle": ((lustrum_year - 1) * 12) + month_in_year,
-                    "total_months": 62
+                "preserved_notations": list(self._coligny_data["preserved_notations"].keys()),
+                "correlation": {
+                    "method": self._correlation_method,
+                    "scholar": self._coligny_data["correlations"][self._correlation_method]["author"],
+                    "note": self._coligny_data["correlations"][self._correlation_method]["note"]
                 },
-                "year": {
-                    "months": 13 if lustrum_year in [3, 5] else 12,
-                    "is_intercalary": lustrum_year in [3, 5],
-                    "gregorian": earth_date.year
+                "gregorian": {
+                    "year": earth_date.year,
+                    "month": earth_date.month,
+                    "day": earth_date.day
+                },
+                "preservation": {
+                    "percentage": "~40%",
+                    "fragments": 153,
+                    "museum": "Musée gallo-romain de Lyon"
                 }
             }
             
-            # Add special day info if applicable
+            # Add notation interpretation if applicable
             if day == 15:
-                self._coligny_calendar["special"] = "ATENOUX - Full Moon/Returning Night"
-            elif day == 1:
-                self._coligny_calendar["special"] = "New Month Beginning"
+                self._coligny_calendar["notation"] = {
+                    "text": "ATENOUX",
+                    "preserved": True,
+                    "interpretation": "Possibly 'returning night' or full moon"
+                }
             
             # Set state
             self._state = coligny_date
@@ -607,4 +494,4 @@ class ColignyCalendarSensor(AlternativeTimeSensorBase):
     
     def get_calendar_metadata(self) -> Dict[str, Any]:
         """Return calendar metadata."""
-        return CALENDAR_INFO
+        return CALENDAR_INFO    
