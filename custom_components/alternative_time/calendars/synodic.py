@@ -12,7 +12,7 @@ from typing import Dict, Any, Optional, List, Tuple
 import logging
 import math
 
-from ..sensor_base import AlternativeTimeSensorBase
+from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -677,3 +677,6 @@ class SynodicCalendarSensor(AlternativeTimeSensorBase):
     def get_calendar_metadata(self) -> Dict[str, Any]:
         """Return calendar metadata."""
         return CALENDAR_INFO
+
+# Export the sensor class
+__all__ = ["SynodicCalendarSensor", "CALENDAR_INFO", "UPDATE_INTERVAL"]
