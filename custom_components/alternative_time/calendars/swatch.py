@@ -1,14 +1,9 @@
-"""Swatch Internet Time Calendar implementation - Version 3.0.
-Config Flow Compatible - Updated without adding or removing functions.
-
-Swatch Internet Time divides the day into 1000 .beats, with no time zones.
-@000 = midnight BMT (Biel Mean Time), @500 = noon BMT
-"""
+"""Swatch Internet Time Calendar implementation - Version 2.9.1."""
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 from homeassistant.core import HomeAssistant
 from ..sensor import AlternativeTimeSensorBase
@@ -20,7 +15,7 @@ try:
     HAS_PYTZ = True
 except ImportError:
     HAS_PYTZ = False
-    _LOGGER.debug("pytz not available, using UTC+1 approximation for Biel Mean Time")
+    _LOGGER.warning("pytz not installed, using UTC+1 approximation for Biel Mean Time")
 
 # ============================================
 # CALENDAR METADATA
@@ -32,7 +27,7 @@ UPDATE_INTERVAL = 1
 # Complete calendar information for auto-discovery
 CALENDAR_INFO = {
     "id": "swatch",
-    "version": "3.0.0",
+    "version": "2.9.1",
     "icon": "mdi:web-clock",
     "category": "technical",
     "accuracy": "commercial",
@@ -55,20 +50,28 @@ CALENDAR_INFO = {
     
     # Short descriptions for UI
     "description": {
-        "en": "Internet Time in Beats @000-@999. One day = 1000 beats, no time zones (e.g. @500)",
-        "de": "Internet-Zeit in Beats @000-@999. Ein Tag = 1000 Beats, keine Zeitzonen (z.B. @500)",
-        "es": "Tiempo de Internet en Beats @000-@999. Un día = 1000 beats, sin zonas horarias (ej. @500)",
-        "fr": "Temps Internet en Beats @000-@999. Un jour = 1000 beats, pas de fuseaux horaires (ex. @500)",
-        "it": "Tempo Internet in Beat @000-@999. Un giorno = 1000 beat, nessun fuso orario (es. @500)",
-        "nl": "Internet Tijd in Beats @000-@999. Eén dag = 1000 beats, geen tijdzones (bijv. @500)",
-        "pt": "Tempo da Internet em Beats @000-@999. Um dia = 1000 beats, sem fusos horários (ex. @500)",
-        "ru": "Интернет-время в битах @000-@999. Один день = 1000 битов, без часовых поясов (напр. @500)",
-        "ja": "インターネットタイムをビート@000-@999で表示。1日=1000ビート、タイムゾーンなし（例：@500）",
-        "zh": "互联网时间以节拍@000-@999表示。一天=1000节拍，无时区（例：@500）",
-        "ko": "비트 @000-@999로 표시되는 인터넷 시간. 하루 = 1000비트, 시간대 없음 (예: @500)"
+        "en": "Internet Time in Beats @000-@999. One day = 1000 beats, no time zones",
+        "de": "Internet-Zeit in Beats @000-@999. Ein Tag = 1000 Beats, keine Zeitzonen",
+        "es": "Tiempo de Internet en Beats @000-@999. Un día = 1000 beats, sin zonas horarias",
+        "fr": "Temps Internet en Beats @000-@999. Un jour = 1000 beats, pas de fuseaux horaires",
+        "it": "Tempo Internet in Beat @000-@999. Un giorno = 1000 beat, nessun fuso orario",
+        "nl": "Internet Tijd in Beats @000-@999. Eén dag = 1000 beats, geen tijdzones",
+        "pt": "Tempo da Internet em Beats @000-@999. Um dia = 1000 beats, sem fusos horários",
+        "ru": "Интернет-время в битах @000-@999. Один день = 1000 битов, без часовых поясов",
+        "ja": "インターネットタイムをビート@000-@999で表示。1日=1000ビート、タイムゾーンなし",
+        "zh": "互联网时间以节拍@000-@999表示。一天=1000节拍，无时区",
+        "ko": "비트 @000-@999로 표시되는 인터넷 시간. 하루 = 1000비트, 시간대 없음"
     },
     
-    # Configuration options for config_flow
+    # Swatch-specific data
+    "swatch_data": {
+        "base_timezone": "Europe/Zurich",  # BMT (Biel Mean Time)
+        "beats_per_day": 1000,
+        "seconds_per_beat": 86.4,  # 86400 seconds / 1000 beats
+        "reference_meridian": 7.5,  # Biel/Bienne longitude
+    },
+    
+    # Configuration options for this calendar
     "config_options": {
         "precision": {
             "type": "select",
@@ -101,78 +104,21 @@ CALENDAR_INFO = {
                 "ko": "표준 (@500) | 데시비트 (@500.5) | 센티비트 (@500.50)"
             }
         }
-    },
-    
-    # Swatch-specific data
-    "swatch_data": {
-        "base_timezone": "Europe/Zurich",  # BMT (Biel Mean Time)
-        "beats_per_day": 1000,
-        "seconds_per_beat": 86.4,  # 86400 seconds / 1000 beats
-        "reference_meridian": 7.5,  # Biel/Bienne longitude
-    },
-    
-    # Additional metadata
-    "reference_url": "https://en.wikipedia.org/wiki/Swatch_Internet_Time",
-    "documentation_url": "https://www.swatch.com/en-us/internet-time/",
-    "origin": "Swatch Corporation",
-    "created_by": "Nicholas Negroponte & Swatch",
-    "introduced": "October 23, 1998",
-    
-    # Example format
-    "example": "@500",
-    "example_meaning": "Noon in Biel, Switzerland (BMT)",
-    
-    # Related calendars
-    "related": ["decimal", "unix", "hexadecimal"],
-    
-    # Tags for searching and filtering
-    "tags": [
-        "modern", "decimal", "internet", "swatch", "switzerland",
-        "biel", "bmt", "no_timezone", "global_time", "beats",
-        "1990s", "commercial", "experimental"
-    ],
-    
-    # Special features
-    "features": {
-        "supports_timezones": False,  # By design - no timezones
-        "supports_fractional": True,   # Supports decimal beats
-        "supports_date": False,        # Time only, no date component
-        "precision": "centibeat",      # Can show to 0.01 beat precision
-        "global_sync": True,           # Same time everywhere
-        "mathematical_base": 10        # Decimal system
-    },
-    
-    # Extended notes
-    "notes": {
-        "en": (
-            "Swatch Internet Time was introduced in 1998 as a decimal time system "
-            "with no time zones. The day starts at @000 (midnight BMT) and ends at @999. "
-            "BMT (Biel Mean Time) is UTC+1."
-        ),
-        "de": (
-            "Die Swatch Internet-Zeit wurde 1998 als dezimales Zeitsystem ohne Zeitzonen eingeführt. "
-            "Der Tag beginnt bei @000 (Mitternacht BMT) und endet bei @999. "
-            "BMT (Biel Mean Time) ist UTC+1."
-        )
     }
 }
 
-
-# ============================================
-# SENSOR CLASS
-# ============================================
 
 class SwatchTimeSensor(AlternativeTimeSensorBase):
     """Sensor for displaying Swatch Internet Time."""
     
     # Class-level update interval
-    UPDATE_INTERVAL = 1  # Update every second for smooth beats
+    UPDATE_INTERVAL = UPDATE_INTERVAL
     
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the Swatch time sensor."""
         super().__init__(base_name, hass)
         
-        # Store CALENDAR_INFO as instance variable for _translate method
+        # Store CALENDAR_INFO as instance variable
         self._calendar_info = CALENDAR_INFO
         
         # Get translated name from metadata
@@ -183,7 +129,7 @@ class SwatchTimeSensor(AlternativeTimeSensorBase):
         self._attr_unique_id = f"{base_name}_swatch"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:web-clock")
         
-        # Configuration option with default from CALENDAR_INFO
+        # Configuration option with default
         config_defaults = CALENDAR_INFO.get("config_options", {})
         precision_default = config_defaults.get("precision", {}).get("default", "beat")
         self._precision = precision_default
@@ -191,13 +137,12 @@ class SwatchTimeSensor(AlternativeTimeSensorBase):
         # Swatch data
         self._swatch_data = CALENDAR_INFO["swatch_data"]
         
-        # WICHTIG: Timezone wird NICHT im __init__ geladen (blocking call)
-        # Wird stattdessen lazy beim ersten Update geladen
+        # Timezone will be loaded later
         self._bmt = None
         self._bmt_initialized = False
         
-        # Initialize state
-        self._state = None
+        # Initialize state to a default value
+        self._state = "@000"
         self._swatch_time = {}
         
         # Flag to track if options have been loaded
@@ -211,41 +156,32 @@ class SwatchTimeSensor(AlternativeTimeSensorBase):
         if self._options_loaded:
             return
             
-        # Get plugin options from config entry
-        plugin_options = self._get_plugin_options()
-        
-        if plugin_options:
-            _LOGGER.debug(f"Loading Swatch options: {plugin_options}")
-            
-            # Apply options using set_options method
-            self.set_options(
-                precision=plugin_options.get("precision")
-            )
-        
-        self._options_loaded = True
-    
-    def set_options(
-        self,
-        *,
-        precision: Optional[str] = None
-    ) -> None:
-        """Set calendar options from config flow."""
-        if precision is not None and precision in ["beat", "decibeat", "centibeat"]:
-            self._precision = precision
-            _LOGGER.debug(f"Set precision to: {precision}")
+        try:
+            options = self.get_plugin_options()
+            if options:
+                # Update configuration from plugin options
+                self._precision = options.get("precision", self._precision)
+                
+                _LOGGER.debug(f"Swatch sensor loaded options: precision={self._precision}")
+            else:
+                _LOGGER.debug("Swatch sensor using default options - no custom options found")
+                
+            self._options_loaded = True
+        except Exception as e:
+            _LOGGER.debug(f"Swatch sensor could not load options yet: {e}")
     
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
         
-        # Load options after entity is registered
+        # Try to load options now that IDs should be set
         self._load_options()
         
         # Initialize Timezone async
         if HAS_PYTZ and not self._bmt_initialized:
             try:
-                # Führe die blockierende Operation in einem Executor aus
-                self._bmt = await self._hass.async_add_executor_job(
+                # Execute blocking operation in executor
+                self._bmt = await self.hass.async_add_executor_job(
                     pytz.timezone, self._swatch_data["base_timezone"]
                 )
                 self._bmt_initialized = True
@@ -255,7 +191,8 @@ class SwatchTimeSensor(AlternativeTimeSensorBase):
                 self._bmt = None
                 self._bmt_initialized = True  # Prevent retry
         
-        _LOGGER.debug(f"Swatch sensor added to hass with precision={self._precision}")
+        # Perform initial update
+        self.update()
     
     @property
     def state(self):
@@ -265,26 +202,21 @@ class SwatchTimeSensor(AlternativeTimeSensorBase):
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes."""
-        attrs = super().extra_state_attributes
+        attrs = super().extra_state_attributes or {}
         
         # Add Swatch-specific attributes
         if self._swatch_time:
             attrs.update(self._swatch_time)
             
-            # Add metadata
-            attrs["calendar_type"] = "Swatch Internet Time"
-            attrs["accuracy"] = CALENDAR_INFO.get("accuracy", "commercial")
-            attrs["reference"] = CALENDAR_INFO.get("reference_url")
-            attrs["notes"] = self._translate("notes")
+            # Add description in user's language
+            attrs["description"] = self._translate('description')
             
             # Add calculation info
             attrs["seconds_per_beat"] = self._swatch_data["seconds_per_beat"]
             attrs["beats_per_day"] = self._swatch_data["beats_per_day"]
             
             # Add current configuration
-            attrs["config_precision"] = self._precision
-            attrs["pytz_available"] = HAS_PYTZ
-            attrs["bmt_initialized"] = self._bmt_initialized
+            attrs["precision_setting"] = self._precision
         
         return attrs
     
@@ -334,7 +266,8 @@ class SwatchTimeSensor(AlternativeTimeSensorBase):
         }
         
         # Add time conversions
-        result["utc_time"] = earth_time.astimezone(timezone.utc).strftime("%H:%M:%S UTC")
+        utc_time = earth_time.astimezone(timezone.utc)
+        result["utc_time"] = utc_time.strftime("%H:%M:%S UTC")
         
         return result
     
@@ -344,18 +277,19 @@ class SwatchTimeSensor(AlternativeTimeSensorBase):
         if not self._options_loaded:
             self._load_options()
         
-        now = datetime.now()
-        self._swatch_time = self._calculate_swatch_time(now)
-        
-        # Set state to formatted Swatch time
-        self._state = self._swatch_time["formatted"]
-        
-        _LOGGER.debug(f"Updated Swatch Internet Time to {self._state}")
-
-
-# ============================================
-# MODULE EXPORTS
-# ============================================
-
-# Export the sensor class
-__all__ = ["SwatchTimeSensor"]
+        try:
+            now = datetime.now().astimezone()
+            self._swatch_time = self._calculate_swatch_time(now)
+            
+            # Set state to formatted Swatch time
+            self._state = self._swatch_time.get("formatted", "@000")
+            
+            _LOGGER.debug(f"Updated Swatch Internet Time to {self._state}")
+        except Exception as e:
+            _LOGGER.error(f"Error updating Swatch time: {e}", exc_info=True)
+            self._state = "@ERROR"
+    
+    async def async_update(self) -> None:
+        """Update sensor asynchronously."""
+        # Run synchronous update in executor
+        await self.hass.async_add_executor_job(self.update)
