@@ -1,401 +1,357 @@
 # Alternative Time Systems for Home Assistant
 
-![Version](https://img.shields.io/badge/version-2.5.0.8-blue)
-![HACS](https://img.shields.io/badge/HACS-Custom-orange)
-![License](https://img.shields.io/badge/license-MIT-green)
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
+[![GitHub Release](https://img.shields.io/github/release/Lexorius/alternative_time.svg)](https://github.com/Lexorius/alternative_time/releases)
+[![GitHub Activity](https://img.shields.io/github/commit-activity/y/Lexorius/alternative_time.svg)](https://github.com/Lexorius/alternative_time/commits/main)
+[![License](https://img.shields.io/github/license/Lexorius/alternative_time.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-2.5.1.0-blue)](https://github.com/Lexorius/alternative_time)
 
-A comprehensive Home Assistant integration for alternative time systems from science, science fiction, fantasy, history, and various cultures. From Stardate to Maya Calendar, from the Shire to Discworld, from Tamriel to ancient Egypt - this integration provides 24 different time systems as sensors.
+A comprehensive Home Assistant integration providing **30+ alternative time systems** from science, science fiction, fantasy, history, religion, and various cultures. Transform your Home Assistant into a universal time machine!
 
-## 🌟 Features Overview
+## 🎯 Overview
 
-This integration transforms Home Assistant into a universal time clock with support for:
-- 🚀 **Science Fiction Times** (Star Trek Stardate, EVE Online)
-- 🧙 **Fantasy Calendars** (Tolkien, Elder Scrolls, Discworld)
-- 🏺 **Historical Calendars** (Maya, Attic, Egyptian, French Revolution)
-- 🔴 **Mars Time Systems** (Darian Calendar, Mars Time Zones)
--    **ESA Lunar Time System** (experimental) 
-- 🌐 **Internet Standards** (Unix, Swatch Internet Time)
-- 🎖️ **Military Time Systems** (NATO DTG in 3 variants)
-- 🌏 **Cultural Calendars** (Thai, Taiwan)
-- 💻 **Technical Formats** (Hexadecimal, Julian Date)
+Transform your Home Assistant into a multiversal clock supporting:
+- 🚀 **Science Fiction** (Star Trek, Star Wars, EVE Online, Warhammer 40K)
+- 🧙 **Fantasy Worlds** (Tolkien, Elder Scrolls, Discworld, Warcraft)
+- 🏛️ **Historical Calendars** (Maya, Egyptian, Attic, Roman, French Revolutionary)
+- 🔴 **Mars Colonization** (Darian Calendar, Mars Time Zones)
+- 🌍 **Cultural Calendars** (Islamic, Thai, Taiwanese, Chinese)
+- 💻 **Technical Formats** (Unix, Hexadecimal, Julian Date, Swatch Internet Time)
+- 🎖️ **Military Systems** (NATO DTG in multiple formats)
 
-## 📅 Available Calendar Systems
+## ✨ New in Version 2.5.1.0
 
-### 🚀 Science Fiction & Technical
-
-| Calendar | Description | Format Example |
-|----------|-------------|----------------|
-| **Stardate** | Star Trek TNG-style stardate | `47634.44` |
-| **EVE Online Time** | New Eden Standard Time (NEST) | `YC 127.03.15 14:30:45` |
-| **Swatch Internet Time** | Universal internet time in beats | `@750.00` |
-| **Unix Timestamp** | Seconds since 1970-01-01 | `1735689600` |
-| **Julian Date** | Continuous day count since 4713 BCE | `2460000.50000` |
-| **Hexadecimal Time** | Day divided into 65536 parts | `.8000` |
-
-### 🧙 Fantasy Worlds
-
-| Calendar | Description | Format Example |
-|----------|-------------|----------------|
-| **Shire Calendar** | Tolkien's Hobbit calendar with meals | `S.R. 1445, 22 Halimath (Highdei)` |
-| **Calendar of Imladris** | Elvish calendar with 6 seasons | `F.A. 6025, Tuilë 22 (Elenya)` |
-| **Tamriel Calendar** | Elder Scrolls with Divine blessings | `4E 201, 17 Last Seed (Fredas)` |
-| **Discworld Calendar** | Terry Pratchett's humorous calendar | `Century of the Anchovy, UC 25, 32 Offle` |
-
-### 🏺 Historical Calendars
-
-| Calendar | Description | Format Example |
-|----------|-------------|----------------|
-| **Maya Calendar** | Long Count, Tzolk'in, and Haab | `13.0.12.1.15 \| 8 Ahau \| 3 Pop` |
-| **Attic Calendar** | Ancient Athens lunar calendar | `5 histamenou Hekatombaion` |
-| **Egyptian Calendar** | Ancient Egypt with hieroglyphs | `Dynasty 1 Year 25, 𓏤𓏨 15 Thoth` |
-| **French Revolutionary** | Decimal time (10 hours/day) | `5:50:00` |
-
-### 🌏 Cultural Calendars
-
-| Calendar | Description | Format Example |
-|----------|-------------|----------------|
-| **Suriyakati (Thai)** | Thai Buddhist Era calendar | `๒๕ ธันวาคม ๒๕๖๘` |
-| **Minguo (Taiwan)** | Republic of China calendar | `民國114年 十二月 二十五日` |
-
-### 🔴 Mars Time Systems
-
-| Calendar | Description | Format Example |
-|----------|-------------|----------------|
-| **Darian Calendar** | Mars calendar with 24 months | `Sol 15 Gemini 217` |
-| **Mars Time** | 24 Mars time zones with sol tracking | `14:25:30 Olympus Mons` |
-
-### 🎖️ Military Time Systems
-
-| Calendar | Description | Format Example |
-|----------|-------------|----------------|
-| **NATO Time** | Simple military format | `151430` |
-| **NATO DTG** | Date-Time Group with timezone | `151430Z JAN 25` |
-| **NATO Rescue** | German emergency services | `15 1430 JAN 25` |
-
-### 🌍 Standard Time
-
-| Calendar | Description | Format Example |
-|----------|-------------|----------------|
-| **Timezone** | Any Earth timezone | `14:30:45 CEST` |
+- 🎨 **Enhanced Config Flow** with full calendar-specific options
+- 🌐 **Multi-language Support** for 12 languages
+- 🔧 **Per-calendar Configuration** with detailed options
+- 📱 **Improved UI** with full text labels (no abbreviations!)
+- 🎯 **Smart Categories** for easier calendar selection
+- ⚡ **Performance Optimizations** for real-time calendars
 
 ## 📦 Installation
 
 ### Via HACS (Recommended)
 
-1. Open HACS in your Home Assistant installation
-2. Click the three dots in the top right
-3. Select "Custom repositories"
-4. Add this URL: `https://github.com/Lexorius/alternative_time`
-5. Select "Integration" as category
-6. Click "Add"
-7. Search for "Alternative Time Systems" and install it
-8. Restart Home Assistant
+1. Open HACS in your Home Assistant
+2. Click the three dots menu → **Custom repositories**
+3. Add URL: `https://github.com/Lexorius/alternative_time`
+4. Category: **Integration**
+5. Click **Add**
+6. Search for **Alternative Time Systems** and install
+7. Restart Home Assistant
 
 ### Manual Installation
 
 1. Download the `alternative_time` folder
-2. Copy it to your `/config/custom_components/` directory
+2. Copy to `/config/custom_components/`
 3. Restart Home Assistant
 
 ## ⚙️ Configuration
 
+### Via User Interface
+
 1. Go to **Settings** → **Devices & Services**
 2. Click **Add Integration**
 3. Search for **Alternative Time Systems**
-4. Follow the configuration wizard
-5. Select the desired time systems
-6. Click Submit
+4. Follow the configuration wizard:
+   - **Step 1**: Name your instance
+   - **Step 2**: Select calendar categories
+   - **Step 3**: Choose specific calendars
+   - **Step 4**: Configure individual calendar options
+5. Click **Submit**
 
-You can create multiple instances with different configurations:
-- **World Clock**: Multiple instances with different time zones
-- **Thematic Groups**: Sci-Fi, Fantasy, Historical, Military
-- **Room-based**: Different time systems for different rooms
+### 💡 Configuration Tips
 
-## 📊 Entities Created
+- Create multiple instances for themed displays
+- Each calendar has specific configuration options
+- Options include display formats, precision, special features
+- All options have full descriptions in your language
 
-After configuration, the following sensors are created (depending on selection):
+## 🌟 Available Time Systems
 
-| Sensor | Entity ID |
-|--------|-----------|
-| Timezone | `sensor.[name]_timezone` |
-| Stardate | `sensor.[name]_stardate` |
-| Swatch Time | `sensor.[name]_swatch` |
-| Unix Timestamp | `sensor.[name]_unix` |
-| Julian Date | `sensor.[name]_julian` |
-| Decimal Time | `sensor.[name]_decimal` |
-| Hexadecimal Time | `sensor.[name]_hexadecimal` |
-| Maya Calendar | `sensor.[name]_maya_calendar` |
-| NATO Time | `sensor.[name]_nato_time` |
-| NATO DTG | `sensor.[name]_nato_time_with_zone` |
-| NATO Rescue | `sensor.[name]_nato_rescue_time` |
-| Attic Calendar | `sensor.[name]_attic_calendar` |
-| Suriyakati | `sensor.[name]_suriyakati_calendar` |
-| Minguo | `sensor.[name]_minguo_calendar` |
-| Darian Calendar | `sensor.[name]_darian_calendar` |
-| Mars Time | `sensor.[name]_mars_time` |
-| EVE Online | `sensor.[name]_eve_online` |
-| Shire | `sensor.[name]_shire` |
-| Imladris | `sensor.[name]_rivendell` |
-| Tamriel | `sensor.[name]_tamriel` |
-| Egyptian | `sensor.[name]_egyptian` |
-| Discworld | `sensor.[name]_discworld` |
+### 🚀 Science Fiction
 
-## 🎨 Dashboard Examples
+#### Star Trek Stardate
+- **Formats**: The Next Generation, Original Series, Discovery, Kelvin Timeline
+- **Features**: Episode references, starship rotation, customizable precision
+- **Example**: `47634.44`
 
-### Fantasy & Gaming Worlds Dashboard
+#### Star Wars Galactic Calendar
+- **Format**: `35:3:21 GrS | Taungsday`
+- **Features**: 368-day years, festival weeks, era systems
 
+#### EVE Online Time
+- **Format**: `YC 127.03.15 14:30:45 NEST`
+- **Features**: Real-time updates, empire rotation, trade hub info
+
+#### Warhammer 40K Imperial Dating
+- **Format**: `0.523.025.M42`
+- **Features**: Check numbers, millennium designation, Imperial prayers
+
+### 🧙 Fantasy Calendars
+
+#### Tolkien's Middle-earth
+- **Shire Calendar**: 7 daily meals, special days, moon phases
+- **Rivendell Calendar**: 6 Elvish seasons, yén cycles, multiple languages
+- **Format options**: Quenya, Sindarin, English, or mixed
+
+#### Elder Scrolls (Tamriel)
+- **Features**: Two moons (Masser & Secunda), Daedric days, birthsigns
+- **Khajiit forms**: Based on moon phase combinations
+- **Guild activities**: Daily guild schedules
+
+#### Discworld
+- **8-day weeks**: Including Octeday!
+- **Impossible dates**: 32nd of December
+- **Death quotes**: Daily wisdom at midnight
+- **L-Space detection**: At 3:33
+
+#### World of Warcraft
+- **Azeroth calendar**: With seasonal events
+- **Features**: Moon phases, guild events, PvP seasons
+
+### 🏛️ Historical Calendars
+
+#### Maya Calendar
+- **Long Count**: `13.0.12.1.15`
+- **Tzolk'in & Haab**: Sacred and civil calendars
+- **Features**: Lord of the Night, Venus cycle
+
+#### Ancient Egyptian
+- **Format**: `Dynasty 1 Year 25, 𓈔𓈨 15 Thoth`
+- **Features**: Hieroglyphs, flood predictions, pharaoh info
+
+#### Attic Calendar (Ancient Athens)
+- **Features**: Lunar months, archon years, festival days
+- **Democracy events**: Assembly meetings, court days
+
+#### Roman Calendar
+- **Format**: `a.d. XVI Kal. Ian. MMDCCLXXVIII A.U.C.`
+- **Features**: Kalends/Nones/Ides, consular dating
+
+### 🌍 Cultural Calendars
+
+#### Islamic (Hijri)
+- **Lunar calendar**: 354/355 days
+- **Features**: Prayer times, holy days
+
+#### Thai (Suriyakati)
+- **Buddhist Era**: BE = CE + 543
+- **Features**: Thai numerals, zodiac animals
+
+#### Taiwanese (Minguo)
+- **ROC calendar**: Year 1 = 1912 CE
+- **Features**: Traditional festivals
+
+#### Chinese Lunar
+- **Features**: Zodiac animals, solar terms, festivals
+
+### 🔴 Mars Time Systems
+
+#### Darian Calendar
+- **24 Martian months**: 668-669 sols per year
+- **Example**: `Sol 15 Gemini 217`
+
+#### Mars Sol Time
+- **24 time zones**: From Olympus Mons to Gale Crater
+- **Features**: Sol tracking, Earth time conversion
+
+### 💻 Technical Formats
+
+#### Unix Timestamp
+- **Format**: `1735689600`
+- **Updates**: Every second
+
+#### Swatch Internet Time
+- **Format**: `@750.00`
+- **Features**: No time zones, 1000 beats per day
+
+#### Hexadecimal Time
+- **Format**: `.8000`
+- **Features**: Day in 65536 parts
+
+#### Julian Date
+- **Format**: `2460000.50000`
+- **Features**: Modified Julian Date option
+
+### 🎖️ Military Time
+
+- **NATO Basic**: `151430`
+- **NATO DTG**: `151430Z JAN 25`
+- **NATO Rescue**: `15 1430 JANUAR 25`
+
+## 📊 Example Dashboards
+
+### Sci-Fi Command Center
 ```yaml
 type: vertical-stack
 cards:
   - type: markdown
     content: |
-      ## 🧙 Fantasy & Gaming Worlds
-      **Shire:** {{ states('sensor.alternative_time_shire') }}
-      **Imladris:** {{ states('sensor.alternative_time_rivendell') }}
-      **Tamriel:** {{ states('sensor.alternative_time_tamriel') }}
-      **Discworld:** {{ states('sensor.alternative_time_discworld') }}
-      **EVE Online:** {{ states('sensor.alternative_time_eve_online') }}
-  
-  - type: entities
-    title: Fantasy & Sci-Fi Times
-    entities:
-      - entity: sensor.alternative_time_shire
-        name: Hobbit Time
-      - entity: sensor.alternative_time_rivendell
-        name: Elven Time
-      - entity: sensor.alternative_time_tamriel
-        name: Elder Scrolls
-      - entity: sensor.alternative_time_discworld
-        name: Discworld
-      - entity: sensor.alternative_time_eve_online
-        name: New Eden Time
+      # 🚀 Sci-Fi Command Center
+      **Stardate:** {{ states('sensor.scifi_stardate') }}
+      **Star Wars:** {{ states('sensor.scifi_star_wars') }}
+      **EVE Online:** {{ states('sensor.scifi_eve_online') }}
+      **Warhammer 40K:** {{ states('sensor.scifi_warhammer40k') }}
 ```
 
-### Historical Calendars Dashboard
-
+### Fantasy Realms
 ```yaml
-type: vertical-stack
-cards:
-  - type: markdown
-    content: |
-      ## 🏺 Historical Time Systems
-      **Egypt:** {{ states('sensor.alternative_time_egyptian') }}
-      **Maya:** {{ states('sensor.alternative_time_maya_calendar') }}
-      **Athens:** {{ states('sensor.alternative_time_attic_calendar') }}
-  
-  - type: entities
-    title: Ancient Calendars
-    entities:
-      - entity: sensor.alternative_time_egyptian
-        name: Egyptian Calendar
-      - entity: sensor.alternative_time_maya_calendar
-        name: Maya Calendar
-      - entity: sensor.alternative_time_attic_calendar
-        name: Attic Calendar
+type: entities
+title: 🧙 Fantasy Worlds
+entities:
+  - entity: sensor.fantasy_shire
+    name: The Shire
+  - entity: sensor.fantasy_rivendell
+    name: Rivendell
+  - entity: sensor.fantasy_tamriel
+    name: Tamriel
+  - entity: sensor.fantasy_discworld
+    name: Ankh-Morpork
 ```
 
-### Mars Mission Control Dashboard
-
+### Historical Timeline
 ```yaml
-type: vertical-stack
-cards:
-  - type: markdown
-    content: |
-      ## 🔴 Mars Mission Control
-      **Mars Time:** {{ states('sensor.alternative_time_mars_time') }}
-      **Darian Calendar:** {{ states('sensor.alternative_time_darian_calendar') }}
-  
-  - type: entities
-    title: Mars Time Zones
-    entities:
-      - entity: sensor.alternative_time_mars_time
-        name: Current Mars Time
-      - entity: sensor.alternative_time_darian_calendar
-        name: Mars Date
+type: glance
+title: 🏛️ Ancient Calendars
+entities:
+  - entity: sensor.history_maya
+    name: Maya
+  - entity: sensor.history_egyptian
+    name: Egypt
+  - entity: sensor.history_attic
+    name: Athens
+  - entity: sensor.history_roman
+    name: Rome
 ```
 
-## 🤖 Automation Examples
+## 🤖 Automations
 
-### Tamriel Holiday Notification
-
+### Hobbit Meal Reminder
 ```yaml
 automation:
-  - alias: "Tamriel New Life Festival"
+  - alias: "Hobbit Meal Time"
     trigger:
       - platform: template
         value_template: >
-          {{ 'New Life Festival' in states('sensor.alternative_time_tamriel') }}
+          {{ 'First Breakfast' in state_attr('sensor.fantasy_shire', 'meal_time') }}
     action:
       - service: notify.mobile_app
         data:
-          title: "🎮 Tamriel Holiday"
-          message: "The New Life Festival begins in Tamriel!"
+          title: "🍳 Hobbit Meal Time!"
+          message: "Time for First Breakfast!"
 ```
 
-### Death Says (Discworld)
-
+### Death's Daily Quote (Discworld)
 ```yaml
 automation:
   - alias: "Death Says"
     trigger:
       - platform: time
         at: "00:00:00"
-    condition:
-      - condition: template
-        value_template: "{{ states('sensor.alternative_time_discworld') != 'unknown' }}"
-    action:
-      - service: tts.google_say
-        data:
-          entity_id: media_player.bedroom
-          message: "Death says: THERE IS NO JUSTICE. THERE IS JUST ME."
-```
-
-### EVE Online Daily Reset
-
-```yaml
-automation:
-  - alias: "EVE Daily Reset"
-    trigger:
-      - platform: template
-        value_template: >
-          {{ '11:00:00' in states('sensor.alternative_time_eve_online') }}
     action:
       - service: notify.mobile_app
         data:
-          title: "🚀 EVE Online"
-          message: "Daily tasks have reset!"
+          title: "💀 DEATH SAYS"
+          message: >
+            {{ state_attr('sensor.fantasy_discworld', 'death_says') }}
 ```
+
+## 🌐 Multi-Language Support
+
+Full support for 12 languages:
+- 🇬🇧 English
+- 🇩🇪 Deutsch
+- 🇪🇸 Español
+- 🇫🇷 Français
+- 🇮🇹 Italiano
+- 🇳🇱 Nederlands
+- 🇵🇱 Polski
+- 🇵🇹 Português
+- 🇷🇺 Русский
+- 🇯🇵 日本語
+- 🇨🇳 中文
+- 🇰🇷 한국어
 
 ## 📈 Performance
 
-The integration is optimized for minimal system load:
+| Calendar Type | Update Interval | Performance Impact |
+|--------------|-----------------|-------------------|
+| Real-time (Unix, EVE) | 1 second | Low |
+| Stardate | 10 seconds | Minimal |
+| Date-based | 1 hour | Negligible |
+| Static | On demand | None |
 
-| Time System | Update Interval | Reason |
-|-------------|-----------------|--------|
-| Timezones, Unix, Swatch, EVE | 1 second | Second-accurate display |
-| Hexadecimal | 5 seconds | Medium change rate |
-| Stardate | 10 seconds | Slow change |
-| Julian Date | 60 seconds | Very slow change |
-| Calendars (Maya, Attic, etc.) | 1 hour | Daily change |
-| Mars Time | 30 seconds | Sol time precision |
-| Fantasy Calendars | 1 hour | Event-based |
+## 🛠️ Development
 
-## 🛠️ Troubleshooting
+### Adding a New Calendar
 
-### Integration Not Loading
+1. Create `calendars/your_calendar.py`
+2. Implement `CALENDAR_INFO` dictionary
+3. Extend `AlternativeTimeSensorBase`
+4. Add `set_options()` method for config flow
+5. Include all 12 language translations
 
-```bash
-# Check folder structure
-ls -la /config/custom_components/alternative_time/
-# Should contain:
-# __init__.py, manifest.json, config_flow.py, sensor.py, const.py, translations/
-```
-
-### No Sensors Created
-
-- Check logs: Settings → System → Logs
-- Ensure at least one time system is enabled
-- Clear cache: `find /config -name "__pycache__" -exec rm -rf {} +`
-- Restart Home Assistant
-
-### Async Call Warning
-
-The integration uses asynchronous operations. If warning persists:
-```bash
-ha core restart
-```
-
-## 📝 Changelog
-
-### v2.5.0.8 (Current)
-- ✨ All 24 time systems fully integrated
-- 🎮 Complete fantasy and gaming calendar collection
-- 🏺 Extensive historical calendar support
-- 🔴 Full Mars colonization time support
-- 🌏 Asian cultural calendars included
-- 🎖️ Military time formats complete
-- 🐛 Performance optimizations
-- 📚 Comprehensive documentation
-
-### Previous Versions
-- Added Tamriel Calendar (Elder Scrolls)
-- Added Egyptian Calendar with hieroglyphs
-- Added Discworld Calendar with Terry Pratchett humor
-- Added EVE Online Time (New Eden Standard Time)
-- Added complete Tolkien time systems (Shire & Imladris)
-- Added Darian Calendar and Mars Time with 24 zones
-- Added Suriyakati (Thai) and Minguo (Taiwan) calendars
-- Added Attic Calendar (Ancient Athens)
-- Added NATO time formats (3 variants)
-- Added Maya Calendar with Long Count
-- Added French Revolutionary decimal time
-- Added Hexadecimal time
-- Initial release with basic time systems
-
-## 🤝 Contributing
-
-Contributions are welcome!
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/NewTimeSystem`)
-3. Commit your changes (`git commit -m 'Add: New time system'`)
-4. Push to the branch (`git push origin feature/NewTimeSystem`)
-5. Open a Pull Request
-
-### 🔧 Create Your Own Calendar Plugin
-
-Want to add your own time system? It's easy! 
-
-1. **Copy an existing calendar as template** from `/custom_components/alternative_time/calendars/`
-2. **Modify the calculation logic** for your time system
-3. **Place your new calendar file** in the `/calendars/` folder - it will be dynamically loaded
-4. **Include translations** directly in your plugin file
-5. **Test your implementation** thoroughly
-6. **Submit a Pull Request** with your new calendar system
-
-Example structure for a new calendar plugin:
+### Calendar Structure
 ```python
-class YourCustomCalendar:
-    def __init__(self):
-        self.name = "Your Calendar Name"
-        
-    def get_current_time(self):
-        # Your time calculation logic here
-        return formatted_time_string
+CALENDAR_INFO = {
+    "id": "unique_id",
+    "version": "2.5.1.0",
+    "icon": "mdi:calendar",
+    "category": "fantasy|scifi|historical|etc",
+    "name": {...},  # 12 languages
+    "description": {...},  # 12 languages
+    "config_options": {...}  # With full labels!
+}
 ```
 
-Check existing calendars in the `/calendars/` folder for detailed examples! The plugins are dynamically loaded - no configuration changes needed.
+## 🐛 Troubleshooting
 
-## 📄 License
+### Common Issues
 
-This project is licensed under the MIT License - see [LICENSE](LICENSE) for details.
+1. **Calendar not showing up**
+   - Check logs for errors
+   - Verify installation path
+   - Restart Home Assistant
 
+2. **Wrong time displayed**
+   - Check timezone settings
+   - Verify calendar configuration
+   - Some calendars are fictional!
 
-## 📚 Resources
+3. **Missing translations**
+   - Update to latest version
+   - Report missing translations on GitHub
 
-- **Issues**: [GitHub Issues](https://github.com/Lexorius/alternative_time/issues)
+## 📝 License
 
-## 🔗 References
+MIT License - See [LICENSE](LICENSE) file
 
-- [Star Trek Stardate Calculator](http://trekguide.com/Stardates.htm)
-- [Swatch Internet Time](https://www.swatch.com/en-us/internet-time.html)
-- [Maya Calendar Converter](https://maya.nmai.si.edu/calendar/maya-calendar-converter)
-- [NATO Date Time Group](https://en.wikipedia.org/wiki/Date-time_group)
-- [Buddhist Era Calendar](https://en.wikipedia.org/wiki/Buddhist_calendar)
-- [Minguo Calendar](https://en.wikipedia.org/wiki/Minguo_calendar)
-- [Darian Calendar](https://en.wikipedia.org/wiki/Darian_calendar)
-- [Mars24 Sunclock](https://mars.nasa.gov/mars24/)
-- [Mars Time Zones](https://marsclock.com/)
-- [Tolkien Gateway - Shire Calendar](http://tolkiengateway.net/wiki/Shire_Calendar)
-- [Encyclopedia of Arda - Calendar of Imladris](https://www.glyphweb.com/arda/c/calendarofimladris.html)
-- [EVE Online Time](https://wiki.eveuniversity.org/Time)
-- [Elder Scrolls Calendar](https://en.uesp.net/wiki/Lore:Calendar)
-- [Ancient Egyptian Calendar](https://en.wikipedia.org/wiki/Egyptian_calendar)
-- [Discworld Calendar](https://wiki.lspace.org/Calendar)
+## 🙏 Credits
+
+- **Terry Pratchett** - Discworld Calendar (GNU Terry Pratchett)
+- **J.R.R. Tolkien** - Middle-earth Calendars
+- **Gene Roddenberry** - Star Trek Stardate
+- **CCP Games** - EVE Online Time
+- **Bethesda** - Elder Scrolls Calendar
+- All contributors and testers!
+
+## 🔗 Links
+
+- [GitHub Repository](https://github.com/Lexorius/alternative_time)
+- [Report Issues](https://github.com/Lexorius/alternative_time/issues)
+- [HACS](https://hacs.xyz/)
+- [Home Assistant](https://www.home-assistant.io/)
+
+## 📮 Support
+
+Found a bug? Have a feature request?
+- Open an [issue on GitHub](https://github.com/Lexorius/alternative_time/issues)
+- Check [existing issues](https://github.com/Lexorius/alternative_time/issues) first
+- Include logs and configuration details
 
 ---
 
-Made with ❤️ by [Lexorius](https://github.com/Lexorius)
+**Made with ❤️ for the Home Assistant Community**
 
-
-*Translated with [Claude.ai](https://claude.ai)*
+*"Time is an illusion. Lunchtime doubly so."* - Douglas Adams
