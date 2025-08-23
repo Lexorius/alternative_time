@@ -1,8 +1,7 @@
-"""Harptos Calendar (Dungeons & Dragons / Forgotten Realms) implementation - Version 2.6."""
+"""Harptos Calendar (Dungeons & Dragons / Forgotten Realms) implementation - Version 2.6.1."""
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import datetime, date, timezone
+from datetime import datetime, date
 import logging
 from typing import Dict, Any, List, Optional
 
@@ -15,277 +14,459 @@ _LOGGER = logging.getLogger(__name__)
 # CALENDAR METADATA
 # ============================================
 
-# Update nur stündlich – es ändert sich der Tag (nicht die Uhrzeit)
+# Update interval in seconds (3600 seconds = 1 hour)
 UPDATE_INTERVAL = 3600
 
+# Complete calendar information for auto-discovery
 CALENDAR_INFO = {
-    "id": "dnd_harptos",
-    "version": "2.6.0",
+    "id": "harptos",
+    "version": "2.6.1",
     "icon": "mdi:dice-d20",
     "category": "fantasy",
     "accuracy": "fictional",
     "update_interval": UPDATE_INTERVAL,
-
-    # Namen
+    
+    # Multi-language names
     "name": {
-        "en": "D&D – Harptos Calendar",
-        "de": "D&D – Harptos‑Kalender",
+        "en": "D&D Harptos Calendar",
+        "de": "D&D Harptos-Kalender",
+        "es": "Calendario Harptos D&D",
+        "fr": "Calendrier Harptos D&D",
+        "it": "Calendario Harptos D&D",
+        "nl": "D&D Harptos Kalender",
+        "pl": "Kalendarz Harptos D&D",
+        "pt": "Calendário Harptos D&D",
+        "ru": "Календарь Харптос D&D",
+        "ja": "D&D ハープトス暦",
+        "zh": "D&D 哈普托斯历",
+        "ko": "D&D 하프토스 달력"
     },
-
-    # Kurze Beschreibung
-    "description": {
-        "en": "Forgotten Realms ‘Calendar of Harptos’: 12×30 days with intercalary festivals (Midwinter, Greengrass, Midsummer, Highharvestide, Feast of the Moon; Shieldmeet on leap years). Weeks are tendays.",
-        "de": "Vergessene Reiche ‚Harptos‑Kalender‘: 12×30 Tage mit Zwischentagen/Festen (Midwinter, Greengrass, Midsummer, Highharvestide, Feast of the Moon; Shieldmeet in Schaltjahren). Wochen sind Zehntage (Tendays).",
-    },
-
-    # Daten für UI & Docs
-    "harptos_data": {
-        "months": [
-            {"id": "hammer", "en": "Hammer", "de": "Hammer"},
-            {"id": "alturiak", "en": "Alturiak", "de": "Alturiak"},
-            {"id": "ches", "en": "Ches", "de": "Ches"},
-            {"id": "tarsakh", "en": "Tarsakh", "de": "Tarsakh"},
-            {"id": "mirtul", "en": "Mirtul", "de": "Mirtul"},
-            {"id": "kythorn", "en": "Kythorn", "de": "Kythorn"},
-            {"id": "flamerule", "en": "Flamerule", "de": "Flamerule"},
-            {"id": "eleasias", "en": "Eleasis", "de": "Eleasias"},
-            {"id": "eleint", "en": "Eleint", "de": "Eleint"},
-            {"id": "marpenoth", "en": "Marpenoth", "de": "Marpenoth"},
-            {"id": "uktar", "en": "Uktar", "de": "Uktar"},
-            {"id": "nightal", "en": "Nightal", "de": "Nightal"},
-        ],
-        # feste NACH welchem Monat eingefügt (1‑basiert)
-        "festivals": [
-            {"id": "midwinter",      "after_month": 1,  "en": "Midwinter",        "de": "Midwinter"},
-            {"id": "greengrass",     "after_month": 4,  "en": "Greengrass",       "de": "Greengrass"},
-            {"id": "midsummer",      "after_month": 7,  "en": "Midsummer",        "de": "Midsummer"},
-            {"id": "highharvestide", "after_month": 9,  "en": "Highharvestide",   "de": "Highharvestide"},
-            {"id": "feast_of_moon",  "after_month": 11, "en": "Feast of the Moon","de": "Fest des Mondes"},
-        ],
-        "shieldmeet": {"id": "shieldmeet", "en": "Shieldmeet", "de": "Shieldmeet"},  # Schaltjahr‑Fest nach Midsummer
-        "weekday_names": {
-            "en": [f"Day {i}" for i in range(1, 11)],
-            "de": [f"Tag {i}" for i in range(1, 11)],
+    
+    # Translations for compatibility
+    "translations": {
+        "en": {
+            "name": "D&D Harptos Calendar",
+            "description": "Forgotten Realms calendar: 12×30 days with festivals, tendays as weeks"
+        },
+        "de": {
+            "name": "D&D Harptos-Kalender",
+            "description": "Vergessene Reiche Kalender: 12×30 Tage mit Festen, Zehntage als Wochen"
+        },
+        "es": {
+            "name": "Calendario Harptos D&D",
+            "description": "Calendario de Reinos Olvidados: 12×30 días con festivales, décadas como semanas"
+        },
+        "fr": {
+            "name": "Calendrier Harptos D&D",
+            "description": "Calendrier des Royaumes Oubliés: 12×30 jours avec festivals, décades comme semaines"
+        },
+        "it": {
+            "name": "Calendario Harptos D&D",
+            "description": "Calendario dei Reami Dimenticati: 12×30 giorni con festival, decadi come settimane"
+        },
+        "nl": {
+            "name": "D&D Harptos Kalender",
+            "description": "Vergeten Rijken kalender: 12×30 dagen met festivals, tiendagen als weken"
+        },
+        "pl": {
+            "name": "Kalendarz Harptos D&D",
+            "description": "Kalendarz Zapomnianych Krain: 12×30 dni z festiwalami, dziesięciodniówki jako tygodnie"
+        },
+        "pt": {
+            "name": "Calendário Harptos D&D",
+            "description": "Calendário dos Reinos Esquecidos: 12×30 dias com festivais, décadas como semanas"
+        },
+        "ru": {
+            "name": "Календарь Харптос D&D",
+            "description": "Календарь Забытых Королевств: 12×30 дней с фестивалями, десятидневки как недели"
+        },
+        "ja": {
+            "name": "D&D ハープトス暦",
+            "description": "フォーゴトン・レルム暦：12×30日と祭り、10日週"
+        },
+        "zh": {
+            "name": "D&D 哈普托斯历",
+            "description": "被遗忘国度历法：12×30天带节日，十天为周"
+        },
+        "ko": {
+            "name": "D&D 하프토스 달력",
+            "description": "포가튼 렐름 달력: 12×30일과 축제, 10일 주"
         }
     },
-
-    # Optionale Konfiguration für den Wizard
+    
+    # Short descriptions for UI
+    "description": {
+        "en": "Forgotten Realms calendar: 12×30 days with festivals, tendays as weeks",
+        "de": "Vergessene Reiche Kalender: 12×30 Tage mit Festen, Zehntage als Wochen",
+        "es": "Calendario de Reinos Olvidados: 12×30 días con festivales, décadas como semanas",
+        "fr": "Calendrier des Royaumes Oubliés: 12×30 jours avec festivals, décades comme semaines",
+        "it": "Calendario dei Reami Dimenticati: 12×30 giorni con festival, decadi come settimane",
+        "nl": "Vergeten Rijken kalender: 12×30 dagen met festivals, tiendagen als weken",
+        "pl": "Kalendarz Zapomnianych Krain: 12×30 dni z festiwalami, dziesięciodniówki jako tygodnie",
+        "pt": "Calendário dos Reinos Esquecidos: 12×30 dias com festivais, décadas como semanas",
+        "ru": "Календарь Забытых Королевств: 12×30 дней с фестивалями, десятидневки как недели",
+        "ja": "フォーゴトン・レルム暦：12×30日と祭り、10日週",
+        "zh": "被遗忘国度历法：12×30天带节日，十天为周",
+        "ko": "포가튼 렐름 달력: 12×30일과 축제, 10일 주"
+    },
+    
+    # Harptos-specific data
+    "harptos_data": {
+        # 12 months of 30 days each
+        "months": [
+            {"name": "Hammer", "common": "Deepwinter", "season": "Winter"},
+            {"name": "Alturiak", "common": "The Claw of Winter", "season": "Winter"},
+            {"name": "Ches", "common": "The Claw of the Sunsets", "season": "Spring"},
+            {"name": "Tarsakh", "common": "The Claw of the Storms", "season": "Spring"},
+            {"name": "Mirtul", "common": "The Melting", "season": "Spring"},
+            {"name": "Kythorn", "common": "The Time of Flowers", "season": "Summer"},
+            {"name": "Flamerule", "common": "Summertide", "season": "Summer"},
+            {"name": "Eleasis", "common": "Highsun", "season": "Summer"},
+            {"name": "Eleint", "common": "The Fading", "season": "Autumn"},
+            {"name": "Marpenoth", "common": "Leaffall", "season": "Autumn"},
+            {"name": "Uktar", "common": "The Rotting", "season": "Autumn"},
+            {"name": "Nightal", "common": "The Drawing Down", "season": "Winter"}
+        ],
+        
+        # Special days (festivals) between months
+        "festivals": [
+            {"name": "Midwinter", "after_month": 1, "description": "Festival between Hammer and Alturiak"},
+            {"name": "Greengrass", "after_month": 4, "description": "Festival between Tarsakh and Mirtul"},
+            {"name": "Midsummer", "after_month": 7, "description": "Festival between Flamerule and Eleasis"},
+            {"name": "Highharvestide", "after_month": 9, "description": "Festival between Eleint and Marpenoth"},
+            {"name": "Feast of the Moon", "after_month": 11, "description": "Festival between Uktar and Nightal"}
+        ],
+        
+        # Leap year festival
+        "shieldmeet": {
+            "name": "Shieldmeet",
+            "after": "Midsummer",
+            "frequency": 4,  # Every 4 years
+            "description": "Leap year festival after Midsummer"
+        },
+        
+        # Tenday names (10-day weeks)
+        "tenday_names": [
+            "1st day", "2nd day", "3rd day", "4th day", "5th day",
+            "6th day", "7th day", "8th day", "9th day", "10th day"
+        ],
+        
+        # DR (Dalereckoning) offset from CE
+        "dr_offset": 531  # 2025 CE = 1494 DR
+    },
+    
+    # Configuration options
     "config_options": {
-        "dr_ce_diff": {
+        "dr_offset": {
             "type": "number",
-            "default": 531,   # 2025 CE -> 1494 DR (DR = CE − 531)
+            "default": 531,
             "min": -2000,
             "max": 5000,
+            "label": {
+                "en": "DR Year Offset",
+                "de": "DR Jahr-Versatz",
+                "es": "Desplazamiento Año DR",
+                "fr": "Décalage Année DR",
+                "it": "Offset Anno DR",
+                "nl": "DR Jaar Offset",
+                "pl": "Przesunięcie Roku DR",
+                "pt": "Deslocamento Ano DR",
+                "ru": "Смещение года DR",
+                "ja": "DR年オフセット",
+                "zh": "DR年偏移",
+                "ko": "DR 연도 오프셋"
+            },
             "description": {
-                "en": "Offset between Common Era year and Dalereckoning (DR): DR = CE − diff",
-                "de": "Versatz zwischen Common Era (CE) und Dalereckoning (DR): DR = CE − Versatz",
+                "en": "Offset between Common Era and Dalereckoning (DR = CE - offset)",
+                "de": "Versatz zwischen Common Era und Dalereckoning (DR = CE - Versatz)",
+                "es": "Desplazamiento entre Era Común y Dalereckoning (DR = CE - desplazamiento)",
+                "fr": "Décalage entre l'Ère Commune et Dalereckoning (DR = CE - décalage)",
+                "it": "Offset tra Era Comune e Dalereckoning (DR = CE - offset)",
+                "nl": "Offset tussen Common Era en Dalereckoning (DR = CE - offset)",
+                "pl": "Przesunięcie między Erą Wspólną a Dalereckoning (DR = CE - przesunięcie)",
+                "pt": "Deslocamento entre Era Comum e Dalereckoning (DR = CE - deslocamento)",
+                "ru": "Смещение между нашей эрой и Dalereckoning (DR = CE - смещение)",
+                "ja": "西暦とDalereckoningの間のオフセット（DR = CE - オフセット）",
+                "zh": "公元与Dalereckoning之间的偏移（DR = CE - 偏移）",
+                "ko": "서기와 Dalereckoning 사이의 오프셋 (DR = CE - 오프셋)"
+            },
+            "translations": {
+                "en": {"label": "DR Year Offset", "description": "Offset between Common Era and Dalereckoning"},
+                "de": {"label": "DR Jahr-Versatz", "description": "Versatz zwischen Common Era und Dalereckoning"}
             }
         },
-        "leap_rule": {
-            "type": "select",
-            "default": "gregorian",
-            "options": ["gregorian", "every_4_years", "never"],
+        "show_common_name": {
+            "type": "boolean",
+            "default": True,
+            "label": {
+                "en": "Show Common Names",
+                "de": "Gemeine Namen anzeigen",
+                "es": "Mostrar Nombres Comunes",
+                "fr": "Afficher les Noms Communs",
+                "it": "Mostra Nomi Comuni",
+                "nl": "Toon Gewone Namen",
+                "pl": "Pokaż Nazwy Pospolite",
+                "pt": "Mostrar Nomes Comuns",
+                "ru": "Показать общие названия",
+                "ja": "一般名を表示",
+                "zh": "显示通用名称",
+                "ko": "일반 이름 표시"
+            },
             "description": {
-                "en": "Shieldmeet insertion rule",
-                "de": "Regel für Shieldmeet (Schalttag)",
+                "en": "Show common month names (e.g., 'Deepwinter' for Hammer)",
+                "de": "Zeige gemeine Monatsnamen (z.B. 'Deepwinter' für Hammer)",
+                "es": "Mostrar nombres comunes de meses (p.ej., 'Deepwinter' para Hammer)",
+                "fr": "Afficher les noms communs des mois (ex: 'Deepwinter' pour Hammer)"
             }
         },
-        "locale": {
-            "type": "select",
-            "default": "auto",
-            "options": ["auto", "en", "de"],
+        "show_tenday": {
+            "type": "boolean",
+            "default": True,
+            "label": {
+                "en": "Show Tenday",
+                "de": "Zehntag anzeigen",
+                "es": "Mostrar Década",
+                "fr": "Afficher la Décade",
+                "it": "Mostra Decade",
+                "nl": "Toon Tiendaag",
+                "pl": "Pokaż Dziesięciodniówkę",
+                "pt": "Mostrar Década",
+                "ru": "Показать десятидневку",
+                "ja": "10日週を表示",
+                "zh": "显示十日",
+                "ko": "10일 표시"
+            },
             "description": {
-                "en": "Force language (auto uses Home Assistant language)",
-                "de": "Sprache erzwingen (auto nutzt Home‑Assistant‑Sprache)",
+                "en": "Display which day of the tenday (1st-10th)",
+                "de": "Zeige welcher Tag des Zehntages (1.-10.)",
+                "es": "Mostrar qué día de la década (1º-10º)",
+                "fr": "Afficher quel jour de la décade (1er-10e)"
             }
         }
-    },
-
-    "reference_url": "https://forgottenrealms.fandom.com/wiki/Calendar_of_Harptos",
-    "origin": "Dungeons & Dragons (Forgotten Realms)",
-    "created_by": "Ed Greenwood",
-    "example": "1494 DR, Kythorn 10 (Day 10)",
-    "tags": ["fantasy", "dnd", "forgotten_realms", "harptos", "tenday", "festival"],
-    "features": {
-        "supports_tendays": True,
-        "supports_festivals": True,
-        "precision": "day"
     }
 }
 
-# ============================================
-# LOGIC
-# ============================================
-
-def _is_gregorian_leap(y: int) -> bool:
-    return (y % 4 == 0) and ((y % 100 != 0) or (y % 400 == 0))
-
-@dataclass(frozen=True)
-class _Day:
-    kind: str           # "month" | "festival"
-    month_index: int    # 1..12 for months; month it follows for festivals
-    day: int | None     # 1..30 for month day; None for festivals
-    fest_id: str | None # festival id when kind == "festival"
-
-def _build_timeline(gyear: int, leap_rule: str, hd: Dict[str, Any]) -> List[_Day]:
-    """Linear list of 365/366 Harptos days for the given Gregorian year."""
-    months = hd["months"]
-    festivals = hd["festivals"]
-    shieldmeet = hd["shieldmeet"]["id"]
-
-    timeline: List[_Day] = []
-
-    # 12×30 month days
-    for m in range(1, 13):
-        for d in range(1, 31):
-            timeline.append(_Day("month", m, d, None))
-        # regular festivals that come after this month
-        for f in festivals:
-            if f["after_month"] == m:
-                timeline.append(_Day("festival", m, None, f["id"]))
-        # after Flamerule (m==7) possibly Shieldmeet
-        if m == 7:
-            add_shieldmeet = False
-            if leap_rule == "gregorian":
-                add_shieldmeet = _is_gregorian_leap(gyear)
-            elif leap_rule == "every_4_years":
-                add_shieldmeet = (gyear % 4 == 0)
-            elif leap_rule == "never":
-                add_shieldmeet = False
-            if add_shieldmeet:
-                timeline.append(_Day("festival", m, None, shieldmeet))
-
-    return timeline
-
-def _day_of_year(d: date) -> int:
-    start = date(d.year, 1, 1)
-    return (d - start).days + 1
-
-def _locale_choice(opts_locale: str, hass_lang: str) -> str:
-    if opts_locale and opts_locale != "auto":
-        return opts_locale if opts_locale in ("en", "de") else "en"
-    # auto -> use hass language primary
-    p = (hass_lang or "en").split("-")[0].split("_")[0]
-    return "de" if p == "de" else "en"
-
-# ============================================
-# SENSOR
-# ============================================
 
 class HarptosCalendarSensor(AlternativeTimeSensorBase):
     """Sensor for the D&D Harptos Calendar."""
-
+    
+    # Class-level update interval
     UPDATE_INTERVAL = UPDATE_INTERVAL
-
+    
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
+        """Initialize the Harptos calendar sensor."""
         super().__init__(base_name, hass)
-
-        cal_name = self._translate("name", "Harptos Calendar")
-        self._attr_name = f"{base_name} {cal_name}"
-        self._attr_unique_id = f"{base_name}_dnd_harptos"
+        
+        # Store CALENDAR_INFO as instance variable
+        self._calendar_info = CALENDAR_INFO
+        
+        # Get translated name from metadata
+        calendar_name = self._translate('name', 'D&D Harptos Calendar')
+        
+        # Set sensor attributes
+        self._attr_name = f"{base_name} {calendar_name}"
+        self._attr_unique_id = f"{base_name}_harptos"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:dice-d20")
-
-        self._hd = CALENDAR_INFO["harptos_data"]
-
-        # defaults (overridden by plugin options at runtime)
-        self._dr_ce_diff = 531
-        self._leap_rule = "gregorian"
-        self._forced_locale = "auto"
-
+        
+        # Configuration options with defaults
+        config_defaults = CALENDAR_INFO.get("config_options", {})
+        self._dr_offset = config_defaults.get("dr_offset", {}).get("default", 531)
+        self._show_common_name = config_defaults.get("show_common_name", {}).get("default", True)
+        self._show_tenday = config_defaults.get("show_tenday", {}).get("default", True)
+        
+        # Harptos data
+        self._harptos_data = CALENDAR_INFO["harptos_data"]
+        
+        # Initialize state
+        self._state = "1 Hammer, 1494 DR"
+        self._harptos = {}
+        
+        # Flag to track if options have been loaded
+        self._options_loaded = False
+        
+        _LOGGER.debug(f"Initialized Harptos Calendar sensor: {self._attr_name}")
+        _LOGGER.debug(f"  Default settings: dr_offset={self._dr_offset}, common={self._show_common_name}, tenday={self._show_tenday}")
+    
+    def _load_options(self) -> None:
+        """Load plugin options after IDs are set."""
+        if self._options_loaded:
+            return
+            
+        try:
+            options = self.get_plugin_options()
+            if options:
+                # Update configuration from plugin options
+                self._dr_offset = options.get("dr_offset", self._dr_offset)
+                self._show_common_name = options.get("show_common_name", self._show_common_name)
+                self._show_tenday = options.get("show_tenday", self._show_tenday)
+                
+                _LOGGER.debug(f"Harptos sensor loaded options: dr_offset={self._dr_offset}, common={self._show_common_name}, tenday={self._show_tenday}")
+            else:
+                _LOGGER.debug("Harptos sensor using default options - no custom options found")
+                
+            self._options_loaded = True
+        except Exception as e:
+            _LOGGER.debug(f"Harptos sensor could not load options yet: {e}")
+    
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        
+        # Try to load options now that IDs should be set
+        self._load_options()
+        
+        # Perform initial update
+        self.update()
+    
     @property
     def state(self):
+        """Return the state of the sensor."""
         return self._state
-
+    
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
-        attrs = super().extra_state_attributes
-        if hasattr(self, "_harptos"):
+        """Return the state attributes."""
+        attrs = super().extra_state_attributes or {}
+        
+        # Add Harptos-specific attributes
+        if self._harptos:
             attrs.update(self._harptos)
-            attrs["description"] = self._translate("description")
-            attrs["reference"] = CALENDAR_INFO.get("reference_url", "")
+            
+            # Add description in user's language
+            attrs["description"] = self._translate('description')
+            
+            # Add current configuration
+            attrs["dr_offset_setting"] = self._dr_offset
+            attrs["show_common_name_setting"] = self._show_common_name
+            attrs["show_tenday_setting"] = self._show_tenday
+        
         return attrs
-
-    # ---------- core calculation ----------
-
-    def _compute(self, dt: datetime, locale: str) -> Dict[str, Any]:
-        d = dt.astimezone(timezone.utc).date() if dt.tzinfo else dt.date()
-
-        # apply plugin options
-        opts = self.get_plugin_options() or {}
-        self._dr_ce_diff = int(opts.get("dr_ce_diff", self._dr_ce_diff))
-        self._leap_rule = str(opts.get("leap_rule", self._leap_rule))
-        self._forced_locale = str(opts.get("locale", self._forced_locale))
-        use_locale = _locale_choice(self._forced_locale, getattr(self._hass.config, "language", "en"))
-
-        timeline = _build_timeline(d.year, self._leap_rule, self._hd)
-        doy = max(1, min(_day_of_year(d), len(timeline)))
-        entry = timeline[doy - 1]
-
-        # DR year mapping
-        dr_year = d.year - self._dr_ce_diff
-
-        months = self._hd["months"]
-        festivals = {f["id"]: f for f in self._hd["festivals"]}
-        shieldmeet = self._hd["shieldmeet"]
-
-        # count month-days so far (exclude festivals) to get tenday/day-of-tenday
-        month_days_before = sum(1 for x in timeline[:doy - 1] if x.kind == "month")
-        if entry.kind == "month":
-            month_days_before += 1
-        day_of_tenday = ((month_days_before - 1) % 10) + 1 if entry.kind == "month" else None
-        tenday_number = ((month_days_before - 1) // 10) + 1 if entry.kind == "month" else None  # 1..36
-
-        if entry.kind == "month":
-            m_idx = entry.month_index
-            m = months[m_idx - 1]
-            m_name = m[use_locale]
-            state = f"{m_name} {entry.day}, {dr_year} DR"
-            fest_obj = None
-        else:
-            # festival
-            if entry.fest_id == "shieldmeet":
-                fest_obj = shieldmeet
-            else:
-                fest_obj = festivals.get(entry.fest_id)
-            fest_name = fest_obj[use_locale] if fest_obj else "Festival"
-            state = f"{fest_name}, {dr_year} DR"
-
-        attrs = {
-            "calendar_id": CALENDAR_INFO["id"],
-            "calendar_name": CALENDAR_INFO["name"][use_locale],
-            "calendar_description": CALENDAR_INFO["description"][use_locale],
-            "locale": use_locale,
-            "dr_year": dr_year,
-            "is_gregorian_leap_year": _is_gregorian_leap(d.year),
-            "kind": entry.kind,
-            "months": [m[use_locale] for m in months],
-            "festival_list": [f[use_locale] for f in self._hd["festivals"]] + [shieldmeet[use_locale]],
-            "weekday_names": self._hd["weekday_names"][use_locale],
-        }
-
-        if entry.kind == "month":
-            attrs.update({
-                "month_index": entry.month_index,
-                "month_id": months[entry.month_index - 1]["id"],
-                "month_name": months[entry.month_index - 1][use_locale],
-                "day": entry.day,
+    
+    def _is_leap_year(self, year: int) -> bool:
+        """Check if a year is a leap year (Gregorian rules)."""
+        return (year % 4 == 0) and ((year % 100 != 0) or (year % 400 == 0))
+    
+    def _calculate_harptos_date(self, earth_date: datetime) -> Dict[str, Any]:
+        """Calculate Harptos calendar date from Earth date."""
+        
+        # Get current year and day of year
+        year = earth_date.year
+        day_of_year = earth_date.timetuple().tm_yday
+        
+        # Calculate DR year
+        dr_year = year - self._dr_offset
+        
+        # Build calendar structure for the year
+        calendar_days = []
+        
+        # Add months and festivals
+        for month_idx, month in enumerate(self._harptos_data["months"], 1):
+            # Add 30 days of the month
+            for day in range(1, 31):
+                calendar_days.append({
+                    "type": "month",
+                    "month": month_idx,
+                    "month_name": month["name"],
+                    "common_name": month["common"],
+                    "day": day,
+                    "season": month["season"]
+                })
+            
+            # Add festival after certain months
+            for festival in self._harptos_data["festivals"]:
+                if festival["after_month"] == month_idx:
+                    calendar_days.append({
+                        "type": "festival",
+                        "name": festival["name"],
+                        "description": festival["description"]
+                    })
+            
+            # Add Shieldmeet after Midsummer (month 7) in leap years
+            if month_idx == 7 and self._is_leap_year(year):
+                calendar_days.append({
+                    "type": "festival",
+                    "name": self._harptos_data["shieldmeet"]["name"],
+                    "description": self._harptos_data["shieldmeet"]["description"]
+                })
+        
+        # Ensure we don't exceed calendar bounds
+        if day_of_year > len(calendar_days):
+            day_of_year = len(calendar_days)
+        elif day_of_year < 1:
+            day_of_year = 1
+        
+        # Get current calendar day
+        current_day = calendar_days[day_of_year - 1]
+        
+        # Format the display
+        if current_day["type"] == "month":
+            month_name = current_day["month_name"]
+            if self._show_common_name:
+                month_name += f" ({current_day['common_name']})"
+            
+            display = f"{current_day['day']} {month_name}, {dr_year} DR"
+            
+            # Calculate tenday information
+            month_day = current_day["day"]
+            tenday = ((month_day - 1) // 10) + 1  # Which tenday (1-3)
+            day_of_tenday = ((month_day - 1) % 10) + 1  # Day within tenday (1-10)
+            
+            if self._show_tenday:
+                tenday_name = self._harptos_data["tenday_names"][day_of_tenday - 1]
+                display += f" ({tenday_name} of tenday {tenday})"
+            
+            result = {
+                "dr_year": dr_year,
+                "month": current_day["month"],
+                "month_name": current_day["month_name"],
+                "common_name": current_day["common_name"],
+                "day": current_day["day"],
+                "season": current_day["season"],
+                "tenday": tenday,
                 "day_of_tenday": day_of_tenday,
-                "tenday_number": tenday_number,
-                "festival": "",
-            })
+                "tenday_name": tenday_name if self._show_tenday else None,
+                "is_festival": False,
+                "formatted": display
+            }
         else:
-            attrs.update({
-                "festival_id": fest_obj["id"] if fest_obj else "",
-                "festival_name": fest_obj[use_locale] if fest_obj else "",
-            })
-
-        return {"state": state, "attrs": attrs}
-
-    # ---------- HA hooks ----------
-
+            # Festival day
+            display = f"{current_day['name']}, {dr_year} DR"
+            
+            result = {
+                "dr_year": dr_year,
+                "festival_name": current_day["name"],
+                "festival_description": current_day["description"],
+                "is_festival": True,
+                "formatted": display
+            }
+        
+        # Add general information
+        result["earth_date"] = earth_date.strftime("%Y-%m-%d")
+        result["day_of_year"] = day_of_year
+        result["total_days"] = len(calendar_days)
+        result["is_leap_year"] = self._is_leap_year(year)
+        
+        return result
+    
     def update(self) -> None:
-        now = datetime.now()
-        result = self._compute(now, getattr(self._hass.config, "language", "en"))
-        self._harptos = result["attrs"]
-        self._state = result["state"]
-        _LOGGER.debug(f"Updated Harptos to {self._state}")
+        """Update the sensor."""
+        # Ensure options are loaded
+        if not self._options_loaded:
+            self._load_options()
+        
+        try:
+            now = datetime.now()
+            self._harptos = self._calculate_harptos_date(now)
+            
+            # Set state to formatted Harptos date
+            self._state = self._harptos.get("formatted", "1 Hammer, 1494 DR")
+            
+            _LOGGER.debug(f"Updated Harptos Calendar to {self._state}")
+        except Exception as e:
+            _LOGGER.error(f"Error updating Harptos calendar: {e}", exc_info=True)
+            self._state = "ERROR"
+    
+    async def async_update(self) -> None:
+        """Update sensor asynchronously."""
+        # Run synchronous update in executor
+        await self.hass.async_add_executor_job(self.update)
