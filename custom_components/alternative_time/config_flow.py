@@ -235,7 +235,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         
         # Build options dict with detailed labels
         options_dict = {}
-        separator = "─" * 40
         
         for i, (cid, info) in enumerate(cals):
             name = self._lcal(info, "name", cid)
@@ -346,6 +345,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Build schema from config_options
         schema_dict = {}
         current_mapping = {}
+        
+        for key, meta in opts.items():
             try:
                 # Get metadata
                 typ = meta.get("type", "string")
@@ -478,32 +479,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
             
             return self.async_create_entry(title=self._user_input["name"], data=data)
-        
-        # Get user's language
-        lang = self.hass.config.language if self.hass else "en"
-        primary = lang.split("-")[0] if "-" in lang else lang
-        
-        # Multi-language disclaimers
-        disclaimers = {
-            "en": {
-                "title": "Important Notice",
-                "text": "This integration provides alternative time systems for educational and entertainment purposes. The calendars may not be 100% accurate and should not be used for critical time-dependent decisions.",
-                "button": "I understand and accept"
-            },
-            "de": {
-                "title": "Wichtiger Hinweis",
-                "text": "Diese Integration bietet alternative Zeitsysteme für Bildungs- und Unterhaltungszwecke. Die Kalender sind möglicherweise nicht 100% genau und sollten nicht für kritische zeitabhängige Entscheidungen verwendet werden.",
-                "button": "Ich verstehe und akzeptiere"
-            }
-        }
-        
-        # Get appropriate disclaimer
-        if primary in disclaimers:
-            disclaimer = disclaimers[primary]
-        elif lang in disclaimers:
-            disclaimer = disclaimers[lang]
-        else:
-            disclaimer = disclaimers["en"]
         
         # Simple schema with just a confirmation
         schema = vol.Schema({})
