@@ -1,360 +1,377 @@
-"""NATO Time Format Calendar Plugin for Alternative Time Systems.
+"""NATO Date-Time Group (DTG) Calendar Plugin for Alternative Time Systems."""
+from __future__ import annotations
 
-Provides military-standard Date-Time Group (DTG) formatting with multiple output formats.
-"""
-
-from datetime import datetime
-from typing import Dict, Any, Optional
+from datetime import datetime, timedelta
 import logging
-import pytz
+from typing import Any, Dict, Optional
+from zoneinfo import ZoneInfo
 
-from ..sensor import AlternativeTimeSensorBase
+from homeassistant.core import HomeAssistant
+
+# Import from parent directory
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+try:
+    from ..sensor import AlternativeTimeSensorBase
+except ImportError:
+    from sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
 
-# Calendar metadata and configuration
+# Update interval in seconds
+UPDATE_INTERVAL = 1
+
+# Calendar Information Dictionary
 CALENDAR_INFO = {
     "id": "nato",
-    "version": "2.5.0",
-    "name": {
-        "en": "NATO Time",
-        "de": "NATO-Zeit",
-        "es": "Hora OTAN",
-        "fr": "Heure OTAN",
-        "it": "Ora NATO",
-        "nl": "NAVO-tijd",
-        "pl": "Czas NATO",
-        "pt": "Hora OTAN",
-        "ru": "Время НАТО",
-        "ja": "NATO時間",
-        "zh": "北约时间",
-        "ko": "NATO 시간"
-    },
-    "description": {
-        "en": "Military Date-Time Group (DTG) format used by NATO forces for precise time coordination",
-        "de": "Militärisches Datum-Zeit-Gruppen (DTG) Format der NATO-Streitkräfte für präzise Zeitkoordination",
-        "es": "Formato de Grupo de Fecha-Hora (DTG) militar usado por las fuerzas de la OTAN",
-        "fr": "Format de Groupe Date-Heure (DTG) militaire utilisé par les forces de l'OTAN",
-        "it": "Formato militare Date-Time Group (DTG) usato dalle forze NATO",
-        "nl": "Militair Datum-Tijd-Groep (DTG) formaat gebruikt door NAVO-strijdkrachten",
-        "pl": "Wojskowy format grupy daty i czasu (DTG) używany przez siły NATO",
-        "pt": "Formato militar de Grupo Data-Hora (DTG) usado pelas forças da OTAN",
-        "ru": "Военный формат группы даты-времени (DTG), используемый силами НАТО",
-        "ja": "NATO軍が使用する軍事日時グループ（DTG）フォーマット",
-        "zh": "北约部队使用的军事日期时间组（DTG）格式",
-        "ko": "NATO군이 사용하는 군사 날짜-시간 그룹(DTG) 형식"
-    },
+    "version": "2.6.0",
+    "icon": "mdi:military-tech",
     "category": "military",
-    "update_interval": 60,
-    "accuracy": "minute",
-    "icon": "mdi:clock-time-eight",
-    "reference_url": "https://en.wikipedia.org/wiki/Date-time_group",
+    "accuracy": "second",
+    "update_interval": UPDATE_INTERVAL,
     
-    # Configuration options for this calendar
+    # Multi-language names
+    "name": {
+        "en": "NATO Date-Time Group",
+        "de": "NATO-Zeitgruppe",
+        "es": "Grupo de Fecha-Hora OTAN",
+        "fr": "Groupe Date-Heure OTAN",
+        "it": "Gruppo Data-Ora NATO",
+        "nl": "NAVO Datum-Tijd Groep",
+        "pl": "Grupa Data-Czas NATO",
+        "pt": "Grupo Data-Hora NATO",
+        "ru": "Группа даты и времени НАТО",
+        "ja": "NATO日時グループ",
+        "zh": "北约日期时间组",
+        "ko": "NATO 날짜-시간 그룹"
+    },
+    
+    # Descriptions
+    "description": {
+        "en": "Military time format used by NATO forces for coordination (e.g., 151430Z JAN 25)",
+        "de": "Militärisches Zeitformat der NATO-Streitkräfte zur Koordination (z.B. 151430Z JAN 25)",
+        "es": "Formato de hora militar usado por fuerzas de la OTAN para coordinación (ej. 151430Z ENE 25)",
+        "fr": "Format horaire militaire utilisé par les forces de l'OTAN pour la coordination (ex. 151430Z JAN 25)",
+        "it": "Formato orario militare usato dalle forze NATO per il coordinamento (es. 151430Z GEN 25)",
+        "nl": "Militair tijdformaat gebruikt door NAVO-strijdkrachten voor coördinatie (bijv. 151430Z JAN 25)",
+        "pl": "Format czasu wojskowego używany przez siły NATO do koordynacji (np. 151430Z STY 25)",
+        "pt": "Formato de hora militar usado pelas forças da NATO para coordenação (ex. 151430Z JAN 25)",
+        "ru": "Военный формат времени, используемый силами НАТО для координации (напр. 151430Z ЯНВ 25)",
+        "ja": "NATO軍が調整に使用する軍事時刻形式 (例: 151430Z JAN 25)",
+        "zh": "北约部队用于协调的军事时间格式 (例: 151430Z JAN 25)",
+        "ko": "NATO군이 조정에 사용하는 군사 시간 형식 (예: 151430Z JAN 25)"
+    },
+    
+    # NATO timezone letters
+    "nato_zones": {
+        "Y": {"offset": -12, "name": "Yankee"},
+        "X": {"offset": -11, "name": "X-ray"},
+        "W": {"offset": -10, "name": "Whiskey"},
+        "V": {"offset": -9, "name": "Victor"},
+        "U": {"offset": -8, "name": "Uniform"},
+        "T": {"offset": -7, "name": "Tango"},
+        "S": {"offset": -6, "name": "Sierra"},
+        "R": {"offset": -5, "name": "Romeo"},
+        "Q": {"offset": -4, "name": "Quebec"},
+        "P": {"offset": -3, "name": "Papa"},
+        "O": {"offset": -2, "name": "Oscar"},
+        "N": {"offset": -1, "name": "November"},
+        "Z": {"offset": 0, "name": "Zulu", "special": "UTC"},
+        "A": {"offset": 1, "name": "Alpha"},
+        "B": {"offset": 2, "name": "Bravo"},
+        "C": {"offset": 3, "name": "Charlie"},
+        "D": {"offset": 4, "name": "Delta"},
+        "E": {"offset": 5, "name": "Echo"},
+        "F": {"offset": 6, "name": "Foxtrot"},
+        "G": {"offset": 7, "name": "Golf"},
+        "H": {"offset": 8, "name": "Hotel"},
+        "I": {"offset": 9, "name": "India"},
+        "K": {"offset": 10, "name": "Kilo"},
+        "L": {"offset": 11, "name": "Lima"},
+        "M": {"offset": 12, "name": "Mike"}
+    },
+    
+    # Month abbreviations
+    "months": {
+        "en": ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"],
+        "de": ["JAN", "FEB", "MÄR", "APR", "MAI", "JUN", "JUL", "AUG", "SEP", "OKT", "NOV", "DEZ"],
+        "es": ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"],
+        "fr": ["JAN", "FÉV", "MAR", "AVR", "MAI", "JUN", "JUL", "AOÛ", "SEP", "OCT", "NOV", "DÉC"],
+        "rescue_de": ["JANUAR", "FEBRUAR", "MÄRZ", "APRIL", "MAI", "JUNI", "JULI", "AUGUST", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DEZEMBER"]
+    },
+    
+    # Configuration options
     "config_options": {
         "format_type": {
             "type": "select",
-            "options": {
-                "basic": {
-                    "en": "Basic (DDHHMM)",
-                    "de": "Basis (TTSSMMM)",
-                    "es": "Básico (DDHHMM)",
-                    "fr": "Basique (JJHHMM)",
-                    "it": "Base (GGHHMM)",
-                    "nl": "Basis (DDUUMM)",
-                    "pl": "Podstawowy (DDGGMM)",
-                    "pt": "Básico (DDHHMM)",
-                    "ru": "Базовый (ДДЧЧММ)",
-                    "ja": "基本 (DDHHMM)",
-                    "zh": "基本 (DDHHMM)",
-                    "ko": "기본 (DDHHMM)"
-                },
-                "zone": {
-                    "en": "Zone DTG (DDHHMM[Z] MON YY)",
-                    "de": "Zonen-DTG (TTSSMMZ MON JJ)",
-                    "es": "DTG con Zona (DDHHMMZ MES AA)",
-                    "fr": "DTG avec Zone (JJHHMMZ MOIS AA)",
-                    "it": "DTG con Zona (GGHHMMZ MESE AA)",
-                    "nl": "Zone DTG (DDUUMMZ MAAND JJ)",
-                    "pl": "DTG ze strefą (DDGGMMZ MIESIĄC RR)",
-                    "pt": "DTG com Zona (DDHHMMZ MÊS AA)",
-                    "ru": "DTG с зоной (ДДЧЧММZ МЕСЯЦ ГГ)",
-                    "ja": "ゾーンDTG (DDHHMMZ 月 YY)",
-                    "zh": "区域DTG (DDHHMMZ 月 YY)",
-                    "ko": "구역 DTG (DDHHMMZ 월 YY)"
-                },
-                "rescue": {
-                    "en": "Rescue Format (DD HHMM MON YY)",
-                    "de": "Rettungsformat (TT SSMM MON JJ)",
-                    "es": "Formato Rescate (DD HHMM MES AA)",
-                    "fr": "Format Sauvetage (JJ HHMM MOIS AA)",
-                    "it": "Formato Soccorso (GG HHMM MESE AA)",
-                    "nl": "Reddingsformaat (DD UUMM MAAND JJ)",
-                    "pl": "Format ratunkowy (DD GGMM MIESIĄC RR)",
-                    "pt": "Formato Resgate (DD HHMM MÊS AA)",
-                    "ru": "Формат спасения (ДД ЧЧММ МЕСЯЦ ГГ)",
-                    "ja": "救助フォーマット (DD HHMM 月 YY)",
-                    "zh": "救援格式 (DD HHMM 月 YY)",
-                    "ko": "구조 형식 (DD HHMM 월 YY)"
-                },
-                "aviation": {
-                    "en": "Aviation (DDHHMM + Phonetic)",
-                    "de": "Luftfahrt (TTSSMM + Phonetisch)",
-                    "es": "Aviación (DDHHMM + Fonético)",
-                    "fr": "Aviation (JJHHMM + Phonétique)",
-                    "it": "Aviazione (GGHHMM + Fonetico)",
-                    "nl": "Luchtvaart (DDUUMM + Fonetisch)",
-                    "pl": "Lotnictwo (DDGGMM + Fonetyczny)",
-                    "pt": "Aviação (DDHHMM + Fonético)",
-                    "ru": "Авиация (ДДЧЧММ + Фонетический)",
-                    "ja": "航空 (DDHHMM + フォネティック)",
-                    "zh": "航空 (DDHHMM + 语音)",
-                    "ko": "항공 (DDHHMM + 음성)"
-                },
-                "extended": {
-                    "en": "Extended (DDHHMMSS[Z] MON YYYY)",
-                    "de": "Erweitert (TTSSMMSSZ MON JJJJ)",
-                    "es": "Extendido (DDHHMMSSZ MES AAAA)",
-                    "fr": "Étendu (JJHHMMSSZ MOIS AAAA)",
-                    "it": "Esteso (GGHHMMSSZ MESE AAAA)",
-                    "nl": "Uitgebreid (DDUUMMSSZ MAAND JJJJ)",
-                    "pl": "Rozszerzony (DDGGMMSSZ MIESIĄC RRRR)",
-                    "pt": "Estendido (DDHHMMSSZ MÊS AAAA)",
-                    "ru": "Расширенный (ДДЧЧММССZ МЕСЯЦ ГГГГ)",
-                    "ja": "拡張 (DDHHMMSSZ 月 YYYY)",
-                    "zh": "扩展 (DDHHMMSSZ 月 YYYY)",
-                    "ko": "확장 (DDHHMMSSZ 월 YYYY)"
-                }
-            },
             "default": "zone",
+            "options": ["basic", "zone", "rescue", "aviation", "extended"],
             "label": {
                 "en": "Format Type",
                 "de": "Formattyp",
-                "es": "Tipo de formato",
-                "fr": "Type de format",
-                "it": "Tipo di formato",
-                "nl": "Formaattype",
-                "pl": "Typ formatu",
-                "pt": "Tipo de formato",
+                "es": "Tipo de Formato",
+                "fr": "Type de Format",
+                "it": "Tipo di Formato",
+                "nl": "Formaat Type",
+                "pl": "Typ Formatu",
+                "pt": "Tipo de Formato",
                 "ru": "Тип формата",
                 "ja": "フォーマットタイプ",
                 "zh": "格式类型",
                 "ko": "형식 유형"
             },
             "description": {
-                "en": "Choose the NATO time format style",
-                "de": "Wählen Sie den NATO-Zeitformatstil",
-                "es": "Elija el estilo de formato de hora OTAN",
-                "fr": "Choisissez le style de format d'heure OTAN",
-                "it": "Scegli lo stile del formato ora NATO",
-                "nl": "Kies de NAVO-tijdformaatstijl",
-                "pl": "Wybierz styl formatu czasu NATO",
-                "pt": "Escolha o estilo de formato de hora OTAN",
-                "ru": "Выберите стиль формата времени НАТО",
-                "ja": "NATO時間フォーマットスタイルを選択",
-                "zh": "选择北约时间格式样式",
-                "ko": "NATO 시간 형식 스타일 선택"
-            }
-        },
-        "timezone": {
-            "type": "select",
-            "options": ["UTC", "Local", "Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel", "India", "Kilo", "Lima", "Mike"],
-            "default": "UTC",
-            "label": {
-                "en": "Time Zone",
-                "de": "Zeitzone",
-                "es": "Zona horaria",
-                "fr": "Fuseau horaire",
-                "it": "Fuso orario",
-                "nl": "Tijdzone",
-                "pl": "Strefa czasowa",
-                "pt": "Fuso horário",
-                "ru": "Часовой пояс",
-                "ja": "タイムゾーン",
-                "zh": "时区",
-                "ko": "시간대"
+                "en": "Select NATO DTG format variant",
+                "de": "NATO DTG-Formatvariante wählen",
+                "es": "Seleccionar variante de formato DTG OTAN",
+                "fr": "Sélectionner la variante de format DTG OTAN",
+                "it": "Seleziona variante formato DTG NATO",
+                "nl": "Selecteer NAVO DTG-formaatvariant",
+                "pl": "Wybierz wariant formatu DTG NATO",
+                "pt": "Selecionar variante de formato DTG NATO",
+                "ru": "Выберите вариант формата DTG НАТО",
+                "ja": "NATO DTG形式の変種を選択",
+                "zh": "选择北约DTG格式变体",
+                "ko": "NATO DTG 형식 변형 선택"
             },
-            "description": {
-                "en": "Select time zone (UTC/Zulu, Local, or NATO zone)",
-                "de": "Zeitzone wählen (UTC/Zulu, Lokal oder NATO-Zone)",
-                "es": "Seleccionar zona horaria (UTC/Zulu, Local o zona OTAN)",
-                "fr": "Sélectionner le fuseau horaire (UTC/Zulu, Local ou zone OTAN)",
-                "it": "Seleziona fuso orario (UTC/Zulu, Locale o zona NATO)",
-                "nl": "Selecteer tijdzone (UTC/Zulu, Lokaal of NAVO-zone)",
-                "pl": "Wybierz strefę czasową (UTC/Zulu, Lokalna lub strefa NATO)",
-                "pt": "Selecionar fuso horário (UTC/Zulu, Local ou zona OTAN)",
-                "ru": "Выберите часовой пояс (UTC/Zulu, местный или зона НАТО)",
-                "ja": "タイムゾーンを選択（UTC/Zulu、ローカル、またはNATOゾーン）",
-                "zh": "选择时区（UTC/Zulu、本地或北约区）",
-                "ko": "시간대 선택 (UTC/Zulu, 로컬 또는 NATO 구역)"
+            "options_labels": {
+                "basic": {
+                    "en": "Basic (151430)",
+                    "de": "Basis (151430)",
+                    "es": "Básico (151430)",
+                    "fr": "Basique (151430)",
+                    "it": "Base (151430)",
+                    "nl": "Basis (151430)",
+                    "pl": "Podstawowy (151430)",
+                    "pt": "Básico (151430)",
+                    "ru": "Базовый (151430)",
+                    "ja": "基本 (151430)",
+                    "zh": "基本 (151430)",
+                    "ko": "기본 (151430)"
+                },
+                "zone": {
+                    "en": "With Zone (151430Z JAN 25)",
+                    "de": "Mit Zone (151430Z JAN 25)",
+                    "es": "Con Zona (151430Z ENE 25)",
+                    "fr": "Avec Zone (151430Z JAN 25)",
+                    "it": "Con Zona (151430Z GEN 25)",
+                    "nl": "Met Zone (151430Z JAN 25)",
+                    "pl": "Ze Strefą (151430Z STY 25)",
+                    "pt": "Com Zona (151430Z JAN 25)",
+                    "ru": "С зоной (151430Z ЯНВ 25)",
+                    "ja": "ゾーン付き (151430Z JAN 25)",
+                    "zh": "带时区 (151430Z JAN 25)",
+                    "ko": "시간대 포함 (151430Z JAN 25)"
+                },
+                "rescue": {
+                    "en": "German Rescue (15 1430 JANUAR 25)",
+                    "de": "Deutsche Rettung (15 1430 JANUAR 25)",
+                    "es": "Rescate Alemán (15 1430 ENERO 25)",
+                    "fr": "Sauvetage Allemand (15 1430 JANVIER 25)",
+                    "it": "Soccorso Tedesco (15 1430 GENNAIO 25)",
+                    "nl": "Duitse Redding (15 1430 JANUARI 25)",
+                    "pl": "Niemiecki Ratunek (15 1430 STYCZEŃ 25)",
+                    "pt": "Resgate Alemão (15 1430 JANEIRO 25)",
+                    "ru": "Немецкий спасательный (15 1430 ЯНВАРЬ 25)",
+                    "ja": "ドイツ救助形式 (15 1430 JANUAR 25)",
+                    "zh": "德国救援格式 (15 1430 JANUAR 25)",
+                    "ko": "독일 구조 형식 (15 1430 JANUAR 25)"
+                },
+                "aviation": {
+                    "en": "Aviation (151430Z ZULU)",
+                    "de": "Luftfahrt (151430Z ZULU)",
+                    "es": "Aviación (151430Z ZULU)",
+                    "fr": "Aviation (151430Z ZULU)",
+                    "it": "Aviazione (151430Z ZULU)",
+                    "nl": "Luchtvaart (151430Z ZULU)",
+                    "pl": "Lotnictwo (151430Z ZULU)",
+                    "pt": "Aviação (151430Z ZULU)",
+                    "ru": "Авиация (151430Z ZULU)",
+                    "ja": "航空 (151430Z ZULU)",
+                    "zh": "航空 (151430Z ZULU)",
+                    "ko": "항공 (151430Z ZULU)"
+                },
+                "extended": {
+                    "en": "Extended (151430:45Z JAN 2025)",
+                    "de": "Erweitert (151430:45Z JAN 2025)",
+                    "es": "Extendido (151430:45Z ENE 2025)",
+                    "fr": "Étendu (151430:45Z JAN 2025)",
+                    "it": "Esteso (151430:45Z GEN 2025)",
+                    "nl": "Uitgebreid (151430:45Z JAN 2025)",
+                    "pl": "Rozszerzony (151430:45Z STY 2025)",
+                    "pt": "Estendido (151430:45Z JAN 2025)",
+                    "ru": "Расширенный (151430:45Z ЯНВ 2025)",
+                    "ja": "拡張 (151430:45Z JAN 2025)",
+                    "zh": "扩展 (151430:45Z JAN 2025)",
+                    "ko": "확장 (151430:45Z JAN 2025)"
+                }
             }
         },
-        "show_seconds": {
+        "show_zone_name": {
             "type": "boolean",
             "default": False,
             "label": {
-                "en": "Show Seconds",
-                "de": "Sekunden anzeigen",
-                "es": "Mostrar segundos",
-                "fr": "Afficher les secondes",
-                "it": "Mostra secondi",
-                "nl": "Toon seconden",
-                "pl": "Pokaż sekundy",
-                "pt": "Mostrar segundos",
-                "ru": "Показать секунды",
-                "ja": "秒を表示",
-                "zh": "显示秒",
-                "ko": "초 표시"
+                "en": "Show Zone Name",
+                "de": "Zonennamen anzeigen",
+                "es": "Mostrar Nombre de Zona",
+                "fr": "Afficher le Nom de Zone",
+                "it": "Mostra Nome Zona",
+                "nl": "Toon Zone Naam",
+                "pl": "Pokaż Nazwę Strefy",
+                "pt": "Mostrar Nome da Zona",
+                "ru": "Показать название зоны",
+                "ja": "ゾーン名を表示",
+                "zh": "显示时区名称",
+                "ko": "시간대 이름 표시"
             },
             "description": {
-                "en": "Include seconds in extended and aviation formats",
-                "de": "Sekunden in erweiterten und Luftfahrt-Formaten einschließen",
-                "es": "Incluir segundos en formatos extendido y aviación",
-                "fr": "Inclure les secondes dans les formats étendu et aviation",
-                "it": "Includi secondi nei formati esteso e aviazione",
-                "nl": "Seconden opnemen in uitgebreide en luchtvaartformaten",
-                "pl": "Uwzględnij sekundy w formatach rozszerzonym i lotniczym",
-                "pt": "Incluir segundos nos formatos estendido e aviação",
-                "ru": "Включить секунды в расширенном и авиационном форматах",
-                "ja": "拡張および航空フォーマットに秒を含める",
-                "zh": "在扩展和航空格式中包括秒",
-                "ko": "확장 및 항공 형식에 초 포함"
+                "en": "Display phonetic zone name (e.g., 'Zulu' for Z)",
+                "de": "Phonetischen Zonennamen anzeigen (z.B. 'Zulu' für Z)",
+                "es": "Mostrar nombre fonético de zona (ej. 'Zulu' para Z)",
+                "fr": "Afficher le nom phonétique de zone (ex. 'Zulu' pour Z)",
+                "it": "Mostra nome fonetico zona (es. 'Zulu' per Z)",
+                "nl": "Toon fonetische zonenaam (bijv. 'Zulu' voor Z)",
+                "pl": "Pokaż fonetyczną nazwę strefy (np. 'Zulu' dla Z)",
+                "pt": "Mostrar nome fonético da zona (ex. 'Zulu' para Z)",
+                "ru": "Показать фонетическое название зоны (напр. 'Zulu' для Z)",
+                "ja": "音声ゾーン名を表示 (例: Zの場合 'Zulu')",
+                "zh": "显示语音时区名称 (例如: Z为'Zulu')",
+                "ko": "음성 시간대 이름 표시 (예: Z의 경우 'Zulu')"
             }
         },
-        "uppercase": {
+        "use_local_zone": {
             "type": "boolean",
-            "default": True,
+            "default": False,
             "label": {
-                "en": "Use Uppercase",
-                "de": "Großbuchstaben verwenden",
-                "es": "Usar mayúsculas",
-                "fr": "Utiliser les majuscules",
-                "it": "Usa maiuscole",
-                "nl": "Gebruik hoofdletters",
-                "pl": "Użyj wielkich liter",
-                "pt": "Usar maiúsculas",
-                "ru": "Использовать заглавные буквы",
-                "ja": "大文字を使用",
-                "zh": "使用大写",
-                "ko": "대문자 사용"
+                "en": "Use Local Zone",
+                "de": "Lokale Zone verwenden",
+                "es": "Usar Zona Local",
+                "fr": "Utiliser Zone Locale",
+                "it": "Usa Zona Locale",
+                "nl": "Gebruik Lokale Zone",
+                "pl": "Użyj Strefy Lokalnej",
+                "pt": "Usar Zona Local",
+                "ru": "Использовать местную зону",
+                "ja": "ローカルゾーンを使用",
+                "zh": "使用本地时区",
+                "ko": "로컬 시간대 사용"
+            },
+            "description": {
+                "en": "Use local timezone instead of UTC/Zulu",
+                "de": "Lokale Zeitzone statt UTC/Zulu verwenden",
+                "es": "Usar zona horaria local en lugar de UTC/Zulu",
+                "fr": "Utiliser le fuseau horaire local au lieu d'UTC/Zulu",
+                "it": "Usa fuso orario locale invece di UTC/Zulu",
+                "nl": "Gebruik lokale tijdzone in plaats van UTC/Zulu",
+                "pl": "Użyj lokalnej strefy czasowej zamiast UTC/Zulu",
+                "pt": "Usar fuso horário local em vez de UTC/Zulu",
+                "ru": "Использовать местный часовой пояс вместо UTC/Zulu",
+                "ja": "UTC/Zuluの代わりにローカルタイムゾーンを使用",
+                "zh": "使用本地时区而不是UTC/Zulu",
+                "ko": "UTC/Zulu 대신 로컬 시간대 사용"
             }
-        },
-        "include_year": {
-            "type": "boolean",
-            "default": True,
-            "label": {
-                "en": "Include Year",
-                "de": "Jahr einschließen",
-                "es": "Incluir año",
-                "fr": "Inclure l'année",
-                "it": "Includi anno",
-                "nl": "Jaar opnemen",
-                "pl": "Uwzględnij rok",
-                "pt": "Incluir ano",
-                "ru": "Включить год",
-                "ja": "年を含める",
-                "zh": "包括年份",
-                "ko": "연도 포함"
-            }
-        }
-    },
-    
-    # NATO timezone data
-    "nato_data": {
-        "zones": {
-            -12: ("Y", "Yankee"),
-            -11: ("X", "X-ray"),
-            -10: ("W", "Whiskey"),
-            -9: ("V", "Victor"),
-            -8: ("U", "Uniform"),
-            -7: ("T", "Tango"),
-            -6: ("S", "Sierra"),
-            -5: ("R", "Romeo"),
-            -4: ("Q", "Quebec"),
-            -3: ("P", "Papa"),
-            -2: ("O", "Oscar"),
-            -1: ("N", "November"),
-            0: ("Z", "Zulu"),
-            1: ("A", "Alpha"),
-            2: ("B", "Bravo"),
-            3: ("C", "Charlie"),
-            4: ("D", "Delta"),
-            5: ("E", "Echo"),
-            6: ("F", "Foxtrot"),
-            7: ("G", "Golf"),
-            8: ("H", "Hotel"),
-            9: ("I", "India"),
-            10: ("K", "Kilo"),
-            11: ("L", "Lima"),
-            12: ("M", "Mike")
-        },
-        "months": {
-            "en": ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"],
-            "de": ["JAN", "FEB", "MÄR", "APR", "MAI", "JUN", "JUL", "AUG", "SEP", "OKT", "NOV", "DEZ"]
         }
     }
 }
 
-# Update interval for this sensor
-UPDATE_INTERVAL = CALENDAR_INFO["update_interval"]
 
 class NATOTimeSensor(AlternativeTimeSensorBase):
-    """Sensor for NATO Date-Time Group format."""
+    """Sensor for displaying NATO Date-Time Group."""
     
     # Class-level update interval
     UPDATE_INTERVAL = UPDATE_INTERVAL
     
-    def __init__(self, base_name: str, hass) -> None:
+    def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the NATO time sensor."""
-        super().__init__(base_name, hass)
+        super().__init__(base_name, "nato", CALENDAR_INFO["name"])
         
-        # Get translated name from metadata
-        calendar_name = self._translate('name', 'NATO Time')
+        self._hass = hass
+        self._attr_icon = CALENDAR_INFO["icon"]
+        self._update_interval = timedelta(seconds=UPDATE_INTERVAL)
         
-        # Set sensor attributes
-        self._attr_name = f"{base_name} {calendar_name}"
-        self._attr_unique_id = f"{base_name}_nato_time"
-        self._attr_icon = CALENDAR_INFO.get("icon", "mdi:clock-time-eight")
-        
-        # Default configuration options
+        # Configuration defaults
         self._format_type = "zone"
-        self._timezone = "UTC"
+        self._show_zone_name = False
+        self._use_local_zone = False
         self._show_seconds = False
         self._uppercase = True
         self._include_year = True
         
-        # NATO data
-        self._nato_data = CALENDAR_INFO["nato_data"]
-        
-        # Track if options have been loaded
+        # Will be loaded from config
         self._options_loaded = False
         
-        _LOGGER.debug(f"Initialized NATO Time sensor: {self._attr_name}")
+        _LOGGER.debug(f"Initialized NATO sensor with base_name: {base_name}")
     
     def _load_options(self) -> None:
-        """Load configuration options from config entry."""
+        """Load options from config entry."""
         if self._options_loaded:
             return
             
         try:
-            options = self.get_plugin_options()
-            if options:
-                # Update configuration from plugin options
-                self._format_type = options.get("format_type", self._format_type)
-                self._timezone = options.get("timezone", self._timezone)
-                self._show_seconds = options.get("show_seconds", self._show_seconds)
-                self._uppercase = options.get("uppercase", self._uppercase)
-                self._include_year = options.get("include_year", self._include_year)
+            # Get the config entry from entity registry
+            entity_registry = self._hass.data.get("entity_registry")
+            if not entity_registry:
+                _LOGGER.debug("Entity registry not available yet")
+                return
+            
+            # Find our entity
+            entity_id = self.entity_id
+            if not entity_id:
+                _LOGGER.debug("Entity ID not set yet")
+                return
                 
-                _LOGGER.debug(f"NATO sensor loaded options: format={self._format_type}, "
-                            f"timezone={self._timezone}, seconds={self._show_seconds}, "
-                            f"uppercase={self._uppercase}, year={self._include_year}")
+            entity_entry = entity_registry.entities.get(entity_id)
+            if not entity_entry:
+                _LOGGER.debug(f"Entity not found in registry: {entity_id}")
+                return
+                
+            # Get config entry
+            config_entry_id = entity_entry.config_entry_id
+            if not config_entry_id:
+                _LOGGER.debug("No config entry ID for entity")
+                return
+                
+            config_entries = self._hass.config_entries
+            config_entry = config_entries.async_get_entry(config_entry_id)
+            if not config_entry:
+                _LOGGER.debug(f"Config entry not found: {config_entry_id}")
+                return
+            
+            # Get options from config entry data
+            if hasattr(config_entry, 'data') and config_entry.data:
+                plugin_options = config_entry.data.get('plugin_options', {})
+                nato_options = plugin_options.get('nato', {})
+                
+                if nato_options:
+                    # Load configuration values
+                    self._format_type = nato_options.get('format_type', 'zone')
+                    self._show_zone_name = nato_options.get('show_zone_name', False)
+                    self._use_local_zone = nato_options.get('use_local_zone', False)
+                    
+                    # Extended format includes seconds
+                    self._show_seconds = (self._format_type == 'extended')
+                    
+                    # Aviation format uses uppercase
+                    self._uppercase = (self._format_type in ['zone', 'aviation', 'extended'])
+                    
+                    # Extended format includes full year
+                    self._include_year = (self._format_type in ['zone', 'rescue', 'extended'])
+                    
+                    self._options_loaded = True
+                    
+                    _LOGGER.info(
+                        f"NATO options loaded - format: {self._format_type}, "
+                        f"show_zone: {self._show_zone_name}, use_local: {self._use_local_zone}"
+                    )
+                else:
+                    _LOGGER.debug("No NATO options found in config")
             else:
-                _LOGGER.debug("NATO sensor using default options - no custom options found")
+                _LOGGER.debug("No data in config entry")
                 
-            self._options_loaded = True
         except Exception as e:
-            _LOGGER.debug(f"NATO sensor could not load options yet: {e}")
+            _LOGGER.error(f"Error loading NATO options: {e}")
     
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -383,21 +400,21 @@ class NATOTimeSensor(AlternativeTimeSensorBase):
             # Add reference
             attrs["reference"] = CALENDAR_INFO.get('reference_url', '')
             
-            # Add format description based on language and type
-            format_key = self._format_type
-            format_options = CALENDAR_INFO["config_options"]["format_type"]["options"]
-            if isinstance(format_options[format_key], dict):
-                attrs["format_description"] = format_options[format_key].get(
-                    self._user_language, 
-                    format_options[format_key].get("en", format_key)
-                )
-            else:
-                attrs["format_description"] = format_key
+            # Add format description
+            format_descriptions = {
+                "basic": "Basic format: DDHHMM (day, hour, minute)",
+                "zone": "Full DTG: DDHHMM[Zone] MON YY",
+                "rescue": "German rescue: DD HHMM MON JJ",
+                "aviation": "Aviation: DDHHMM[Zone] with full phonetic",
+                "extended": "Extended: DDHHMMSS[Zone] MON YYYY"
+            }
+            attrs["format_description"] = format_descriptions.get(self._format_type, "Unknown format")
             
             # Add configuration status
             attrs["config"] = {
                 "format_type": self._format_type,
-                "timezone": self._timezone,
+                "show_zone_name": self._show_zone_name,
+                "use_local_zone": self._use_local_zone,
                 "show_seconds": self._show_seconds,
                 "uppercase": self._uppercase,
                 "include_year": self._include_year
@@ -406,156 +423,127 @@ class NATOTimeSensor(AlternativeTimeSensorBase):
         return attrs
     
     def _get_timezone_info(self, earth_time: datetime) -> tuple:
-        """Get NATO timezone letter and name based on configuration."""
-        if self._timezone == "Local":
-            # Use actual local timezone offset
-            offset_seconds = earth_time.utcoffset().total_seconds() if earth_time.utcoffset() else 0
-            offset_hours = int(offset_seconds / 3600)
-        elif self._timezone == "UTC":
-            # Use UTC (Zulu time)
-            offset_hours = 0
-        else:
-            # Use specific NATO zone
-            nato_zone_map = {
-                "Alpha": 1, "Bravo": 2, "Charlie": 3, "Delta": 4,
-                "Echo": 5, "Foxtrot": 6, "Golf": 7, "Hotel": 8,
-                "India": 9, "Kilo": 10, "Lima": 11, "Mike": 12
-            }
-            offset_hours = nato_zone_map.get(self._timezone, 0)
-        
-        # Get zone info from data
-        zone_info = self._nato_data["zones"].get(offset_hours, ("Z", "Zulu"))
-        return zone_info
-    
-    def _get_time_for_zone(self, earth_time: datetime) -> datetime:
-        """Get the time adjusted for the selected timezone."""
-        if self._timezone == "Local":
-            return earth_time
-        elif self._timezone == "UTC":
-            return earth_time.astimezone(pytz.UTC)
-        else:
-            # Get offset for NATO zone
-            nato_zone_map = {
-                "Alpha": 1, "Bravo": 2, "Charlie": 3, "Delta": 4,
-                "Echo": 5, "Foxtrot": 6, "Golf": 7, "Hotel": 8,
-                "India": 9, "Kilo": 10, "Lima": 11, "Mike": 12
-            }
-            offset_hours = nato_zone_map.get(self._timezone, 0)
+        """Get NATO timezone letter and name."""
+        if self._use_local_zone:
+            # Get local timezone offset
+            offset = earth_time.astimezone().strftime('%z')
+            if offset:
+                hours = int(offset[1:3])
+                if offset[0] == '-':
+                    hours = -hours
+                
+                # Find matching NATO zone
+                for letter, info in CALENDAR_INFO["nato_zones"].items():
+                    if info["offset"] == hours:
+                        return letter, info["name"]
             
-            # Create timezone with fixed offset
-            tz = pytz.FixedOffset(offset_hours * 60)
-            return earth_time.astimezone(tz)
+            # Default to Zulu if no match
+            return "Z", "Zulu"
+        else:
+            # Always use Zulu (UTC)
+            return "Z", "Zulu"
     
     def _format_nato_time(self, earth_time: datetime) -> str:
         """Format time according to selected NATO format."""
-        # Reload options on each update to catch changes
-        self._load_options()
-        
-        # Get time in selected zone
-        zone_time = self._get_time_for_zone(earth_time)
-        
+        # Ensure options are loaded
+        if not self._options_loaded:
+            self._load_options()
+            
         # Get timezone info
-        zone_letter, zone_name = self._get_timezone_info(zone_time)
+        zone_letter, zone_name = self._get_timezone_info(earth_time)
         
         # Get month abbreviation
-        lang = self._user_language if self._user_language in ["en", "de"] else "en"
-        month = self._nato_data["months"][lang][zone_time.month - 1]
+        month_idx = earth_time.month - 1
         
-        # Format based on type
+        # Select month format based on type
+        if self._format_type == "rescue":
+            # German rescue format uses full month names
+            months = CALENDAR_INFO["months"].get("rescue_de", CALENDAR_INFO["months"]["en"])
+        else:
+            # Standard formats use abbreviations
+            months = CALENDAR_INFO["months"]["en"]
+        
+        month = months[month_idx]
+        
+        # Format based on selected type
         if self._format_type == "basic":
             # Basic format: DDHHMM
-            result = zone_time.strftime("%d%H%M")
+            result = f"{earth_time.day:02d}{earth_time.hour:02d}{earth_time.minute:02d}"
             
         elif self._format_type == "zone":
-            # Full DTG: DDHHMM[Zone] MON YY
-            base = zone_time.strftime(f"%d%H%M{zone_letter}")
-            if self._include_year:
-                result = f"{base} {month} {zone_time.strftime('%y')}"
-            else:
-                result = f"{base} {month}"
-                
-        elif self._format_type == "rescue":
-            # German rescue format: DD HHMM MON JJ
-            base = zone_time.strftime("%d %H%M")
-            if self._include_year:
-                result = f"{base} {month} {zone_time.strftime('%y')}"
-            else:
-                result = f"{base} {month}"
-                
-        elif self._format_type == "aviation":
-            # Aviation format with phonetic zone name
-            if self._show_seconds:
-                base = zone_time.strftime(f"%d%H%M%S")
-            else:
-                base = zone_time.strftime(f"%d%H%M")
+            # Standard DTG: DDHHMM[Zone] MON YY
+            result = f"{earth_time.day:02d}{earth_time.hour:02d}{earth_time.minute:02d}{zone_letter} {month} {earth_time.year % 100:02d}"
             
-            # Always show phonetic name for aviation
-            result = f"{base} {zone_name}"
-                
-            if self._include_year:
-                result = f"{result} {month} {zone_time.strftime('%y')}"
+        elif self._format_type == "rescue":
+            # German rescue: DD HHMM MON JJ
+            result = f"{earth_time.day:02d} {earth_time.hour:02d}{earth_time.minute:02d} {month} {earth_time.year % 100:02d}"
+            
+        elif self._format_type == "aviation":
+            # Aviation format: DDHHMM[Zone] with phonetic
+            if self._show_zone_name:
+                result = f"{earth_time.day:02d}{earth_time.hour:02d}{earth_time.minute:02d}{zone_letter} {zone_name.upper()}"
             else:
-                result = f"{result} {month}"
+                result = f"{earth_time.day:02d}{earth_time.hour:02d}{earth_time.minute:02d}{zone_letter}"
                 
         elif self._format_type == "extended":
             # Extended format: DDHHMMSS[Zone] MON YYYY
-            if self._show_seconds:
-                base = zone_time.strftime(f"%d%H%M%S{zone_letter}")
-            else:
-                base = zone_time.strftime(f"%d%H%M{zone_letter}")
-                
-            if self._include_year:
-                result = f"{base} {month} {zone_time.strftime('%Y')}"
-            else:
-                result = f"{base} {month}"
+            result = f"{earth_time.day:02d}{earth_time.hour:02d}{earth_time.minute:02d}:{earth_time.second:02d}{zone_letter} {month} {earth_time.year}"
+            
         else:
-            # Default to zone format
-            result = zone_time.strftime(f"%d%H%M{zone_letter} {month} %y")
+            # Fallback to zone format
+            result = f"{earth_time.day:02d}{earth_time.hour:02d}{earth_time.minute:02d}{zone_letter} {month} {earth_time.year % 100:02d}"
         
-        # Apply uppercase if configured
+        # Apply uppercase if needed
         if self._uppercase:
             result = result.upper()
-        else:
-            result = result.lower()
         
         return result
     
-    def _calculate_time(self, earth_time: datetime) -> None:
-        """Calculate NATO Date-Time Group."""
-        try:
-            # Format the main time string
-            nato_format = self._format_nato_time(earth_time)
-            
-            # Get zone info for attributes
-            zone_time = self._get_time_for_zone(earth_time)
-            zone_letter, zone_name = self._get_timezone_info(zone_time)
-            
-            # Build attribute data
-            self._nato_time = {
-                "format": nato_format,
-                "zone_letter": zone_letter,
-                "zone_name": zone_name,
-                "format_type": self._format_type,
-                "timezone_setting": self._timezone,
-                "day": zone_time.day,
-                "hour": zone_time.hour,
-                "minute": zone_time.minute,
-                "second": zone_time.second if self._show_seconds else None,
-                "month": zone_time.strftime("%B"),
-                "year": zone_time.year
-            }
-            
-            # Set state
-            self._state = nato_format
-            
-        except Exception as e:
-            _LOGGER.error(f"Error calculating NATO time: {e}")
-            self._state = "Error"
-            self._nato_time = {"error": str(e)}
+    def calculate_time(self) -> Dict[str, Any]:
+        """Calculate current NATO DTG."""
+        # Get current time
+        if self._use_local_zone:
+            earth_time = datetime.now()
+        else:
+            earth_time = datetime.now(ZoneInfo("UTC"))
+        
+        # Format the time
+        formatted = self._format_nato_time(earth_time)
+        
+        # Get zone info
+        zone_letter, zone_name = self._get_timezone_info(earth_time)
+        
+        # Build result dictionary
+        result = {
+            "formatted": formatted,
+            "day": earth_time.day,
+            "hour": earth_time.hour,
+            "minute": earth_time.minute,
+            "second": earth_time.second,
+            "zone_letter": zone_letter,
+            "zone_name": zone_name,
+            "month": CALENDAR_INFO["months"]["en"][earth_time.month - 1],
+            "year": earth_time.year,
+            "format_type": self._format_type,
+            "earth_time": earth_time.strftime("%Y-%m-%d %H:%M:%S %Z")
+        }
+        
+        # Add phonetic alphabet reference
+        if self._show_zone_name:
+            result["zone_phonetic"] = f"{zone_letter} - {zone_name}"
+        
+        return result
     
-    def get_calendar_metadata(self) -> Dict[str, Any]:
-        """Return calendar metadata."""
-        return CALENDAR_INFO
+    def update(self) -> None:
+        """Update the sensor."""
+        # Calculate NATO time
+        self._nato_time = self.calculate_time()
+        
+        # Set state to formatted time
+        self._state = self._nato_time["formatted"]
+        
+        _LOGGER.debug(f"Updated NATO DTG to {self._state} (format: {self._format_type})")
+
 
 # Export the sensor class
 __all__ = ["NATOTimeSensor", "CALENDAR_INFO", "UPDATE_INTERVAL"]
