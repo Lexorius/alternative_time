@@ -77,120 +77,55 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _lcal(self, info: dict, key: str, default: str = "") -> str:
         """Get localized value from calendar info or option metadata."""
-        # Handle both direct values and nested dictionaries
-        if isinstance(info, dict) and key in info:
-            value = info[key]
-        else:
-            value = info if isinstance(info, dict) else default
+        # Get current language
+        lang = self.hass.config.language if self.hass else "en"
+        
+        # Try to get localized value
+        if isinstance(info, dict):
+            translations = info.get("translations", {})
+            if translations and lang in translations:
+                trans = translations[lang]
+                if isinstance(trans, dict) and key in trans:
+                    return trans[key]
             
-        if not isinstance(value, dict):
-            return str(value) if value else default
+            # Fallback to direct key
+            if key in info:
+                val = info[key]
+                if isinstance(val, str):
+                    return val
+                elif isinstance(val, dict):
+                    # Could be a nested structure with language keys
+                    if lang in val:
+                        return str(val[lang])
+                    elif "en" in val:
+                        return str(val["en"])
         
-        # Get user's language from Home Assistant
-        lang = getattr(self.hass.config, "language", "en")
-        
-        # Try exact match first
-        if lang in value:
-            return value[lang]
-        
-        # Try primary language tag (e.g., "de" from "de-DE")
-        primary = lang.split("-")[0] if "-" in lang else lang.split("_")[0] if "_" in lang else lang
-        if primary in value:
-            return value[primary]
-        
-        # Fallback to English
-        if "en" in value:
-            return value["en"]
-        
-        # Return first available value
-        return next(iter(value.values()), default) if value else default
+        return default
 
-    def _details_text(self, calendars: dict) -> str:
-        """Create a detailed text about discovered calendars."""
+    def _details_text(self, calendars: Dict[str, Dict]) -> str:
+        """Generate a details text for discovered calendars."""
         if not calendars:
-            return "No calendars discovered."
+            return "No calendars discovered"
         
-        lines = [f"Found {len(calendars)} calendars:"]
+        lang = self.hass.config.language if self.hass else "en"
         
-        # Group by category
-        by_cat = {}
-        for cid, info in calendars.items():
-            cat = str(info.get("category", "uncategorized"))
-            if cat == "religious":
-                cat = "religion"
-            if cat not in by_cat:
-                by_cat[cat] = []
-            by_cat[cat].append((cid, info))
+        # Translations for the details text
+        translations = {
+            "en": "Available calendars: {count}",
+            "de": "Verfügbare Kalender: {count}",
+            "fr": "Calendriers disponibles: {count}",
+            "es": "Calendarios disponibles: {count}",
+            "it": "Calendari disponibili: {count}",
+            "nl": "Beschikbare kalenders: {count}",
+            "pl": "Dostępne kalendarze: {count}",
+            "pt": "Calendários disponíveis: {count}",
+            "ru": "Доступные календари: {count}",
+            "zh": "可用日历: {count}",
+            "ja": "利用可能なカレンダー: {count}"
+        }
         
-        # Display by category
-        for cat in sorted(by_cat.keys()):
-            lines.append(f"\n**{cat.title()}:**")
-            for cid, info in by_cat[cat]:
-                name = self._lcal(info, "name", cid)
-                desc = self._lcal(info, "description", "")
-                if desc:
-                    lines.append(f"  • {name}: {desc[:60]}...")
-                else:
-                    lines.append(f"  • {name}")
-        
-        return "\n".join(lines)
-
-    def _build_select_options(self, cid: str, key: str, meta: dict, info: dict) -> List[Dict[str, str]]:
-        """Build options for a select field, with special handling for timezone."""
-        # Check if options are directly provided in metadata
-        opts = meta.get("options")
-        if isinstance(opts, list) and opts:
-            # Ensure all values are strings
-            return [{"label": str(o), "value": str(o)} for o in opts]
-        
-        # Special handling for timezone field
-        if key.lower() == "timezone":
-            tzs = []
-            # Get timezone data from plugin info
-            tzdata = info.get("timezone_data", {})
-            
-            # Handle regions dict structure
-            regions = tzdata.get("regions", {})
-            if isinstance(regions, dict):
-                for _region, tz_list in regions.items():
-                    if isinstance(tz_list, list):
-                        tzs.extend([str(x) for x in tz_list])
-            
-            # Also check for direct timezone lists
-            for grp, arr in tzdata.items():
-                if isinstance(arr, list) and grp != "regions":
-                    tzs.extend([str(x) for x in arr])
-            
-            # Remove duplicates while preserving order
-            seen = set()
-            tzs_unique = []
-            for t in tzs:
-                if t not in seen:
-                    seen.add(t)
-                    tzs_unique.append(t)
-            
-            # Ensure system timezone is included and at the top
-            try:
-                sys_tz = getattr(self.hass.config, "time_zone", None) or "UTC"
-            except Exception:
-                sys_tz = "UTC"
-            
-            if sys_tz and sys_tz not in seen:
-                tzs_unique.insert(0, sys_tz)
-            elif sys_tz and tzs_unique and tzs_unique[0] != sys_tz:
-                # Move to front
-                tzs_unique = [sys_tz] + [t for t in tzs_unique if t != sys_tz]
-            
-            if not tzs_unique:
-                tzs_unique = ["UTC"]
-            
-            return [{"label": z, "value": z} for z in tzs_unique]
-        
-        # Fallback: use default as the only option
-        default = meta.get("default")
-        if default is None:
-            default = ""
-        return [{"label": str(default), "value": str(default)}]
+        template = translations.get(lang, translations["en"])
+        return template.format(count=len(calendars))
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -259,7 +194,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Iterate category list and collect calendars with checkbox UI and detailed labels."""
-        
         # Process user input if we're coming back from a form
         if user_input is not None and self._category_index > 0:
             # Save selected for previous category
@@ -337,9 +271,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             label = "\n".join(label_parts)
             options_dict[cid] = label
         
-        # Defaults: keep already chosen in this category
+        # WICHTIGE ÄNDERUNG: Keine automatische Vorauswahl von Kalendern
+        # Nur bereits ausgewählte Kalender bleiben ausgewählt (für Navigation zurück)
         already = [cid for cid, _ in cals if cid in self._selected_calendars]
-        default = already or [cid for cid, _ in cals]
+        default = already  # NICHT mehr "or [cid for cid, _ in cals]" - keine automatische Auswahl aller Kalender
         
         schema = vol.Schema({
             vol.Required("calendars", default=default): cv.multi_select(options_dict)
@@ -361,7 +296,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Iterate selected calendars that expose CALENDAR_INFO['config_options'] and collect values."""
-        
         # Process user input from previous form
         if user_input is not None and self._option_index > 0:
             # Store data from the previous calendar (index already incremented)
@@ -405,93 +339,43 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._option_index += 1
             return await self.async_step_plugin_options()
         
-        # Get calendar name and description for display
-        if "name" in info:
-            name = self._lcal(info["name"], None, cid)
-        else:
-            name = cid
-            
-        if "description" in info:
-            desc = self._lcal(info["description"], None, "")
-        else:
-            desc = ""
-        
-        _LOGGER.debug(f"Configuring options for calendar {cid} ({name}), options: {list(opts.keys())}")
-        
-        # Increment index for next iteration BEFORE showing form
-        self._option_index += 1
-        
-        _LOGGER.debug(f"Configuring options for calendar {cid} ({name}), options: {list(opts.keys())}")
-        
-        # Increment index for next iteration BEFORE showing form
-        self._option_index += 1
-        
-        # Create mapping for this calendar's options
+        # Build schema from config_options
+        schema_dict = {}
         current_mapping = {}
         
-        # Build schema dynamically (without prefix in keys)
-        schema_dict = {}
         for key, meta in opts.items():
-            if not isinstance(meta, dict):
-                _LOGGER.warning(f"Invalid config option metadata for {key} in {cid}")
-                continue
-            
             try:
+                # Get metadata
                 typ = meta.get("type", "string")
                 default = meta.get("default")
                 
-                # Get localized descriptions and labels
-                if "description" in meta:
-                    option_desc = self._lcal(meta["description"], None, "")
-                else:
-                    option_desc = ""
-                    
-                if "label" in meta:
-                    label = self._lcal(meta["label"], None, key)
-                else:
-                    label = key
+                # Get localized label and description
+                label = self._lcal(meta, "label", key)
+                option_desc = self._lcal(meta, "description", "")
                 
-                # Store mapping: displayed label -> actual config key
+                # Store the mapping from label to actual key
                 current_mapping[label] = key
                 
-                _LOGGER.debug(f"Building field {key}: type={typ}, default={default}, label={label}, desc={option_desc[:50]}")
-                
-                # Store mapping: displayed label -> actual config key
-                current_mapping[label] = key
-                
-                _LOGGER.debug(f"Building field {key}: type={typ}, default={default}, label={label}")
-                
-                # SPECIAL HANDLING FOR TIMEZONE - force it to be a dropdown
-                if key.lower() == "timezone" or typ == "select":
-                    # Build options
-                    options = self._build_select_options(cid, key, meta, info)
-                    
-                    # Special default for timezone
-                    if key.lower() == "timezone":
-                        try:
-                            sys_tz = getattr(self.hass.config, "time_zone", None) or default or "UTC"
-                        except Exception:
-                            sys_tz = default or "UTC"
-                        default = sys_tz
-                    
-                    if options and len(options) > 0:
-                        # Ensure all option values are strings
-                        options = [{"label": str(o["label"]), "value": str(o["value"])} for o in options]
+                # Handle SELECT type
+                if typ == "select":
+                    options = meta.get("options", [])
+                    if options:
+                        # Convert options to selector format
+                        select_options = []
+                        for opt in options:
+                            if isinstance(opt, dict):
+                                # Option with label and value
+                                opt_label = self._lcal(opt, "label", str(opt.get("value", opt)))
+                                opt_value = opt.get("value", opt_label)
+                            else:
+                                # Simple string option
+                                opt_label = str(opt)
+                                opt_value = opt
+                            select_options.append({"label": opt_label, "value": opt_value})
                         
-                        # Ensure default is in options
-                        default_str = str(default) if default is not None else ""
-                        option_values = [o["value"] for o in options]
-                        if default_str not in option_values and option_values:
-                            default_str = option_values[0]
-                        else:
-                            default_str = default_str if default_str else (option_values[0] if option_values else "")
-                        
-                        _LOGGER.debug(f"Creating SelectSelector for {key} with {len(options)} options")
-                        
-                        schema_dict[vol.Optional(label, default=default_str, description=option_desc)] = SelectSelector(
+                        schema_dict[vol.Optional(label, default=default, description=option_desc)] = SelectSelector(
                             SelectSelectorConfig(
-                                options=options,
-                                multiple=False,
+                                options=select_options,
                                 mode=SelectSelectorMode.DROPDOWN
                             )
                         )
@@ -575,101 +459,34 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Show disclaimer before creating the entry."""
-        
-        _LOGGER.info("=== async_step_disclaimer called ===")
-        _LOGGER.info(f"user_input: {user_input}")
-        _LOGGER.info(f"selected_calendars: {self._selected_calendars}")
-        _LOGGER.info(f"plugin_options: {self._selected_options}")
-        
-        try:
-            if user_input is not None:
-                # User acknowledged disclaimer, create entry
-                _LOGGER.info("User acknowledged disclaimer, creating entry")
-                data = {
-                    **self._user_input,
-                    "calendars": self._selected_calendars,
-                    "groups": self._build_groups(self._selected_calendars, self._discovered_calendars),
-                    "plugin_options": self._selected_options
-                }
-                _LOGGER.info(f"Creating entry with title: {self._user_input.get('name', 'Alternative Time')}")
-                return self.async_create_entry(
-                    title=self._user_input.get("name", "Alternative Time"),
-                    data=data
-                )
+        if user_input is not None:
+            # Create the config entry
+            _LOGGER.info(f"Creating config entry with {len(self._selected_calendars)} calendars")
             
-            _LOGGER.info("Showing disclaimer form")
+            # Build final data
+            data = {
+                **self._user_input,
+                "calendars": self._selected_calendars,
+                "calendar_options": self._selected_options,
+                "groups": self._build_groups(self._selected_calendars, self._discovered_calendars)
+            }
             
-            # Simple schema with just a confirmation
-            schema = vol.Schema({})
-            
-            return self.async_show_form(
-                step_id="disclaimer",
-                data_schema=schema
-            )
-            
-        except Exception as e:
-            _LOGGER.error(f"Critical error in disclaimer step: {e}", exc_info=True)
-            # Try to create entry without disclaimer on error
-            _LOGGER.info("Attempting to create entry despite error")
-            try:
-                data = {
-                    "name": self._user_input.get("name", "Alternative Time"),
-                    "calendars": self._selected_calendars,
-                    "groups": self._build_groups(self._selected_calendars, self._discovered_calendars),
-                    "plugin_options": self._selected_options
-                }
-                return self.async_create_entry(
-                    title=self._user_input.get("name", "Alternative Time"),
-                    data=data
-                )
-            except Exception as e2:
-                _LOGGER.error(f"Failed to create entry: {e2}", exc_info=True)
-                return self.async_abort(reason="unknown")
+            return self.async_create_entry(title=self._user_input["name"], data=data)
         
-        # Get language
-        lang = getattr(self.hass.config, "language", "en")
-        primary = lang.split("-")[0] if "-" in lang else lang.split("_")[0] if "_" in lang else lang
+        # Get user's language
+        lang = self.hass.config.language if self.hass else "en"
+        primary = lang.split("-")[0] if "-" in lang else lang
         
-        # Disclaimer text in multiple languages
+        # Multi-language disclaimers
         disclaimers = {
             "en": {
-                "title": "⚠️ Important Notice",
-                "content": (
-                    "## Alternative Time Systems - Disclaimer\n\n"
-                    "The alternative calendars and time systems provided by this integration are for "
-                    "**educational and entertainment purposes only**.\n\n"
-                    "### Please note:\n"
-                    "• The calculations might not be 100% accurate\n"
-                    "• Some calendars are fictional or theoretical\n"
-                    "• Historical calendars may have variations\n"
-                    "• Time zones and conversions are approximations\n\n"
-                    "### Found an issue?\n"
-                    "If you discover any errors or have suggestions for improvements, "
-                    "please report them on our GitHub repository:\n\n"
-                    "**https://github.com/Lexorius/alternative_time**\n\n"
-                    "By continuing, you acknowledge that these time systems should not be used "
-                    "for critical time-keeping or official purposes."
-                ),
+                "title": "Important Notice",
+                "text": "This integration provides alternative time systems for educational and entertainment purposes. The calendars may not be 100% accurate and should not be used for critical time-dependent decisions.",
                 "button": "I understand and accept"
             },
             "de": {
-                "title": "⚠️ Wichtiger Hinweis",
-                "content": (
-                    "## Alternative Zeitsysteme - Haftungsausschluss\n\n"
-                    "Die von dieser Integration bereitgestellten alternativen Kalender und Zeitsysteme dienen "
-                    "**ausschließlich Bildungs- und Unterhaltungszwecken**.\n\n"
-                    "### Bitte beachten Sie:\n"
-                    "• Die Berechnungen sind möglicherweise nicht 100% genau\n"
-                    "• Einige Kalender sind fiktiv oder theoretisch\n"
-                    "• Historische Kalender können Variationen aufweisen\n"
-                    "• Zeitzonen und Umrechnungen sind Näherungswerte\n\n"
-                    "### Fehler gefunden?\n"
-                    "Wenn Sie Fehler entdecken oder Verbesserungsvorschläge haben, "
-                    "melden Sie diese bitte in unserem GitHub-Repository:\n\n"
-                    "**https://github.com/Lexorius/alternative_time**\n\n"
-                    "Mit dem Fortfahren bestätigen Sie, dass diese Zeitsysteme nicht für "
-                    "kritische Zeiterfassung oder offizielle Zwecke verwendet werden sollten."
-                ),
+                "title": "Wichtiger Hinweis",
+                "text": "Diese Integration bietet alternative Zeitsysteme für Bildungs- und Unterhaltungszwecke. Die Kalender sind möglicherweise nicht 100% genau und sollten nicht für kritische zeitabhängige Entscheidungen verwendet werden.",
                 "button": "Ich verstehe und akzeptiere"
             }
         }
@@ -809,11 +626,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        # For now, just show a simple message
+        # For now, just show the current configuration
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema({}),
-            description_placeholders={
-                "info": "Options flow is not yet implemented. Please delete and recreate the integration to change settings."
-            }
+            data_schema=vol.Schema({
+                vol.Optional(
+                    "show_info",
+                    default=self.config_entry.options.get("show_info", True),
+                ): bool,
+            })
         )
