@@ -68,7 +68,7 @@ CALENDAR_INFO = {
         "ja": "⚠️ 改革暦（1746年）：カドミ改革は認識された暦の誤りを「修正」しようと暦を30日進めました。これによりパールシー共同体にカドミとシェンシャイの間で今日まで続く大分裂が起こりました。両暦とも太陽年から同様にずれます。改革は論争のある歴史的解釈に基づいていました。",
         "zh": "⚠️ 改革历法（1746年）：卡德米改革试图通过将日历提前30天来"纠正"感知的历法错误。这在帕西社区的卡德米派和申沙派之间造成了持续至今的重大分裂。两种历法都同样偏离太阳年。改革基于有争议的历史解释。",
         "ko": "⚠️ 개혁 달력 (1746): 카드미 개혁은 인식된 달력 오류를 '수정'하려고 달력을 30일 앞당겼습니다. 이는 오늘날까지 계속되는 카드미와 셴샤이 사이의 파르시 공동체 대분열을 일으켰습니다. 두 달력 모두 태양년에서 동일하게 벗어납니다. 개혁은 논란이 있는 역사적 해석에 기반했습니다."
-    },
+    },  # HIER WAR DAS KOMMA GEFEHLT!
     
     # Configuration options for this calendar
     "config_options": {
@@ -579,4 +579,4 @@ class KadmiCalendarSensor(AlternativeTimeSensorBase):
         return CALENDAR_INFO
 
 # Export the sensor class
-__all__ = ["KadmiCalendarSensor", "CALENDAR_INFO", "UPDATE_INTERVAL"]
+__all__ = ["KadmiCalendarSensor", "CALENDAR_INFO", "UPDATE_INTERVAL"]   
