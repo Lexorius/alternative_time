@@ -1,9 +1,14 @@
-"""Chinese Lunar Calendar implementation - Version 2.6."""
+"""Chinese Lunar Calendar implementation - Version 3.0.
+Config Flow Compatible with Enhanced Features.
+
+The Chinese lunar calendar is a lunisolar calendar that combines lunar months with solar years.
+It has been used for thousands of years to determine festivals and agricultural timing.
+"""
 from __future__ import annotations
 
 from datetime import datetime
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from homeassistant.core import HomeAssistant
 from ..sensor import AlternativeTimeSensorBase
@@ -28,7 +33,7 @@ UPDATE_INTERVAL = 3600
 # Complete calendar information for auto-discovery
 CALENDAR_INFO = {
     "id": "chinese_lunar",
-    "version": "2.6.0",
+    "version": "3.0.0",
     "icon": "mdi:yin-yang",
     "category": "cultural",
     "accuracy": "traditional",
@@ -66,6 +71,139 @@ CALENDAR_INFO = {
         "ko": "띠 동물과 축제가 있는 전통 중국 음력"
     },
     
+    # Configuration options for config_flow
+    "config_options": {
+        "show_zodiac": {
+            "type": "boolean",
+            "default": True,
+            "label": {
+                "en": "Show Zodiac Animal",
+                "zh": "显示生肖",
+                "zh-tw": "顯示生肖",
+                "de": "Tierkreiszeichen anzeigen",
+                "es": "Mostrar animal del zodiaco",
+                "fr": "Afficher l'animal du zodiaque",
+                "it": "Mostra animale dello zodiaco",
+                "nl": "Toon dierenriem dier",
+                "pt": "Mostrar animal do zodíaco",
+                "ru": "Показать животное зодиака",
+                "ja": "干支を表示",
+                "ko": "띠 동물 표시"
+            },
+            "description": {
+                "en": "Display the zodiac animal for the current year",
+                "zh": "显示当年的生肖动物",
+                "zh-tw": "顯示當年的生肖動物",
+                "de": "Zeige das Tierkreiszeichen für das aktuelle Jahr",
+                "es": "Mostrar el animal del zodiaco para el año actual",
+                "fr": "Afficher l'animal du zodiaque pour l'année en cours",
+                "it": "Mostra l'animale dello zodiaco per l'anno corrente",
+                "nl": "Toon het dierenriem dier voor het huidige jaar",
+                "pt": "Mostrar o animal do zodíaco para o ano atual",
+                "ru": "Показывать животное зодиака для текущего года",
+                "ja": "現在の年の干支を表示",
+                "ko": "현재 연도의 띠 동물 표시"
+            }
+        },
+        "show_festivals": {
+            "type": "boolean",
+            "default": True,
+            "label": {
+                "en": "Show Festivals",
+                "zh": "显示节日",
+                "zh-tw": "顯示節日",
+                "de": "Feste anzeigen",
+                "es": "Mostrar festivales",
+                "fr": "Afficher les festivals",
+                "it": "Mostra festival",
+                "nl": "Toon festivals",
+                "pt": "Mostrar festivais",
+                "ru": "Показать праздники",
+                "ja": "祭りを表示",
+                "ko": "축제 표시"
+            },
+            "description": {
+                "en": "Display traditional Chinese festivals",
+                "zh": "显示传统中国节日",
+                "zh-tw": "顯示傳統中國節日",
+                "de": "Zeige traditionelle chinesische Feste",
+                "es": "Mostrar festivales chinos tradicionales",
+                "fr": "Afficher les festivals chinois traditionnels",
+                "it": "Mostra festival cinesi tradizionali",
+                "nl": "Toon traditionele Chinese festivals",
+                "pt": "Mostrar festivais chineses tradicionais",
+                "ru": "Показывать традиционные китайские праздники",
+                "ja": "伝統的な中国の祭りを表示",
+                "ko": "전통 중국 축제 표시"
+            }
+        },
+        "show_solar_terms": {
+            "type": "boolean",
+            "default": True,
+            "label": {
+                "en": "Show Solar Terms",
+                "zh": "显示节气",
+                "zh-tw": "顯示節氣",
+                "de": "Solarterme anzeigen",
+                "es": "Mostrar términos solares",
+                "fr": "Afficher les termes solaires",
+                "it": "Mostra termini solari",
+                "nl": "Toon zonnetermen",
+                "pt": "Mostrar termos solares",
+                "ru": "Показать солнечные термины",
+                "ja": "節気を表示",
+                "ko": "절기 표시"
+            },
+            "description": {
+                "en": "Display the 24 solar terms",
+                "zh": "显示二十四节气",
+                "zh-tw": "顯示二十四節氣",
+                "de": "Zeige die 24 Solarterme",
+                "es": "Mostrar los 24 términos solares",
+                "fr": "Afficher les 24 termes solaires",
+                "it": "Mostra i 24 termini solari",
+                "nl": "Toon de 24 zonnetermen",
+                "pt": "Mostrar os 24 termos solares",
+                "ru": "Показывать 24 солнечных термина",
+                "ja": "二十四節気を表示",
+                "ko": "24절기 표시"
+            }
+        },
+        "display_format": {
+            "type": "select",
+            "default": "both",
+            "options": ["chinese", "english", "both"],
+            "label": {
+                "en": "Display Format",
+                "zh": "显示格式",
+                "zh-tw": "顯示格式",
+                "de": "Anzeigeformat",
+                "es": "Formato de visualización",
+                "fr": "Format d'affichage",
+                "it": "Formato di visualizzazione",
+                "nl": "Weergaveformaat",
+                "pt": "Formato de exibição",
+                "ru": "Формат отображения",
+                "ja": "表示形式",
+                "ko": "표시 형식"
+            },
+            "description": {
+                "en": "Choose how to display the calendar",
+                "zh": "选择如何显示日历",
+                "zh-tw": "選擇如何顯示日曆",
+                "de": "Wähle wie der Kalender angezeigt wird",
+                "es": "Elegir cómo mostrar el calendario",
+                "fr": "Choisir comment afficher le calendrier",
+                "it": "Scegli come visualizzare il calendario",
+                "nl": "Kies hoe de kalender wordt weergegeven",
+                "pt": "Escolher como exibir o calendário",
+                "ru": "Выбрать как отображать календарь",
+                "ja": "カレンダーの表示方法を選択",
+                "ko": "달력 표시 방법 선택"
+            }
+        }
+    },
+    
     # Chinese calendar data
     "chinese_data": {
         # Heavenly Stems (天干)
@@ -81,31 +219,31 @@ CALENDAR_INFO = {
             "chinese": ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"],
             "pinyin": ["zǐ", "chǒu", "yín", "mǎo", "chén", "sì", "wǔ", "wèi", "shēn", "yǒu", "xū", "hài"],
             "zodiac": ["Rat", "Ox", "Tiger", "Rabbit", "Dragon", "Snake", "Horse", "Goat", "Monkey", "Rooster", "Dog", "Pig"],
-            "zodiac_chinese": ["鼠", "牛", "虎", "兔", "龙", "蛇", "马", "羊", "猴", "鸡", "狗", "猪"],
-            "hours": ["23-01", "01-03", "03-05", "05-07", "07-09", "09-11", "11-13", "13-15", "15-17", "17-19", "19-21", "21-23"]
+            "zodiac_chinese": ["鼠", "牛", "虎", "兔", "龙", "蛇", "马", "羊", "猴", "鸡", "狗", "猪"]
         },
         
-        # Chinese months
+        # Lunar months
         "months": {
             "names": ["正月", "二月", "三月", "四月", "五月", "六月", 
                      "七月", "八月", "九月", "十月", "冬月", "腊月"],
-            "english": ["First Month", "Second Month", "Third Month", "Fourth Month", "Fifth Month", "Sixth Month",
-                       "Seventh Month", "Eighth Month", "Ninth Month", "Tenth Month", "Winter Month", "Twelfth Month"]
+            "english": ["First", "Second", "Third", "Fourth", "Fifth", "Sixth",
+                       "Seventh", "Eighth", "Ninth", "Tenth", "Eleventh", "Twelfth"]
         },
         
-        # Major festivals
+        # Traditional festivals
         "festivals": {
-            "1-1": {"chinese": "春节", "english": "Spring Festival (Chinese New Year)"},
+            "1-1": {"chinese": "春节", "english": "Spring Festival"},
             "1-15": {"chinese": "元宵节", "english": "Lantern Festival"},
+            "2-2": {"chinese": "龙抬头", "english": "Dragon Head Raising"},
             "5-5": {"chinese": "端午节", "english": "Dragon Boat Festival"},
-            "7-7": {"chinese": "七夕", "english": "Qixi Festival (Chinese Valentine's Day)"},
+            "7-7": {"chinese": "七夕节", "english": "Qixi Festival"},
             "7-15": {"chinese": "中元节", "english": "Ghost Festival"},
             "8-15": {"chinese": "中秋节", "english": "Mid-Autumn Festival"},
             "9-9": {"chinese": "重阳节", "english": "Double Ninth Festival"},
             "12-8": {"chinese": "腊八节", "english": "Laba Festival"}
         },
         
-        # Solar terms (24 节气)
+        # Solar terms (24 节气) - simplified list
         "solar_terms": [
             {"chinese": "立春", "english": "Start of Spring", "approx": "Feb 4"},
             {"chinese": "雨水", "english": "Rain Water", "approx": "Feb 19"},
@@ -150,107 +288,33 @@ CALENDAR_INFO = {
         "festivals", "solar_terms", "agricultural", "astronomical"
     ],
     
-    # Configuration options for this calendar
-    "config_options": {
-        "show_zodiac": {
-            "type": "boolean",
-            "default": True,
-            "label": {
-                "en": "Show Zodiac Animal",
-                "zh": "显示生肖",
-                "zh-tw": "顯示生肖",
-                "de": "Tierkreiszeichen anzeigen",
-                "es": "Mostrar animal del zodiaco",
-                "fr": "Afficher l'animal du zodiaque",
-                "it": "Mostra animale dello zodiaco",
-                "nl": "Toon dierenriem dier",
-                "pt": "Mostrar animal do zodíaco",
-                "ru": "Показать животное зодиака",
-                "ja": "干支を表示",
-                "ko": "띠 동물 표시"
-            },
-            "description": {
-                "en": "Display the zodiac animal for the current year",
-                "zh": "显示当年的生肖动物",
-                "de": "Zeige das Tierkreiszeichen für das aktuelle Jahr"
-            }
-        },
-        "show_festivals": {
-            "type": "boolean",
-            "default": True,
-            "label": {
-                "en": "Show Festivals",
-                "zh": "显示节日",
-                "zh-tw": "顯示節日",
-                "de": "Feste anzeigen",
-                "es": "Mostrar festivales",
-                "fr": "Afficher les festivals",
-                "it": "Mostra festival",
-                "nl": "Toon festivals",
-                "pt": "Mostrar festivais",
-                "ru": "Показать праздники",
-                "ja": "祭りを表示",
-                "ko": "축제 표시"
-            },
-            "description": {
-                "en": "Display traditional Chinese festivals",
-                "zh": "显示传统中国节日",
-                "de": "Zeige traditionelle chinesische Feste"
-            }
-        },
-        "show_solar_terms": {
-            "type": "boolean", 
-            "default": True,
-            "label": {
-                "en": "Show Solar Terms",
-                "zh": "显示节气",
-                "zh-tw": "顯示節氣",
-                "de": "Sonnenterme anzeigen",
-                "es": "Mostrar términos solares",
-                "fr": "Afficher les termes solaires",
-                "it": "Mostra termini solari",
-                "nl": "Toon zonnetermen",
-                "pt": "Mostrar termos solares",
-                "ru": "Показать солнечные термины",
-                "ja": "節気を表示",
-                "ko": "절기 표시"
-            },
-            "description": {
-                "en": "Display the 24 solar terms",
-                "zh": "显示二十四节气",
-                "de": "Zeige die 24 Sonnenterme"
-            }
-        },
-        "display_format": {
-            "type": "select",
-            "default": "both",
-            "options": ["chinese", "english", "both"],
-            "label": {
-                "en": "Display Format",
-                "zh": "显示格式",
-                "zh-tw": "顯示格式",
-                "de": "Anzeigeformat",
-                "es": "Formato de visualización",
-                "fr": "Format d'affichage",
-                "it": "Formato di visualizzazione",
-                "nl": "Weergaveformaat",
-                "pt": "Formato de exibição",
-                "ru": "Формат отображения",
-                "ja": "表示形式",
-                "ko": "표시 형식"
-            },
-            "description": {
-                "en": "Choose display language: Chinese characters, English, or both",
-                "zh": "选择显示语言：中文、英文或两者",
-                "de": "Wähle Anzeigesprache: Chinesische Zeichen, Englisch oder beides"
-            }
-        }
+    # Extended notes
+    "notes": {
+        "en": (
+            "The Chinese lunar calendar is a lunisolar calendar combining lunar months with solar years. "
+            "It has been used for over 4000 years for agricultural timing and traditional festivals. "
+            "Requires the 'lunarcalendar' Python library to be installed."
+        ),
+        "zh": (
+            "中国农历是一种阴阳历，结合了阴历月份和阳历年份。"
+            "它已经使用了4000多年，用于农业时间和传统节日。"
+            "需要安装'lunarcalendar' Python库。"
+        ),
+        "de": (
+            "Der chinesische Mondkalender ist ein Lunisolarkalender, der Mondmonate mit Sonnenjahren kombiniert. "
+            "Er wird seit über 4000 Jahren für landwirtschaftliche Zeitplanung und traditionelle Feste verwendet. "
+            "Benötigt die Installation der 'lunarcalendar' Python-Bibliothek."
+        )
     }
 }
 
 
+# ============================================
+# SENSOR CLASS
+# ============================================
+
 class ChineseLunarCalendarSensor(AlternativeTimeSensorBase):
-    """Sensor for displaying Chinese Lunar Calendar."""
+    """Sensor for displaying Chinese Lunar calendar dates."""
     
     # Class-level update interval
     UPDATE_INTERVAL = UPDATE_INTERVAL
@@ -299,30 +363,57 @@ class ChineseLunarCalendarSensor(AlternativeTimeSensorBase):
         if self._options_loaded:
             return
             
-        try:
-            options = self.get_plugin_options()
-            if options:
-                # Update configuration from plugin options
-                self._show_zodiac = options.get("show_zodiac", self._show_zodiac)
-                self._show_festivals = options.get("show_festivals", self._show_festivals)
-                self._show_solar_terms = options.get("show_solar_terms", self._show_solar_terms)
-                self._display_format = options.get("display_format", self._display_format)
-                
-                _LOGGER.debug(f"Chinese Lunar sensor loaded options: show_zodiac={self._show_zodiac}, "
-                            f"show_festivals={self._show_festivals}, display_format={self._display_format}")
-            else:
-                _LOGGER.debug("Chinese Lunar sensor using default options - no custom options found")
-                
-            self._options_loaded = True
-        except Exception as e:
-            _LOGGER.debug(f"Chinese Lunar sensor could not load options yet: {e}")
+        # Get plugin options from config entry
+        plugin_options = self._get_plugin_options()
+        
+        if plugin_options:
+            _LOGGER.debug(f"Loading Chinese Lunar options: {plugin_options}")
+            
+            # Apply options using set_options method
+            self.set_options(
+                show_zodiac=plugin_options.get("show_zodiac"),
+                show_festivals=plugin_options.get("show_festivals"),
+                show_solar_terms=plugin_options.get("show_solar_terms"),
+                display_format=plugin_options.get("display_format")
+            )
+        
+        self._options_loaded = True
     
     async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
+        """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
         
-        # Try to load options now that IDs should be set
+        # Load options after entity is registered
         self._load_options()
+        
+        _LOGGER.debug(f"Chinese Lunar sensor added to hass with options: "
+                     f"zodiac={self._show_zodiac}, festivals={self._show_festivals}, "
+                     f"solar_terms={self._show_solar_terms}, format={self._display_format}")
+    
+    def set_options(
+        self,
+        *,
+        show_zodiac: Optional[bool] = None,
+        show_festivals: Optional[bool] = None,
+        show_solar_terms: Optional[bool] = None,
+        display_format: Optional[str] = None
+    ) -> None:
+        """Set calendar options from config flow."""
+        if show_zodiac is not None:
+            self._show_zodiac = bool(show_zodiac)
+            _LOGGER.debug(f"Set show_zodiac to: {show_zodiac}")
+        
+        if show_festivals is not None:
+            self._show_festivals = bool(show_festivals)
+            _LOGGER.debug(f"Set show_festivals to: {show_festivals}")
+        
+        if show_solar_terms is not None:
+            self._show_solar_terms = bool(show_solar_terms)
+            _LOGGER.debug(f"Set show_solar_terms to: {show_solar_terms}")
+        
+        if display_format is not None and display_format in ["chinese", "english", "both"]:
+            self._display_format = display_format
+            _LOGGER.debug(f"Set display_format to: {display_format}")
     
     @property
     def state(self):
@@ -335,17 +426,23 @@ class ChineseLunarCalendarSensor(AlternativeTimeSensorBase):
         attrs = super().extra_state_attributes
         
         # Add Chinese calendar-specific attributes
-        if self._chinese_date:
+        if self._chinese_date and "error" not in self._chinese_date:
             attrs.update(self._chinese_date)
             
-            # Add description in user's language
-            attrs["description"] = self._translate('description')
+            # Add metadata
+            attrs["calendar_type"] = "Chinese Lunar"
+            attrs["accuracy"] = CALENDAR_INFO.get("accuracy", "traditional")
+            attrs["reference"] = CALENDAR_INFO.get("reference_url")
+            attrs["notes"] = self._translate("notes")
             
-            # Add reference
-            attrs["reference"] = CALENDAR_INFO.get('reference_url', '')
+            # Add configuration state
+            attrs["config_show_zodiac"] = self._show_zodiac
+            attrs["config_show_festivals"] = self._show_festivals
+            attrs["config_show_solar_terms"] = self._show_solar_terms
+            attrs["config_display_format"] = self._display_format
             
-            # Add display format setting
-            attrs["display_format"] = self._display_format
+            # Add library status
+            attrs["library_installed"] = HAS_LUNAR
         
         return attrs
     
@@ -401,9 +498,32 @@ class ChineseLunarCalendarSensor(AlternativeTimeSensorBase):
             return self._chinese_data["solar_terms"][term_index]
         return None
     
+    def _format_chinese_day(self, day: int) -> str:
+        """Format day number in Chinese."""
+        if day == 10:
+            return "初十"
+        elif day == 20:
+            return "二十"
+        elif day == 30:
+            return "三十"
+        elif day < 10:
+            return f"初{self._chinese_number(day)}"
+        elif day < 20:
+            return f"十{self._chinese_number(day - 10)}"
+        elif day < 30:
+            return f"廿{self._chinese_number(day - 20)}"
+        else:
+            return "三十"
+    
+    def _chinese_number(self, num: int) -> str:
+        """Convert number to Chinese character."""
+        numbers = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"]
+        if 0 <= num <= 10:
+            return numbers[num]
+        return str(num)
+    
     def _calculate_chinese_date(self, earth_date: datetime) -> Dict[str, Any]:
         """Calculate Chinese Lunar calendar date from Gregorian date."""
-        
         if not HAS_LUNAR:
             return {"error": "lunarcalendar library not installed"}
         
@@ -485,30 +605,6 @@ class ChineseLunarCalendarSensor(AlternativeTimeSensorBase):
             _LOGGER.error(f"Error calculating Chinese date: {e}")
             return {"error": str(e)}
     
-    def _format_chinese_day(self, day: int) -> str:
-        """Format day number in Chinese."""
-        if day == 10:
-            return "初十"
-        elif day == 20:
-            return "二十"
-        elif day == 30:
-            return "三十"
-        elif day < 10:
-            return f"初{self._chinese_number(day)}"
-        elif day < 20:
-            return f"十{self._chinese_number(day - 10)}"
-        elif day < 30:
-            return f"廿{self._chinese_number(day - 20)}"
-        else:
-            return f"三十"
-    
-    def _chinese_number(self, num: int) -> str:
-        """Convert number to Chinese character."""
-        numbers = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"]
-        if 0 <= num <= 10:
-            return numbers[num]
-        return str(num)
-    
     def update(self) -> None:
         """Update the sensor."""
         # Ensure options are loaded (in case async_added_to_hass hasn't run yet)
@@ -529,3 +625,11 @@ class ChineseLunarCalendarSensor(AlternativeTimeSensorBase):
             self._state = self._chinese_date.get("formatted", "Unknown")
         
         _LOGGER.debug(f"Updated Chinese Lunar Calendar to {self._state}")
+
+
+# ============================================
+# MODULE EXPORTS
+# ============================================
+
+# Export the sensor class
+__all__ = ["ChineseLunarCalendarSensor"]
