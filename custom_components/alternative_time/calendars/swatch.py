@@ -41,11 +41,64 @@ CALENDAR_INFO = {
         "fr": "Temps Internet Swatch",
         "it": "Ora Internet Swatch",
         "nl": "Swatch Internet Tijd",
+        "pl": "Czas Internetowy Swatch",
         "pt": "Hora da Internet Swatch",
         "ru": "Интернет-время Swatch",
         "ja": "スウォッチ・インターネットタイム",
         "zh": "斯沃琪互联网时间",
         "ko": "스와치 인터넷 시간"
+    },
+    
+    # Translations for compatibility
+    "translations": {
+        "en": {
+            "name": "Swatch Internet Time",
+            "description": "Internet Time in Beats @000-@999. One day = 1000 beats, no time zones"
+        },
+        "de": {
+            "name": "Swatch Internet-Zeit",
+            "description": "Internet-Zeit in Beats @000-@999. Ein Tag = 1000 Beats, keine Zeitzonen"
+        },
+        "es": {
+            "name": "Hora Internet Swatch",
+            "description": "Tiempo de Internet en Beats @000-@999. Un día = 1000 beats, sin zonas horarias"
+        },
+        "fr": {
+            "name": "Temps Internet Swatch",
+            "description": "Temps Internet en Beats @000-@999. Un jour = 1000 beats, pas de fuseaux horaires"
+        },
+        "it": {
+            "name": "Ora Internet Swatch",
+            "description": "Tempo Internet in Beat @000-@999. Un giorno = 1000 beat, nessun fuso orario"
+        },
+        "nl": {
+            "name": "Swatch Internet Tijd",
+            "description": "Internet Tijd in Beats @000-@999. Eén dag = 1000 beats, geen tijdzones"
+        },
+        "pl": {
+            "name": "Czas Internetowy Swatch",
+            "description": "Czas internetowy w bitach @000-@999. Jeden dzień = 1000 bitów, bez stref czasowych"
+        },
+        "pt": {
+            "name": "Hora da Internet Swatch",
+            "description": "Tempo da Internet em Beats @000-@999. Um dia = 1000 beats, sem fusos horários"
+        },
+        "ru": {
+            "name": "Интернет-время Swatch",
+            "description": "Интернет-время в битах @000-@999. Один день = 1000 битов, без часовых поясов"
+        },
+        "ja": {
+            "name": "スウォッチ・インターネットタイム",
+            "description": "インターネットタイムをビート@000-@999で表示。1日=1000ビート、タイムゾーンなし"
+        },
+        "zh": {
+            "name": "斯沃琪互联网时间",
+            "description": "互联网时间以节拍@000-@999表示。一天=1000节拍，无时区"
+        },
+        "ko": {
+            "name": "스와치 인터넷 시간",
+            "description": "비트 @000-@999로 표시되는 인터넷 시간. 하루 = 1000비트, 시간대 없음"
+        }
     },
     
     # Short descriptions for UI
@@ -56,6 +109,7 @@ CALENDAR_INFO = {
         "fr": "Temps Internet en Beats @000-@999. Un jour = 1000 beats, pas de fuseaux horaires",
         "it": "Tempo Internet in Beat @000-@999. Un giorno = 1000 beat, nessun fuso orario",
         "nl": "Internet Tijd in Beats @000-@999. Eén dag = 1000 beats, geen tijdzones",
+        "pl": "Czas internetowy w bitach @000-@999. Jeden dzień = 1000 bitów, bez stref czasowych",
         "pt": "Tempo da Internet em Beats @000-@999. Um dia = 1000 beats, sem fusos horários",
         "ru": "Интернет-время в битах @000-@999. Один день = 1000 битов, без часовых поясов",
         "ja": "インターネットタイムをビート@000-@999で表示。1日=1000ビート、タイムゾーンなし",
@@ -84,6 +138,7 @@ CALENDAR_INFO = {
                 "fr": "Précision d'Affichage",
                 "it": "Precisione di Visualizzazione",
                 "nl": "Weergaveprecisie",
+                "pl": "Precyzja Wyświetlania",
                 "pt": "Precisão de Exibição",
                 "ru": "Точность отображения",
                 "ja": "表示精度",
@@ -97,11 +152,62 @@ CALENDAR_INFO = {
                 "fr": "Standard (@500) | Decibeat (@500.5) | Centibeat (@500.50)",
                 "it": "Standard (@500) | Decibeat (@500.5) | Centibeat (@500.50)",
                 "nl": "Standaard (@500) | Decibeat (@500.5) | Centibeat (@500.50)",
+                "pl": "Standard (@500) | Decibeat (@500.5) | Centibeat (@500.50)",
                 "pt": "Padrão (@500) | Decibeat (@500.5) | Centibeat (@500.50)",
                 "ru": "Стандарт (@500) | Децибит (@500.5) | Сантибит (@500.50)",
                 "ja": "標準 (@500) | デシビート (@500.5) | センチビート (@500.50)",
                 "zh": "标准 (@500) | 分节拍 (@500.5) | 厘节拍 (@500.50)",
                 "ko": "표준 (@500) | 데시비트 (@500.5) | 센티비트 (@500.50)"
+            },
+            "translations": {
+                "en": {
+                    "label": "Display Precision",
+                    "description": "Standard (@500) | Decibeat (@500.5) | Centibeat (@500.50)"
+                },
+                "de": {
+                    "label": "Anzeigegenauigkeit",
+                    "description": "Standard (@500) | Decibeat (@500.5) | Centibeat (@500.50)"
+                },
+                "es": {
+                    "label": "Precisión de Visualización",
+                    "description": "Estándar (@500) | Decibeat (@500.5) | Centibeat (@500.50)"
+                },
+                "fr": {
+                    "label": "Précision d'Affichage",
+                    "description": "Standard (@500) | Decibeat (@500.5) | Centibeat (@500.50)"
+                },
+                "it": {
+                    "label": "Precisione di Visualizzazione",
+                    "description": "Standard (@500) | Decibeat (@500.5) | Centibeat (@500.50)"
+                },
+                "nl": {
+                    "label": "Weergaveprecisie",
+                    "description": "Standaard (@500) | Decibeat (@500.5) | Centibeat (@500.50)"
+                },
+                "pl": {
+                    "label": "Precyzja Wyświetlania",
+                    "description": "Standard (@500) | Decibeat (@500.5) | Centibeat (@500.50)"
+                },
+                "pt": {
+                    "label": "Precisão de Exibição",
+                    "description": "Padrão (@500) | Decibeat (@500.5) | Centibeat (@500.50)"
+                },
+                "ru": {
+                    "label": "Точность отображения",
+                    "description": "Стандарт (@500) | Децибит (@500.5) | Сантибит (@500.50)"
+                },
+                "ja": {
+                    "label": "表示精度",
+                    "description": "標準 (@500) | デシビート (@500.5) | センチビート (@500.50)"
+                },
+                "zh": {
+                    "label": "显示精度",
+                    "description": "标准 (@500) | 分节拍 (@500.5) | 厘节拍 (@500.50)"
+                },
+                "ko": {
+                    "label": "표시 정밀도",
+                    "description": "표준 (@500) | 데시비트 (@500.5) | 센티비트 (@500.50)"
+                }
             }
         }
     }
