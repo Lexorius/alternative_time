@@ -702,3 +702,6 @@ class TamrielCalendarSensor(AlternativeTimeSensorBase):
         self._state = f"{self._tamriel_date['full_date']} ({self._tamriel_date['weekday']})"
         
         _LOGGER.debug(f"Updated Tamriel calendar to {self._state}")
+
+# Export the sensor class
+__all__ = ["TamrielCalendarSensor", "CALENDAR_INFO", "UPDATE_INTERVAL"]

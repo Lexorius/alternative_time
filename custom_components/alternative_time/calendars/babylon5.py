@@ -601,3 +601,6 @@ class Babylon5CalendarSensor(AlternativeTimeSensorBase):
         self._state = self._b5_time["formatted"]
         
         _LOGGER.debug(f"Updated Babylon 5 time to {self._state}")
+
+# Export the sensor class
+__all__ = ["Babylon5CalendarSensor", "CALENDAR_INFO", "UPDATE_INTERVAL"]

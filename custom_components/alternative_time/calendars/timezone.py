@@ -592,3 +592,6 @@ class TimezoneSensor(AlternativeTimeSensorBase):
             }
         
         _LOGGER.debug(f"Updated Timezone to {self._state}")
+
+# Export the sensor class
+__all__ = ["TimezoneSensor", "CALENDAR_INFO", "UPDATE_INTERVAL"]

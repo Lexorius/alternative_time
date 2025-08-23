@@ -393,3 +393,6 @@ class TestDebugSensor(AlternativeTimeSensorBase):  # Klassenname geändert
             import traceback
             self._log_debug("traceback", traceback.format_exc())
             self._state = f"Error: {e}"
+
+# Export the sensor class
+__all__ = ["TestDebugSensor", "CALENDAR_INFO", "UPDATE_INTERVAL"]

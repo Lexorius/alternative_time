@@ -554,3 +554,6 @@ class ShireCalendarSensor(AlternativeTimeSensorBase):
         self._state = self._format_date(self._shire_date)
         
         _LOGGER.debug(f"Updated Shire Calendar to {self._state}")
+
+# Export the sensor class
+__all__ = ["ShireCalendarSensor", "CALENDAR_INFO", "UPDATE_INTERVAL"]

@@ -577,3 +577,6 @@ class KadmiCalendarSensor(AlternativeTimeSensorBase):
     def get_calendar_metadata(self) -> Dict[str, Any]:
         """Return calendar metadata."""
         return CALENDAR_INFO
+
+# Export the sensor class
+__all__ = ["KadmiCalendarSensor", "CALENDAR_INFO", "UPDATE_INTERVAL"]

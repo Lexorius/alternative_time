@@ -465,3 +465,6 @@ class StarWarsCalendarSensor(AlternativeTimeSensorBase):
         self._state = self._star_wars_date["formatted"]
         
         _LOGGER.debug(f"Updated Star Wars Calendar to {self._state}")
+
+# Export the sensor class
+__all__ = ["StarWarsCalendarSensor", "CALENDAR_INFO", "UPDATE_INTERVAL"]

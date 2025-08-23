@@ -390,3 +390,6 @@ class IslamicCalendarSensor(AlternativeTimeSensorBase):
             except Exception:
                 val = 0
             self._offset_days = max(-2, min(2, val))
+
+# Export the sensor class
+__all__ = ["IslamicCalendarSensor", "CALENDAR_INFO", "UPDATE_INTERVAL"]

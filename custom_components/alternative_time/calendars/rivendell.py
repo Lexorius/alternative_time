@@ -760,3 +760,6 @@ class RivendellCalendarSensor(AlternativeTimeSensorBase):
             self._state = self._elven_date["full_date"]
         
         _LOGGER.debug(f"Updated Rivendell calendar to {self._state}")
+
+# Export the sensor class
+__all__ = ["RivendellCalendarSensor", "CALENDAR_INFO", "UPDATE_INTERVAL"]

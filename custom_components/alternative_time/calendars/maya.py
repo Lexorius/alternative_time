@@ -605,3 +605,6 @@ class MayaCalendarSensor(AlternativeTimeSensorBase):
         self._state = self._maya_date["formatted"]
         
         _LOGGER.debug(f"Updated Maya Calendar to {self._state}")
+
+# Export the sensor class
+__all__ = ["MayaCalendarSensor", "CALENDAR_INFO", "UPDATE_INTERVAL"]

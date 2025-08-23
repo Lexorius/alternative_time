@@ -812,4 +812,7 @@ class BattlestarGalacticaSensor(AlternativeTimeSensorBase):
         import random
         attrs['bsg_quote'] = random.choice(quotes)
         
-        return attrs    
+        return attrs
+
+# Export the sensor class
+__all__ = ["BattlestarGalacticaSensor", "CALENDAR_INFO"]

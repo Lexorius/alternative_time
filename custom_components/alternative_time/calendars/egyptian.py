@@ -584,3 +584,6 @@ class EgyptianCalendarSensor(AlternativeTimeSensorBase):
         self._state = self._egyptian_date["full_date"]
         
         _LOGGER.debug(f"Updated Egyptian Calendar to {self._state}")
+
+# Export the sensor class
+__all__ = ["EgyptianCalendarSensor", "CALENDAR_INFO", "UPDATE_INTERVAL"]

@@ -646,3 +646,6 @@ class StardateSensor(AlternativeTimeSensorBase):
         self._state = self._stardate["formatted"]
         
         _LOGGER.debug(f"Updated Stardate to {self._state}")
+
+# Export the sensor class
+__all__ = ["StardateSensor", "CALENDAR_INFO", "UPDATE_INTERVAL"]
