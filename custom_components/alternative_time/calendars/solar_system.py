@@ -989,7 +989,7 @@ CALENDAR_INFO = {
                 "ja": "惑星位置のインタラクティブな視覚化を生成",
                 "zh": "生成行星位置的交互式可视化",
                 "ko": "행성 위치의 대화형 시각화 생성"
-            }
+            },
         },
         "visualization_scale": {
             "type": "select",
