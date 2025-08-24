@@ -2,9 +2,16 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import discovery
+import homeassistant.util.dt as dt_util
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
@@ -14,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Alternative Time component."""
     # This is for backward compatibility if someone uses YAML config
     # We only support config entries now
@@ -36,11 +43,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Forward setup to sensor platform
     # This will look for sensor.py in the same directory as __init__.py
     try:
+        # Use the non-blocking version to avoid the import_module warning
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
         _LOGGER.info(f"Successfully set up Alternative Time integration for {entry.title}")
     except Exception as e:
         _LOGGER.error(f"Error setting up platforms: {e}")
         return False
+    
+    # Register update listener if needed
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
     
     return True
 
