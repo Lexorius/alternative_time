@@ -491,8 +491,8 @@ class GermanRescueDTGSensor(AlternativeTimeSensorBase):
         # Debug flag
         self._first_update = True
         
-        # Get user's language
-        self._user_language = self._get_user_language()
+        # Get user's language - use Home Assistant's configured language or default to 'en'
+        self._user_language = self.hass.config.language if hasattr(self.hass.config, 'language') else 'en'
     
     @property
     def state(self) -> str:
