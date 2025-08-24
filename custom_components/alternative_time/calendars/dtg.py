@@ -595,7 +595,33 @@ CALENDAR_INFO = {
                 "zh": "选择用于DTG显示的北约时区代码",
                 "ko": "DTG 표시를 위한 NATO 시간대 코드 선택"
             },
-            "options": "timezone_options"  # Will be populated dynamically
+            "options": [
+                {"value": "Z", "label": {"en": "Z - Zulu (UTC/GMT)", "de": "Z - Zulu (UTC/GMT)"}},
+                {"value": "A", "label": {"en": "A - Alpha (UTC+1)", "de": "A - Alpha (UTC+1)"}},
+                {"value": "B", "label": {"en": "B - Bravo (UTC+2)", "de": "B - Bravo (UTC+2)"}},
+                {"value": "C", "label": {"en": "C - Charlie (UTC+3)", "de": "C - Charlie (UTC+3)"}},
+                {"value": "D", "label": {"en": "D - Delta (UTC+4)", "de": "D - Delta (UTC+4)"}},
+                {"value": "E", "label": {"en": "E - Echo (UTC+5)", "de": "E - Echo (UTC+5)"}},
+                {"value": "F", "label": {"en": "F - Foxtrot (UTC+6)", "de": "F - Foxtrot (UTC+6)"}},
+                {"value": "G", "label": {"en": "G - Golf (UTC+7)", "de": "G - Golf (UTC+7)"}},
+                {"value": "H", "label": {"en": "H - Hotel (UTC+8)", "de": "H - Hotel (UTC+8)"}},
+                {"value": "I", "label": {"en": "I - India (UTC+9)", "de": "I - India (UTC+9)"}},
+                {"value": "K", "label": {"en": "K - Kilo (UTC+10)", "de": "K - Kilo (UTC+10)"}},
+                {"value": "L", "label": {"en": "L - Lima (UTC+11)", "de": "L - Lima (UTC+11)"}},
+                {"value": "M", "label": {"en": "M - Mike (UTC+12)", "de": "M - Mike (UTC+12)"}},
+                {"value": "N", "label": {"en": "N - November (UTC-1)", "de": "N - November (UTC-1)"}},
+                {"value": "O", "label": {"en": "O - Oscar (UTC-2)", "de": "O - Oscar (UTC-2)"}},
+                {"value": "P", "label": {"en": "P - Papa (UTC-3)", "de": "P - Papa (UTC-3)"}},
+                {"value": "Q", "label": {"en": "Q - Quebec (UTC-4)", "de": "Q - Quebec (UTC-4)"}},
+                {"value": "R", "label": {"en": "R - Romeo (UTC-5)", "de": "R - Romeo (UTC-5)"}},
+                {"value": "S", "label": {"en": "S - Sierra (UTC-6)", "de": "S - Sierra (UTC-6)"}},
+                {"value": "T", "label": {"en": "T - Tango (UTC-7)", "de": "T - Tango (UTC-7)"}},
+                {"value": "U", "label": {"en": "U - Uniform (UTC-8)", "de": "U - Uniform (UTC-8)"}},
+                {"value": "V", "label": {"en": "V - Victor (UTC-9)", "de": "V - Victor (UTC-9)"}},
+                {"value": "W", "label": {"en": "W - Whiskey (UTC-10)", "de": "W - Whiskey (UTC-10)"}},
+                {"value": "X", "label": {"en": "X - X-ray (UTC-11)", "de": "X - X-ray (UTC-11)"}},
+                {"value": "Y", "label": {"en": "Y - Yankee (UTC-12)", "de": "Y - Yankee (UTC-12)"}}
+            ]
         },
         "use_iana_timezone": {
             "type": "boolean",

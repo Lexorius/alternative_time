@@ -265,7 +265,13 @@ CALENDAR_INFO = {
                 "zh": "选择DTG显示的时区",
                 "ko": "DTG 표시를 위한 시간대 선택"
             },
-            "options": "timezone_options"  # Will be populated dynamically
+            "options": [
+                {"value": "Europe/Berlin", "label": {"en": "Europe/Berlin (CET/CEST)", "de": "Europa/Berlin (MEZ/MESZ)"}},
+                {"value": "Europe/Vienna", "label": {"en": "Europe/Vienna (CET/CEST)", "de": "Europa/Wien (MEZ/MESZ)"}},
+                {"value": "Europe/Zurich", "label": {"en": "Europe/Zurich (CET/CEST)", "de": "Europa/Zürich (MEZ/MESZ)"}},
+                {"value": "Europe/Luxembourg", "label": {"en": "Europe/Luxembourg (CET/CEST)", "de": "Europa/Luxemburg (MEZ/MESZ)"}},
+                {"value": "UTC", "label": {"en": "UTC - Coordinated Universal Time", "de": "UTC - Koordinierte Weltzeit"}}
+            ]
         },
         "month_language": {
             "type": "select",
@@ -491,8 +497,8 @@ class GermanRescueDTGSensor(AlternativeTimeSensorBase):
         # Debug flag
         self._first_update = True
         
-        # Get user's language - use Home Assistant's configured language or default to 'en'
-        self._user_language = self.hass.config.language if hasattr(self.hass.config, 'language') else 'en'
+        # Get user's language - will be set properly after HA is initialized
+        self._user_language = 'en'  # Default, will be updated in update()
     
     @property
     def state(self) -> str:
@@ -654,6 +660,10 @@ class GermanRescueDTGSensor(AlternativeTimeSensorBase):
     
     def update(self) -> None:
         """Update the sensor."""
+        # Update user language if not set properly
+        if self._user_language == 'en' and self.hass and hasattr(self.hass, 'config'):
+            self._user_language = self.hass.config.language if hasattr(self.hass.config, 'language') else 'en'
+        
         # Load options on every update
         options = self.get_plugin_options()
         
