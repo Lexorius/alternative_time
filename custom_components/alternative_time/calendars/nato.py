@@ -1,8 +1,8 @@
 """NATO Date Time Group calendar formats for Alternative Time integration."""
 
 import logging
-from datetime import datetime
-from typing import Dict, Any, Optional, List
+from datetime import datetime, timedelta
+from typing import Dict, Any, Optional
 import pytz
 
 _LOGGER = logging.getLogger(__name__)
@@ -213,53 +213,91 @@ CALENDAR_INFO = {
 }
 
 
-class NATOSensor:
+# Import base class
+try:
+    from . import AlternativeTimeSensorBase
+except ImportError:
+    try:
+        from sensor import AlternativeTimeSensorBase
+    except ImportError:
+        # Fallback for testing
+        AlternativeTimeSensorBase = object
+
+
+class NatoSensor(AlternativeTimeSensorBase if AlternativeTimeSensorBase != object else object):
     """NATO Date Time Group sensor implementation."""
     
-    def __init__(self, hass, entry_data: Dict[str, Any], base_name: str):
+    def __init__(self, hass, entry_data: Dict[str, Any], name: str):
         """Initialize the NATO sensor."""
-        self._hass = hass
-        self._entry_data = entry_data
-        self._base_name = base_name
+        if AlternativeTimeSensorBase != object:
+            super().__init__(hass, entry_data, name, CALENDAR_INFO)
+        else:
+            # Fallback initialization
+            self._hass = hass
+            self._entry_data = entry_data
+            self._base_name = name
+            self._calendar_info = CALENDAR_INFO
+            
         self._state = None
         self._attributes = {}
         
         # Get configuration from entry data
-        calendar_options = entry_data.get("calendar_options", {})
-        nato_options = calendar_options.get("nato", {})
+        self._load_config()
+        
+        # Set sensor name based on format
+        self._update_sensor_name()
+    
+    def _load_config(self):
+        """Load configuration from entry data."""
+        # Try to get options from plugin system first
+        if hasattr(self, 'get_plugin_options'):
+            options = self.get_plugin_options()
+        else:
+            # Fallback to direct access
+            calendar_options = self._entry_data.get("calendar_options", {})
+            options = calendar_options.get("nato", {})
         
         # Apply configuration with proper defaults
-        self._format = nato_options.get("nato_format", "basic")
-        self._timezone_name = nato_options.get("timezone_for_zone", "UTC")
-        self._show_zone_letter = nato_options.get("show_zone_letter", True)
-        self._uppercase_month = nato_options.get("uppercase_month", True)
+        self._format = options.get("nato_format", "basic")
+        self._timezone_name = options.get("timezone_for_zone", "UTC")
+        self._show_zone_letter = options.get("show_zone_letter", True)
+        self._uppercase_month = options.get("uppercase_month", True)
         
         # Log configuration for debugging
-        _LOGGER.info(f"NATO sensor initialized with options: {nato_options}")
-        _LOGGER.info(f"Format: {self._format}, Zone: {self._timezone_name}, "
-                    f"Show letter: {self._show_zone_letter}, Uppercase: {self._uppercase_month}")
+        _LOGGER.debug(f"NATO sensor config loaded: format={self._format}, zone={self._timezone_name}, "
+                     f"show_letter={self._show_zone_letter}, uppercase={self._uppercase_month}")
         
         # Get timezone offset
         self._zone_offset = CALENDAR_INFO["nato_zones"].get(self._timezone_name, 0)
         self._zone_letter = CALENDAR_INFO["zone_letters"].get(self._timezone_name, "Z")
-        
-        # Set sensor name based on format
+    
+    def _update_sensor_name(self):
+        """Update sensor name based on format."""
         format_names = {
             "basic": "NATO DTG",
             "zone": "NATO Zone DTG",
             "rescue": "NATO Rescue DTG"
         }
-        self._name = f"{base_name} {format_names.get(self._format, 'NATO DTG')}"
+        suffix = format_names.get(self._format, "NATO DTG")
+        
+        # Update the name
+        if hasattr(self, '_attr_name'):
+            self._attr_name = f"{self._base_name} {suffix}"
+        else:
+            self._name = f"{self._base_name} {suffix}"
     
     @property
     def name(self) -> str:
         """Return the name of the sensor."""
-        return self._name
+        if hasattr(self, '_attr_name'):
+            return self._attr_name
+        return getattr(self, '_name', f"{self._base_name} NATO DTG")
     
     @property
     def unique_id(self) -> str:
         """Return unique ID for the sensor."""
-        return f"{self._entry_data.get('entry_id', 'nato')}_{self._format}"
+        base_id = self._entry_data.get('entry_id', 'nato')
+        return f"{base_id}_nato_{self._format}"
     
     @property
     def state(self) -> str:
@@ -277,7 +315,6 @@ class NATOSensor:
         
         # Apply zone offset
         if self._zone_offset != 0:
-            from datetime import timedelta
             now = now + timedelta(hours=self._zone_offset)
         
         return now
@@ -341,7 +378,7 @@ class NATOSensor:
         # Rescue format typically doesn't use zone letters
         return f"{day} {time} {month} {year}"
     
-    def update(self):
+    def _update(self):
         """Update the sensor state."""
         try:
             # Get time in configured zone
@@ -371,26 +408,41 @@ class NATOSensor:
                 "year": zone_time.year,
                 "full_date": zone_time.strftime("%Y-%m-%d"),
                 "full_time": zone_time.strftime("%H:%M:%S"),
-                "iso_format": zone_time.isoformat()
+                "iso_format": zone_time.isoformat(),
+                "icon": CALENDAR_INFO.get("icon", "mdi:shield-star")
             }
             
             _LOGGER.debug(f"NATO sensor updated: {self._state}")
             
         except Exception as e:
-            _LOGGER.error(f"Error updating NATO sensor: {e}")
+            _LOGGER.error(f"Error updating NATO sensor: {e}", exc_info=True)
             self._state = "ERROR"
             self._attributes = {"error": str(e)}
     
+    async def async_added_to_hass(self):
+        """When entity is added to hass."""
+        if hasattr(super(), 'async_added_to_hass'):
+            await super().async_added_to_hass()
+        
+        # Reload configuration when added
+        self._load_config()
+        self._update_sensor_name()
+        
+        _LOGGER.info(f"NATO sensor added to Home Assistant: {self.name}")
+    
     async def async_update(self):
         """Async update wrapper."""
-        await self._hass.async_add_executor_job(self.update)
-    
-    def get_calendar_info(self) -> Dict[str, Any]:
-        """Return calendar information."""
-        return CALENDAR_INFO
+        if hasattr(super(), 'async_update'):
+            await super().async_update()
+        else:
+            await self._hass.async_add_executor_job(self._update)
 
 
-# Legacy support for older integrations
+# Legacy support - provide both class names
+NATOSensor = NatoSensor
+
+
+# Module-level function for calendar discovery
 def get_calendar_info() -> Dict[str, Any]:
     """Get calendar information for discovery."""
     return CALENDAR_INFO
