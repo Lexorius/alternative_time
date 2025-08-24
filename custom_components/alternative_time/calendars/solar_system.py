@@ -1066,7 +1066,7 @@ CALENDAR_INFO = {
             ]
         }
     }
-}
+
 
 
 class SolarSystemSensor(AlternativeTimeSensorBase):
