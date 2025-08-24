@@ -475,6 +475,327 @@ CALENDAR_INFO = {
                 }}
             ]
         },
+        "observer_latitude": {
+            "type": "float",
+            "default": 49.14,  # Default: Heilbronn, Germany
+            "min": -90.0,
+            "max": 90.0,
+            "label": {
+                "en": "Observer Latitude",
+                "de": "Beobachter Breitengrad",
+                "es": "Latitud del Observador",
+                "fr": "Latitude de l'Observateur",
+                "it": "Latitudine dell'Osservatore",
+                "nl": "Waarnemersbreedte",
+                "pl": "Szerokość Geograficzna Obserwatora",
+                "pt": "Latitude do Observador",
+                "ru": "Широта наблюдателя",
+                "ja": "観測者の緯度",
+                "zh": "观察者纬度",
+                "ko": "관찰자 위도"
+            },
+            "description": {
+                "en": "Your latitude for visibility calculations (-90 to 90)",
+                "de": "Ihr Breitengrad für Sichtbarkeitsberechnungen (-90 bis 90)",
+                "es": "Su latitud para cálculos de visibilidad (-90 a 90)",
+                "fr": "Votre latitude pour les calculs de visibilité (-90 à 90)",
+                "it": "La tua latitudine per i calcoli di visibilità (-90 a 90)",
+                "nl": "Uw breedtegraad voor zichtbaarheidsberekeningen (-90 tot 90)",
+                "pl": "Twoja szerokość geograficzna do obliczeń widoczności (-90 do 90)",
+                "pt": "Sua latitude para cálculos de visibilidade (-90 a 90)",
+                "ru": "Ваша широта для расчета видимости (-90 до 90)",
+                "ja": "可視性計算のための緯度（-90から90）",
+                "zh": "用于可见性计算的纬度（-90至90）",
+                "ko": "가시성 계산을 위한 위도 (-90에서 90)"
+            }
+        },
+        "observer_longitude": {
+            "type": "float",
+            "default": 9.22,  # Default: Heilbronn, Germany
+            "min": -180.0,
+            "max": 180.0,
+            "label": {
+                "en": "Observer Longitude",
+                "de": "Beobachter Längengrad",
+                "es": "Longitud del Observador",
+                "fr": "Longitude de l'Observateur",
+                "it": "Longitudine dell'Osservatore",
+                "nl": "Waarnemerslengte",
+                "pl": "Długość Geograficzna Obserwatora",
+                "pt": "Longitude do Observador",
+                "ru": "Долгота наблюдателя",
+                "ja": "観測者の経度",
+                "zh": "观察者经度",
+                "ko": "관찰자 경도"
+            },
+            "description": {
+                "en": "Your longitude for visibility calculations (-180 to 180)",
+                "de": "Ihr Längengrad für Sichtbarkeitsberechnungen (-180 bis 180)",
+                "es": "Su longitud para cálculos de visibilidad (-180 a 180)",
+                "fr": "Votre longitude pour les calculs de visibilité (-180 à 180)",
+                "it": "La tua longitudine per i calcoli di visibilità (-180 a 180)",
+                "nl": "Uw lengtegraad voor zichtbaarheidsberekeningen (-180 tot 180)",
+                "pl": "Twoja długość geograficzna do obliczeń widoczności (-180 do 180)",
+                "pt": "Sua longitude para cálculos de visibilidade (-180 a 180)",
+                "ru": "Ваша долгота для расчета видимости (-180 до 180)",
+                "ja": "可視性計算のための経度（-180から180）",
+                "zh": "用于可见性计算的经度（-180至180）",
+                "ko": "가시성 계산을 위한 경도 (-180에서 180)"
+            }
+        },
+        "show_visibility": {
+            "type": "boolean",
+            "default": True,
+            "label": {
+                "en": "Show Visibility Times",
+                "de": "Sichtbarkeitszeiten anzeigen",
+                "es": "Mostrar Tiempos de Visibilidad",
+                "fr": "Afficher les Heures de Visibilité",
+                "it": "Mostra Tempi di Visibilità",
+                "nl": "Zichtbaarheidstijden Tonen",
+                "pl": "Pokaż Czasy Widoczności",
+                "pt": "Mostrar Tempos de Visibilidade",
+                "ru": "Показать время видимости",
+                "ja": "可視時間を表示",
+                "zh": "显示可见时间",
+                "ko": "가시 시간 표시"
+            },
+            "description": {
+                "en": "Display when planets are visible from your location",
+                "de": "Anzeigen wann Planeten von Ihrem Standort sichtbar sind",
+                "es": "Mostrar cuándo los planetas son visibles desde su ubicación",
+                "fr": "Afficher quand les planètes sont visibles depuis votre position",
+                "it": "Visualizza quando i pianeti sono visibili dalla tua posizione",
+                "nl": "Weergeven wanneer planeten zichtbaar zijn vanaf uw locatie",
+                "pl": "Wyświetl, kiedy planety są widoczne z Twojej lokalizacji",
+                "pt": "Exibir quando os planetas são visíveis da sua localização",
+                "ru": "Отображать, когда планеты видны из вашего местоположения",
+                "ja": "あなたの場所から惑星が見える時間を表示",
+                "zh": "显示从您的位置可以看到行星的时间",
+                "ko": "당신의 위치에서 행성이 보이는 시간 표시"
+            }
+        },
+            "type": "select",
+            "default": "all",
+            "label": {
+                "en": "Display Planet",
+                "de": "Planet anzeigen",
+                "es": "Mostrar Planeta",
+                "fr": "Afficher Planète",
+                "it": "Mostra Pianeta",
+                "nl": "Planeet Weergeven",
+                "pl": "Wyświetl Planetę",
+                "pt": "Exibir Planeta",
+                "ru": "Показать планету",
+                "ja": "惑星を表示",
+                "zh": "显示行星",
+                "ko": "행성 표시"
+            },
+            "description": {
+                "en": "Select which planet to display or all planets",
+                "de": "Wählen Sie welchen Planeten oder alle Planeten anzeigen",
+                "es": "Seleccione qué planeta mostrar o todos los planetas",
+                "fr": "Sélectionnez quelle planète afficher ou toutes les planètes",
+                "it": "Seleziona quale pianeta visualizzare o tutti i pianeti",
+                "nl": "Selecteer welke planeet weer te geven of alle planeten",
+                "pl": "Wybierz planetę do wyświetlenia lub wszystkie planety",
+                "pt": "Selecione qual planeta exibir ou todos os planetas",
+                "ru": "Выберите планету для отображения или все планеты",
+                "ja": "表示する惑星または全惑星を選択",
+                "zh": "选择要显示的行星或所有行星",
+                "ko": "표시할 행성 또는 모든 행성 선택"
+            },
+            "options": [
+                {"value": "all", "label": {
+                    "en": "All Planets", 
+                    "de": "Alle Planeten",
+                    "es": "Todos los Planetas",
+                    "fr": "Toutes les Planètes",
+                    "it": "Tutti i Pianeti",
+                    "nl": "Alle Planeten",
+                    "pl": "Wszystkie Planety",
+                    "pt": "Todos os Planetas",
+                    "ru": "Все планеты",
+                    "ja": "すべての惑星",
+                    "zh": "所有行星",
+                    "ko": "모든 행성"
+                }},
+                {"value": "mercury", "label": {
+                    "en": "Mercury",
+                    "de": "Merkur",
+                    "es": "Mercurio",
+                    "fr": "Mercure",
+                    "it": "Mercurio",
+                    "nl": "Mercurius",
+                    "pl": "Merkury",
+                    "pt": "Mercúrio",
+                    "ru": "Меркурий",
+                    "ja": "水星",
+                    "zh": "水星",
+                    "ko": "수성"
+                }},
+                {"value": "venus", "label": {
+                    "en": "Venus",
+                    "de": "Venus",
+                    "es": "Venus",
+                    "fr": "Vénus",
+                    "it": "Venere",
+                    "nl": "Venus",
+                    "pl": "Wenus",
+                    "pt": "Vênus",
+                    "ru": "Венера",
+                    "ja": "金星",
+                    "zh": "金星",
+                    "ko": "금성"
+                }},
+                {"value": "earth", "label": {
+                    "en": "Earth",
+                    "de": "Erde",
+                    "es": "Tierra",
+                    "fr": "Terre",
+                    "it": "Terra",
+                    "nl": "Aarde",
+                    "pl": "Ziemia",
+                    "pt": "Terra",
+                    "ru": "Земля",
+                    "ja": "地球",
+                    "zh": "地球",
+                    "ko": "지구"
+                }},
+                {"value": "mars", "label": {
+                    "en": "Mars",
+                    "de": "Mars",
+                    "es": "Marte",
+                    "fr": "Mars",
+                    "it": "Marte",
+                    "nl": "Mars",
+                    "pl": "Mars",
+                    "pt": "Marte",
+                    "ru": "Марс",
+                    "ja": "火星",
+                    "zh": "火星",
+                    "ko": "화성"
+                }},
+                {"value": "jupiter", "label": {
+                    "en": "Jupiter",
+                    "de": "Jupiter",
+                    "es": "Júpiter",
+                    "fr": "Jupiter",
+                    "it": "Giove",
+                    "nl": "Jupiter",
+                    "pl": "Jowisz",
+                    "pt": "Júpiter",
+                    "ru": "Юпитер",
+                    "ja": "木星",
+                    "zh": "木星",
+                    "ko": "목성"
+                }},
+                {"value": "saturn", "label": {
+                    "en": "Saturn",
+                    "de": "Saturn",
+                    "es": "Saturno",
+                    "fr": "Saturne",
+                    "it": "Saturno",
+                    "nl": "Saturnus",
+                    "pl": "Saturn",
+                    "pt": "Saturno",
+                    "ru": "Сатурн",
+                    "ja": "土星",
+                    "zh": "土星",
+                    "ko": "토성"
+                }},
+                {"value": "uranus", "label": {
+                    "en": "Uranus",
+                    "de": "Uranus",
+                    "es": "Urano",
+                    "fr": "Uranus",
+                    "it": "Urano",
+                    "nl": "Uranus",
+                    "pl": "Uran",
+                    "pt": "Urano",
+                    "ru": "Уран",
+                    "ja": "天王星",
+                    "zh": "天王星",
+                    "ko": "천왕성"
+                }},
+                {"value": "neptune", "label": {
+                    "en": "Neptune",
+                    "de": "Neptun",
+                    "es": "Neptuno",
+                    "fr": "Neptune",
+                    "it": "Nettuno",
+                    "nl": "Neptunus",
+                    "pl": "Neptun",
+                    "pt": "Netuno",
+                    "ru": "Нептун",
+                    "ja": "海王星",
+                    "zh": "海王星",
+                    "ko": "해왕성"
+                }}
+            ]
+        },
+        "coordinate_system": {
+            "type": "select",
+            "default": "heliocentric",
+            "label": {
+                "en": "Coordinate System",
+                "de": "Koordinatensystem",
+                "es": "Sistema de Coordenadas",
+                "fr": "Système de Coordonnées",
+                "it": "Sistema di Coordinate",
+                "nl": "Coördinatensysteem",
+                "pl": "Układ Współrzędnych",
+                "pt": "Sistema de Coordenadas",
+                "ru": "Система координат",
+                "ja": "座標系",
+                "zh": "坐标系",
+                "ko": "좌표계"
+            },
+            "description": {
+                "en": "Choose heliocentric (Sun-centered) or geocentric (Earth-centered) view",
+                "de": "Wählen Sie heliozentrisch (sonnenzentriert) oder geozentrisch (erdzentriert)",
+                "es": "Elija vista heliocéntrica (centrada en el Sol) o geocéntrica (centrada en la Tierra)",
+                "fr": "Choisissez vue héliocentrique (centrée sur le Soleil) ou géocentrique (centrée sur la Terre)",
+                "it": "Scegli vista eliocentrica (centrata sul Sole) o geocentrica (centrata sulla Terra)",
+                "nl": "Kies heliocentrisch (zon-gecentreerd) of geocentrisch (aarde-gecentreerd)",
+                "pl": "Wybierz widok heliocentryczny (słoneczny) lub geocentryczny (ziemski)",
+                "pt": "Escolha visão heliocêntrica (centrada no Sol) ou geocêntrica (centrada na Terra)",
+                "ru": "Выберите гелиоцентрический (Солнце в центре) или геоцентрический (Земля в центре) вид",
+                "ja": "太陽中心（太陽系）または地球中心（地心）ビューを選択",
+                "zh": "选择日心（以太阳为中心）或地心（以地球为中心）视图",
+                "ko": "태양 중심(태양계) 또는 지구 중심(지구계) 보기 선택"
+            },
+            "options": [
+                {"value": "heliocentric", "label": {
+                    "en": "Heliocentric (Sun-centered)",
+                    "de": "Heliozentrisch (Sonnenzentriert)",
+                    "es": "Heliocéntrico (Centrado en el Sol)",
+                    "fr": "Héliocentrique (Centré sur le Soleil)",
+                    "it": "Eliocentrico (Centrato sul Sole)",
+                    "nl": "Heliocentrisch (Zon-gecentreerd)",
+                    "pl": "Heliocentryczny (Słoneczny)",
+                    "pt": "Heliocêntrico (Centrado no Sol)",
+                    "ru": "Гелиоцентрический (Солнце в центре)",
+                    "ja": "太陽中心",
+                    "zh": "日心（以太阳为中心）",
+                    "ko": "태양 중심"
+                }},
+                {"value": "geocentric", "label": {
+                    "en": "Geocentric (Earth-centered)",
+                    "de": "Geozentrisch (Erdzentriert)",
+                    "es": "Geocéntrico (Centrado en la Tierra)",
+                    "fr": "Géocentrique (Centré sur la Terre)",
+                    "it": "Geocentrico (Centrato sulla Terra)",
+                    "nl": "Geocentrisch (Aarde-gecentreerd)",
+                    "pl": "Geocentryczny (Ziemski)",
+                    "pt": "Geocêntrico (Centrado na Terra)",
+                    "ru": "Геоцентрический (Земля в центре)",
+                    "ja": "地球中心",
+                    "zh": "地心（以地球为中心）",
+                    "ko": "지구 중심"
+                }}
+            ]
+        },
         "show_distance": {
             "type": "boolean",
             "default": True,
@@ -493,18 +814,18 @@ CALENDAR_INFO = {
                 "ko": "거리 표시"
             },
             "description": {
-                "en": "Display distance from Sun (or Earth in geocentric mode)",
-                "de": "Entfernung von der Sonne anzeigen (oder Erde im geozentrischen Modus)",
-                "es": "Mostrar distancia desde el Sol (o Tierra en modo geocéntrico)",
-                "fr": "Afficher la distance du Soleil (ou de la Terre en mode géocentrique)",
-                "it": "Visualizza distanza dal Sole (o Terra in modalità geocentrica)",
-                "nl": "Afstand van de zon weergeven (of aarde in geocentrische modus)",
-                "pl": "Wyświetl odległość od Słońca (lub Ziemi w trybie geocentrycznym)",
-                "pt": "Exibir distância do Sol (ou Terra no modo geocêntrico)",
-                "ru": "Отображать расстояние от Солнца (или Земли в геоцентрическом режиме)",
-                "ja": "太陽からの距離を表示（地心モードでは地球から）",
-                "zh": "显示与太阳的距离（地心模式下为地球）",
-                "ko": "태양으로부터의 거리 표시 (지구 중심 모드에서는 지구)"
+                "en": "Display distance from Sun (or Earth in geocentric mode) in AU and km",
+                "de": "Entfernung von der Sonne anzeigen (oder Erde im geozentrischen Modus) in AE und km",
+                "es": "Mostrar distancia desde el Sol (o Tierra en modo geocéntrico) en UA y km",
+                "fr": "Afficher la distance du Soleil (ou de la Terre en mode géocentrique) en UA et km",
+                "it": "Visualizza distanza dal Sole (o Terra in modalità geocentrica) in UA e km",
+                "nl": "Afstand van de zon weergeven (of aarde in geocentrische modus) in AE en km",
+                "pl": "Wyświetl odległość od Słońca (lub Ziemi w trybie geocentrycznym) w j.a. i km",
+                "pt": "Exibir distância do Sol (ou Terra no modo geocêntrico) em UA e km",
+                "ru": "Отображать расстояние от Солнца (или Земли в геоцентрическом режиме) в а.е. и км",
+                "ja": "太陽からの距離を表示（地心モードでは地球から）AUとkm",
+                "zh": "显示与太阳的距离（地心模式下为地球）以AU和km为单位",
+                "ko": "태양으로부터의 거리 표시 (지구 중심 모드에서는 지구) AU와 km 단위"
             }
         },
         "show_constellation": {
@@ -604,6 +925,9 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
         self._show_distance = True
         self._show_constellation = True
         self._show_retrograde = True
+        self._show_visibility = True
+        self._observer_latitude = 49.14  # Default: Heilbronn
+        self._observer_longitude = 9.22
         
         # Planet positions data storage
         self._positions_info = {}
@@ -721,7 +1045,83 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
             "distance": distance
         }
     
-    def _check_retrograde(self, planet_id: str, current_pos: float, previous_pos: float) -> bool:
+    def _calculate_visibility(self, planet_id: str, dt: datetime) -> Dict[str, Any]:
+        """Calculate simplified visibility times for a planet."""
+        # This is a simplified calculation
+        # Real calculation would need proper ephemeris data
+        
+        # Get planet's geocentric position
+        planet_pos = self._calculate_planet_position(planet_id, self._datetime_to_jd(dt))
+        earth_pos = self._calculate_planet_position("earth", self._datetime_to_jd(dt))
+        geo_pos = self._calculate_geocentric_position(planet_pos, earth_pos)
+        
+        # Calculate elongation from Sun (angle between planet and Sun as seen from Earth)
+        elongation = abs(geo_pos["longitude"] - earth_pos["longitude"])
+        if elongation > 180:
+            elongation = 360 - elongation
+        
+        # Determine visibility based on elongation
+        # Inner planets (Mercury, Venus) best visible near greatest elongation
+        # Outer planets best visible at opposition (elongation ~180°)
+        
+        visibility = {
+            "elongation": elongation,
+            "visible": False,
+            "rise_time": None,
+            "set_time": None,
+            "best_time": None,
+            "visibility_period": None
+        }
+        
+        # Simple visibility rules based on elongation
+        if planet_id in ["mercury", "venus"]:
+            # Inner planets - morning or evening star
+            if 15 < elongation < 47:  # Near maximum elongation
+                visibility["visible"] = True
+                if geo_pos["longitude"] < earth_pos["longitude"]:
+                    # Morning star (visible before sunrise)
+                    visibility["visibility_period"] = "Morning star"
+                    visibility["best_time"] = "Before sunrise"
+                    # Approximate times (simplified)
+                    sunrise = 6.0  # 6:00 AM
+                    visibility["rise_time"] = f"{int(sunrise-3):02d}:00"
+                    visibility["set_time"] = f"{int(sunrise):02d}:00"
+                else:
+                    # Evening star (visible after sunset)
+                    visibility["visibility_period"] = "Evening star"
+                    visibility["best_time"] = "After sunset"
+                    # Approximate times (simplified)
+                    sunset = 18.0  # 6:00 PM
+                    visibility["rise_time"] = f"{int(sunset):02d}:00"
+                    visibility["set_time"] = f"{int(sunset+3):02d}:00"
+        else:
+            # Outer planets
+            if elongation > 60:  # Reasonably separated from Sun
+                visibility["visible"] = True
+                
+                # Calculate approximate rise/set times based on elongation
+                # This is very simplified - real calculation needs proper algorithms
+                hour_angle = elongation / 15  # Convert to hours
+                
+                if elongation > 150:  # Near opposition
+                    visibility["visibility_period"] = "All night"
+                    visibility["best_time"] = "Midnight"
+                    visibility["rise_time"] = "18:00"  # Sunset
+                    visibility["set_time"] = "06:00"   # Sunrise
+                elif elongation > 90:
+                    visibility["visibility_period"] = "Most of night"
+                    visibility["best_time"] = "Late evening"
+                    rise_hour = 18 + (180 - elongation) / 15
+                    set_hour = 6 - (180 - elongation) / 15
+                    visibility["rise_time"] = f"{int(rise_hour % 24):02d}:00"
+                    visibility["set_time"] = f"{int(set_hour % 24):02d}:00"
+                else:
+                    visibility["visibility_period"] = "Part of night"
+                    visibility["best_time"] = "Evening"
+                    visibility["rise_time"] = "20:00"
+                    visibility["set_time"] = "23:00"
+        
+        return visibility
         """Check if planet appears to be in retrograde motion."""
         # Simplified check - in reality this would need more sophisticated calculation
         if planet_id in ["mercury", "venus"]:
@@ -746,12 +1146,22 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
         
         # Add distance if configured
         if self._show_distance:
-            parts.append(f"{position['distance']:.2f} AU")
+            au = position['distance']
+            km = au * 149597870.7  # 1 AU = 149,597,870.7 km
+            parts.append(f"{au:.3f} AU ({km/1e6:.1f} Mio km)")
         
         # Add constellation if configured
         if self._show_constellation:
             const_name, const_symbol = self._get_constellation(position['longitude'])
             parts.append(f"{const_symbol} {const_name}")
+        
+        # Add visibility if configured
+        if self._show_visibility and "visibility" in position:
+            vis = position["visibility"]
+            if vis.get("visible"):
+                parts.append(f"👁 {vis.get('rise_time', 'N/A')}-{vis.get('set_time', 'N/A')}")
+            else:
+                parts.append("🚫 Not visible")
         
         # Add retrograde indicator if applicable
         if self._show_retrograde and position.get("retrograde", False):
@@ -764,9 +1174,16 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
         # Calculate Julian Date
         jd = self._datetime_to_jd(dt)
         
+        # Astronomical Unit in kilometers
+        AU_TO_KM = 149597870.7
+        
         result = {
             "julian_date": jd,
             "timestamp": dt.isoformat(),
+            "observer_location": {
+                "latitude": self._observer_latitude,
+                "longitude": self._observer_longitude
+            },
             "positions": {}
         }
         
@@ -782,11 +1199,15 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
             if planet_id not in self._planets:
                 continue
             
+            # Skip Earth in planet list (it's the observer)
+            if planet_id == "earth":
+                continue
+            
             # Calculate heliocentric position
             helio_pos = self._calculate_planet_position(planet_id, jd)
             
             # Convert to geocentric if needed
-            if self._coordinate_system == "geocentric" and planet_id != "earth" and earth_pos:
+            if self._coordinate_system == "geocentric" and earth_pos:
                 position = self._calculate_geocentric_position(helio_pos, earth_pos)
             else:
                 position = helio_pos
@@ -795,6 +1216,16 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
             const_name, const_symbol = self._get_constellation(position['longitude'])
             position['constellation'] = const_name
             position['constellation_symbol'] = const_symbol
+            
+            # Add distance in both AU and km
+            position['distance_au'] = position['distance']
+            position['distance_km'] = position['distance'] * AU_TO_KM
+            position['distance_million_km'] = position['distance_km'] / 1e6
+            
+            # Calculate visibility if configured
+            if self._show_visibility:
+                visibility = self._calculate_visibility(planet_id, dt)
+                position['visibility'] = visibility
             
             # Store position
             planet_name = self._get_planet_name(planet_id)
@@ -850,6 +1281,22 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
             self._show_distance = bool(options.get("show_distance", True))
             self._show_constellation = bool(options.get("show_constellation", True))
             self._show_retrograde = bool(options.get("show_retrograde", True))
+            self._show_visibility = bool(options.get("show_visibility", True))
+            
+            # Update observer location
+            try:
+                lat = float(options.get("observer_latitude", 49.14))
+                if -90 <= lat <= 90:
+                    self._observer_latitude = lat
+            except (ValueError, TypeError):
+                pass
+            
+            try:
+                lon = float(options.get("observer_longitude", 9.22))
+                if -180 <= lon <= 180:
+                    self._observer_longitude = lon
+            except (ValueError, TypeError):
+                pass
         
         # Calculate positions
         try:
