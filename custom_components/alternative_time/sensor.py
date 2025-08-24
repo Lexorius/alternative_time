@@ -3,25 +3,19 @@ from __future__ import annotations
 
 import logging
 import os
-import importlib
-import sys
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from typing import Any, Dict, List, Optional
 from datetime import datetime, timedelta
-import asyncio
+from importlib import import_module
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator
 from homeassistant.util.dt import utcnow
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 
 from .const import DOMAIN
-
-if TYPE_CHECKING:
-    from homeassistant.helpers.typing import StateType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,7 +65,7 @@ async def async_setup_entry(
     
     for calendar_id in selected_calendars:
         try:
-            # Load the calendar module
+            # FIX: Load the calendar module using executor to avoid blocking call
             module = await hass.async_add_executor_job(
                 _load_calendar_module, calendar_id
             )
@@ -109,7 +103,7 @@ async def async_setup_entry(
                 _LOGGER.error(f"No sensor class found in calendar module: {calendar_id}")
                 continue
             
-            # Create sensor instance
+            # Create sensor instance - calendars expect (base_name, hass)
             sensor = sensor_class(name, hass)
             
             # Set the calendar ID and config entry ID for plugin options access
@@ -138,17 +132,9 @@ async def async_setup_entry(
 def _load_calendar_module(calendar_id: str):
     """Load a calendar module by ID (blocking operation for executor)."""
     try:
-        # First, try to import from the calendars subdirectory
-        module_name = f"custom_components.alternative_time.calendars.{calendar_id}"
-        
-        # Check if already imported
-        if module_name in sys.modules:
-            return sys.modules[module_name]
-        
         # Import the module
-        module = importlib.import_module(f".calendars.{calendar_id}", package="custom_components.alternative_time")
+        module = import_module(f'.calendars.{calendar_id}', package='custom_components.alternative_time')
         return module
-        
     except ImportError as e:
         _LOGGER.error(f"Failed to import calendar module {calendar_id}: {e}")
         return None
@@ -208,8 +194,9 @@ class AlternativeTimeSensorBase(SensorEntity):
         elif hasattr(self, 'CALENDAR_INFO'):
             info = self.CALENDAR_INFO
         else:
-            # Try to get from class
+            # Try to get from module
             try:
+                import sys
                 module = sys.modules[self.__class__.__module__]
                 info = getattr(module, 'CALENDAR_INFO', {})
             except:
@@ -247,12 +234,8 @@ class AlternativeTimeSensorBase(SensorEntity):
         return default
 
     def get_plugin_options(self) -> Dict[str, Any]:
-        """Get plugin options for this sensor.
-        
-        Returns:
-            Dictionary of plugin options or empty dict if not available
-        """
-        # Check if IDs are set
+        """Get plugin options for this sensor with detailed debugging."""
+        # Basis-Debug nur wenn wirklich ein Problem besteht
         if not self._config_entry_id or not self._calendar_id:
             _LOGGER.debug(f"get_plugin_options called for {self.__class__.__name__}")
             _LOGGER.debug(f"  _config_entry_id: {self._config_entry_id}")
@@ -280,19 +263,19 @@ class AlternativeTimeSensorBase(SensorEntity):
         
         calendar_options = plugin_options.get(self._calendar_id, {})
         
-        # Only log if options are actually present
+        # Nur loggen wenn tatsächlich Optionen vorhanden sind
         if calendar_options:
             _LOGGER.debug(f"{self.__class__.__name__} ({self._calendar_id}) loaded options: {calendar_options}")
         
         return calendar_options
     
-    # NEW METHOD: For compatibility with calendars using _get_plugin_options()
+    # NEUE METHODE: Für Kompatibilität mit Kalendern die _get_plugin_options() verwenden
     def _get_plugin_options(self) -> Dict[str, Any]:
         """Private method for backward compatibility with calendars using _get_plugin_options()."""
         return self.get_plugin_options()
 
     @property
-    def state(self) -> StateType:
+    def state(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -357,3 +340,46 @@ class AlternativeTimeSensorBase(SensorEntity):
         await super().async_will_remove_from_hass()
         
         _LOGGER.debug(f"{self.__class__.__name__} removed from hass: {self._attr_name}")
+
+
+# Export function for config_flow discovery
+def export_discovered_calendars() -> Dict[str, Dict[str, Any]]:
+    """Export discovered calendars for config flow.
+    
+    This function is called by config_flow to discover available calendars.
+    """
+    discovered = {}
+    
+    # Get calendars directory
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    calendars_dir = os.path.join(current_dir, "calendars")
+    
+    if not os.path.exists(calendars_dir):
+        _LOGGER.warning(f"Calendars directory not found: {calendars_dir}")
+        return discovered
+    
+    # List all calendar files
+    for filename in os.listdir(calendars_dir):
+        if filename.endswith(".py") and not filename.startswith("__"):
+            module_name = filename[:-3]  # Remove .py extension
+            
+            # Skip template and example files
+            if "template" in module_name.lower() or "example" in module_name.lower():
+                continue
+            
+            try:
+                # Import module
+                module = import_module(f'.calendars.{module_name}', package='custom_components.alternative_time')
+                
+                if hasattr(module, 'CALENDAR_INFO'):
+                    cal_info = module.CALENDAR_INFO
+                    cal_id = cal_info.get('id', module_name)
+                    discovered[cal_id] = cal_info
+                    _LOGGER.debug(f"Discovered calendar for config: {cal_id}")
+                    
+            except Exception as e:
+                _LOGGER.warning(f"Failed to load calendar {module_name} for discovery: {e}")
+                continue
+    
+    _LOGGER.info(f"Discovered {len(discovered)} calendars for config flow")
+    return discovered
