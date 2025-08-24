@@ -103,7 +103,7 @@ CALENDAR_INFO = {
                     "it": "Terra", "nl": "Aarde", "pl": "Ziemia", "pt": "Terra",
                     "ru": "Земля", "ja": "地球", "zh": "地球", "ko": "지구"
                 },
-                "symbol": "🜨",
+                "symbol": "⊕",
                 "semi_major_axis": 1.000000,
                 "eccentricity": 0.016709,
                 "inclination": 0.000,
