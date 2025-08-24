@@ -227,49 +227,65 @@ except ImportError:
 class NatoSensor(AlternativeTimeSensorBase if AlternativeTimeSensorBase != object else object):
     """NATO Date Time Group sensor implementation."""
     
-    def __init__(self, hass, entry_data: Dict[str, Any], name: str):
-        """Initialize the NATO sensor."""
+    # Class-level update interval
+    UPDATE_INTERVAL = CALENDAR_INFO["update_interval"]
+    
+    def __init__(self, base_name: str, hass):
+        """Initialize the NATO sensor - ONLY TWO PARAMETERS as required by sensor.py!"""
         if AlternativeTimeSensorBase != object:
-            super().__init__(hass, entry_data, name, CALENDAR_INFO)
+            super().__init__(base_name, hass)
         else:
             # Fallback initialization
+            self._base_name = base_name
             self._hass = hass
-            self._entry_data = entry_data
-            self._base_name = name
-            self._calendar_info = CALENDAR_INFO
             
         self._state = None
         self._attributes = {}
         
-        # Get configuration from entry data
-        self._load_config()
-        
-        # Set sensor name based on format
-        self._update_sensor_name()
-    
-    def _load_config(self):
-        """Load configuration from entry data."""
-        # Try to get options from plugin system first
-        if hasattr(self, 'get_plugin_options'):
-            options = self.get_plugin_options()
-        else:
-            # Fallback to direct access
-            calendar_options = self._entry_data.get("calendar_options", {})
-            options = calendar_options.get("nato", {})
-        
-        # Apply configuration with proper defaults
-        self._format = options.get("nato_format", "basic")
-        self._timezone_name = options.get("timezone_for_zone", "UTC")
-        self._show_zone_letter = options.get("show_zone_letter", True)
-        self._uppercase_month = options.get("uppercase_month", True)
-        
-        # Log configuration for debugging
-        _LOGGER.debug(f"NATO sensor config loaded: format={self._format}, zone={self._timezone_name}, "
-                     f"show_letter={self._show_zone_letter}, uppercase={self._uppercase_month}")
+        # Default configuration
+        self._format = "basic"
+        self._timezone_name = "UTC"
+        self._show_zone_letter = True
+        self._uppercase_month = True
         
         # Get timezone offset
         self._zone_offset = CALENDAR_INFO["nato_zones"].get(self._timezone_name, 0)
         self._zone_letter = CALENDAR_INFO["zone_letters"].get(self._timezone_name, "Z")
+        
+        # Set sensor name based on format
+        self._update_sensor_name()
+        
+        # Set unique ID and icon
+        if hasattr(self, '_attr_unique_id'):
+            self._attr_unique_id = f"{base_name}_nato"
+        if hasattr(self, '_attr_icon'):
+            self._attr_icon = CALENDAR_INFO.get("icon", "mdi:shield-star")
+        
+        _LOGGER.debug(f"NATO sensor initialized for {base_name}")
+    
+    def _load_config(self):
+        """Load configuration from plugin options."""
+        try:
+            options = self.get_plugin_options() if hasattr(self, 'get_plugin_options') else {}
+            
+            if options:
+                # Apply configuration with proper defaults
+                self._format = options.get("nato_format", self._format)
+                self._timezone_name = options.get("timezone_for_zone", self._timezone_name)
+                self._show_zone_letter = options.get("show_zone_letter", self._show_zone_letter)
+                self._uppercase_month = options.get("uppercase_month", self._uppercase_month)
+                
+                # Update derived values
+                self._zone_offset = CALENDAR_INFO["nato_zones"].get(self._timezone_name, 0)
+                self._zone_letter = CALENDAR_INFO["zone_letters"].get(self._timezone_name, "Z")
+                
+                _LOGGER.debug(f"NATO sensor config loaded: format={self._format}, zone={self._timezone_name}, "
+                             f"show_letter={self._show_zone_letter}, uppercase={self._uppercase_month}")
+            else:
+                _LOGGER.debug("NATO sensor using default configuration")
+                
+        except Exception as e:
+            _LOGGER.debug(f"NATO sensor config load error: {e}")
     
     def _update_sensor_name(self):
         """Update sensor name based on format."""
@@ -280,9 +296,12 @@ class NatoSensor(AlternativeTimeSensorBase if AlternativeTimeSensorBase != objec
         }
         suffix = format_names.get(self._format, "NATO DTG")
         
+        # Get translated calendar name
+        calendar_name = self._translate('name', 'NATO Date Time Group') if hasattr(self, '_translate') else 'NATO Date Time Group'
+        
         # Update the name
         if hasattr(self, '_attr_name'):
-            self._attr_name = f"{self._base_name} {suffix}"
+            self._attr_name = f"{self._base_name} {calendar_name}"
         else:
             self._name = f"{self._base_name} {suffix}"
     
@@ -296,18 +315,33 @@ class NatoSensor(AlternativeTimeSensorBase if AlternativeTimeSensorBase != objec
     @property
     def unique_id(self) -> str:
         """Return unique ID for the sensor."""
-        base_id = self._entry_data.get('entry_id', 'nato')
-        return f"{base_id}_nato_{self._format}"
+        if hasattr(self, '_attr_unique_id'):
+            return self._attr_unique_id
+        # Use _calendar_id and _config_entry_id if available
+        calendar_id = getattr(self, '_calendar_id', 'nato')
+        config_id = getattr(self, '_config_entry_id', '')
+        if config_id:
+            return f"{config_id}_{calendar_id}_{self._format}"
+        return f"nato_{self._format}"
     
     @property
     def state(self) -> str:
         """Return the state of the sensor."""
-        return self._state
+        return self._state or "Loading..."
     
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return additional state attributes."""
-        return self._attributes
+        # Get parent attributes if available
+        attrs = {}
+        if hasattr(super(), 'extra_state_attributes'):
+            parent_attrs = super().extra_state_attributes
+            if parent_attrs:
+                attrs.update(parent_attrs)
+        
+        # Add NATO-specific attributes
+        attrs.update(self._attributes)
+        return attrs
     
     def _get_zone_time(self) -> datetime:
         """Get the current time in the configured NATO zone."""
@@ -378,9 +412,13 @@ class NatoSensor(AlternativeTimeSensorBase if AlternativeTimeSensorBase != objec
         # Rescue format typically doesn't use zone letters
         return f"{day} {time} {month} {year}"
     
-    def _update(self):
-        """Update the sensor state."""
+    def update(self):
+        """Update the sensor state - Home Assistant will call this."""
         try:
+            # Reload configuration
+            self._load_config()
+            self._update_sensor_name()
+            
             # Get time in configured zone
             zone_time = self._get_zone_time()
             
@@ -424,7 +462,7 @@ class NatoSensor(AlternativeTimeSensorBase if AlternativeTimeSensorBase != objec
         if hasattr(super(), 'async_added_to_hass'):
             await super().async_added_to_hass()
         
-        # Reload configuration when added
+        # Load configuration after being added
         self._load_config()
         self._update_sensor_name()
         
@@ -432,10 +470,11 @@ class NatoSensor(AlternativeTimeSensorBase if AlternativeTimeSensorBase != objec
     
     async def async_update(self):
         """Async update wrapper."""
-        if hasattr(super(), 'async_update'):
-            await super().async_update()
-        else:
-            await self._hass.async_add_executor_job(self._update)
+        await self._hass.async_add_executor_job(self.update)
+    
+    def get_calendar_metadata(self) -> Dict[str, Any]:
+        """Return calendar metadata."""
+        return CALENDAR_INFO
 
 
 # Legacy support - provide both class names
