@@ -1,9 +1,14 @@
-"""Julian Date Calendar implementation - Version 2.6."""
+"""Julian Date (JD) implementation - Version 1.0.0
+Astronomical Julian Date system for precise time tracking.
+
+Displays continuous day count since January 1, 4713 BCE noon UTC.
+Example: JD 2460636.235417 (decimal days since epoch)
+"""
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from homeassistant.core import HomeAssistant
 from ..sensor import AlternativeTimeSensorBase
@@ -14,13 +19,13 @@ _LOGGER = logging.getLogger(__name__)
 # CALENDAR METADATA
 # ============================================
 
-# Update interval in seconds (60 seconds = 1 minute for fractional day updates)
-UPDATE_INTERVAL = 60
+# Update interval in seconds (1 second for precise fractional day updates)
+UPDATE_INTERVAL = 1
 
 # Complete calendar information for auto-discovery
 CALENDAR_INFO = {
-    "id": "julian",
-    "version": "2.6.0",
+    "id": "julian_date",
+    "version": "1.0.0",
     "icon": "mdi:calendar-clock",
     "category": "technical",
     "accuracy": "scientific",
@@ -34,6 +39,7 @@ CALENDAR_INFO = {
         "fr": "Date Julienne",
         "it": "Data Giuliana",
         "nl": "Juliaanse Datum",
+        "pl": "Data Juliańska",
         "pt": "Data Juliana",
         "ru": "Юлианская дата",
         "ja": "ユリウス日",
@@ -43,24 +49,25 @@ CALENDAR_INFO = {
     
     # Short descriptions for UI
     "description": {
-        "en": "Continuous day count since January 1, 4713 BCE (e.g. JD 2460000.5)",
-        "de": "Fortlaufende Tageszählung seit 1. Januar 4713 v. Chr. (z.B. JD 2460000.5)",
-        "es": "Recuento continuo de días desde el 1 de enero de 4713 a.C. (ej. JD 2460000.5)",
-        "fr": "Comptage continu des jours depuis le 1er janvier 4713 av. J.-C. (ex. JD 2460000.5)",
-        "it": "Conteggio continuo dei giorni dal 1 gennaio 4713 a.C. (es. JD 2460000.5)",
-        "nl": "Continue dagtelling sinds 1 januari 4713 v.Chr. (bijv. JD 2460000.5)",
-        "pt": "Contagem contínua de dias desde 1 de janeiro de 4713 a.C. (ex. JD 2460000.5)",
-        "ru": "Непрерывный счет дней с 1 января 4713 г. до н.э. (напр. JD 2460000.5)",
-        "ja": "紀元前4713年1月1日からの連続日数（例：JD 2460000.5）",
-        "zh": "自公元前4713年1月1日起的连续天数（例：JD 2460000.5）",
-        "ko": "기원전 4713년 1월 1일부터의 연속 일수 (예: JD 2460000.5)"
+        "en": "Continuous day count since January 1, 4713 BCE noon UTC",
+        "de": "Fortlaufende Tageszählung seit 1. Januar 4713 v. Chr. mittags UTC",
+        "es": "Recuento continuo de días desde el 1 de enero de 4713 a.C. mediodía UTC",
+        "fr": "Comptage continu des jours depuis le 1er janvier 4713 av. J.-C. midi UTC",
+        "it": "Conteggio continuo dei giorni dal 1 gennaio 4713 a.C. mezzogiorno UTC",
+        "nl": "Continue dagtelling sinds 1 januari 4713 v.Chr. middag UTC",
+        "pl": "Ciągłe liczenie dni od 1 stycznia 4713 p.n.e. południe UTC",
+        "pt": "Contagem contínua de dias desde 1 de janeiro de 4713 a.C. meio-dia UTC",
+        "ru": "Непрерывный счет дней с 1 января 4713 г. до н.э. полдень UTC",
+        "ja": "紀元前4713年1月1日正午UTCからの連続日数",
+        "zh": "自公元前4713年1月1日中午UTC起的连续天数",
+        "ko": "기원전 4713년 1월 1일 정오 UTC부터의 연속 일수"
     },
     
     # Julian Date specific data
     "julian_data": {
         # Epoch (noon UTC on January 1, 4713 BCE in proleptic Julian calendar)
         "epoch": {
-            "year": -4712,  # 4713 BCE
+            "year": -4712,  # 4713 BCE in astronomical year numbering
             "month": 1,
             "day": 1,
             "hour": 12,  # Noon UTC
@@ -76,19 +83,18 @@ CALENDAR_INFO = {
             2415020.5: "January 1, 1900",
             2440587.5: "January 1, 1970 (Unix Epoch)",
             2451545.0: "January 1, 2000 noon (J2000.0)",
-            2460000.5: "February 23, 2023",
-            2500000.5: "August 31, 2132"
+            2460000.5: "February 23, 2023"
         },
         
         # Related systems
-        "related_systems": {
+        "variants": {
             "MJD": {
                 "name": "Modified Julian Date",
                 "offset": -2400000.5,
                 "description": "MJD = JD - 2400000.5"
             },
             "TJD": {
-                "name": "Truncated Julian Date", 
+                "name": "Truncated Julian Date",
                 "offset": -2440000.5,
                 "description": "TJD = JD - 2440000.5"
             },
@@ -96,158 +102,160 @@ CALENDAR_INFO = {
                 "name": "Reduced Julian Date",
                 "offset": -2400000.0,
                 "description": "RJD = JD - 2400000"
-            },
-            "DJD": {
-                "name": "Dublin Julian Date",
-                "offset": -2415020.0,
-                "description": "DJD = JD - 2415020 (from 1900)"
-            },
-            "CNES": {
-                "name": "CNES Julian Date",
-                "offset": -2433282.5,
-                "description": "CJDN = JD - 2433282.5 (from 1950)"
-            },
-            "LILIAN": {
-                "name": "Lilian Date",
-                "offset": -2299159.5,
-                "description": "Days since Oct 15, 1582"
             }
-        },
-        
-        # Conversion formulas
-        "formulas": {
-            "gregorian_to_jd": "JD = 367Y - INT(7(Y + INT((M+9)/12))/4) + INT(275M/9) + D + 1721013.5 + UT/24",
-            "jd_to_gregorian": "Complex algorithm - see Meeus 'Astronomical Algorithms'",
-            "decimal_day": "Fractional part × 24 = hours from noon UTC"
-        },
-        
-        # Applications
-        "applications": [
-            "Astronomy",
-            "Chronology",
-            "Computer Systems",
-            "Historical Dating",
-            "Ephemeris Calculations",
-            "Satellite Tracking"
-        ]
+        }
     },
     
-    # Additional metadata
+    # Reference URL
     "reference_url": "https://en.wikipedia.org/wiki/Julian_day",
-    "documentation_url": "https://aa.usno.navy.mil/data/JulianDate",
-    "origin": "Joseph Justus Scaliger (1583)",
-    "created_by": "Joseph Justus Scaliger",
-    "introduced": "1583",
     
-    # Example format
-    "example": "JD 2460000.500000",
-    "example_meaning": "February 23, 2023 at noon UTC",
-    
-    # Related calendars
-    "related": ["gregorian", "unix", "iso8601"],
-    
-    # Tags for searching and filtering
-    "tags": [
-        "technical", "julian", "astronomy", "scientific", "continuous",
-        "chronology", "ephemeris", "scaliger", "mjd", "tjd"
-    ],
-    
-    # Special features
-    "features": {
-        "continuous_count": True,
-        "fractional_days": True,
-        "timezone_independent": True,
-        "negative_dates": True,
-        "precision": "microsecond",
-        "scientific_standard": True
-    },
-    
-    # Configuration options for this calendar
-    "config_options": {
-        "show_mjd": {
-            "type": "boolean",
-            "default": True,
+    # Plugin configuration options
+    "plugin_options": {
+        "format": {
+            "type": "select",
+            "default": "jd",
             "label": {
-                "en": "Show Modified Julian Date",
-                "de": "Modifiziertes Julianisches Datum anzeigen",
-                "es": "Mostrar Fecha Juliana Modificada",
-                "fr": "Afficher la Date Julienne Modifiée",
-                "it": "Mostra Data Giuliana Modificata",
-                "nl": "Toon Gemodificeerde Juliaanse Datum",
-                "pt": "Mostrar Data Juliana Modificada",
-                "ru": "Показать модифицированную юлианскую дату",
-                "ja": "修正ユリウス日を表示",
-                "zh": "显示修正儒略日",
-                "ko": "수정 율리우스일 표시"
+                "en": "Display Format",
+                "de": "Anzeigeformat",
+                "es": "Formato de Visualización",
+                "fr": "Format d'Affichage",
+                "it": "Formato di Visualizzazione",
+                "nl": "Weergaveformaat",
+                "pl": "Format Wyświetlania",
+                "pt": "Formato de Exibição",
+                "ru": "Формат отображения",
+                "ja": "表示形式",
+                "zh": "显示格式",
+                "ko": "표시 형식"
             },
             "description": {
-                "en": "Also display Modified Julian Date (MJD = JD - 2400000.5)",
-                "de": "Zeige auch das Modifizierte Julianische Datum (MJD = JD - 2400000.5)"
-            }
+                "en": "Select which Julian Date format to display",
+                "de": "Wählen Sie das anzuzeigende Julianische Datumsformat",
+                "es": "Seleccione qué formato de fecha juliana mostrar",
+                "fr": "Sélectionnez le format de date julienne à afficher",
+                "it": "Seleziona quale formato di data giuliana visualizzare",
+                "nl": "Selecteer welk Juliaans datumformaat moet worden weergegeven",
+                "pl": "Wybierz format daty juliańskiej do wyświetlenia",
+                "pt": "Selecione qual formato de data juliana exibir",
+                "ru": "Выберите формат юлианской даты для отображения",
+                "ja": "表示するユリウス日形式を選択",
+                "zh": "选择要显示的儒略日格式",
+                "ko": "표시할 율리우스 날짜 형식 선택"
+            },
+            "options": [
+                {"value": "jd", "label": {"en": "Julian Date (JD)", "de": "Julianisches Datum (JD)"}},
+                {"value": "mjd", "label": {"en": "Modified Julian Date (MJD)", "de": "Modifiziertes Julianisches Datum (MJD)"}},
+                {"value": "tjd", "label": {"en": "Truncated Julian Date (TJD)", "de": "Gekürztes Julianisches Datum (TJD)"}},
+                {"value": "rjd", "label": {"en": "Reduced Julian Date (RJD)", "de": "Reduziertes Julianisches Datum (RJD)"}}
+            ]
         },
         "decimal_places": {
-            "type": "integer",
-            "default": 6,
-            "min": 0,
-            "max": 10,
+            "type": "select",
+            "default": "5",
             "label": {
                 "en": "Decimal Places",
                 "de": "Dezimalstellen",
-                "es": "Lugares decimales",
+                "es": "Lugares Decimales",
                 "fr": "Décimales",
-                "it": "Cifre decimali",
+                "it": "Cifre Decimali",
                 "nl": "Decimalen",
-                "pt": "Casas decimais",
+                "pl": "Miejsca Dziesiętne",
+                "pt": "Casas Decimais",
                 "ru": "Десятичные знаки",
                 "ja": "小数点以下の桁数",
                 "zh": "小数位数",
                 "ko": "소수점 자리"
             },
             "description": {
-                "en": "Number of decimal places to display (0-10)",
-                "de": "Anzahl der anzuzeigenden Dezimalstellen (0-10)"
-            }
-        },
-        "show_fraction_as_time": {
-            "type": "boolean",
-            "default": True,
-            "label": {
-                "en": "Show Fraction as Time",
-                "de": "Bruch als Zeit anzeigen",
-                "es": "Mostrar fracción como hora",
-                "fr": "Afficher la fraction comme heure",
-                "it": "Mostra frazione come ora",
-                "nl": "Toon fractie als tijd",
-                "pt": "Mostrar fração como hora",
-                "ru": "Показать дробь как время",
-                "ja": "小数部を時刻として表示",
-                "zh": "将小数显示为时间",
-                "ko": "분수를 시간으로 표시"
+                "en": "Number of decimal places to display",
+                "de": "Anzahl der anzuzeigenden Dezimalstellen",
+                "es": "Número de lugares decimales a mostrar",
+                "fr": "Nombre de décimales à afficher",
+                "it": "Numero di cifre decimali da visualizzare",
+                "nl": "Aantal decimalen om weer te geven",
+                "pl": "Liczba miejsc dziesiętnych do wyświetlenia",
+                "pt": "Número de casas decimais a exibir",
+                "ru": "Количество десятичных знаков для отображения",
+                "ja": "表示する小数点以下の桁数",
+                "zh": "要显示的小数位数",
+                "ko": "표시할 소수점 자리 수"
             },
-            "description": {
-                "en": "Convert fractional day to hours:minutes:seconds",
-                "de": "Konvertiere Tagesbruchteile in Stunden:Minuten:Sekunden"
-            }
+            "options": [
+                {"value": "0", "label": {"en": "0 - Integer only", "de": "0 - Nur Ganzzahl"}},
+                {"value": "1", "label": {"en": "1 decimal place", "de": "1 Dezimalstelle"}},
+                {"value": "2", "label": {"en": "2 decimal places", "de": "2 Dezimalstellen"}},
+                {"value": "3", "label": {"en": "3 decimal places", "de": "3 Dezimalstellen"}},
+                {"value": "4", "label": {"en": "4 decimal places", "de": "4 Dezimalstellen"}},
+                {"value": "5", "label": {"en": "5 decimal places", "de": "5 Dezimalstellen"}},
+                {"value": "6", "label": {"en": "6 decimal places", "de": "6 Dezimalstellen"}},
+                {"value": "7", "label": {"en": "7 decimal places", "de": "7 Dezimalstellen"}},
+                {"value": "8", "label": {"en": "8 decimal places", "de": "8 Dezimalstellen"}},
+                {"value": "9", "label": {"en": "9 decimal places", "de": "9 Dezimalstellen"}},
+                {"value": "10", "label": {"en": "10 decimal places", "de": "10 Dezimalstellen"}}
+            ]
         },
-        "show_other_systems": {
+        "show_time": {
             "type": "boolean",
             "default": False,
             "label": {
-                "en": "Show Other Julian Systems",
-                "de": "Andere Julianische Systeme anzeigen",
-                "es": "Mostrar otros sistemas julianos",
-                "fr": "Afficher d'autres systèmes juliens",
-                "it": "Mostra altri sistemi giuliani",
-                "nl": "Toon andere Juliaanse systemen",
-                "pt": "Mostrar outros sistemas julianos",
-                "ru": "Показать другие юлианские системы",
-                "ja": "他のユリウス系を表示",
-                "zh": "显示其他儒略系统",
-                "ko": "다른 율리우스 시스템 표시"
+                "en": "Show Time Component",
+                "de": "Zeitkomponente anzeigen",
+                "es": "Mostrar Componente de Tiempo",
+                "fr": "Afficher la Composante Temporelle",
+                "it": "Mostra Componente Temporale",
+                "nl": "Tijdcomponent Tonen",
+                "pl": "Pokaż Komponent Czasu",
+                "pt": "Mostrar Componente de Tempo",
+                "ru": "Показать временную составляющую",
+                "ja": "時間成分を表示",
+                "zh": "显示时间分量",
+                "ko": "시간 구성 요소 표시"
             },
             "description": {
-                "en": "Display TJD, RJD, and other Julian date variants",
-                "de": "Zeige TJD, RJD und andere Julianische Datumsvarianten"
+                "en": "Display fractional day as time (HH:MM:SS)",
+                "de": "Bruchteil des Tages als Zeit anzeigen (HH:MM:SS)",
+                "es": "Mostrar día fraccionario como tiempo (HH:MM:SS)",
+                "fr": "Afficher la fraction de jour comme heure (HH:MM:SS)",
+                "it": "Visualizza frazione di giorno come ora (HH:MM:SS)",
+                "nl": "Fractionele dag als tijd weergeven (HH:MM:SS)",
+                "pl": "Wyświetl ułamek dnia jako czas (HH:MM:SS)",
+                "pt": "Exibir dia fracionário como tempo (HH:MM:SS)",
+                "ru": "Отображать дробную часть дня как время (ЧЧ:ММ:СС)",
+                "ja": "小数日を時刻として表示 (HH:MM:SS)",
+                "zh": "将小数天显示为时间 (HH:MM:SS)",
+                "ko": "소수 일을 시간으로 표시 (HH:MM:SS)"
+            }
+        },
+        "show_all_variants": {
+            "type": "boolean",
+            "default": False,
+            "label": {
+                "en": "Show All Variants",
+                "de": "Alle Varianten anzeigen",
+                "es": "Mostrar Todas las Variantes",
+                "fr": "Afficher Toutes les Variantes",
+                "it": "Mostra Tutte le Varianti",
+                "nl": "Alle Varianten Tonen",
+                "pl": "Pokaż Wszystkie Warianty",
+                "pt": "Mostrar Todas as Variantes",
+                "ru": "Показать все варианты",
+                "ja": "すべてのバリアントを表示",
+                "zh": "显示所有变体",
+                "ko": "모든 변형 표시"
+            },
+            "description": {
+                "en": "Display JD, MJD, TJD, and RJD in attributes",
+                "de": "JD, MJD, TJD und RJD in Attributen anzeigen",
+                "es": "Mostrar JD, MJD, TJD y RJD en atributos",
+                "fr": "Afficher JD, MJD, TJD et RJD dans les attributs",
+                "it": "Visualizza JD, MJD, TJD e RJD negli attributi",
+                "nl": "JD, MJD, TJD en RJD in attributen weergeven",
+                "pl": "Wyświetl JD, MJD, TJD i RJD w atrybutach",
+                "pt": "Exibir JD, MJD, TJD e RJD em atributos",
+                "ru": "Отображать JD, MJD, TJD и RJD в атрибутах",
+                "ja": "属性にJD、MJD、TJD、RJDを表示",
+                "zh": "在属性中显示JD、MJD、TJD和RJD",
+                "ko": "속성에 JD, MJD, TJD 및 RJD 표시"
             }
         }
     }
@@ -258,75 +266,40 @@ class JulianDateSensor(AlternativeTimeSensorBase):
     """Sensor for displaying Julian Date."""
     
     # Class-level update interval
-    UPDATE_INTERVAL = UPDATE_INTERVAL
+    UPDATE_INTERVAL = 1  # Update every second for precise fractional days
     
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
-        """Initialize the Julian Date sensor."""
+        """Initialize the Julian Date sensor with standard 2-parameter signature."""
         super().__init__(base_name, hass)
         
-        # Get translated name from metadata
+        # Get calendar info
         calendar_name = self._translate('name', 'Julian Date')
-        
-        # Set sensor attributes
         self._attr_name = f"{base_name} {calendar_name}"
-        self._attr_unique_id = f"{base_name}_julian_date"
-        self._attr_icon = CALENDAR_INFO.get("icon", "mdi:calendar-clock")
+        self._attr_unique_id = f"julian_date_{base_name.lower().replace(' ', '_')}"
         
-        # Configuration options with defaults from CALENDAR_INFO
-        config_defaults = CALENDAR_INFO.get("config_options", {})
-        self._show_mjd = config_defaults.get("show_mjd", {}).get("default", True)
-        self._decimal_places = config_defaults.get("decimal_places", {}).get("default", 6)
-        self._show_fraction_as_time = config_defaults.get("show_fraction_as_time", {}).get("default", True)
-        self._show_other_systems = config_defaults.get("show_other_systems", {}).get("default", False)
+        # Set update interval
+        self._update_interval = timedelta(seconds=UPDATE_INTERVAL)
         
-        # Julian data
-        self._julian_data = CALENDAR_INFO["julian_data"]
+        # Julian Date specific data
+        self._julian_data = CALENDAR_INFO.get("julian_data", {})
+        self._variants = self._julian_data.get("variants", {})
+        self._milestones = self._julian_data.get("milestones", {})
         
-        # Flag to track if options have been loaded
-        self._options_loaded = False
+        # Initialize with defaults
+        self._format = "jd"
+        self._decimal_places = 5
+        self._show_time = False
+        self._show_all_variants = False
         
-        # Initialize state
-        self._state = None
-        self._julian_date_info = {}
+        # Julian Date data storage
+        self._jd_info = {}
+        self._state = "Initializing..."
         
-        _LOGGER.debug(f"Initialized Julian Date sensor: {self._attr_name}")
-    
-    def _load_options(self) -> None:
-        """Load plugin options after IDs are set."""
-        if self._options_loaded:
-            return
-            
-        try:
-            options = self.get_plugin_options()
-            if options:
-                # Update configuration from plugin options
-                self._show_mjd = options.get("show_mjd", self._show_mjd)
-                self._decimal_places = options.get("decimal_places", self._decimal_places)
-                self._show_fraction_as_time = options.get("show_fraction_as_time", self._show_fraction_as_time)
-                self._show_other_systems = options.get("show_other_systems", self._show_other_systems)
-                
-                # Ensure decimal_places is within valid range
-                self._decimal_places = max(0, min(10, int(self._decimal_places)))
-                
-                _LOGGER.debug(f"Julian sensor loaded options: show_mjd={self._show_mjd}, "
-                            f"decimal_places={self._decimal_places}, "
-                            f"show_fraction_as_time={self._show_fraction_as_time}")
-            else:
-                _LOGGER.debug("Julian sensor using default options - no custom options found")
-                
-            self._options_loaded = True
-        except Exception as e:
-            _LOGGER.debug(f"Julian sensor could not load options yet: {e}")
-    
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        await super().async_added_to_hass()
-        
-        # Try to load options now that IDs should be set
-        self._load_options()
+        # Debug flag
+        self._first_update = True
     
     @property
-    def state(self):
+    def state(self) -> str:
         """Return the state of the sensor."""
         return self._state
     
@@ -335,44 +308,51 @@ class JulianDateSensor(AlternativeTimeSensorBase):
         """Return the state attributes."""
         attrs = super().extra_state_attributes
         
-        # Add Julian Date-specific attributes
-        if self._julian_date_info:
-            attrs.update(self._julian_date_info)
+        # Add Julian Date specific attributes
+        if self._jd_info:
+            attrs.update(self._jd_info)
             
-            # Add description in user's language
+            # Add description
             attrs["description"] = self._translate('description')
             
             # Add reference
             attrs["reference"] = CALENDAR_INFO.get('reference_url', '')
             
-            # Add current settings
-            attrs["decimal_places_setting"] = self._decimal_places
-            attrs["show_fraction_as_time_setting"] = self._show_fraction_as_time
+            # Add config info
+            attrs["config"] = {
+                "format": self._format,
+                "decimal_places": self._decimal_places,
+                "show_time": self._show_time,
+                "show_all_variants": self._show_all_variants
+            }
         
         return attrs
     
-    def _gregorian_to_julian_date(self, date: datetime) -> float:
-        """Convert Gregorian date to Julian Date."""
+    def _gregorian_to_julian_date(self, dt: datetime) -> float:
+        """Convert Gregorian datetime to Julian Date.
+        
+        Algorithm from Meeus, "Astronomical Algorithms"
+        """
         # Ensure we're working with UTC
-        if date.tzinfo is None:
-            date = date.replace(tzinfo=timezone.utc)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
         else:
-            date = date.astimezone(timezone.utc)
+            dt = dt.astimezone(timezone.utc)
         
         # Extract components
-        year = date.year
-        month = date.month
-        day = date.day
-        hour = date.hour
-        minute = date.minute
-        second = date.second
-        microsecond = date.microsecond
+        year = dt.year
+        month = dt.month
+        day = dt.day
+        hour = dt.hour
+        minute = dt.minute
+        second = dt.second
+        microsecond = dt.microsecond
         
         # Calculate fractional day from noon UTC
         # Julian Date starts at noon, so we need to adjust
         fractional_day = (hour - 12) / 24.0 + minute / 1440.0 + second / 86400.0 + microsecond / 86400000000.0
         
-        # Algorithm from Meeus, "Astronomical Algorithms"
+        # Algorithm from Meeus
         if month <= 2:
             year -= 1
             month += 12
@@ -410,75 +390,80 @@ class JulianDateSensor(AlternativeTimeSensorBase):
         
         return f"{hours:02d}:{minutes:02d}:{seconds:02d} UTC"
     
+    def _format_julian_date(self, jd: float, format_type: str, decimal_places: int) -> str:
+        """Format Julian Date according to selected format."""
+        if format_type == "mjd":
+            value = jd - 2400000.5
+            prefix = "MJD"
+        elif format_type == "tjd":
+            value = jd - 2440000.5
+            prefix = "TJD"
+        elif format_type == "rjd":
+            value = jd - 2400000.0
+            prefix = "RJD"
+        else:  # jd
+            value = jd
+            prefix = "JD"
+        
+        return f"{prefix} {value:.{decimal_places}f}"
+    
     def _find_nearest_milestone(self, jd: float) -> tuple:
         """Find the nearest milestone Julian Date."""
-        milestones = self._julian_data["milestones"]
-        
         nearest_jd = None
         nearest_desc = None
         min_diff = float('inf')
         
-        for milestone_jd, description in milestones.items():
+        for milestone_jd, description in self._milestones.items():
             diff = abs(jd - milestone_jd)
             if diff < min_diff:
                 min_diff = diff
                 nearest_jd = milestone_jd
                 nearest_desc = description
         
-        return (nearest_jd, nearest_desc, jd - nearest_jd)
+        return (nearest_jd, nearest_desc, jd - nearest_jd if nearest_jd else 0)
     
-    def _calculate_julian_date(self, earth_date: datetime) -> Dict[str, Any]:
-        """Calculate Julian Date and related information."""
-        
+    def _calculate_jd_info(self, dt: datetime) -> Dict[str, Any]:
+        """Calculate Julian Date information."""
         # Calculate Julian Date
-        jd = self._gregorian_to_julian_date(earth_date)
-        
-        # Format JD with specified decimal places
-        jd_formatted = f"JD {jd:.{self._decimal_places}f}"
+        jd = self._gregorian_to_julian_date(dt)
         
         # Get integer and fractional parts
         jd_integer = int(jd)
         jd_fraction = jd - jd_integer
         
+        # Format primary display
+        formatted = self._format_julian_date(jd, self._format, self._decimal_places)
+        
         result = {
             "julian_date": jd,
             "julian_date_integer": jd_integer,
             "julian_date_fraction": jd_fraction,
-            "formatted": jd_formatted,
-            "gregorian_date": earth_date.strftime("%Y-%m-%d %H:%M:%S UTC")
+            "formatted": formatted,
+            "gregorian_date": dt.strftime("%Y-%m-%d %H:%M:%S UTC")
         }
         
-        # Add Modified Julian Date if configured
-        if self._show_mjd:
-            mjd = jd - 2400000.5
-            result["modified_julian_date"] = mjd
-            result["mjd_formatted"] = f"MJD {mjd:.{self._decimal_places}f}"
-        
-        # Convert fraction to time if configured
-        if self._show_fraction_as_time:
+        # Add time component if configured
+        if self._show_time:
             time_str = self._fraction_to_time(jd_fraction)
             result["fraction_as_time"] = time_str
-            result["time_from_noon_utc"] = f"{(jd_fraction * 24):.4f} hours"
+            result["hours_from_noon"] = jd_fraction * 24
         
-        # Add other Julian systems if configured
-        if self._show_other_systems:
-            systems = {}
-            for sys_id, sys_info in self._julian_data["related_systems"].items():
-                sys_value = jd + sys_info["offset"]
-                systems[sys_id] = {
-                    "value": sys_value,
-                    "formatted": f"{sys_value:.{min(self._decimal_places, 2)}f}",
-                    "name": sys_info["name"],
-                    "formula": sys_info["description"]
-                }
-            result["other_systems"] = systems
+        # Add all variants if configured
+        if self._show_all_variants:
+            result["variants"] = {
+                "JD": self._format_julian_date(jd, "jd", self._decimal_places),
+                "MJD": self._format_julian_date(jd, "mjd", self._decimal_places),
+                "TJD": self._format_julian_date(jd, "tjd", self._decimal_places),
+                "RJD": self._format_julian_date(jd, "rjd", self._decimal_places)
+            }
         
         # Find nearest milestone
         nearest_jd, nearest_desc, diff_days = self._find_nearest_milestone(jd)
-        result["nearest_milestone"] = nearest_desc
-        result["days_from_milestone"] = f"{diff_days:+.1f} days"
+        if nearest_desc:
+            result["nearest_milestone"] = nearest_desc
+            result["days_from_milestone"] = f"{diff_days:+.1f} days"
         
-        # Calculate century and millennium
+        # Calculate century and millennium from J2000.0
         j2000_jd = 2451545.0  # J2000.0 epoch
         days_from_j2000 = jd - j2000_jd
         julian_century = days_from_j2000 / 36525.0  # Julian century = 36525 days
@@ -487,8 +472,7 @@ class JulianDateSensor(AlternativeTimeSensorBase):
         result["julian_century"] = f"T{julian_century:+.8f}"
         result["julian_millennium"] = f"{julian_millennium:+.8f}"
         
-        # Add day of week (0 = Monday, following ISO)
-        # JD 0.0 was a Monday (January 1, 4713 BCE noon)
+        # Add day of week (JD 0.0 was a Monday)
         day_of_week = int((jd + 0.5)) % 7
         weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
         result["day_of_week"] = weekdays[day_of_week]
@@ -501,14 +485,41 @@ class JulianDateSensor(AlternativeTimeSensorBase):
     
     def update(self) -> None:
         """Update the sensor."""
-        # Ensure options are loaded (in case async_added_to_hass hasn't run yet)
-        if not self._options_loaded:
-            self._load_options()
+        # Load options on every update
+        options = self.get_plugin_options()
         
-        now = datetime.now(timezone.utc)
-        self._julian_date_info = self._calculate_julian_date(now)
+        # Debug on first update
+        if self._first_update:
+            if options:
+                _LOGGER.info(f"Julian Date sensor options in first update: {options}")
+            else:
+                _LOGGER.debug("Julian Date sensor using defaults (no options configured)")
+            self._first_update = False
         
-        # Set state to formatted Julian Date
-        self._state = self._julian_date_info["formatted"]
+        # Update configuration
+        if options:
+            self._format = options.get("format", "jd")
+            decimal_str = options.get("decimal_places", "5")
+            try:
+                self._decimal_places = int(decimal_str)
+            except (ValueError, TypeError):
+                self._decimal_places = 5
+            self._show_time = bool(options.get("show_time", False))
+            self._show_all_variants = bool(options.get("show_all_variants", False))
+        
+        # Calculate Julian Date
+        try:
+            now = datetime.now(timezone.utc)
+            self._jd_info = self._calculate_jd_info(now)
+            self._state = self._jd_info["formatted"]
+            
+        except Exception as e:
+            _LOGGER.error(f"Error calculating Julian Date: {e}")
+            self._state = "Error"
+            self._jd_info = {"error": str(e)}
         
         _LOGGER.debug(f"Updated Julian Date to {self._state}")
+
+
+# Required for Home Assistant to discover this calendar
+__all__ = ['JulianDateSensor', 'CALENDAR_INFO']
