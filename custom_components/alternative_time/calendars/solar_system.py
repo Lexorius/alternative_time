@@ -288,8 +288,8 @@ CALENDAR_INFO = {
     # Reference URL
     "reference_url": "https://en.wikipedia.org/wiki/Planetary_positions",
     
-    # Plugin configuration options
-    "plugin_options": {
+    # Configuration options for this calendar
+    "config_options": {
         "display_planet": {
             "type": "select",
             "default": "all",
@@ -1067,8 +1067,8 @@ CALENDAR_INFO = {
                 }}
             ]
         }
-    }
-
+    }  # Ende von config_options
+}  # Ende von CALENDAR_INFO
 
 
 class SolarSystemSensor(AlternativeTimeSensorBase):
