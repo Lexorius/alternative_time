@@ -26,7 +26,7 @@ UPDATE_INTERVAL = 1
 # Calendar Information Dictionary
 CALENDAR_INFO = {
     "id": "nato",
-    "version": "2.6.0",
+    "version": "2.6.1",
     "icon": "mdi:military-tech",
     "category": "military",
     "accuracy": "second",
@@ -285,10 +285,10 @@ class NATOTimeSensor(AlternativeTimeSensorBase):
     
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the NATO time sensor."""
-        # WICHTIG: Nur 2 Parameter an die Basisklasse übergeben!
+        # Ruf die Basisklasse mit den richtigen Parametern auf
         super().__init__(base_name, hass)
         
-        # Store CALENDAR_INFO as instance variable
+        # Store CALENDAR_INFO als Instanzvariable für _translate
         self._calendar_info = CALENDAR_INFO
         
         # Get translated name from metadata
@@ -299,15 +299,18 @@ class NATOTimeSensor(AlternativeTimeSensorBase):
         self._attr_unique_id = f"{base_name}_nato"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:military-tech")
         
-        # Configuration defaults
-        self._format_type = "zone"
-        self._show_zone_name = False
-        self._use_local_zone = False
+        # Configuration defaults from CALENDAR_INFO
+        config_defaults = CALENDAR_INFO.get("config_options", {})
+        self._format_type = config_defaults.get("format_type", {}).get("default", "zone")
+        self._show_zone_name = config_defaults.get("show_zone_name", {}).get("default", False)
+        self._use_local_zone = config_defaults.get("use_local_zone", {}).get("default", False)
+        
+        # Calculated values based on format_type
         self._show_seconds = False
         self._uppercase = True
         self._include_year = True
         
-        # Will be loaded from config
+        # Flag to track if options have been loaded
         self._options_loaded = False
         
         # Initialize state
@@ -315,43 +318,37 @@ class NATOTimeSensor(AlternativeTimeSensorBase):
         self._nato_time = {}
         
         _LOGGER.debug(f"Initialized NATO sensor: {self._attr_name}")
+        _LOGGER.debug(f"  Default settings: format={self._format_type}, zone_name={self._show_zone_name}, local={self._use_local_zone}")
     
     def _load_options(self) -> None:
-        """Load options from config entry."""
+        """Load plugin options after IDs are set."""
         if self._options_loaded:
             return
             
         try:
-            # Get plugin options using parent method
+            # Get plugin options using the parent class method
             options = self.get_plugin_options()
             
             if options:
-                # Load configuration values
-                self._format_type = options.get('format_type', 'zone')
-                self._show_zone_name = options.get('show_zone_name', False)
-                self._use_local_zone = options.get('use_local_zone', False)
+                # Update configuration from plugin options
+                self._format_type = options.get("format_type", self._format_type)
+                self._show_zone_name = options.get("show_zone_name", self._show_zone_name)
+                self._use_local_zone = options.get("use_local_zone", self._use_local_zone)
                 
-                # Extended format includes seconds
-                self._show_seconds = (self._format_type == 'extended')
-                
-                # Aviation format uses uppercase
-                self._uppercase = (self._format_type in ['zone', 'aviation', 'extended'])
-                
-                # Extended format includes full year
-                self._include_year = (self._format_type in ['zone', 'rescue', 'extended'])
-                
-                self._options_loaded = True
-                
-                _LOGGER.info(
-                    f"NATO options loaded - format: {self._format_type}, "
-                    f"show_zone: {self._show_zone_name}, use_local: {self._use_local_zone}"
-                )
+                _LOGGER.debug(f"NATO sensor loaded options: format={self._format_type}, "
+                            f"zone_name={self._show_zone_name}, local={self._use_local_zone}")
             else:
-                _LOGGER.debug("NATO sensor using default options")
-                self._options_loaded = True
-                
+                _LOGGER.debug("NATO sensor using default options - no custom options found")
+            
+            # Calculate derived values based on format_type
+            self._show_seconds = (self._format_type == "extended")
+            self._uppercase = (self._format_type in ["zone", "aviation", "extended"])
+            self._include_year = (self._format_type in ["zone", "rescue", "extended"])
+            
+            self._options_loaded = True
+            
         except Exception as e:
-            _LOGGER.error(f"Error loading NATO options: {e}")
+            _LOGGER.debug(f"NATO sensor could not load options yet: {e}")
     
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -376,9 +373,6 @@ class NATOTimeSensor(AlternativeTimeSensorBase):
             
             # Add description in user's language
             attrs["description"] = self._translate('description')
-            
-            # Add reference
-            attrs["reference"] = CALENDAR_INFO.get('reference_url', '')
             
             # Add format description
             format_descriptions = {
@@ -516,6 +510,10 @@ class NATOTimeSensor(AlternativeTimeSensorBase):
     
     def update(self) -> None:
         """Update the sensor."""
+        # Ensure options are loaded before update
+        if not self._options_loaded:
+            self._load_options()
+            
         # Calculate NATO time
         self._nato_time = self.calculate_time()
         
