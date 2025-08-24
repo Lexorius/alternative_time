@@ -541,71 +541,73 @@ CALENDAR_INFO = {
             ]
         },
         "observer_latitude": {
-            "type": "float",
-            "default": 49.14,  # Default: Heilbronn, Germany
+            "type": "number",
+            "default": 0.0,  # Will be overridden by Home Assistant location
             "min": -90.0,
             "max": 90.0,
+            "step": 0.01,
             "label": {
-                "en": "Observer Latitude",
-                "de": "Beobachter Breitengrad",
-                "es": "Latitud del Observador",
-                "fr": "Latitude de l'Observateur",
-                "it": "Latitudine dell'Osservatore",
-                "nl": "Waarnemersbreedte",
-                "pl": "Szerokość Geograficzna Obserwatora",
-                "pt": "Latitude do Observador",
-                "ru": "Широта наблюдателя",
-                "ja": "観測者の緯度",
-                "zh": "观察者纬度",
-                "ko": "관찰자 위도"
+                "en": "Observer Latitude (uses HA location if empty)",
+                "de": "Beobachter Breitengrad (nutzt HA-Position wenn leer)",
+                "es": "Latitud del Observador (usa ubicación HA si está vacío)",
+                "fr": "Latitude de l'Observateur (utilise position HA si vide)",
+                "it": "Latitudine dell'Osservatore (usa posizione HA se vuoto)",
+                "nl": "Waarnemersbreedte (gebruikt HA-locatie indien leeg)",
+                "pl": "Szerokość Geograficzna (używa lokalizacji HA jeśli puste)",
+                "pt": "Latitude do Observador (usa localização HA se vazio)",
+                "ru": "Широта наблюдателя (использует местоположение HA если пусто)",
+                "ja": "観測者の緯度（空の場合はHA位置を使用）",
+                "zh": "观察者纬度（如果为空则使用HA位置）",
+                "ko": "관찰자 위도 (비어있으면 HA 위치 사용)"
             },
             "description": {
-                "en": "Your latitude for visibility calculations (-90 to 90)",
-                "de": "Ihr Breitengrad für Sichtbarkeitsberechnungen (-90 bis 90)",
-                "es": "Su latitud para cálculos de visibilidad (-90 a 90)",
-                "fr": "Votre latitude pour les calculs de visibilité (-90 à 90)",
-                "it": "La tua latitudine per i calcoli di visibilità (-90 a 90)",
-                "nl": "Uw breedtegraad voor zichtbaarheidsberekeningen (-90 tot 90)",
-                "pl": "Twoja szerokość geograficzna do obliczeń widoczności (-90 do 90)",
-                "pt": "Sua latitude para cálculos de visibilidade (-90 a 90)",
-                "ru": "Ваша широта для расчета видимости (-90 до 90)",
-                "ja": "可視性計算のための緯度（-90から90）",
-                "zh": "用于可见性计算的纬度（-90至90）",
-                "ko": "가시성 계산을 위한 위도 (-90에서 90)"
+                "en": "Your latitude (-90 to 90). Leave at 0 to use Home Assistant location",
+                "de": "Ihr Breitengrad (-90 bis 90). Bei 0 wird die Home Assistant Position verwendet",
+                "es": "Su latitud (-90 a 90). Deje en 0 para usar la ubicación de Home Assistant",
+                "fr": "Votre latitude (-90 à 90). Laissez à 0 pour utiliser la position Home Assistant",
+                "it": "La tua latitudine (-90 a 90). Lascia a 0 per usare la posizione di Home Assistant",
+                "nl": "Uw breedtegraad (-90 tot 90). Laat op 0 om Home Assistant locatie te gebruiken",
+                "pl": "Twoja szerokość (-90 do 90). Zostaw 0 aby użyć lokalizacji Home Assistant",
+                "pt": "Sua latitude (-90 a 90). Deixe em 0 para usar a localização do Home Assistant",
+                "ru": "Ваша широта (-90 до 90). Оставьте 0 для использования местоположения Home Assistant",
+                "ja": "緯度（-90から90）。0のままにするとHome Assistantの位置を使用",
+                "zh": "纬度（-90至90）。保留0以使用Home Assistant位置",
+                "ko": "위도 (-90에서 90). 0으로 두면 Home Assistant 위치 사용"
             }
         },
         "observer_longitude": {
-            "type": "float",
-            "default": 9.22,  # Default: Heilbronn, Germany
+            "type": "number",
+            "default": 0.0,  # Will be overridden by Home Assistant location
             "min": -180.0,
             "max": 180.0,
+            "step": 0.01,
             "label": {
-                "en": "Observer Longitude",
-                "de": "Beobachter Längengrad",
-                "es": "Longitud del Observador",
-                "fr": "Longitude de l'Observateur",
-                "it": "Longitudine dell'Osservatore",
-                "nl": "Waarnemerslengte",
-                "pl": "Długość Geograficzna Obserwatora",
-                "pt": "Longitude do Observador",
-                "ru": "Долгота наблюдателя",
-                "ja": "観測者の経度",
-                "zh": "观察者经度",
-                "ko": "관찰자 경도"
+                "en": "Observer Longitude (uses HA location if empty)",
+                "de": "Beobachter Längengrad (nutzt HA-Position wenn leer)",
+                "es": "Longitud del Observador (usa ubicación HA si está vacío)",
+                "fr": "Longitude de l'Observateur (utilise position HA si vide)",
+                "it": "Longitudine dell'Osservatore (usa posizione HA se vuoto)",
+                "nl": "Waarnemerslengte (gebruikt HA-locatie indien leeg)",
+                "pl": "Długość Geograficzna (używa lokalizacji HA jeśli puste)",
+                "pt": "Longitude do Observador (usa localização HA se vazio)",
+                "ru": "Долгота наблюдателя (использует местоположение HA если пусто)",
+                "ja": "観測者の経度（空の場合はHA位置を使用）",
+                "zh": "观察者经度（如果为空则使用HA位置）",
+                "ko": "관찰자 경도 (비어있으면 HA 위치 사용)"
             },
             "description": {
-                "en": "Your longitude for visibility calculations (-180 to 180)",
-                "de": "Ihr Längengrad für Sichtbarkeitsberechnungen (-180 bis 180)",
-                "es": "Su longitud para cálculos de visibilidad (-180 a 180)",
-                "fr": "Votre longitude pour les calculs de visibilité (-180 à 180)",
-                "it": "La tua longitudine per i calcoli di visibilità (-180 a 180)",
-                "nl": "Uw lengtegraad voor zichtbaarheidsberekeningen (-180 tot 180)",
-                "pl": "Twoja długość geograficzna do obliczeń widoczności (-180 do 180)",
-                "pt": "Sua longitude para cálculos de visibilidade (-180 a 180)",
-                "ru": "Ваша долгота для расчета видимости (-180 до 180)",
-                "ja": "可視性計算のための経度（-180から180）",
-                "zh": "用于可见性计算的经度（-180至180）",
-                "ko": "가시성 계산을 위한 경도 (-180에서 180)"
+                "en": "Your longitude (-180 to 180). Leave at 0 to use Home Assistant location",
+                "de": "Ihr Längengrad (-180 bis 180). Bei 0 wird die Home Assistant Position verwendet",
+                "es": "Su longitud (-180 a 180). Deje en 0 para usar la ubicación de Home Assistant",
+                "fr": "Votre longitude (-180 à 180). Laissez à 0 pour utiliser la position Home Assistant",
+                "it": "La tua longitudine (-180 a 180). Lascia a 0 per usare la posizione di Home Assistant",
+                "nl": "Uw lengtegraad (-180 tot 180). Laat op 0 om Home Assistant locatie te gebruiken",
+                "pl": "Twoja długość (-180 do 180). Zostaw 0 aby użyć lokalizacji Home Assistant",
+                "pt": "Sua longitude (-180 a 180). Deixe em 0 para usar a localização do Home Assistant",
+                "ru": "Ваша долгота (-180 до 180). Оставьте 0 для использования местоположения Home Assistant",
+                "ja": "経度（-180から180）。0のままにするとHome Assistantの位置を使用",
+                "zh": "经度（-180至180）。保留0以使用Home Assistant位置",
+                "ko": "경도 (-180에서 180). 0으로 두면 Home Assistant 위치 사용"
             }
         },
         "show_visibility": {
@@ -1092,6 +1094,16 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
         self._planets = self._solar_data.get("planets", {})
         self._constellations = self._solar_data.get("constellations", [])
         
+        # Get Home Assistant location as default
+        default_latitude = 49.14  # Fallback to Heilbronn
+        default_longitude = 9.22
+        
+        if hass and hasattr(hass, 'config'):
+            # Get location from Home Assistant configuration
+            default_latitude = hass.config.latitude
+            default_longitude = hass.config.longitude
+            _LOGGER.debug(f"Using Home Assistant location: {default_latitude}, {default_longitude}")
+        
         # Initialize with defaults
         self._display_planet = "all"
         self._coordinate_system = "heliocentric"
@@ -1099,8 +1111,8 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
         self._show_constellation = True
         self._show_retrograde = True
         self._show_visibility = True
-        self._observer_latitude = 49.14  # Default: Heilbronn
-        self._observer_longitude = 9.22
+        self._observer_latitude = default_latitude
+        self._observer_longitude = default_longitude
         self._enable_visualization = False
         self._visualization_scale = "logarithmic"
         
@@ -1625,20 +1637,28 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
             self._enable_visualization = bool(options.get("enable_visualization", False))
             self._visualization_scale = options.get("visualization_scale", "logarithmic")
             
-            # Update observer location
-            try:
-                lat = float(options.get("observer_latitude", 49.14))
-                if -90 <= lat <= 90:
-                    self._observer_latitude = lat
-            except (ValueError, TypeError):
-                pass
+            # Update observer location - use Home Assistant location if not configured
+            if "observer_latitude" in options:
+                try:
+                    lat = float(options.get("observer_latitude"))
+                    if -90 <= lat <= 90:
+                        self._observer_latitude = lat
+                except (ValueError, TypeError):
+                    pass
+            elif self.hass and hasattr(self.hass, 'config'):
+                # Use Home Assistant configured location
+                self._observer_latitude = self.hass.config.latitude
             
-            try:
-                lon = float(options.get("observer_longitude", 9.22))
-                if -180 <= lon <= 180:
-                    self._observer_longitude = lon
-            except (ValueError, TypeError):
-                pass
+            if "observer_longitude" in options:
+                try:
+                    lon = float(options.get("observer_longitude"))
+                    if -180 <= lon <= 180:
+                        self._observer_longitude = lon
+                except (ValueError, TypeError):
+                    pass
+            elif self.hass and hasattr(self.hass, 'config'):
+                # Use Home Assistant configured location
+                self._observer_longitude = self.hass.config.longitude
         
         # Calculate positions
         try:
