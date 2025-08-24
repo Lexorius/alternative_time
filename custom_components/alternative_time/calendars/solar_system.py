@@ -180,6 +180,42 @@ CALENDAR_INFO = {
                 "mean_longitude": 304.880,
                 "perihelion_longitude": 48.123,
                 "orbital_period": 60182.0
+            },
+            "pluto": {
+                "name": {
+                    "en": "Pluto (Dwarf Planet)", "de": "Pluto (Zwergplanet)", "es": "Plutón (Planeta Enano)", 
+                    "fr": "Pluton (Planète Naine)", "it": "Plutone (Pianeta Nano)", "nl": "Pluto (Dwergplaneet)", 
+                    "pl": "Pluton (Planeta Karłowata)", "pt": "Plutão (Planeta Anão)", 
+                    "ru": "Плутон (Карликовая планета)", "ja": "冥王星（準惑星）", 
+                    "zh": "冥王星（矮行星）", "ko": "명왕성 (왜행성)"
+                },
+                "symbol": "♇",
+                "semi_major_axis": 39.482117,
+                "eccentricity": 0.2488,
+                "inclination": 17.16,
+                "mean_longitude": 238.929,
+                "perihelion_longitude": 224.067,
+                "orbital_period": 90560.0
+            },
+            "jwst": {
+                "name": {
+                    "en": "James Webb Space Telescope", "de": "James-Webb-Weltraumteleskop", 
+                    "es": "Telescopio Espacial James Webb", "fr": "Télescope Spatial James Webb",
+                    "it": "Telescopio Spaziale James Webb", "nl": "James Webb Ruimtetelescoop",
+                    "pl": "Kosmiczny Teleskop Jamesa Webba", "pt": "Telescópio Espacial James Webb",
+                    "ru": "Космический телескоп Джеймса Уэбба", "ja": "ジェイムズ・ウェッブ宇宙望遠鏡",
+                    "zh": "詹姆斯·韦伯太空望远镜", "ko": "제임스 웹 우주 망원경"
+                },
+                "symbol": "🔭",
+                "semi_major_axis": 1.01,  # ~1.01 AU (L2 point is about 1.5 million km from Earth)
+                "eccentricity": 0.0,  # Halo orbit around L2
+                "inclination": 0.0,
+                "mean_longitude": 0.0,  # Stays aligned with Earth-Sun line
+                "perihelion_longitude": 0.0,
+                "orbital_period": 365.256,  # Orbits with Earth around the Sun
+                "special_type": "space_telescope",
+                "location": "L2",
+                "distance_from_earth_km": 1500000  # 1.5 million km
             }
         },
         
@@ -410,6 +446,34 @@ CALENDAR_INFO = {
                     "ja": "海王星",
                     "zh": "海王星",
                     "ko": "해왕성"
+                }},
+                {"value": "pluto", "label": {
+                    "en": "Pluto (Dwarf)",
+                    "de": "Pluto (Zwergplanet)",
+                    "es": "Plutón (Enano)",
+                    "fr": "Pluton (Naine)",
+                    "it": "Plutone (Nano)",
+                    "nl": "Pluto (Dwerg)",
+                    "pl": "Pluton (Karłowata)",
+                    "pt": "Plutão (Anão)",
+                    "ru": "Плутон (Карлик)",
+                    "ja": "冥王星（準惑星）",
+                    "zh": "冥王星（矮行星）",
+                    "ko": "명왕성 (왜행성)"
+                }},
+                {"value": "jwst", "label": {
+                    "en": "JWST (L2 Point)",
+                    "de": "JWST (L2-Punkt)",
+                    "es": "JWST (Punto L2)",
+                    "fr": "JWST (Point L2)",
+                    "it": "JWST (Punto L2)",
+                    "nl": "JWST (L2-punt)",
+                    "pl": "JWST (Punkt L2)",
+                    "pt": "JWST (Ponto L2)",
+                    "ru": "JWST (Точка L2)",
+                    "ja": "JWST（L2点）",
+                    "zh": "JWST（L2点）",
+                    "ko": "JWST (L2 지점)"
                 }}
             ]
         },
@@ -893,8 +957,7 @@ CALENDAR_INFO = {
             }
         }
     }
-    
-
+}
 
 
 class SolarSystemSensor(AlternativeTimeSensorBase):
