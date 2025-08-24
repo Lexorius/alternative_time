@@ -1067,8 +1067,115 @@ CALENDAR_INFO = {
                 }}
             ]
         }
+            "type": "boolean",
+            "default": False,
+            "label": {
+                "en": "Enable Solar System Map",
+                "de": "Sonnensystem-Karte aktivieren",
+                "es": "Activar Mapa del Sistema Solar",
+                "fr": "Activer la Carte du Système Solaire",
+                "it": "Attiva Mappa del Sistema Solare",
+                "nl": "Zonnestelselkaart Activeren",
+                "pl": "Włącz Mapę Układu Słonecznego",
+                "pt": "Ativar Mapa do Sistema Solar",
+                "ru": "Включить карту Солнечной системы",
+                "ja": "太陽系マップを有効化",
+                "zh": "启用太阳系地图",
+                "ko": "태양계 지도 활성화"
+            },
+            "description": {
+                "en": "Generate interactive visualization of planet positions",
+                "de": "Interaktive Visualisierung der Planetenpositionen generieren",
+                "es": "Generar visualización interactiva de posiciones planetarias",
+                "fr": "Générer une visualisation interactive des positions planétaires",
+                "it": "Genera visualizzazione interattiva delle posizioni planetarie",
+                "nl": "Genereer interactieve visualisatie van planeetposities",
+                "pl": "Generuj interaktywną wizualizację pozycji planet",
+                "pt": "Gerar visualização interativa das posições planetárias",
+                "ru": "Создать интерактивную визуализацию положений планет",
+                "ja": "惑星位置のインタラクティブな視覚化を生成",
+                "zh": "生成行星位置的交互式可视化",
+                "ko": "행성 위치의 대화형 시각화 생성"
+            }
+        },
+        "visualization_scale": {
+            "type": "select",
+            "default": "logarithmic",
+            "label": {
+                "en": "Map Scale",
+                "de": "Kartenskalierung",
+                "es": "Escala del Mapa",
+                "fr": "Échelle de la Carte",
+                "it": "Scala della Mappa",
+                "nl": "Kaartschaal",
+                "pl": "Skala Mapy",
+                "pt": "Escala do Mapa",
+                "ru": "Масштаб карты",
+                "ja": "地図の縮尺",
+                "zh": "地图比例",
+                "ko": "지도 축척"
+            },
+            "description": {
+                "en": "Choose scale for orbit visualization",
+                "de": "Skalierung für Umlaufbahn-Visualisierung wählen",
+                "es": "Elegir escala para visualización de órbitas",
+                "fr": "Choisir l'échelle pour la visualisation des orbites",
+                "it": "Scegli scala per visualizzazione orbite",
+                "nl": "Kies schaal voor baanvisualisatie",
+                "pl": "Wybierz skalę dla wizualizacji orbit",
+                "pt": "Escolher escala para visualização de órbitas",
+                "ru": "Выберите масштаб для визуализации орбит",
+                "ja": "軌道視覚化のスケールを選択",
+                "zh": "选择轨道可视化的比例",
+                "ko": "궤도 시각화를 위한 축척 선택"
+            },
+            "options": [
+                {"value": "logarithmic", "label": {
+                    "en": "Logarithmic (All planets visible)",
+                    "de": "Logarithmisch (Alle Planeten sichtbar)",
+                    "es": "Logarítmica (Todos los planetas visibles)",
+                    "fr": "Logarithmique (Toutes les planètes visibles)",
+                    "it": "Logaritmica (Tutti i pianeti visibili)",
+                    "nl": "Logaritmisch (Alle planeten zichtbaar)",
+                    "pl": "Logarytmiczna (Wszystkie planety widoczne)",
+                    "pt": "Logarítmica (Todos os planetas visíveis)",
+                    "ru": "Логарифмическая (Все планеты видны)",
+                    "ja": "対数（すべての惑星が見える）",
+                    "zh": "对数（所有行星可见）",
+                    "ko": "로그 (모든 행성 표시)"
+                }},
+                {"value": "linear", "label": {
+                    "en": "Linear (True scale)",
+                    "de": "Linear (Wahrer Maßstab)",
+                    "es": "Lineal (Escala real)",
+                    "fr": "Linéaire (Échelle réelle)",
+                    "it": "Lineare (Scala reale)",
+                    "nl": "Lineair (Ware schaal)",
+                    "pl": "Liniowa (Prawdziwa skala)",
+                    "pt": "Linear (Escala real)",
+                    "ru": "Линейная (Истинный масштаб)",
+                    "ja": "線形（実際のスケール）",
+                    "zh": "线性（真实比例）",
+                    "ko": "선형 (실제 축척)"
+                }},
+                {"value": "compressed", "label": {
+                    "en": "Compressed (Inner system focus)",
+                    "de": "Komprimiert (Fokus inneres System)",
+                    "es": "Comprimida (Enfoque sistema interior)",
+                    "fr": "Compressée (Focus système intérieur)",
+                    "it": "Compressa (Focus sistema interno)",
+                    "nl": "Gecomprimeerd (Focus binnenste systeem)",
+                    "pl": "Skompresowana (Fokus na układ wewnętrzny)",
+                    "pt": "Comprimida (Foco sistema interior)",
+                    "ru": "Сжатая (Фокус на внутренней системе)",
+                    "ja": "圧縮（内側システムフォーカス）",
+                    "zh": "压缩（内部系统焦点）",
+                    "ko": "압축 (내부 시스템 중심)"
+                }}
+            ]
+        }
     }  # Ende von config_options
-
+}  # Ende von CALENDAR_INFO
 
 
 class SolarSystemSensor(AlternativeTimeSensorBase):
