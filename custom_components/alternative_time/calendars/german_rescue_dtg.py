@@ -478,7 +478,6 @@ class GermanRescueDTGSensor(AlternativeTimeSensorBase):
         self._month_language = "de"
         self._uppercase = True
         self._show_seconds = False
-        self._show_timezone = True
         self._timezone = None
         self._timezone_initialized = False
         
@@ -528,8 +527,7 @@ class GermanRescueDTGSensor(AlternativeTimeSensorBase):
                 "timezone": self._timezone_str,
                 "month_language": self._month_language,
                 "uppercase": self._uppercase,
-                "show_seconds": self._show_seconds,
-                "show_timezone": self._show_timezone
+                "show_seconds": self._show_seconds
             }
         
         return attrs
@@ -571,29 +569,8 @@ class GermanRescueDTGSensor(AlternativeTimeSensorBase):
         month = self._get_month_abbreviation(dt.month)
         year = f"{dt.year:04d}"
         
-        # Build DTG string
+        # Build DTG string - NO TIMEZONE
         dtg = f"{day} {time_part} {month} {year}"
-        
-        # Add timezone if configured
-        if self._show_timezone and HAS_PYTZ and self._timezone:
-            try:
-                tz_abbr = dt.strftime("%Z")
-                # Convert common timezone abbreviations to German
-                german_tz_map = {
-                    "CET": "MEZ",   # Mitteleuropäische Zeit
-                    "CEST": "MESZ", # Mitteleuropäische Sommerzeit
-                    "GMT": "GMT",
-                    "UTC": "UTC",
-                    "WET": "WEZ",   # Westeuropäische Zeit
-                    "WEST": "WESZ", # Westeuropäische Sommerzeit
-                    "EET": "OEZ",   # Osteuropäische Zeit
-                    "EEST": "OESZ"  # Osteuropäische Sommerzeit
-                }
-                if self._month_language == "de" or self._month_language == "local" and self._user_language == "de":
-                    tz_abbr = german_tz_map.get(tz_abbr, tz_abbr)
-                dtg = f"{dtg} {tz_abbr}"
-            except:
-                pass
         
         # Apply uppercase setting
         if self._uppercase:
@@ -681,7 +658,6 @@ class GermanRescueDTGSensor(AlternativeTimeSensorBase):
             self._month_language = options.get("month_language", "de")
             self._uppercase = bool(options.get("uppercase", True))
             self._show_seconds = bool(options.get("show_seconds", False))
-            self._show_timezone = bool(options.get("show_timezone", True))
             
             # Check if timezone changed
             if new_timezone != self._timezone_str and HAS_PYTZ:
