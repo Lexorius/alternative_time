@@ -77,55 +77,24 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _lcal(self, info: dict, key: str, default: str = "") -> str:
         """Get localized value from calendar info or option metadata."""
-        # Get current language
-        lang = self.hass.config.language if self.hass else "en"
+        # Assume English for now (can be extended to use hass.config.language)
+        lang = "en"
         
-        # Try to get localized value
-        if isinstance(info, dict):
-            translations = info.get("translations", {})
-            if translations and lang in translations:
-                trans = translations[lang]
-                if isinstance(trans, dict) and key in trans:
-                    return trans[key]
-            
-            # Fallback to direct key
-            if key in info:
-                val = info[key]
-                if isinstance(val, str):
-                    return val
-                elif isinstance(val, dict):
-                    # Could be a nested structure with language keys
-                    if lang in val:
-                        return str(val[lang])
-                    elif "en" in val:
-                        return str(val["en"])
-        
-        return default
-
+        value = info.get(key, default)
+        if isinstance(value, dict):
+            # It's a localized dict
+            return value.get(lang, value.get("en", default))
+        else:
+            # It's a plain value
+            return str(value)
+    
     def _details_text(self, calendars: Dict[str, Dict]) -> str:
-        """Generate a details text for discovered calendars."""
+        """Generate details text for form descriptions."""
         if not calendars:
-            return "No calendars discovered"
+            return "No calendars available"
         
-        lang = self.hass.config.language if self.hass else "en"
-        
-        # Translations for the details text
-        translations = {
-            "en": "Available calendars: {count}",
-            "de": "Verfügbare Kalender: {count}",
-            "fr": "Calendriers disponibles: {count}",
-            "es": "Calendarios disponibles: {count}",
-            "it": "Calendari disponibili: {count}",
-            "nl": "Beschikbare kalenders: {count}",
-            "pl": "Dostępne kalendarze: {count}",
-            "pt": "Calendários disponíveis: {count}",
-            "ru": "Доступные календари: {count}",
-            "zh": "可用日历: {count}",
-            "ja": "利用可能なカレンダー: {count}"
-        }
-        
-        template = translations.get(lang, translations["en"])
-        return template.format(count=len(calendars))
+        count = len(calendars)
+        return f"Found {count} calendar{'s' if count != 1 else ''} in this category"
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -194,6 +163,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Iterate category list and collect calendars with checkbox UI and detailed labels."""
+        
         # Process user input if we're coming back from a form
         if user_input is not None and self._category_index > 0:
             # Save selected for previous category
@@ -295,6 +265,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Iterate selected calendars that expose CALENDAR_INFO['config_options'] and collect values."""
+        
         # Process user input from previous form
         if user_input is not None and self._option_index > 0:
             # Store data from the previous calendar (index already incremented)
@@ -383,40 +354,32 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             )
                         )
                     else:
-                        # Fallback to text if no options
-                        _LOGGER.warning(f"No options for select field {key} in {cid}, using text")
+                        # No options, fallback to text
                         schema_dict[vol.Optional(label, default=str(default) if default is not None else "", description=option_desc)] = TextSelector(
                             TextSelectorConfig(type=TextSelectorType.TEXT)
                         )
-                    continue  # Skip the rest of type handling
                 
-                # BOOLEAN type
-                if typ == "boolean":
+                # Handle BOOLEAN type
+                elif typ == "boolean":
                     schema_dict[vol.Optional(label, default=bool(default) if default is not None else False, description=option_desc)] = BooleanSelector()
-                    
-                # NUMBER types
-                elif typ in ("number", "integer", "float"):
-                    # Handle min/max if present
+                
+                # Handle NUMBER/INTEGER type
+                elif typ in ["number", "integer", "float"]:
                     min_val = meta.get("min")
                     max_val = meta.get("max")
+                    step = meta.get("step", 1 if typ == "integer" else 0.1)
                     
-                    if typ == "integer":
-                        default_num = int(default) if default is not None else 0
-                        mode = NumberSelectorMode.BOX
-                    else:
-                        default_num = float(default) if default is not None else 0.0
-                        mode = NumberSelectorMode.BOX
-                    
-                    config = NumberSelectorConfig(mode=mode)
-                    if min_val is not None:
-                        config["min"] = float(min_val)
-                    if max_val is not None:
-                        config["max"] = float(max_val)
-                    
-                    schema_dict[vol.Optional(label, default=default_num, description=option_desc)] = NumberSelector(config)
-                        
-                # TEXT/STRING types
-                elif typ in ("string", "text"):
+                    schema_dict[vol.Optional(label, default=default if default is not None else 0, description=option_desc)] = NumberSelector(
+                        NumberSelectorConfig(
+                            min=min_val,
+                            max=max_val,
+                            step=step,
+                            mode=NumberSelectorMode.BOX
+                        )
+                    )
+                
+                # Handle STRING/TEXT type (default)
+                elif typ in ["string", "text"]:
                     schema_dict[vol.Optional(label, default=str(default) if default is not None else "", description=option_desc)] = TextSelector(
                         TextSelectorConfig(type=TextSelectorType.TEXT)
                     )
@@ -470,11 +433,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Create the config entry
             _LOGGER.info(f"Creating config entry with {len(self._selected_calendars)} calendars")
             
-            # Build final data
+            # Build final data - FIX: Use "plugin_options" instead of "calendar_options"
             data = {
                 **self._user_input,
                 "calendars": self._selected_calendars,
-                "calendar_options": self._selected_options,
+                "plugin_options": self._selected_options,  # FIXED: Was "calendar_options"
                 "groups": self._build_groups(self._selected_calendars, self._discovered_calendars)
             }
             
@@ -597,8 +560,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options flow for Alternative Time Systems."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
+        """Initialize options flow.
+        
+        NOTE: We store the config_entry for compatibility but don't set it
+        as self.config_entry to avoid the deprecation warning in HA 2025.12.
+        """
+        self._config_entry = config_entry  # FIXED: Use private attribute instead
+        # Don't do: self.config_entry = config_entry  # This is deprecated!
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -613,7 +581,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             data_schema=vol.Schema({
                 vol.Optional(
                     "show_info",
-                    default=self.config_entry.options.get("show_info", True),
+                    default=self._config_entry.options.get("show_info", True),  # FIXED: Use _config_entry
                 ): bool,
             })
         )
