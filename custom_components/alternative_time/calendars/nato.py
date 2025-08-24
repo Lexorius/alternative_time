@@ -238,6 +238,8 @@ class NatoSensor(AlternativeTimeSensorBase if AlternativeTimeSensorBase != objec
             # Fallback initialization
             self._base_name = base_name
             self._hass = hass
+            self._calendar_id = None
+            self._config_entry_id = None
             
         self._state = None
         self._attributes = {}
@@ -248,12 +250,19 @@ class NatoSensor(AlternativeTimeSensorBase if AlternativeTimeSensorBase != objec
         self._show_zone_letter = True
         self._uppercase_month = True
         
+        # Track if options loaded
+        self._options_loaded = False
+        
         # Get timezone offset
         self._zone_offset = CALENDAR_INFO["nato_zones"].get(self._timezone_name, 0)
         self._zone_letter = CALENDAR_INFO["zone_letters"].get(self._timezone_name, "Z")
         
-        # Set sensor name based on format
-        self._update_sensor_name()
+        # Set sensor name
+        calendar_name = self._translate('name', 'NATO Date Time Group') if hasattr(self, '_translate') else 'NATO Date Time Group'
+        if hasattr(self, '_attr_name'):
+            self._attr_name = f"{base_name} {calendar_name}"
+        else:
+            self._name = f"{base_name} {calendar_name}"
         
         # Set unique ID and icon
         if hasattr(self, '_attr_unique_id'):
@@ -263,10 +272,39 @@ class NatoSensor(AlternativeTimeSensorBase if AlternativeTimeSensorBase != objec
         
         _LOGGER.debug(f"NATO sensor initialized for {base_name}")
     
+    def _get_plugin_options(self) -> Dict[str, Any]:
+        """Get plugin options - PRIVATE method like other calendars use."""
+        # Try the public method from base class
+        if hasattr(self, 'get_plugin_options'):
+            return self.get_plugin_options()
+        
+        # Fallback: Try to get options directly
+        if not self._config_entry_id or not self._calendar_id:
+            return {}
+        
+        try:
+            from . import _CONFIG_ENTRIES
+            config_entry = _CONFIG_ENTRIES.get(self._config_entry_id)
+            if config_entry:
+                # WICHTIG: config_flow.py speichert als "calendar_options", NICHT "plugin_options"!
+                calendar_options = config_entry.data.get("calendar_options", {})
+                # Fallback auf plugin_options falls vorhanden
+                if not calendar_options:
+                    calendar_options = config_entry.data.get("plugin_options", {})
+                return calendar_options.get(self._calendar_id, {})
+        except:
+            pass
+        
+        return {}
+    
     def _load_config(self):
         """Load configuration from plugin options."""
+        if self._options_loaded:
+            return
+            
         try:
-            options = self.get_plugin_options() if hasattr(self, 'get_plugin_options') else {}
+            # Use private method like other calendars
+            options = self._get_plugin_options()
             
             if options:
                 # Apply configuration with proper defaults
@@ -279,49 +317,32 @@ class NatoSensor(AlternativeTimeSensorBase if AlternativeTimeSensorBase != objec
                 self._zone_offset = CALENDAR_INFO["nato_zones"].get(self._timezone_name, 0)
                 self._zone_letter = CALENDAR_INFO["zone_letters"].get(self._timezone_name, "Z")
                 
-                _LOGGER.debug(f"NATO sensor config loaded: format={self._format}, zone={self._timezone_name}, "
-                             f"show_letter={self._show_zone_letter}, uppercase={self._uppercase_month}")
+                _LOGGER.info(f"NATO sensor loaded config: format={self._format}, zone={self._timezone_name}, "
+                            f"show_letter={self._show_zone_letter}, uppercase={self._uppercase_month}")
+                self._options_loaded = True
             else:
                 _LOGGER.debug("NATO sensor using default configuration")
                 
         except Exception as e:
-            _LOGGER.debug(f"NATO sensor config load error: {e}")
-    
-    def _update_sensor_name(self):
-        """Update sensor name based on format."""
-        format_names = {
-            "basic": "NATO DTG",
-            "zone": "NATO Zone DTG",
-            "rescue": "NATO Rescue DTG"
-        }
-        suffix = format_names.get(self._format, "NATO DTG")
-        
-        # Get translated calendar name
-        calendar_name = self._translate('name', 'NATO Date Time Group') if hasattr(self, '_translate') else 'NATO Date Time Group'
-        
-        # Update the name
-        if hasattr(self, '_attr_name'):
-            self._attr_name = f"{self._base_name} {calendar_name}"
-        else:
-            self._name = f"{self._base_name} {suffix}"
+            _LOGGER.error(f"NATO sensor config load error: {e}", exc_info=True)
     
     @property
     def name(self) -> str:
         """Return the name of the sensor."""
         if hasattr(self, '_attr_name'):
             return self._attr_name
-        return getattr(self, '_name', f"{self._base_name} NATO DTG")
+        return getattr(self, '_name', f"{self._base_name} NATO Date Time Group")
     
     @property
     def unique_id(self) -> str:
         """Return unique ID for the sensor."""
         if hasattr(self, '_attr_unique_id'):
             return self._attr_unique_id
-        # Use _calendar_id and _config_entry_id if available
+        # Build from IDs if available
         calendar_id = getattr(self, '_calendar_id', 'nato')
         config_id = getattr(self, '_config_entry_id', '')
         if config_id:
-            return f"{config_id}_{calendar_id}_{self._format}"
+            return f"{config_id}_{calendar_id}"
         return f"nato_{self._format}"
     
     @property
@@ -415,9 +436,9 @@ class NatoSensor(AlternativeTimeSensorBase if AlternativeTimeSensorBase != objec
     def update(self):
         """Update the sensor state - Home Assistant will call this."""
         try:
-            # Reload configuration
-            self._load_config()
-            self._update_sensor_name()
+            # Load configuration if not loaded yet
+            if not self._options_loaded:
+                self._load_config()
             
             # Get time in configured zone
             zone_time = self._get_zone_time()
@@ -464,21 +485,12 @@ class NatoSensor(AlternativeTimeSensorBase if AlternativeTimeSensorBase != objec
         
         # Load configuration after being added
         self._load_config()
-        self._update_sensor_name()
         
         _LOGGER.info(f"NATO sensor added to Home Assistant: {self.name}")
     
     async def async_update(self):
         """Async update wrapper."""
         await self._hass.async_add_executor_job(self.update)
-    
-    def get_calendar_metadata(self) -> Dict[str, Any]:
-        """Return calendar metadata."""
-        return CALENDAR_INFO
-
-
-# Legacy support - provide both class names
-NATOSensor = NatoSensor
 
 
 # Module-level function for calendar discovery
