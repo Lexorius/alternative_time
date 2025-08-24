@@ -6,7 +6,7 @@ Example: 241530Z DEC 25 (24th day, 15:30 Zulu time, December 2025)
 """
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 from typing import Dict, Any, Optional
 
@@ -916,7 +916,7 @@ class DTGSensor(AlternativeTimeSensorBase):
                 
                 if HAS_PYTZ:
                     # Create fixed offset timezone
-                    from datetime import timedelta, timezone as dt_timezone
+                    from datetime import timezone as dt_timezone
                     tz = dt_timezone(timedelta(hours=offset_hours))
                     now = datetime.now(tz)
                 else:
