@@ -401,6 +401,3 @@ class UnixTimestampSensor(AlternativeTimeSensorBase):
         self._state = self._unix_time["formatted"]
         
         _LOGGER.debug(f"Updated Unix Timestamp to {self._state}")
-
-# Export the sensor class
-__all__ = ["UnixTimestampSensor", "CALENDAR_INFO", "UPDATE_INTERVAL"]

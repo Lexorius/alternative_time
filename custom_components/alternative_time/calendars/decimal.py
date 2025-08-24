@@ -506,6 +506,3 @@ class DecimalTimeSensor(AlternativeTimeSensorBase):
         """Update sensor asynchronously."""
         # Run synchronous update in executor
         await self.hass.async_add_executor_job(self.update)
-
-# Export the sensor class
-__all__ = ["DecimalTimeSensor", "CALENDAR_INFO", "UPDATE_INTERVAL"]

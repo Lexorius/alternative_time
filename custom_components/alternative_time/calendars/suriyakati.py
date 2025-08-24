@@ -575,6 +575,3 @@ class SuriyakatiCalendarSensor(AlternativeTimeSensorBase):
         self._state = self._thai_date["formatted"]
         
         _LOGGER.debug(f"Updated Thai Buddhist Calendar to {self._state}")
-
-# Export the sensor class
-__all__ = ["SuriyakatiCalendarSensor", "CALENDAR_INFO", "UPDATE_INTERVAL"]

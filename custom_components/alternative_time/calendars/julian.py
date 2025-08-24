@@ -512,6 +512,3 @@ class JulianDateSensor(AlternativeTimeSensorBase):
         self._state = self._julian_date_info["formatted"]
         
         _LOGGER.debug(f"Updated Julian Date to {self._state}")
-
-# Export the sensor class
-__all__ = ["JulianDateSensor", "CALENDAR_INFO", "UPDATE_INTERVAL"]

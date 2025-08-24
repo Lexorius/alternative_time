@@ -634,6 +634,3 @@ class DiscworldCalendarSensor(AlternativeTimeSensorBase):
         self._state = " ".join(state_parts)
         
         _LOGGER.debug(f"Updated Discworld Calendar to {self._state}")
-
-# Export the sensor class
-__all__ = ["DiscworldCalendarSensor", "CALENDAR_INFO", "UPDATE_INTERVAL"]

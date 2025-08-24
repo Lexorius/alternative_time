@@ -612,6 +612,3 @@ class RomanCalendarSensor(AlternativeTimeSensorBase):
         self._state = self._roman_date["full_date"]
         
         _LOGGER.debug(f"Updated Roman Calendar to {self._state}")
-
-# Export the sensor class
-__all__ = ["RomanCalendarSensor", "CALENDAR_INFO", "UPDATE_INTERVAL"]

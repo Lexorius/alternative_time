@@ -561,6 +561,3 @@ class MinguoCalendarSensor(AlternativeTimeSensorBase):
         self._state = self._minguo_date["formatted"]
         
         _LOGGER.debug(f"Updated Minguo Calendar to {self._state}")
-
-# Export the sensor class
-__all__ = ["MinguoCalendarSensor", "CALENDAR_INFO", "UPDATE_INTERVAL"]

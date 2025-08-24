@@ -569,6 +569,3 @@ class EveOnlineTimeSensor(AlternativeTimeSensorBase):
         self._state = self._eve_time["formatted"]
         
         _LOGGER.debug(f"Updated EVE Online Time to {self._state}")
-
-# Export the sensor class
-__all__ = ["EveOnlineTimeSensor", "CALENDAR_INFO", "UPDATE_INTERVAL"]

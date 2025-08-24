@@ -281,6 +281,3 @@ class TrackmaniaEventsSensor(AlternativeTimeSensorBase):
             _LOGGER.exception("Failed to update Trackmania events: %s", exc)
             self._state = "Error"
             self._tm_events = {"error": str(exc)}
-
-# Export the sensor class
-__all__ = ["TrackmaniaEventsSensor", "CALENDAR_INFO", "UPDATE_INTERVAL"]

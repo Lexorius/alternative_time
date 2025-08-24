@@ -45,12 +45,8 @@ async def async_setup_entry(
     selected_calendars = config_entry.data.get("calendars", [])
     name = config_entry.data.get("name", "Alternative Time")
     
-    # Debug logging für plugin_options UND calendar_options (Rückwärtskompatibilität)
+    # Debug logging für plugin_options
     plugin_options = config_entry.data.get("plugin_options", {})
-    if not plugin_options:
-        # Fallback auf calendar_options für Rückwärtskompatibilität
-        plugin_options = config_entry.data.get("calendar_options", {})
-    
     _LOGGER.info(f"=== Setting up Alternative Time '{name}' ===")
     _LOGGER.debug(f"Config Entry ID: {entry_id[:8]}...")
     _LOGGER.debug(f"Selected calendars: {selected_calendars}")
@@ -133,7 +129,7 @@ async def async_setup_entry(
             # Test if sensor can retrieve its options
             test_options = sensor.get_plugin_options()
             if test_options:
-                _LOGGER.info(f"✔ Sensor {calendar_id} successfully retrieved options: {test_options}")
+                _LOGGER.info(f"✓ Sensor {calendar_id} successfully retrieved options: {test_options}")
             else:
                 _LOGGER.debug(f"  Sensor {calendar_id} has no options or using defaults")
             
@@ -156,7 +152,7 @@ async def async_setup_entry(
             if update_interval < 60:  # Exclude sensors that update more than once per minute
                 entities_to_exclude.append(sensor.entity_id)
             
-            _LOGGER.info(f"✔ Created sensor for calendar: {calendar_id}")
+            _LOGGER.info(f"✓ Created sensor for calendar: {calendar_id}")
             
         except Exception as e:
             _LOGGER.error(f"Failed to create sensor for calendar {calendar_id}: {e}")
@@ -408,12 +404,7 @@ class AlternativeTimeSensorBase(SensorEntity):
             _LOGGER.debug(f"Available entries: {list(_CONFIG_ENTRIES.keys())}")
             return {}
         
-        # FIX: Unterstütze sowohl "plugin_options" als auch "calendar_options"
         plugin_options = config_entry.data.get("plugin_options", {})
-        if not plugin_options:
-            # Fallback auf calendar_options für Rückwärtskompatibilität
-            plugin_options = config_entry.data.get("calendar_options", {})
-            
         calendar_options = plugin_options.get(self._calendar_id, {})
         
         # Nur loggen wenn tatsächlich Optionen vorhanden sind
@@ -491,7 +482,7 @@ class AlternativeTimeSensorBase(SensorEntity):
         category = str(info.get("category") or "uncategorized")
         if category == "religious":
             category = "religion"
-        device_name = f"Alternative Time — {category.title()}"
+        device_name = f"Alternative Time – {category.title()}"
         return {
             "identifiers": {(DOMAIN, f"group:{category}")},
             "manufacturer": "Alternative Time Systems",
