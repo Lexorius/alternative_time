@@ -1068,7 +1068,7 @@ CALENDAR_INFO = {
             ]
         }
     }  # Ende von config_options
-}  # Ende von CALENDAR_INFO
+
 
 
 class SolarSystemSensor(AlternativeTimeSensorBase):
