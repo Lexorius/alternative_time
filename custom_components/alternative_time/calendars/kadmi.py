@@ -12,7 +12,14 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, Optional, List
 import logging
 
-from ..sensor import AlternativeTimeSensorBase
+try:
+    from . import AlternativeTimeSensorBase
+except ImportError:
+    try:
+        from sensor import AlternativeTimeSensorBase
+    except ImportError:
+        # Fallback for testing
+        AlternativeTimeSensorBase = object
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,64 +61,86 @@ CALENDAR_INFO = {
     "icon": "mdi:fire",
     "reference_url": "https://en.wikipedia.org/wiki/Zoroastrian_calendar#Kadmi_calendar",
     
-    # Important historical and community context
+    # Important historical and community context - FIXED: Added closing quote and brace
     "disclaimer": {
-        "en": "⚠️ REFORMED CALENDAR (1746): The Kadmi reform attempted to 'correct' a perceived calendrical error by moving the calendar 30 days forward. This caused a MAJOR SCHISM in the Parsi community between Kadmis and Shenshais that continues today. Both calendars drift equally from the solar year. The reform was based on disputed historical interpretations.",
-        "de": "⚠️ REFORMIERTER KALENDER (1746): Die Kadmi-Reform versuchte einen vermeintlichen Kalenderfehler zu 'korrigieren' durch Vorverlegung um 30 Tage. Dies verursachte ein GROSSES SCHISMA in der Parsi-Gemeinde zwischen Kadmis und Shenshais, das bis heute besteht. Beide Kalender driften gleichermaßen vom Sonnenjahr. Die Reform basierte auf umstrittenen historischen Interpretationen.",
-        "es": "⚠️ CALENDARIO REFORMADO (1746): La reforma Kadmi intentó 'corregir' un error calendárico percibido adelantando el calendario 30 días. Esto causó un GRAN CISMA en la comunidad Parsi entre Kadmis y Shenshais que continúa hoy. Ambos calendarios derivan igualmente del año solar. La reforma se basó en interpretaciones históricas disputadas.",
-        "fr": "⚠️ CALENDRIER RÉFORMÉ (1746): La réforme Kadmi a tenté de 'corriger' une erreur calendaire perçue en avançant le calendrier de 30 jours. Cela a causé un SCHISME MAJEUR dans la communauté Parsi entre Kadmis et Shenshais qui persiste aujourd'hui. Les deux calendriers dérivent également de l'année solaire. La réforme était basée sur des interprétations historiques contestées.",
-        "it": "⚠️ CALENDARIO RIFORMATO (1746): La riforma Kadmi tentò di 'correggere' un errore calendariale percepito spostando il calendario 30 giorni avanti. Questo causò un GRANDE SCISMA nella comunità Parsi tra Kadmi e Shenshai che continua oggi. Entrambi i calendari derivano ugualmente dall'anno solare. La riforma si basava su interpretazioni storiche contestate.",
-        "nl": "⚠️ HERVORMDE KALENDER (1746): De Kadmi-hervorming probeerde een vermeende kalenderfout te 'corrigeren' door de kalender 30 dagen vooruit te zetten. Dit veroorzaakte een GROOT SCHISMA in de Parsi-gemeenschap tussen Kadmi's en Shenshai's dat vandaag voortduurt. Beide kalenders drijven evenveel af van het zonnejaar. De hervorming was gebaseerd op betwiste historische interpretaties.",
-        "pl": "⚠️ KALENDARZ ZREFORMOWANY (1746): Reforma Kadmi próbowała 'naprawić' postrzegany błąd kalendarzowy przesuwając kalendarz o 30 dni do przodu. To spowodowało WIELKĄ SCHIZMĘ w społeczności Parsi między Kadmi i Shenshai, która trwa do dziś. Oba kalendarze dryfują jednakowo od roku słonecznego. Reforma opierała się na spornych interpretacjach historycznych.",
-        "pt": "⚠️ CALENDÁRIO REFORMADO (1746): A reforma Kadmi tentou 'corrigir' um erro calendárico percebido avançando o calendário 30 dias. Isso causou um GRANDE CISMA na comunidade Parsi entre Kadmis e Shenshais que continua hoje. Ambos os calendários derivam igualmente do ano solar. A reforma foi baseada em interpretações históricas disputadas.",
-        "ru": "⚠️ РЕФОРМИРОВАННЫЙ КАЛЕНДАРЬ (1746): Реформа Кадми попыталась 'исправить' предполагаемую календарную ошибку, сдвинув календарь на 30 дней вперед. Это вызвало БОЛЬШОЙ РАСКОЛ в общине парсов между кадми и шеншай, который продолжается сегодня. Оба календаря одинаково дрейфуют от солнечного года. Реформа основывалась на спорных исторических интерпретациях.",
-        "ja": "⚠️ 改革暦（1746年）：カドミ改革は認識された暦の誤りを「修正」しようと暦を30日進めました。これによりパールシー共同体にカドミとシェンシャイの間で今日まで続く大分裂が起こりました。両暦とも太陽年から同様にずれます。改革は論争のある歴史的解釈に基づいていました。",
-        "zh": "⚠️ 改革历法（1746年）：卡德米改革试图通过将日历提前30天来"纠正"感知的历法错误。这在帕西社区的卡德米派和申沙派之间造成了持续至今的重大分裂。两种历法都同样偏离太阳年。改革基于有争议的历史解释。",
-        "ko": "⚠️ 개혁 달력 (1746): 카드미 개혁은 인식된 달력 오류를 '수정'하려고 달력을 30일 앞당겼습니다. 이는 오늘날까지 계속되는 카드미와 셴샤이 사이의 파르시 공동체 대분열을 일으켰습니다. 두 달력 모두 태양년에서 동일하게 벗어납니다. 개혁은 논란이 있는 역사적 해석에 기반했습니다."
-    },  # HIER WAR DAS KOMMA GEFEHLT!
+        "en": "⚠️ REFORMED CALENDAR (1746): The Kadmi reform attempted to 'correct' a perceived calendrical error by moving the calendar 30 days forward. This created a SECOND faction in the Parsi community that persists today. Used by ~20% of Parsis. The community remains divided between Shenshai (traditional) and Kadmi (reformed), with both calendars still drifting from the solar year.",
+        "de": "⚠️ REFORMIERTER KALENDER (1746): Die Kadmi-Reform versuchte einen wahrgenommenen kalendarischen Fehler zu 'korrigieren', indem der Kalender 30 Tage nach vorne verschoben wurde. Dies schuf eine ZWEITE Fraktion in der Parsi-Gemeinde, die bis heute besteht. Wird von ~20% der Parsis verwendet. Die Gemeinde bleibt zwischen Shenshai (traditionell) und Kadmi (reformiert) geteilt, wobei beide Kalender weiterhin vom Sonnenjahr abweichen.",
+        "es": "⚠️ CALENDARIO REFORMADO (1746): La reforma Kadmi intentó 'corregir' un error calendárico percibido moviendo el calendario 30 días hacia adelante. Esto creó una SEGUNDA facción en la comunidad Parsi que persiste hoy. Usado por ~20% de los Parsis. La comunidad permanece dividida entre Shenshai (tradicional) y Kadmi (reformado), con ambos calendarios aún derivando del año solar.",
+        "fr": "⚠️ CALENDRIER RÉFORMÉ (1746): La réforme Kadmi a tenté de 'corriger' une erreur calendaire perçue en avançant le calendrier de 30 jours. Cela a créé une DEUXIÈME faction dans la communauté Parsi qui persiste aujourd'hui. Utilisé par ~20% des Parsis. La communauté reste divisée entre Shenshai (traditionnel) et Kadmi (réformé), les deux calendriers dérivant toujours de l'année solaire.",
+        "it": "⚠️ CALENDARIO RIFORMATO (1746): La riforma Kadmi tentò di 'correggere' un errore calendariale percepito spostando il calendario 30 giorni avanti. Questo creò una SECONDA fazione nella comunità Parsi che persiste oggi. Usato da ~20% dei Parsi. La comunità rimane divisa tra Shenshai (tradizionale) e Kadmi (riformato), con entrambi i calendari che ancora derivano dall'anno solare.",
+        "nl": "⚠️ HERVORMD KALENDER (1746): De Kadmi-hervorming probeerde een vermeende kalenderfout te 'corrigeren' door de kalender 30 dagen vooruit te schuiven. Dit creëerde een TWEEDE factie in de Parsi-gemeenschap die vandaag voortduurt. Gebruikt door ~20% van de Parsi's. De gemeenschap blijft verdeeld tussen Shenshai (traditioneel) en Kadmi (hervormd), waarbij beide kalenders nog steeds afdrijven van het zonnejaar.",
+        "pl": "⚠️ KALENDARZ ZREFORMOWANY (1746): Reforma Kadmi próbowała 'naprawić' postrzegany błąd kalendarzowy przesuwając kalendarz o 30 dni do przodu. To stworzyło DRUGĄ frakcję w społeczności Parsi, która trwa do dziś. Używany przez ~20% Parsów. Społeczność pozostaje podzielona między Shenshai (tradycyjny) i Kadmi (zreformowany), przy czym oba kalendarze nadal dryfują od roku słonecznego.",
+        "pt": "⚠️ CALENDÁRIO REFORMADO (1746): A reforma Kadmi tentou 'corrigir' um erro calendárico percebido movendo o calendário 30 dias para frente. Isso criou uma SEGUNDA facção na comunidade Parsi que persiste hoje. Usado por ~20% dos Parsis. A comunidade permanece dividida entre Shenshai (tradicional) e Kadmi (reformado), com ambos os calendários ainda derivando do ano solar.",
+        "ru": "⚠️ РЕФОРМИРОВАННЫЙ КАЛЕНДАРЬ (1746): Реформа Кадми попыталась 'исправить' воспринимаемую календарную ошибку, сдвинув календарь на 30 дней вперед. Это создало ВТОРУЮ фракцию в общине парсов, которая существует до сих пор. Используется ~20% парсов. Община остается разделенной между Шеншай (традиционный) и Кадми (реформированный), причем оба календаря продолжают отклоняться от солнечного года.",
+        "ja": "⚠️ 改革暦（1746年）：カドミ改革は、暦を30日前進させることで認識された暦の誤りを「修正」しようとしました。これはパールシー共同体に第二の派閥を作り、今日まで続いています。パールシーの約20％が使用。共同体はシェンシャイ（伝統的）とカドミ（改革）の間で分裂したままで、両方の暦が太陽年からずれ続けています。",
+        "zh": "⚠️ 改革历法（1746年）：卡德米改革试图通过将日历向前移动30天来"纠正"感知的历法错误。这在帕西社区中创建了第二个派系，至今仍然存在。约20%的帕西人使用。社区仍然分裂在申沙（传统）和卡德米（改革）之间，两个日历都继续偏离太阳年。",
+        "ko": "⚠️ 개혁 달력 (1746년): 카드미 개혁은 달력을 30일 앞으로 이동시켜 인식된 달력 오류를 '수정'하려고 시도했습니다. 이것은 오늘날까지 지속되는 파르시 공동체에 두 번째 파벌을 만들었습니다. 파르시의 약 20%가 사용. 공동체는 셴샤이(전통)와 카드미(개혁) 사이에 분열되어 있으며, 두 달력 모두 태양년에서 계속 표류하고 있습니다."
+    },
     
-    # Configuration options for this calendar
+    # Configuration options
     "config_options": {
         "show_yazata": {
             "type": "boolean",
             "default": True,
             "label": {
-                "en": "Show Day Dedication (Yazata)",
-                "de": "Tageswidmung zeigen (Yazata)",
-                "es": "Mostrar dedicación del día (Yazata)",
-                "fr": "Afficher la dédicace du jour (Yazata)",
-                "it": "Mostra dedica del giorno (Yazata)",
-                "nl": "Toon dagwijding (Yazata)",
-                "pl": "Pokaż dedykację dnia (Yazata)",
-                "pt": "Mostrar dedicação do dia (Yazata)",
-                "ru": "Показать посвящение дня (Язата)",
-                "ja": "日の献身を表示（ヤザタ）",
-                "zh": "显示日奉献（亚扎塔）",
-                "ko": "일 헌정 표시 (야자타)"
+                "en": "Show Yazata (Guardian Angel)",
+                "de": "Zeige Yazata (Schutzengel)",
+                "es": "Mostrar Yazata (Ángel Guardián)",
+                "fr": "Afficher Yazata (Ange Gardien)",
+                "it": "Mostra Yazata (Angelo Custode)",
+                "nl": "Toon Yazata (Beschermengel)",
+                "pl": "Pokaż Yazata (Anioł Stróż)",
+                "pt": "Mostrar Yazata (Anjo Guardião)",
+                "ru": "Показать Язата (Ангел-хранитель)",
+                "ja": "ヤザタ（守護天使）を表示",
+                "zh": "显示亚扎塔（守护天使）",
+                "ko": "야자타 (수호천사) 표시"
+            },
+            "description": {
+                "en": "Display the Yazata (divine being) associated with each day",
+                "de": "Zeigt das Yazata (göttliches Wesen) das mit jedem Tag verbunden ist",
+                "es": "Muestra el Yazata (ser divino) asociado con cada día",
+                "fr": "Affiche le Yazata (être divin) associé à chaque jour",
+                "it": "Visualizza lo Yazata (essere divino) associato a ogni giorno",
+                "nl": "Toont de Yazata (goddelijk wezen) geassocieerd met elke dag",
+                "pl": "Wyświetla Yazata (boską istotę) związaną z każdym dniem",
+                "pt": "Exibe o Yazata (ser divino) associado a cada dia",
+                "ru": "Отображает Язата (божественное существо), связанное с каждым днем",
+                "ja": "各日に関連するヤザタ（神聖な存在）を表示",
+                "zh": "显示与每天相关的亚扎塔（神圣存在）",
+                "ko": "매일과 관련된 야자타 (신성한 존재) 표시"
             }
         },
         "show_shenshai_difference": {
             "type": "boolean",
             "default": True,
             "label": {
-                "en": "Show Difference from Shenshai",
-                "de": "Unterschied zu Shenshai anzeigen",
-                "es": "Mostrar diferencia con Shenshai",
-                "fr": "Afficher la différence avec Shenshai",
-                "it": "Mostra differenza da Shenshai",
-                "nl": "Toon verschil met Shenshai",
-                "pl": "Pokaż różnicę od Shenshai",
-                "pt": "Mostrar diferença de Shenshai",
+                "en": "Show Shenshai Difference",
+                "de": "Zeige Shenshai-Differenz",
+                "es": "Mostrar Diferencia Shenshai",
+                "fr": "Afficher la Différence Shenshai",
+                "it": "Mostra Differenza Shenshai",
+                "nl": "Toon Shenshai Verschil",
+                "pl": "Pokaż Różnicę Shenshai",
+                "pt": "Mostrar Diferença Shenshai",
                 "ru": "Показать разницу с Шеншай",
                 "ja": "シェンシャイとの差を表示",
-                "zh": "显示与申沙的差异",
-                "ko": "셴샤이와의 차이 표시"
+                "zh": "显示申沙差异",
+                "ko": "셴샤이 차이 표시"
             },
             "description": {
                 "en": "Display that Kadmi is 30 days ahead of Shenshai calendar",
                 "de": "Zeigt dass Kadmi 30 Tage vor dem Shenshai-Kalender liegt",
                 "es": "Muestra que Kadmi está 30 días adelante del calendario Shenshai",
-                "fr": "Affiche que Kadmi est 30 jours en avance sur le calendrier Shenshai"
+                "fr": "Affiche que Kadmi est 30 jours en avance sur le calendrier Shenshai",
+                "it": "Visualizza che Kadmi è 30 giorni avanti rispetto al calendario Shenshai",
+                "nl": "Toont dat Kadmi 30 dagen voor ligt op de Shenshai kalender",
+                "pl": "Wyświetla że Kadmi jest 30 dni przed kalendarzem Shenshai",
+                "pt": "Exibe que Kadmi está 30 dias à frente do calendário Shenshai",
+                "ru": "Отображает что Кадми на 30 дней впереди календаря Шеншай",
+                "ja": "カドミがシェンシャイ暦より30日進んでいることを表示",
+                "zh": "显示卡德米比申沙历提前30天",
+                "ko": "카드미가 셴샤이 달력보다 30일 앞서 있음을 표시"
             }
         },
         "show_schism_note": {
@@ -135,78 +164,100 @@ CALENDAR_INFO = {
                 "en": "Display information about the 1746 calendar reform controversy",
                 "de": "Zeigt Informationen über die Kalenderreform-Kontroverse von 1746",
                 "es": "Muestra información sobre la controversia de la reforma del calendario de 1746",
-                "fr": "Affiche des informations sur la controverse de la réforme du calendrier de 1746"
+                "fr": "Affiche des informations sur la controverse de la réforme du calendrier de 1746",
+                "it": "Visualizza informazioni sulla controversia della riforma del calendario del 1746",
+                "nl": "Toont informatie over de kalenderhervorming controverse van 1746",
+                "pl": "Wyświetla informacje o kontrowersji reformy kalendarza z 1746",
+                "pt": "Exibe informações sobre a controvérsia da reforma do calendário de 1746",
+                "ru": "Отображает информацию о споре о календарной реформе 1746 года",
+                "ja": "1746年の暦改革論争に関する情報を表示",
+                "zh": "显示关于1746年历法改革争议的信息",
+                "ko": "1746년 달력 개혁 논란에 대한 정보 표시"
             }
         },
         "show_festivals": {
             "type": "boolean",
             "default": True,
             "label": {
-                "en": "Show Religious Festivals",
-                "de": "Religiöse Feste anzeigen",
-                "es": "Mostrar festivales religiosos",
-                "fr": "Afficher les fêtes religieuses",
-                "it": "Mostra feste religiose",
-                "nl": "Toon religieuze festivals",
-                "pl": "Pokaż święta religijne",
-                "pt": "Mostrar festivais religiosos",
-                "ru": "Показать религиозные праздники",
-                "ja": "宗教祭を表示",
-                "zh": "显示宗教节日",
-                "ko": "종교 축제 표시"
+                "en": "Show Festivals",
+                "de": "Feste anzeigen",
+                "es": "Mostrar Festivales",
+                "fr": "Afficher les Festivals",
+                "it": "Mostra Festival",
+                "nl": "Toon Festivals",
+                "pl": "Pokaż Festiwale",
+                "pt": "Mostrar Festivais",
+                "ru": "Показать праздники",
+                "ja": "祭りを表示",
+                "zh": "显示节日",
+                "ko": "축제 표시"
+            },
+            "description": {
+                "en": "Display Zoroastrian festivals and holy days",
+                "de": "Zeigt zoroastrische Feste und heilige Tage",
+                "es": "Muestra festivales y días sagrados zoroástricos",
+                "fr": "Affiche les festivals et jours sacrés zoroastriens",
+                "it": "Visualizza festival e giorni sacri zoroastriani",
+                "nl": "Toont Zoroastrische festivals en heilige dagen",
+                "pl": "Wyświetla zoroastryjskie festiwale i święte dni",
+                "pt": "Exibe festivais e dias sagrados zoroastrianos",
+                "ru": "Отображает зороастрийские праздники и святые дни",
+                "ja": "ゾロアスター教の祭りと聖日を表示",
+                "zh": "显示琐罗亚斯德教节日和圣日",
+                "ko": "조로아스터교 축제와 성일 표시"
             }
         }
     },
     
-    # Kadmi calendar data (same structure as Shenshai, but different epoch)
+    # Kadmi calendar data
     "kadmi_data": {
-        # 12 months of 30 days each (identical to Shenshai)
+        # 12 months of 30 days each
         "months": [
-            {"name": "Farvardin", "meaning": "Guardian Spirits", "days": 30},
-            {"name": "Ardibehesht", "meaning": "Best Righteousness", "days": 30},
-            {"name": "Khordad", "meaning": "Perfection/Health", "days": 30},
-            {"name": "Tir", "meaning": "Sirius/Rain", "days": 30},
-            {"name": "Amardad", "meaning": "Immortality", "days": 30},
-            {"name": "Shahrivar", "meaning": "Desirable Dominion", "days": 30},
-            {"name": "Mehr", "meaning": "Covenant/Sun", "days": 30},
-            {"name": "Aban", "meaning": "Waters", "days": 30},
-            {"name": "Azar", "meaning": "Fire", "days": 30},
-            {"name": "Dey", "meaning": "The Creator", "days": 30},
-            {"name": "Bahman", "meaning": "Good Mind", "days": 30},
-            {"name": "Esfand", "meaning": "Holy Devotion", "days": 30}
+            {"name": "Farvardin", "days": 30, "meaning": "Guardian Spirits"},
+            {"name": "Ardibehesht", "days": 30, "meaning": "Best Truth"},
+            {"name": "Khordad", "days": 30, "meaning": "Perfection"},
+            {"name": "Tir", "days": 30, "meaning": "Sirius"},
+            {"name": "Amardad", "days": 30, "meaning": "Immortality"},
+            {"name": "Shahrivar", "days": 30, "meaning": "Desirable Kingdom"},
+            {"name": "Mehr", "days": 30, "meaning": "Covenant"},
+            {"name": "Aban", "days": 30, "meaning": "Waters"},
+            {"name": "Azar", "days": 30, "meaning": "Fire"},
+            {"name": "Dey", "days": 30, "meaning": "Creator"},
+            {"name": "Bahman", "days": 30, "meaning": "Good Mind"},
+            {"name": "Esfand", "days": 30, "meaning": "Holy Devotion"}
         ],
         
-        # 5 Gatha days (identical to Shenshai)
+        # 5 Gatha days at year end
         "gatha_days": [
             {"name": "Ahunavad", "meaning": "Possessing Ahu"},
             {"name": "Ushtavad", "meaning": "Possessing Happiness"},
             {"name": "Spentomad", "meaning": "Possessing Holy Devotion"},
-            {"name": "Vohukshathra", "meaning": "Possessing Good Dominion"},
+            {"name": "Vohukhshathra", "meaning": "Possessing Good Dominion"},
             {"name": "Vahishtoisht", "meaning": "Best Righteousness"}
         ],
         
-        # 30 day dedications (identical to Shenshai)
-        "day_yazatas": [
-            {"day": 1, "name": "Ohrmazd", "meaning": "Lord Wisdom"},
+        # Yazatas (30 divine beings for each day)
+        "yazatas": [
+            {"day": 1, "name": "Ohrmazd", "meaning": "Lord of Wisdom"},
             {"day": 2, "name": "Bahman", "meaning": "Good Mind"},
-            {"day": 3, "name": "Ardibehesht", "meaning": "Best Righteousness"},
-            {"day": 4, "name": "Shahrivar", "meaning": "Desirable Dominion"},
+            {"day": 3, "name": "Ardibehesht", "meaning": "Best Truth"},
+            {"day": 4, "name": "Shahrivar", "meaning": "Desirable Kingdom"},
             {"day": 5, "name": "Esfand", "meaning": "Holy Devotion"},
             {"day": 6, "name": "Khordad", "meaning": "Perfection"},
             {"day": 7, "name": "Amardad", "meaning": "Immortality"},
-            {"day": 8, "name": "Dey-pa-Adar", "meaning": "Creator before Fire"},
+            {"day": 8, "name": "Dey-pa-Adar", "meaning": "Creator of Fire"},
             {"day": 9, "name": "Azar", "meaning": "Fire"},
             {"day": 10, "name": "Aban", "meaning": "Waters"},
             {"day": 11, "name": "Khorshed", "meaning": "Sun"},
             {"day": 12, "name": "Mohor", "meaning": "Moon"},
             {"day": 13, "name": "Tir", "meaning": "Sirius"},
             {"day": 14, "name": "Gosh", "meaning": "Cattle"},
-            {"day": 15, "name": "Dey-pa-Mehr", "meaning": "Creator before Mithra"},
-            {"day": 16, "name": "Mehr", "meaning": "Covenant/Mithra"},
+            {"day": 15, "name": "Dey-pa-Mehr", "meaning": "Creator of Covenant"},
+            {"day": 16, "name": "Mehr", "meaning": "Covenant"},
             {"day": 17, "name": "Srosh", "meaning": "Obedience"},
             {"day": 18, "name": "Rashnu", "meaning": "Justice"},
             {"day": 19, "name": "Fravardin", "meaning": "Guardian Spirits"},
-            {"day": 20, "name": "Behram", "meaning": "Victory"},
+            {"day": 20, "name": "Bahram", "meaning": "Victory"},
             {"day": 21, "name": "Ram", "meaning": "Joy"},
             {"day": 22, "name": "Govad", "meaning": "Wind"},
             {"day": 23, "name": "Dey-pa-Din", "meaning": "Creator of Religion"},
@@ -265,23 +316,26 @@ CALENDAR_INFO = {
 # Update interval for this sensor
 UPDATE_INTERVAL = CALENDAR_INFO["update_interval"]
 
-class KadmiCalendarSensor(AlternativeTimeSensorBase):
+
+class KadmiCalendarSensor(AlternativeTimeSensorBase if AlternativeTimeSensorBase != object else object):
     """Sensor for Zoroastrian Kadmi Calendar."""
     
     # Class-level update interval
     UPDATE_INTERVAL = UPDATE_INTERVAL
     
-    def __init__(self, base_name: str, hass) -> None:
+    def __init__(self, hass, entry_data: Dict[str, Any], name: str):
         """Initialize the Kadmi calendar sensor."""
-        super().__init__(base_name, hass)
-        
-        # Get translated name from metadata
-        calendar_name = self._translate('name', 'Kadmi Calendar')
-        
-        # Set sensor attributes
-        self._attr_name = f"{base_name} {calendar_name}"
-        self._attr_unique_id = f"{base_name}_kadmi_calendar"
-        self._attr_icon = CALENDAR_INFO.get("icon", "mdi:fire")
+        if AlternativeTimeSensorBase != object:
+            super().__init__(hass, entry_data, name, CALENDAR_INFO)
+        else:
+            # Fallback initialization
+            self._hass = hass
+            self._entry_data = entry_data
+            self._base_name = name
+            self._calendar_info = CALENDAR_INFO
+            
+        self._state = None
+        self._kadmi_calendar = {}
         
         # Default configuration options
         self._show_yazata = True
@@ -295,7 +349,19 @@ class KadmiCalendarSensor(AlternativeTimeSensorBase):
         # Track if options have been loaded
         self._options_loaded = False
         
-        _LOGGER.debug(f"Initialized Kadmi Calendar sensor: {self._attr_name}")
+        # Set sensor name
+        calendar_name = self._translate('name', 'Kadmi Calendar') if hasattr(self, '_translate') else 'Kadmi Calendar'
+        if hasattr(self, '_attr_name'):
+            self._attr_name = f"{name} {calendar_name}"
+        else:
+            self._name = f"{name} {calendar_name}"
+            
+        if hasattr(self, '_attr_unique_id'):
+            self._attr_unique_id = f"{name}_kadmi_calendar"
+        if hasattr(self, '_attr_icon'):
+            self._attr_icon = CALENDAR_INFO.get("icon", "mdi:fire")
+        
+        _LOGGER.debug(f"Initialized Kadmi Calendar sensor: {name}")
     
     def _load_options(self) -> None:
         """Load configuration options from config entry."""
@@ -303,7 +369,12 @@ class KadmiCalendarSensor(AlternativeTimeSensorBase):
             return
             
         try:
-            options = self.get_plugin_options()
+            if hasattr(self, 'get_plugin_options'):
+                options = self.get_plugin_options()
+            else:
+                calendar_options = self._entry_data.get("calendar_options", {})
+                options = calendar_options.get("kadmi", {})
+                
             if options:
                 # Update configuration from plugin options
                 self._show_yazata = options.get("show_yazata", self._show_yazata)
@@ -321,12 +392,20 @@ class KadmiCalendarSensor(AlternativeTimeSensorBase):
         except Exception as e:
             _LOGGER.debug(f"Kadmi sensor could not load options yet: {e}")
     
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        await super().async_added_to_hass()
-        
-        # Try to load options now that IDs should be set
-        self._load_options()
+    @property
+    def name(self) -> str:
+        """Return the name of the sensor."""
+        if hasattr(self, '_attr_name'):
+            return self._attr_name
+        return getattr(self, '_name', f"{self._base_name} Kadmi Calendar")
+    
+    @property
+    def unique_id(self) -> str:
+        """Return unique ID for the sensor."""
+        if hasattr(self, '_attr_unique_id'):
+            return self._attr_unique_id
+        base_id = self._entry_data.get('entry_id', 'kadmi')
+        return f"{base_id}_kadmi_calendar"
     
     @property
     def state(self):
@@ -336,17 +415,20 @@ class KadmiCalendarSensor(AlternativeTimeSensorBase):
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes."""
-        attrs = super().extra_state_attributes
+        attrs = {}
+        
+        # Get parent attributes if available
+        if hasattr(super(), 'extra_state_attributes'):
+            attrs = super().extra_state_attributes
         
         # Add Kadmi-specific attributes
-        if hasattr(self, '_kadmi_calendar'):
+        if self._kadmi_calendar:
             attrs.update(self._kadmi_calendar)
             
             # Add description in user's language
-            attrs["description"] = self._translate('description')
-            
-            # Add disclaimer
-            attrs["disclaimer"] = self._translate('disclaimer')
+            if hasattr(self, '_translate'):
+                attrs["description"] = self._translate('description')
+                attrs["disclaimer"] = self._translate('disclaimer')
             
             # Add reference
             attrs["reference"] = CALENDAR_INFO.get('reference_url', '')
@@ -366,66 +448,44 @@ class KadmiCalendarSensor(AlternativeTimeSensorBase):
         return attrs
     
     def _calculate_kadmi_date(self, gregorian_date: datetime) -> tuple:
-        """Calculate Kadmi date from Gregorian date."""
-        # Get epoch information
+        """Calculate Kadmi date from Gregorian date.
+        Returns: (year, month_index, day, is_gatha_day)
+        """
         epoch = self._kadmi_data["epoch"]
         epoch_date = epoch["gregorian_date"]
         epoch_year = epoch["kadmi_year"]
         
         # Calculate days since epoch
-        days_diff = (gregorian_date.date() - epoch_date.date()).days
+        delta = gregorian_date - epoch_date
+        days_since_epoch = delta.days
         
-        # Handle dates before epoch
-        if days_diff < 0:
-            # Go backwards
-            years_back = abs(days_diff) // 365
-            remaining_days = abs(days_diff) % 365
-            
-            year = epoch_year - years_back - 1
-            # Calculate from end of year backwards
-            if remaining_days == 0:
-                month_idx = 11
-                day = 30
-                is_gatha = False
-            else:
-                day_of_year = 365 - remaining_days
-                month_idx, day, is_gatha = self._get_month_and_day(day_of_year)
+        # Calculate Kadmi year
+        years_passed = days_since_epoch // 365
+        year = epoch_year + years_passed
+        
+        # Calculate day in year
+        day_in_year = days_since_epoch % 365 + 1
+        
+        # Check if it's a Gatha day (last 5 days)
+        if day_in_year > 360:
+            # Gatha days
+            gatha_day = day_in_year - 360
+            return year, gatha_day - 1, gatha_day, True
         else:
-            # Calculate years passed (365 days each, no leap years)
-            years_passed = days_diff // 365
-            day_of_year = (days_diff % 365) + 1
-            
-            # Calculate year
-            year = epoch_year + years_passed
-            
-            # Find month and day
-            month_idx, day, is_gatha = self._get_month_and_day(day_of_year)
-        
-        return year, month_idx, day, is_gatha
-    
-    def _get_month_and_day(self, day_of_year: int) -> tuple:
-        """Get month index and day from day of year."""
-        # Check if in regular months (1-360)
-        if day_of_year <= 360:
-            month_idx = (day_of_year - 1) // 30
-            day = ((day_of_year - 1) % 30) + 1
-            is_gatha = False
-        else:
-            # In Gatha days (361-365)
-            month_idx = day_of_year - 361  # 0-4 for 5 Gatha days
-            day = day_of_year - 360
-            is_gatha = True
-        
-        return month_idx, day, is_gatha
+            # Regular month/day
+            month_idx = (day_in_year - 1) // 30
+            day = ((day_in_year - 1) % 30) + 1
+            return year, month_idx, day, False
     
     def _get_yazata(self, day: int) -> Dict[str, str]:
-        """Get the Yazata (divine being) for a given day."""
-        if 1 <= day <= 30:
-            return self._kadmi_data["day_yazatas"][day - 1]
-        return {"name": "Unknown", "meaning": ""}
+        """Get Yazata for a specific day."""
+        for yazata in self._kadmi_data["yazatas"]:
+            if yazata["day"] == day:
+                return yazata
+        return {"name": "Unknown", "meaning": "Unknown"}
     
     def _check_festival(self, month_name: str, day: int, is_gatha: bool) -> Optional[str]:
-        """Check if current day is a festival."""
+        """Check if current date is a festival."""
         if is_gatha:
             if day == 5:
                 return self._kadmi_data["festivals"].get("Gatha 5", None)
@@ -479,8 +539,10 @@ class KadmiCalendarSensor(AlternativeTimeSensorBase):
         
         return result
     
-    def _calculate_time(self, gregorian_date: datetime) -> None:
-        """Calculate Kadmi calendar date."""
+    def _update(self):
+        """Update the sensor state."""
+        gregorian_date = datetime.now()
+        
         try:
             # Format the main date string
             kadmi_date = self._format_kadmi_date(gregorian_date)
@@ -570,13 +632,35 @@ class KadmiCalendarSensor(AlternativeTimeSensorBase):
             self._state = kadmi_date
             
         except Exception as e:
-            _LOGGER.error(f"Error calculating Kadmi calendar: {e}")
+            _LOGGER.error(f"Error calculating Kadmi calendar: {e}", exc_info=True)
             self._state = "Error"
             self._kadmi_calendar = {"error": str(e)}
+    
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        if hasattr(super(), 'async_added_to_hass'):
+            await super().async_added_to_hass()
+        
+        # Try to load options now that IDs should be set
+        self._load_options()
+    
+    async def async_update(self):
+        """Async update wrapper."""
+        if hasattr(super(), 'async_update'):
+            await super().async_update()
+        else:
+            await self._hass.async_add_executor_job(self._update)
     
     def get_calendar_metadata(self) -> Dict[str, Any]:
         """Return calendar metadata."""
         return CALENDAR_INFO
 
+
+# Module-level function for calendar discovery
+def get_calendar_info() -> Dict[str, Any]:
+    """Get calendar information for discovery."""
+    return CALENDAR_INFO
+
+
 # Export the sensor class
-__all__ = ["KadmiCalendarSensor", "CALENDAR_INFO", "UPDATE_INTERVAL"]   
+__all__ = ["KadmiCalendarSensor", "CALENDAR_INFO", "UPDATE_INTERVAL"]
