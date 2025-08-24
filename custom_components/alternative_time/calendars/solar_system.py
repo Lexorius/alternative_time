@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 import math
+import json
 import logging
 from typing import Dict, Any, Optional
 
@@ -955,6 +956,114 @@ CALENDAR_INFO = {
                 "zh": "指示行星看起来向后移动的时候",
                 "ko": "행성이 뒤로 움직이는 것처럼 보일 때 표시"
             }
+        },
+        "enable_visualization": {
+            "type": "boolean",
+            "default": False,
+            "label": {
+                "en": "Enable Solar System Map",
+                "de": "Sonnensystem-Karte aktivieren",
+                "es": "Activar Mapa del Sistema Solar",
+                "fr": "Activer la Carte du Système Solaire",
+                "it": "Attiva Mappa del Sistema Solare",
+                "nl": "Zonnestelselkaart Activeren",
+                "pl": "Włącz Mapę Układu Słonecznego",
+                "pt": "Ativar Mapa do Sistema Solar",
+                "ru": "Включить карту Солнечной системы",
+                "ja": "太陽系マップを有効化",
+                "zh": "启用太阳系地图",
+                "ko": "태양계 지도 활성화"
+            },
+            "description": {
+                "en": "Generate interactive visualization of planet positions",
+                "de": "Interaktive Visualisierung der Planetenpositionen generieren",
+                "es": "Generar visualización interactiva de posiciones planetarias",
+                "fr": "Générer une visualisation interactive des positions planétaires",
+                "it": "Genera visualizzazione interattiva delle posizioni planetarie",
+                "nl": "Genereer interactieve visualisatie van planeetposities",
+                "pl": "Generuj interaktywną wizualizację pozycji planet",
+                "pt": "Gerar visualização interativa das posições planetárias",
+                "ru": "Создать интерактивную визуализацию положений планет",
+                "ja": "惑星位置のインタラクティブな視覚化を生成",
+                "zh": "生成行星位置的交互式可视化",
+                "ko": "행성 위치의 대화형 시각화 생성"
+            }
+        },
+        "visualization_scale": {
+            "type": "select",
+            "default": "logarithmic",
+            "label": {
+                "en": "Map Scale",
+                "de": "Kartenskalierung",
+                "es": "Escala del Mapa",
+                "fr": "Échelle de la Carte",
+                "it": "Scala della Mappa",
+                "nl": "Kaartschaal",
+                "pl": "Skala Mapy",
+                "pt": "Escala do Mapa",
+                "ru": "Масштаб карты",
+                "ja": "地図の縮尺",
+                "zh": "地图比例",
+                "ko": "지도 축척"
+            },
+            "description": {
+                "en": "Choose scale for orbit visualization",
+                "de": "Skalierung für Umlaufbahn-Visualisierung wählen",
+                "es": "Elegir escala para visualización de órbitas",
+                "fr": "Choisir l'échelle pour la visualisation des orbites",
+                "it": "Scegli scala per visualizzazione orbite",
+                "nl": "Kies schaal voor baanvisualisatie",
+                "pl": "Wybierz skalę dla wizualizacji orbit",
+                "pt": "Escolher escala para visualização de órbitas",
+                "ru": "Выберите масштаб для визуализации орбит",
+                "ja": "軌道視覚化のスケールを選択",
+                "zh": "选择轨道可视化的比例",
+                "ko": "궤도 시각화를 위한 축척 선택"
+            },
+            "options": [
+                {"value": "logarithmic", "label": {
+                    "en": "Logarithmic (All planets visible)",
+                    "de": "Logarithmisch (Alle Planeten sichtbar)",
+                    "es": "Logarítmica (Todos los planetas visibles)",
+                    "fr": "Logarithmique (Toutes les planètes visibles)",
+                    "it": "Logaritmica (Tutti i pianeti visibili)",
+                    "nl": "Logaritmisch (Alle planeten zichtbaar)",
+                    "pl": "Logarytmiczna (Wszystkie planety widoczne)",
+                    "pt": "Logarítmica (Todos os planetas visíveis)",
+                    "ru": "Логарифмическая (Все планеты видны)",
+                    "ja": "対数（すべての惑星が見える）",
+                    "zh": "对数（所有行星可见）",
+                    "ko": "로그 (모든 행성 표시)"
+                }},
+                {"value": "linear", "label": {
+                    "en": "Linear (True scale)",
+                    "de": "Linear (Wahrer Maßstab)",
+                    "es": "Lineal (Escala real)",
+                    "fr": "Linéaire (Échelle réelle)",
+                    "it": "Lineare (Scala reale)",
+                    "nl": "Lineair (Ware schaal)",
+                    "pl": "Liniowa (Prawdziwa skala)",
+                    "pt": "Linear (Escala real)",
+                    "ru": "Линейная (Истинный масштаб)",
+                    "ja": "線形（実際のスケール）",
+                    "zh": "线性（真实比例）",
+                    "ko": "선형 (실제 축척)"
+                }},
+                {"value": "compressed", "label": {
+                    "en": "Compressed (Inner system focus)",
+                    "de": "Komprimiert (Fokus inneres System)",
+                    "es": "Comprimida (Enfoque sistema interior)",
+                    "fr": "Compressée (Focus système intérieur)",
+                    "it": "Compressa (Focus sistema interno)",
+                    "nl": "Gecomprimeerd (Focus binnenste systeem)",
+                    "pl": "Skompresowana (Fokus na układ wewnętrzny)",
+                    "pt": "Comprimida (Foco sistema interior)",
+                    "ru": "Сжатая (Фокус на внутренней системе)",
+                    "ja": "圧縮（内側システムフォーカス）",
+                    "zh": "压缩（内部系统焦点）",
+                    "ko": "압축 (내부 시스템 중심)"
+                }}
+            ]
         }
     }
 }
@@ -992,6 +1101,8 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
         self._show_visibility = True
         self._observer_latitude = 49.14  # Default: Heilbronn
         self._observer_longitude = 9.22
+        self._enable_visualization = False
+        self._visualization_scale = "logarithmic"
         
         # Planet positions data storage
         self._positions_info = {}
@@ -1029,8 +1140,14 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
                 "coordinate_system": self._coordinate_system,
                 "show_distance": self._show_distance,
                 "show_constellation": self._show_constellation,
-                "show_retrograde": self._show_retrograde
+                "show_retrograde": self._show_retrograde,
+                "enable_visualization": self._enable_visualization,
+                "visualization_scale": self._visualization_scale
             }
+            
+            # Add visualization HTML if enabled
+            if self._enable_visualization:
+                attrs["solar_system_map_html"] = self._generate_visualization_html()
         
         return attrs
     
@@ -1060,6 +1177,24 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
     def _calculate_planet_position(self, planet_id: str, jd: float) -> Dict[str, Any]:
         """Calculate simplified planet position using Keplerian elements."""
         planet = self._planets[planet_id]
+        
+        # Special handling for JWST at L2 point
+        if planet.get("special_type") == "space_telescope":
+            # JWST stays at L2 point, 1.5 million km from Earth opposite the Sun
+            earth_pos = self._calculate_planet_position("earth", jd) if "earth" in self._planets else {"longitude": 0, "distance": 1.0}
+            
+            # L2 is opposite to the Sun from Earth's perspective
+            jwst_longitude = (earth_pos["longitude"] + 180) % 360
+            jwst_distance = 1.01  # Slightly further than Earth from Sun
+            
+            return {
+                "longitude": jwst_longitude,
+                "distance": jwst_distance,
+                "mean_anomaly": 0,
+                "true_anomaly": 0,
+                "distance_from_earth_km": planet.get("distance_from_earth_km", 1500000),
+                "location": "L2 Lagrange Point"
+            }
         
         # Days since J2000.0
         d = jd - 2451545.0
@@ -1205,19 +1340,27 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
         
         parts = [f"{symbol} {planet_name}:"]
         
-        # Add longitude
-        parts.append(f"{position['longitude']:.1f}°")
-        
-        # Add distance if configured
-        if self._show_distance:
-            au = position['distance']
-            km = au * 149597870.7  # 1 AU = 149,597,870.7 km
-            parts.append(f"{au:.3f} AU ({km/1e6:.1f} Mio km)")
-        
-        # Add constellation if configured
-        if self._show_constellation:
-            const_name, const_symbol = self._get_constellation(position['longitude'])
-            parts.append(f"{const_symbol} {const_name}")
+        # Special formatting for JWST
+        if position.get("location") == "L2 Lagrange Point":
+            parts.append("L2 Point")
+            if self._show_distance:
+                km = position.get("distance_from_earth_km", 1500000)
+                parts.append(f"{km/1e6:.1f} Mio km from Earth")
+        else:
+            # Regular planet formatting
+            # Add longitude
+            parts.append(f"{position['longitude']:.1f}°")
+            
+            # Add distance if configured
+            if self._show_distance:
+                au = position['distance']
+                km = au * 149597870.7  # 1 AU = 149,597,870.7 km
+                parts.append(f"{au:.3f} AU ({km/1e6:.1f} Mio km)")
+            
+            # Add constellation if configured
+            if self._show_constellation:
+                const_name, const_symbol = self._get_constellation(position['longitude'])
+                parts.append(f"{const_symbol} {const_name}")
         
         # Add visibility if configured
         if self._show_visibility and "visibility" in position:
@@ -1321,6 +1464,139 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
         
         return jd
     
+    def _generate_visualization_html(self) -> str:
+        """Generate HTML/Canvas visualization of solar system."""
+        # Planet colors
+        colors = {
+            "mercury": "#8C7853", "venus": "#FFC649", "earth": "#4A90E2",
+            "mars": "#CD5C5C", "jupiter": "#DAA520", "saturn": "#F4A460",
+            "uranus": "#4FD0E2", "neptune": "#4169E1", "pluto": "#9B870C",
+            "jwst": "#FF1493"
+        }
+        
+        # Get current positions
+        positions = self._positions_info.get("positions", {})
+        
+        # Build planet data for JavaScript
+        planet_data = []
+        for planet_name, pos in positions.items():
+            planet_id = None
+            for pid, pdata in self._planets.items():
+                if self._get_planet_name(pid) == planet_name:
+                    planet_id = pid
+                    break
+            
+            if planet_id:
+                planet_data.append({
+                    "name": planet_name,
+                    "longitude": pos.get("longitude", 0),
+                    "distance": pos.get("distance", 1),
+                    "color": colors.get(planet_id, "#FFFFFF"),
+                    "symbol": self._planets[planet_id].get("symbol", "")
+                })
+        
+        # Generate HTML with embedded JavaScript
+        html = f"""
+        <div style="width:100%; max-width:600px; margin:auto;">
+            <canvas id="solar-system-map" width="600" height="600" style="width:100%; border:1px solid #333; background:#000033;"></canvas>
+            <script>
+                (function() {{
+                    const canvas = document.getElementById('solar-system-map');
+                    const ctx = canvas.getContext('2d');
+                    const centerX = canvas.width / 2;
+                    const centerY = canvas.height / 2;
+                    const maxRadius = Math.min(centerX, centerY) - 30;
+                    
+                    // Planet data
+                    const planets = {json.dumps(planet_data)};
+                    const scale = "{self._visualization_scale}";
+                    
+                    // Clear canvas
+                    ctx.fillStyle = '#000033';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Draw Sun
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, 15, 0, 2 * Math.PI);
+                    ctx.fillStyle = '#FFD700';
+                    ctx.fill();
+                    ctx.strokeStyle = '#FFA500';
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                    
+                    // Draw title
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.font = '16px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Solar System - ' + new Date().toLocaleDateString(), centerX, 25);
+                    
+                    // Reference line (1st January at top)
+                    ctx.strokeStyle = '#444444';
+                    ctx.lineWidth = 1;
+                    ctx.setLineDash([5, 5]);
+                    ctx.beginPath();
+                    ctx.moveTo(centerX, centerY);
+                    ctx.lineTo(centerX, 30);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                    
+                    // Scale function
+                    function scaleDistance(distance) {{
+                        if (scale === 'logarithmic') {{
+                            return Math.log(distance + 1) / Math.log(40) * maxRadius;
+                        }} else if (scale === 'compressed') {{
+                            return Math.pow(distance, 0.5) / Math.pow(40, 0.5) * maxRadius;
+                        }} else {{
+                            return (distance / 40) * maxRadius;
+                        }}
+                    }}
+                    
+                    // Draw orbits and planets
+                    planets.forEach(planet => {{
+                        const radius = scaleDistance(planet.distance);
+                        
+                        // Draw orbit
+                        ctx.beginPath();
+                        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+                        ctx.strokeStyle = '#444444';
+                        ctx.lineWidth = 0.5;
+                        ctx.stroke();
+                        
+                        // Calculate planet position
+                        const angle = (planet.longitude - 90) * Math.PI / 180; // -90 to put 0° at top
+                        const x = centerX + Math.cos(angle) * radius;
+                        const y = centerY + Math.sin(angle) * radius;
+                        
+                        // Draw planet
+                        ctx.beginPath();
+                        ctx.arc(x, y, 5, 0, 2 * Math.PI);
+                        ctx.fillStyle = planet.color;
+                        ctx.fill();
+                        ctx.strokeStyle = '#FFFFFF';
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                        
+                        // Draw label
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.font = '10px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(planet.symbol + ' ' + planet.name, x, y - 10);
+                    }});
+                    
+                    // Legend
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.font = '12px Arial';
+                    ctx.textAlign = 'left';
+                    ctx.fillText('Scale: ' + scale, 10, canvas.height - 10);
+                    ctx.textAlign = 'right';
+                    ctx.fillText('☉ = Sun | ↑ = Jan 1', canvas.width - 10, canvas.height - 10);
+                }})();
+            </script>
+        </div>
+        """
+        
+        return html
+    
     def update(self) -> None:
         """Update the sensor."""
         # Update user language
@@ -1346,6 +1622,8 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
             self._show_constellation = bool(options.get("show_constellation", True))
             self._show_retrograde = bool(options.get("show_retrograde", True))
             self._show_visibility = bool(options.get("show_visibility", True))
+            self._enable_visualization = bool(options.get("enable_visualization", False))
+            self._visualization_scale = options.get("visualization_scale", "logarithmic")
             
             # Update observer location
             try:
