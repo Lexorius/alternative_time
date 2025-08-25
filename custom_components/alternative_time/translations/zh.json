@@ -1,3 +1,4 @@
+// ===== translations/zh.json (Chinesisch) =====
 {
   "config": {
     "step": {
@@ -35,15 +36,26 @@
       "unknown": "发生意外错误"
     },
     "abort": {
-      "no_calendars_found": "未找到日历实现。请检查安装。"
+      "no_calendars_found": "未找到日历实现。请检查安装。",
+      "no_options": "{message}"
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "替代时间选项",
-        "description": "选项流尚未实现。请删除并重新创建集成以更改设置。"
+        "title": "配置日历选项",
+        "description": "选择一个日历来配置其选项：\n\n{title}",
+        "data": {
+          "calendar": "要配置的日历"
+        }
+      },
+      "configure_calendar": {
+        "title": "配置{calendar_name}",
+        "description": "**{calendar_name}**\n\n{calendar_description}\n\n调整以下设置："
       }
+    },
+    "abort": {
+      "no_options": "{message}"
     }
   }
 }

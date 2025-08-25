@@ -1,3 +1,4 @@
+// ===== strings.json (Englisch - Basis) =====
 {
   "config": {
     "step": {
@@ -35,15 +36,26 @@
       "unknown": "Unexpected error occurred"
     },
     "abort": {
-      "no_calendars_found": "No calendar implementations found. Please check the installation."
+      "no_calendars_found": "No calendar implementations found. Please check the installation.",
+      "no_options": "{message}"
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Alternative Time Options",
-        "description": "Options flow is not yet implemented. Please delete and recreate the integration to change settings."
+        "title": "Configure Calendar Options",
+        "description": "Select a calendar to configure its options:\n\n{title}",
+        "data": {
+          "calendar": "Calendar to configure"
+        }
+      },
+      "configure_calendar": {
+        "title": "Configure {calendar_name}",
+        "description": "**{calendar_name}**\n\n{calendar_description}\n\nAdjust the settings below:"
       }
+    },
+    "abort": {
+      "no_options": "{message}"
     }
   }
 }
