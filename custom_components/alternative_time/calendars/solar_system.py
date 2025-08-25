@@ -1,17 +1,17 @@
-"""Solar System Planetary Positions - Version 1.0.6
+"""Solar System Planetary Positions - Version 1.1.0
 
 Home Assistant "Alternative Time Systems" calendar plugin.
 
-- Kompatibel mit vorhandener config_flow.py und sensor.py (keine Änderungen dort nötig)
-- Bietet CALENDAR_INFO für Auto-Discovery & Options-UI (mit vollständigen Übersetzungen)
-- Sensor-Klasse: SolarSystemSensor(base_name, hass) (AlternativeTimeSensorBase-konform)
-- Visualisierung:
-    - solar_system_map_html  (Canvas + JS, jetzt CCW)
-    - solar_system_map_svg   (reines SVG, jetzt CCW)
-    - solar_system_map_svg_data_uri (Base64) + entity_picture für Lovelace
-- Neu:
-    - Darstellung dreht sich LINKS herum (gegen den Uhrzeigersinn, Nordblick)
-    - Radial-Markierungen für den 1. jedes Monats (berechnet aus Erdbahn)
+Ziele / Änderungen:
+- Darstellung LINKS herum (CCW, Blick vom Nord-Ekliptikpol), 0° = 1. Januar oben
+- Monats-Markierungen für den 1. jedes Monats, relativ zu 1. Jan (damit 1. Jan immer oben)
+- Optionales HTML (Canvas) **und** reines SVG (ohne JS)
+- Liefert Base64-Data-URI und setzt `entity_picture`, damit Lovelace ohne Custom-Cards rendert
+- Lässt config_flow.py und sensor.py unverändert; nutzt nur deren bereitgestellte Schnittstellen
+
+Hinweise:
+- Ephemeriden sind vereinfachte Kepler-Approximationen (J2000-Elemente).
+- Earth wird zur geozentrischen Umrechnung genutzt, aber nicht als Planet gezeichnet.
 """
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ from typing import Dict, Any, Tuple, List
 from homeassistant.core import HomeAssistant
 from ..sensor import AlternativeTimeSensorBase
 
-# Optional: Falls euer sensor.py eine interne Registry bereitstellt
+# Optional: Falls eure sensor.py eine interne Registry bereitstellt (zur Options-Fallback-Nutzung)
 try:
     from ..sensor import _CONFIG_ENTRIES  # type: ignore
 except Exception:  # pragma: no cover
@@ -41,13 +41,13 @@ UPDATE_INTERVAL = 300  # Sekunden
 
 CALENDAR_INFO: Dict[str, Any] = {
     "id": "solar_system",
-    "version": "1.0.6",
+    "version": "1.1.0",
     "icon": "mdi:orbit",
     "category": "space",
     "accuracy": "approximate",
     "update_interval": UPDATE_INTERVAL,
 
-    # Vollständige mehrsprachige Namen
+    # Mehrsprachige Namen
     "name": {
         "en": "Solar System Positions",
         "de": "Sonnensystem Positionen",
@@ -63,7 +63,7 @@ CALENDAR_INFO: Dict[str, Any] = {
         "ko": "태양계 위치",
     },
 
-    # Vollständige mehrsprachige Beschreibungen
+    # Mehrsprachige Beschreibungen
     "description": {
         "en": "Current positions of planets in the solar system",
         "de": "Aktuelle Positionen der Planeten im Sonnensystem",
@@ -82,7 +82,7 @@ CALENDAR_INFO: Dict[str, Any] = {
     # Referenz
     "reference_url": "https://en.wikipedia.org/wiki/Planetary_positions",
 
-    # Vollständige Konfig-Optionen (wie config_flow sie ausliest)
+    # Konfigurationsoptionen (werden vom bestehenden config_flow genutzt)
     "config_options": {
         "display_planet": {
             "type": "select",
@@ -299,7 +299,7 @@ CALENDAR_INFO: Dict[str, Any] = {
                 "nl": "Waarnemerslengte (gebruikt HA-locatie indien leeg)",
                 "pl": "Długość Geograficzna (używa lokalizacji HA jeśli puste)",
                 "pt": "Longitude do Observador (usa localização HA se vazio)",
-                "ru": "Долгота наблюдателя (использует местоположение HA если пусто)",
+                "ru": "Долгота наблюдателя (использует местоположение HA jeśli пусто)",
                 "ja": "観測者の経度（空の場合はHA位置を使用）",
                 "zh": "观察者经度（如果为空则使用HA位置）",
                 "ko": "관찰자 경도 (비어있으면 HA 위치 사용)",
@@ -374,9 +374,9 @@ CALENDAR_INFO: Dict[str, Any] = {
                 "en": "Display distance from Sun (or Earth in geocentric mode) in AU and km",
                 "de": "Entfernung von der Sonne anzeigen (oder Erde im geozentrischen Modus) in AE und km",
                 "es": "Mostrar distancia desde el Sol (o Tierra en modo geocéntrico) en UA y km",
-                "fr": "Afficher la distance du Soleil (ou de la Terre en mode géocentrique) en UA et km",
+                "fr": "Afficher la distance du Soleil (ou de la Terre en mode géocentrique) en UA y km",
                 "it": "Visualizza distanza dal Sole (o Terra in modalità geocentrica) in UA e km",
-                "nl": "Afstand van de zon wiedergeven (of aarde in geocentrische modus) in AE en km",
+                "nl": "Afstand van de zon weergeven (of aarde in geocentrische modus) in AE en km",
                 "pl": "Wyświetl odległość od Słońca (lub Ziemi w trybie geocentrycznym) w j.a. i km",
                 "pt": "Exibir distância do Sol (ou Terra no modo geocêntrico) em UA e km",
                 "ru": "Отображать расстояние от Солнца (или Земли в геоцентрическом режиме) в а.е. и км",
@@ -409,7 +409,7 @@ CALENDAR_INFO: Dict[str, Any] = {
                 "es": "Mostrar constelación del zodíaco donde se encuentra el planeta",
                 "fr": "Afficher la constellation du zodiaque où se trouve la planète",
                 "it": "Visualizza costellazione zodiacale dove si trova il pianeta",
-                "nl": "Dierenriem sterrenbeeld wiedergeven waar planeet zich bevindt",
+                "nl": "Dierenriem sterrenbeeld weergeven waar planeet zich bevindt",
                 "pl": "Wyświetl konstelację zodiaku, w której znajduje się planeta",
                 "pt": "Exibir constelação do zodíaco onde o planeta está localizado",
                 "ru": "Отображать зодиакальное созвездие, где находится планета",
@@ -563,9 +563,8 @@ CALENDAR_INFO: Dict[str, Any] = {
         },
     },
 
-    # Sonnen-/Planeten-/Sternbilddaten (mit Übersetzungen)
+    # Daten: Sternbilder & Planeten
     "solar_data": {
-        # 12 Tierkreissternbilder à 30°
         "constellations": [
             {"name": {"en": "Aries", "de": "Widder", "es": "Aries", "fr": "Bélier",
                       "it": "Ariete", "nl": "Ram", "pl": "Baran", "pt": "Áries",
@@ -605,7 +604,6 @@ CALENDAR_INFO: Dict[str, Any] = {
                       "ru": "Рыбы", "ja": "魚座", "zh": "双鱼座", "ko": "물고기자리"}, "start": 330, "symbol": "♓"},
         ],
 
-        # Planeten (J2000; vereinfachte Elemente) + vollsprachige Namen
         "planets": {
             "mercury": {
                 "name": {"en": "Mercury", "de": "Merkur", "es": "Mercurio", "fr": "Mercure",
@@ -743,9 +741,9 @@ CALENDAR_INFO: Dict[str, Any] = {
 # ============================================
 
 class SolarSystemSensor(AlternativeTimeSensorBase):
-    """Sensor for displaying solar system planetary positions (CCW + monthly markers)."""
+    """Sensor für Sonnensystem-Positionen (CCW, 1. Jan = 0° oben, Monats-Markierungen)."""
 
-    UPDATE_INTERVAL = UPDATE_INTERVAL  # class-level
+    UPDATE_INTERVAL = UPDATE_INTERVAL  # class-level Intervall
 
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         super().__init__(base_name, hass)
@@ -763,6 +761,7 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
         self._planets = self._solar_data.get("planets", {})
         self._constellations = self._solar_data.get("constellations", [])
 
+        # Defaults (werden aus Optionen überschrieben)
         self._display_planet = "all"
         self._coordinate_system = "heliocentric"
         self._observer_latitude = float(getattr(getattr(hass, "config", None), "latitude", 0.0) or 0.0)
@@ -803,20 +802,31 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
                 "visualization_scale": self._visualization_scale,
             }
             if self._enable_visualization:
-                # SVG
+                # SVG erzeugen + als Entity-Bild verfügbar machen
                 svg = self._generate_visualization_svg()
                 attrs["solar_system_map_svg"] = svg
                 data_uri = "data:image/svg+xml;base64," + base64.b64encode(svg.encode("utf-8")).decode("ascii")
                 attrs["solar_system_map_svg_data_uri"] = data_uri
-                attrs["entity_picture"] = data_uri  # für picture-entity
+                attrs["entity_picture"] = data_uri  # picture-entity zeigt das direkt an
 
-                # HTML (Canvas)
+                # HTML/Canvas optional weiterhin bereitstellen
                 attrs["solar_system_map_html"] = self._generate_visualization_html()
         return attrs
 
-    # ----- Core calculations -----
+    # ----- Hilfen / Lokalisierung -----
+    def _lang(self) -> str:
+        return getattr(getattr(self._hass, "config", None), "language", "en") or "en"
+
+    def _label_today(self) -> str:
+        return "Heute" if self._lang().startswith("de") else "Today"
+
+    def _planet_local_name(self, pid: str) -> str:
+        names = self._planets.get(pid, {}).get("name", {})
+        return names.get(self._lang()) or names.get("en", pid.title())
+
+    # ----- Zeit / Winkel -----
     def _datetime_to_jd(self, dt: datetime) -> float:
-        """Convert datetime to Julian Date (Meeus)."""
+        """Julianisches Datum (Meeus)."""
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=timezone.utc)
         else:
@@ -832,87 +842,13 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
         jd = int(365.25 * (year + 4716)) + int(30.6001 * (month + 1)) + day + b - 1524.5
         return float(jd)
 
-    def _get_constellation(self, longitude: float) -> Tuple[str, str]:
-        """Map ecliptic longitude to a 30° zodiac segment."""
-        lon = longitude % 360.0
-        lang = getattr(getattr(self._hass, "config", None), "language", "en") or "en"
-        for c in self._constellations:
-            start = float(c.get("start", 0))
-            end = (start + 30.0) % 360.0
-            if start <= lon < end or (start > end and (lon >= start or lon < end)):
-                names = c.get("name", {})
-                name = names.get(lang) or names.get("en", "Unknown")
-                return name, str(c.get("symbol", ""))
-        return "Unknown", ""
+    def _year_rotation_offset_deg(self, year: int) -> float:
+        """Rotationsoffset: heliozentrische Länge der Erde am 1.1. des Jahres (0..360)."""
+        dt = datetime(year, 1, 1, 0, 0, tzinfo=timezone.utc)
+        jd = self._datetime_to_jd(dt)
+        earth = self._calc_planet("earth", jd)
+        return float(earth["longitude"] % 360.0)
 
-    def _calc_planet(self, pid: str, jd: float) -> Dict[str, Any]:
-        """Very simplified heliocentric position from mean longitude & eccentricity."""
-        p = self._planets[pid]
-
-        # JWST (L2)
-        if p.get("special_type") == "space_telescope":
-            earth = self._calc_planet("earth", jd) if "earth" in self._planets else {"longitude": 0.0, "distance": 1.0}
-            return {
-                "longitude": (earth["longitude"] + 180.0) % 360.0,
-                "distance": 1.01,
-                "mean_anomaly": 0.0,
-                "true_anomaly": 0.0,
-                "location": "L2 Lagrange Point",
-                "distance_from_earth_km": p.get("distance_from_earth_km", 1_500_000),
-            }
-
-        d = jd - 2451545.0
-        n = 360.0 / float(p["orbital_period"])  # deg/day
-        M = (p["mean_longitude"] + n * d) % 360.0
-        e = float(p["eccentricity"])
-
-        # 1. Ordnung der Gleichung des Zentrums (grobe Näherung)
-        C = (2 * e - e**3 / 4.0) * math.sin(math.radians(M)) * (180.0 / math.pi)
-        v = (M + C) % 360.0
-        L = (v + p["perihelion_longitude"]) % 360.0
-
-        a = float(p["semi_major_axis"])
-        r = a * (1 - e**2) / (1 + e * math.cos(math.radians(v)))
-
-        return {"longitude": L, "distance": r, "mean_anomaly": M, "true_anomaly": v}
-
-    def _to_geocentric(self, planet_pos: Dict[str, float], earth_pos: Dict[str, float]) -> Dict[str, float]:
-        """Simplified geocentric conversion in the ecliptic plane (vector difference)."""
-        lam_p = math.radians(planet_pos["longitude"])
-        lam_e = math.radians(earth_pos["longitude"])
-        r_p = planet_pos["distance"]
-        r_e = earth_pos["distance"]
-        x = r_p * math.cos(lam_p) - r_e * math.cos(lam_e)
-        y = r_p * math.sin(lam_p) - r_e * math.sin(lam_e)
-        lam_geo = (math.degrees(math.atan2(y, x)) + 360.0) % 360.0
-        dist = math.hypot(x, y)
-        return {"longitude": lam_geo, "distance": dist}
-
-    def _approx_visibility(self, pid: str, geo_long: float, earth_long: float) -> Dict[str, Any]:
-        """Very coarse visibility window based on elongation only."""
-        elong = abs((geo_long - earth_long + 540.0) % 360.0 - 180.0)  # 0..180
-        vis = {"elongation": elong, "visible": False, "rise_time": None, "set_time": None, "best_time": None, "visibility_period": None}
-
-        if pid in ("mercury", "venus"):
-            if 15.0 < elong < 47.0:
-                vis["visible"] = True
-                evening = ((geo_long - earth_long) % 360.0) > 180.0
-                if evening:
-                    vis.update({"visibility_period": "Evening", "best_time": "After sunset", "rise_time": "18:00", "set_time": "21:00"})
-                else:
-                    vis.update({"visibility_period": "Morning", "best_time": "Before sunrise", "rise_time": "03:00", "set_time": "06:00"})
-        else:
-            if elong > 60.0:
-                vis["visible"] = True
-                if elong > 150.0:
-                    vis.update({"visibility_period": "All night", "best_time": "Midnight", "rise_time": "18:00", "set_time": "06:00"})
-                elif elong > 90.0:
-                    vis.update({"visibility_period": "Most of night", "best_time": "Late evening", "rise_time": "20:00", "set_time": "04:00"})
-                else:
-                    vis.update({"visibility_period": "Evening", "best_time": "Evening", "rise_time": "20:00", "set_time": "23:00"})
-        return vis
-
-    # ----- Monats-Markierungen -----
     def _month_names(self, lang: str) -> List[str]:
         names = {
             "de": ["1. Jan", "1. Feb", "1. Mär", "1. Apr", "1. Mai", "1. Jun",
@@ -943,18 +879,102 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
         return names.get(lang) or names["en"]
 
     def _monthly_markers(self, year: int) -> List[Dict[str, Any]]:
-        """Berechne Erd-Helio-Längengrade am 1. jedes Monats (Helio-Referenzen)."""
-        lang = getattr(getattr(self._hass, "config", None), "language", "en") or "en"
+        """Erd-Helio-Längen am 1. jedes Monats; zusätzlich 'rel' relativ zu 1.1.-Offset."""
+        lang = self._lang()
         labels = self._month_names(lang)
         marks: List[Dict[str, Any]] = []
+        L0 = self._year_rotation_offset_deg(year)
         for m in range(1, 13):
             dt = datetime(year, m, 1, 0, 0, tzinfo=timezone.utc)
             jd = self._datetime_to_jd(dt)
             earth = self._calc_planet("earth", jd)
-            marks.append({"lon": float(earth["longitude"] % 360.0), "label": labels[m - 1]})
+            lon = float(earth["longitude"] % 360.0)
+            rel = (lon - L0 + 360.0) % 360.0
+            marks.append({"lon": lon, "rel": rel, "label": labels[m - 1]})
         return marks
 
-    # ----- Visualisierung (HTML/Canvas) -----
+    # ----- Konstellation -----
+    def _get_constellation(self, longitude: float) -> Tuple[str, str]:
+        """Ordnet ekliptische Länge einem 30°-Zodiaksegment zu."""
+        lon = longitude % 360.0
+        for c in self._constellations:
+            start = float(c.get("start", 0))
+            end = (start + 30.0) % 360.0
+            if start <= lon < end or (start > end and (lon >= start or lon < end)):
+                names = c.get("name", {})
+                name = names.get(self._lang()) or names.get("en", "Unknown")
+                return name, str(c.get("symbol", ""))
+        return "Unknown", ""
+
+    # ----- Planetengeometrie -----
+    def _calc_planet(self, pid: str, jd: float) -> Dict[str, Any]:
+        """Sehr vereinfachte heliozentrische Position (Kepler 1. Ordnung)."""
+        p = self._planets[pid]
+
+        # JWST (L2) – gegenüber der Sonne von der Erde aus gesehen (~1.01 AU)
+        if p.get("special_type") == "space_telescope":
+            earth = self._calc_planet("earth", jd) if "earth" in self._planets else {"longitude": 0.0, "distance": 1.0}
+            return {
+                "longitude": (earth["longitude"] + 180.0) % 360.0,
+                "distance": 1.01,
+                "mean_anomaly": 0.0,
+                "true_anomaly": 0.0,
+                "location": "L2 Lagrange Point",
+                "distance_from_earth_km": p.get("distance_from_earth_km", 1_500_000),
+            }
+
+        d = jd - 2451545.0
+        n = 360.0 / float(p["orbital_period"])  # deg/day
+        M = (p["mean_longitude"] + n * d) % 360.0
+        e = float(p["eccentricity"])
+
+        # Gleichung des Zentrums (1. Ordnung)
+        C = (2 * e - e**3 / 4.0) * math.sin(math.radians(M)) * (180.0 / math.pi)
+        v = (M + C) % 360.0
+        L = (v + p["perihelion_longitude"]) % 360.0
+
+        a = float(p["semi_major_axis"])
+        r = a * (1 - e**2) / (1 + e * math.cos(math.radians(v)))
+
+        return {"longitude": L, "distance": r, "mean_anomaly": M, "true_anomaly": v}
+
+    def _to_geocentric(self, planet_pos: Dict[str, float], earth_pos: Dict[str, float]) -> Dict[str, float]:
+        """Vereinfachte geozentrische Projektion in der Ekliptik-Ebene."""
+        lam_p = math.radians(planet_pos["longitude"])
+        lam_e = math.radians(earth_pos["longitude"])
+        r_p = planet_pos["distance"]
+        r_e = earth_pos["distance"]
+        x = r_p * math.cos(lam_p) - r_e * math.cos(lam_e)
+        y = r_p * math.sin(lam_p) - r_e * math.sin(lam_e)
+        lam_geo = (math.degrees(math.atan2(y, x)) + 360.0) % 360.0
+        dist = math.hypot(x, y)
+        return {"longitude": lam_geo, "distance": dist}
+
+    def _approx_visibility(self, pid: str, geo_long: float, earth_long: float) -> Dict[str, Any]:
+        """Grobe Sichtbarkeitsabschätzung nur über Elongation."""
+        elong = abs((geo_long - earth_long + 540.0) % 360.0 - 180.0)  # 0..180
+        vis = {"elongation": elong, "visible": False, "rise_time": None, "set_time": None, "best_time": None, "visibility_period": None}
+
+        if pid in ("mercury", "venus"):
+            if 15.0 < elong < 47.0:
+                vis["visible"] = True
+                evening = ((geo_long - earth_long) % 360.0) > 180.0
+                if evening:
+                    vis.update({"visibility_period": "Evening", "best_time": "After sunset", "rise_time": "18:00", "set_time": "21:00"})
+                else:
+                    vis.update({"visibility_period": "Morning", "best_time": "Before sunrise", "rise_time": "03:00", "set_time": "06:00"})
+        else:
+            if elong > 60.0:
+                vis["visible"] = True
+                if elong > 150.0:
+                    vis.update({"visibility_period": "All night", "best_time": "Midnight", "rise_time": "18:00", "set_time": "06:00"})
+                elif elong > 90.0:
+                    vis.update({"visibility_period": "Most of night", "best_time": "Late evening", "rise_time": "20:00", "set_time": "04:00"})
+                else:
+                    vis.update({"visibility_period": "Evening", "best_time": "Evening", "rise_time": "20:00", "set_time": "23:00"})
+        return vis
+
+    # ----- Visualisierung HTML/Canvas (CCW; 1. Jan oben; Monate relativ) -----
     def _generate_visualization_html(self) -> str:
         colors = {
             "mercury": "#8C7853", "venus": "#FFC649", "earth": "#4A90E2",
@@ -963,13 +983,13 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
             "jwst": "#FF1493",
         }
         positions = self._positions_info.get("positions", {})
-        lang = getattr(getattr(self._hass, "config", None), "language", "en") or "en"
+        lang = self._lang()
 
         data = []
         for pid, pdata in self._planets.items():
             pname = pdata.get("name", {}).get(lang) or pdata.get("name", {}).get("en") or pid.title()
             pos = positions.get(pname)
-            if not pos:
+            if not pos or pid == "earth":
                 continue
             data.append({
                 "id": pid,
@@ -980,9 +1000,9 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
                 "symbol": pdata.get("symbol", ""),
             })
 
-        # Monats-Markierungen
         year = datetime.now(timezone.utc).year
         month_marks = self._monthly_markers(year)
+        L0 = self._year_rotation_offset_deg(year)
 
         return f"""
         <div style="width:100%;max-width:600px;margin:auto">
@@ -996,6 +1016,7 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
             const scale = "{self._visualization_scale}";
             const planets = {json.dumps(data)};
             const marks = {json.dumps(month_marks)};
+            const L0 = {L0};
 
             function scaleR(d) {{
               if (scale === 'logarithmic') return Math.log(d + 1)/Math.log(40)*maxR;
@@ -1003,27 +1024,25 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
               return (d/40)*maxR;
             }}
 
-            // Hintergrund
             ctx.fillStyle = '#000033'; ctx.fillRect(0,0,canvas.width,canvas.height);
 
             // Sonne
             ctx.beginPath(); ctx.arc(cx,cy,15,0,2*Math.PI);
             ctx.fillStyle='#FFD700'; ctx.fill(); ctx.strokeStyle='#FFA500'; ctx.lineWidth=2; ctx.stroke();
 
-            // 0°/1.1. Referenz nach oben (CCW)
-            ctx.strokeStyle = '#666'; ctx.lineWidth = 1; ctx.setLineDash([6,4]);
+            // 0°/1.1. oben (Referenz)
+            ctx.strokeStyle = '#888'; ctx.lineWidth = 1; ctx.setLineDash([6,4]);
             ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx, 20); ctx.stroke(); ctx.setLineDash([]);
             ctx.fillStyle = '#FFFFFF'; ctx.font = '11px Arial'; ctx.textAlign = 'center';
             ctx.fillText('0° / 1.1.', cx, 16);
 
-            // Monats-Linien (1. jedes Monats) – CCW: Winkel = (90 - lon)
+            // Monats-Linien relativ zu 1.1.
             ctx.strokeStyle = '#555'; ctx.lineWidth = 1; ctx.setLineDash([4,4]);
             marks.forEach(m => {{
-              const ang = (90 - m.lon) * Math.PI/180;
+              const ang = (90 - m.rel) * Math.PI/180;
               const x = cx + Math.cos(ang) * (maxR);
               const y = cy + Math.sin(ang) * (maxR);
               ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x, y); ctx.stroke();
-              // Label außen leicht versetzt
               const lx = cx + Math.cos(ang) * (maxR + 12);
               const ly = cy + Math.sin(ang) * (maxR + 12);
               ctx.fillStyle='#fff'; ctx.font='10px Arial'; ctx.textAlign='center';
@@ -1031,13 +1050,14 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
             }});
             ctx.setLineDash([]);
 
-            // Orbits & Planeten (CCW)
+            // Orbits & Planeten (CCW, relativ zu 1.1.)
             planets.forEach(p => {{
               const r = scaleR(p.distance);
               ctx.beginPath(); ctx.arc(cx,cy,r,0,2*Math.PI);
               ctx.strokeStyle='#444'; ctx.lineWidth=0.5; ctx.stroke();
 
-              const ang = (90 - p.longitude) * Math.PI/180;  // CCW
+              const relLon = (((p.longitude - L0) % 360) + 360) % 360;
+              const ang = (90 - relLon) * Math.PI/180;  // CCW
               const x = cx + Math.cos(ang)*r;
               const y = cy + Math.sin(ang)*r;
 
@@ -1052,15 +1072,14 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
             ctx.fillStyle = '#FFFFFF';
             ctx.font = '11px Arial';
             ctx.textAlign = 'left';
-            ctx.fillText('CCW · Sonne im Zentrum · 0°/1.1. oben · Maßstab: ' + scale, 10, canvas.height - 10);
+            ctx.fillText('CCW · Sun centered · 1 Jan = 0° up · Scale: ' + scale, 10, canvas.height - 10);
           }})();
           </script>
         </div>
         """
 
-    # ----- Visualisierung (SVG, kein JS) -----
+    # ----- Visualisierung SVG (CCW; 1. Jan oben; Monate relativ) -----
     def _generate_visualization_svg(self) -> str:
-        """Inline-SVG: Draufsicht, CCW, Sonne in Mitte, 0°/1.1. oben, Monatslinien."""
         width, height = 600, 600
         cx, cy = width // 2, height // 2
         margin = 30
@@ -1074,7 +1093,7 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
             "jwst": "#FF1493",
         }
         positions = self._positions_info.get("positions", {})
-        lang = getattr(getattr(self._hass, "config", None), "language", "en") or "en"
+        lang = self._lang()
 
         def scale_r(d: float) -> float:
             d = float(d)
@@ -1085,14 +1104,15 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
             else:
                 return (d / 40.0) * maxR
 
-        # Monats-Markierungen (Helio-Lon der Erde am 1. jedes Monats)
         year = datetime.now(timezone.utc).year
         marks = self._monthly_markers(year)
+        L0 = self._year_rotation_offset_deg(year)
 
+        # Planet-Items vorbereiten
         items = []
         for pid, pdata in self._planets.items():
             if pid == "earth":
-                continue
+                continue  # Erde nicht als Planet zeichnen
             pname = pdata.get("name", {}).get(lang) or pdata.get("name", {}).get("en") or pid.title()
             pos = positions.get(pname)
             if not pos:
@@ -1112,12 +1132,12 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
         parts.append(f'<rect x="0" y="0" width="{width}" height="{height}" fill="#000033"/>')
         parts.append(f'<circle cx="{cx}" cy="{cy}" r="15" fill="#FFD700" stroke="#FFA500" stroke-width="2"/>')
         # 0°/1.1. oben
-        parts.append(f'<line x1="{cx}" y1="{cy}" x2="{cx}" y2="{margin}" stroke="#666" stroke-dasharray="6,4" stroke-width="1"/>')
+        parts.append(f'<line x1="{cx}" y1="{cy}" x2="{cx}" y2="{margin}" stroke="#888" stroke-dasharray="6,4" stroke-width="1"/>')
         parts.append(f'<text x="{cx}" y="{margin-6}" fill="#FFFFFF" font-size="11" text-anchor="middle">0° / 1.1.</text>')
 
-        # Monatslinien (CCW: ang = 90 - lon)
+        # Monatslinien relativ zu 1.1.
         for m in marks:
-            ang = math.radians(90.0 - float(m["lon"]))
+            ang = math.radians(90.0 - float(m["rel"]))
             x = cx + math.cos(ang) * maxR
             y = cy + math.sin(ang) * maxR
             parts.append(f'<line x1="{cx}" y1="{cy}" x2="{x:.2f}" y2="{y:.2f}" stroke="#555" stroke-dasharray="4,4" stroke-width="1"/>')
@@ -1126,11 +1146,12 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
             label = str(m["label"]).replace("&", "&amp;")
             parts.append(f'<text x="{lx:.2f}" y="{ly:.2f}" fill="#FFFFFF" font-size="10" text-anchor="middle">{label}</text>')
 
-        # Orbits & Planeten (CCW)
+        # Orbits & Planeten (CCW, relativ zu 1.1.)
         for it in items:
             r = scale_r(it["dist"])
             parts.append(f'<circle cx="{cx}" cy="{cy}" r="{r:.2f}" fill="none" stroke="#444" stroke-width="0.6"/>')
-            ang = math.radians(90.0 - it["lon"])  # CCW
+            rel = (it["lon"] - L0 + 360.0) % 360.0
+            ang = math.radians(90.0 - rel)
             x = cx + math.cos(ang) * r
             y = cy + math.sin(ang) * r
             parts.append(f'<circle cx="{x:.2f}" cy="{y:.2f}" r="5" fill="{it["color"]}" stroke="#FFFFFF" stroke-width="1"/>')
@@ -1138,16 +1159,11 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
             label = label.replace("&", "&amp;")
             parts.append(f'<text x="{x:.2f}" y="{(y-10):.2f}" fill="#FFFFFF" font-size="10" text-anchor="middle">{label}</text>')
 
-        parts.append(f'<text x="10" y="{height-10}" fill="#FFFFFF" font-size="11">CCW · Sonne im Zentrum · 0°/1.1. oben · Maßstab: {scale}</text>')
+        parts.append(f'<text x="10" y="{height-10}" fill="#FFFFFF" font-size="11">CCW · Sonne im Zentrum · 1.1.=0° oben · Maßstab: {scale}</text>')
         parts.append('</svg>')
         return "".join(parts)
 
-    # ----- Hilfen -----
-    def _planet_local_name(self, pid: str) -> str:
-        lang = getattr(getattr(self._hass, "config", None), "language", "en") or "en"
-        names = self._planets.get(pid, {}).get("name", {})
-        return names.get(lang) or names.get("en", pid.title())
-
+    # ----- Formatierung State-Zeile -----
     def _format_position_line(self, pid: str, position: Dict[str, Any]) -> str:
         symbol = self._planets[pid].get("symbol", "")
         name = self._planet_local_name(pid)
@@ -1179,7 +1195,7 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
 
     # ----- Update -----
     def update(self) -> None:
-        """Berechnet/aktualisiert die Zustands- und Attributdaten."""
+        """Berechnet/aktualisiert Zustands- und Attributdaten."""
         opts = super().get_plugin_options()
 
         # Fallback: einige Implementationen legen Optionen unter calendar_options ab
@@ -1195,6 +1211,7 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
         except Exception as _e:
             _LOGGER.debug(f"Options fallback failed: {_e}")
 
+        # Optionen übernehmen
         try:
             self._display_planet = str(opts.get("display_planet", self._display_planet))
             self._coordinate_system = str(opts.get("coordinate_system", self._coordinate_system))
@@ -1214,11 +1231,12 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
         except Exception as exc:
             _LOGGER.debug(f"Option parsing issue: {exc}")
 
+        # Zeitpunkt jetzt
         now = datetime.now(timezone.utc)
         jd = self._datetime_to_jd(now)
         AU_KM = 149_597_870.7
 
-        # Erde zuerst für geozentrische Umrechnung
+        # Erde (für Geo-Umrechnung)
         earth = self._calc_planet("earth", jd) if "earth" in self._planets else {"longitude": 0.0, "distance": 1.0}
 
         result: Dict[str, Any] = {
@@ -1228,7 +1246,7 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
             "positions": {},
         }
 
-        # Welche Planeten?
+        # Welche Planeten berechnen?
         planet_ids = list(self._planets.keys()) if self._display_planet == "all" else [self._display_planet]
         for pid in planet_ids:
             if pid not in self._planets or pid == "earth":
