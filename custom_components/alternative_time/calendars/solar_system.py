@@ -1,4 +1,4 @@
-"""Solar System Planetary Positions - Version 1.0.5
+"""Solar System Planetary Positions - Version 1.0.6
 
 Home Assistant "Alternative Time Systems" calendar plugin.
 
@@ -6,8 +6,12 @@ Home Assistant "Alternative Time Systems" calendar plugin.
 - Bietet CALENDAR_INFO für Auto-Discovery & Options-UI (mit vollständigen Übersetzungen)
 - Sensor-Klasse: SolarSystemSensor(base_name, hass) (AlternativeTimeSensorBase-konform)
 - Visualisierung:
-    - solar_system_map_html  (Canvas + JS)
-    - solar_system_map_svg   (reines SVG, kein JS)  ← ideal für Lovelace Markdown/HTML ohne iframe
+    - solar_system_map_html  (Canvas + JS, jetzt CCW)
+    - solar_system_map_svg   (reines SVG, jetzt CCW)
+    - solar_system_map_svg_data_uri (Base64) + entity_picture für Lovelace
+- Neu:
+    - Darstellung dreht sich LINKS herum (gegen den Uhrzeigersinn, Nordblick)
+    - Radial-Markierungen für den 1. jedes Monats (berechnet aus Erdbahn)
 """
 from __future__ import annotations
 
@@ -15,7 +19,8 @@ from datetime import datetime, timezone
 import math
 import json
 import logging
-from typing import Dict, Any, Tuple
+import base64
+from typing import Dict, Any, Tuple, List
 
 from homeassistant.core import HomeAssistant
 from ..sensor import AlternativeTimeSensorBase
@@ -36,7 +41,7 @@ UPDATE_INTERVAL = 300  # Sekunden
 
 CALENDAR_INFO: Dict[str, Any] = {
     "id": "solar_system",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "icon": "mdi:orbit",
     "category": "space",
     "accuracy": "approximate",
@@ -371,7 +376,7 @@ CALENDAR_INFO: Dict[str, Any] = {
                 "es": "Mostrar distancia desde el Sol (o Tierra en modo geocéntrico) en UA y km",
                 "fr": "Afficher la distance du Soleil (ou de la Terre en mode géocentrique) en UA et km",
                 "it": "Visualizza distanza dal Sole (o Terra in modalità geocentrica) in UA e km",
-                "nl": "Afstand van de zon weergeven (of aarde in geocentrische modus) in AE en km",
+                "nl": "Afstand van de zon wiedergeven (of aarde in geocentrische modus) in AE en km",
                 "pl": "Wyświetl odległość od Słońca (lub Ziemi w trybie geocentrycznym) w j.a. i km",
                 "pt": "Exibir distância do Sol (ou Terra no modo geocêntrico) em UA e km",
                 "ru": "Отображать расстояние от Солнца (или Земли в геоцентрическом режиме) в а.е. и км",
@@ -404,7 +409,7 @@ CALENDAR_INFO: Dict[str, Any] = {
                 "es": "Mostrar constelación del zodíaco donde se encuentra el planeta",
                 "fr": "Afficher la constellation du zodiaque où se trouve la planète",
                 "it": "Visualizza costellazione zodiacale dove si trova il pianeta",
-                "nl": "Dierenriem sterrenbeeld weergeven waar planeet zich bevindt",
+                "nl": "Dierenriem sterrenbeeld wiedergeven waar planeet zich bevindt",
                 "pl": "Wyświetl konstelację zodiaku, w której znajduje się planeta",
                 "pt": "Exibir constelação do zodíaco onde o planeta está localizado",
                 "ru": "Отображать зодиакальное созвездие, где находится планета",
@@ -738,7 +743,7 @@ CALENDAR_INFO: Dict[str, Any] = {
 # ============================================
 
 class SolarSystemSensor(AlternativeTimeSensorBase):
-    """Sensor for displaying solar system planetary positions."""
+    """Sensor for displaying solar system planetary positions (CCW + monthly markers)."""
 
     UPDATE_INTERVAL = UPDATE_INTERVAL  # class-level
 
@@ -798,8 +803,15 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
                 "visualization_scale": self._visualization_scale,
             }
             if self._enable_visualization:
+                # SVG
+                svg = self._generate_visualization_svg()
+                attrs["solar_system_map_svg"] = svg
+                data_uri = "data:image/svg+xml;base64," + base64.b64encode(svg.encode("utf-8")).decode("ascii")
+                attrs["solar_system_map_svg_data_uri"] = data_uri
+                attrs["entity_picture"] = data_uri  # für picture-entity
+
+                # HTML (Canvas)
                 attrs["solar_system_map_html"] = self._generate_visualization_html()
-                attrs["solar_system_map_svg"] = self._generate_visualization_svg()
         return attrs
 
     # ----- Core calculations -----
@@ -900,6 +912,48 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
                     vis.update({"visibility_period": "Evening", "best_time": "Evening", "rise_time": "20:00", "set_time": "23:00"})
         return vis
 
+    # ----- Monats-Markierungen -----
+    def _month_names(self, lang: str) -> List[str]:
+        names = {
+            "de": ["1. Jan", "1. Feb", "1. Mär", "1. Apr", "1. Mai", "1. Jun",
+                   "1. Jul", "1. Aug", "1. Sep", "1. Okt", "1. Nov", "1. Dez"],
+            "en": ["1 Jan", "1 Feb", "1 Mar", "1 Apr", "1 May", "1 Jun",
+                   "1 Jul", "1 Aug", "1 Sep", "1 Oct", "1 Nov", "1 Dec"],
+            "fr": ["1 janv.", "1 févr.", "1 mars", "1 avr.", "1 mai", "1 juin",
+                   "1 juil.", "1 août", "1 sept.", "1 oct.", "1 nov.", "1 déc."],
+            "es": ["1 ene", "1 feb", "1 mar", "1 abr", "1 may", "1 jun",
+                   "1 jul", "1 ago", "1 sep", "1 oct", "1 nov", "1 dic"],
+            "it": ["1 gen", "1 feb", "1 mar", "1 apr", "1 mag", "1 giu",
+                   "1 lug", "1 ago", "1 set", "1 ott", "1 nov", "1 dic"],
+            "nl": ["1 jan", "1 feb", "1 mrt", "1 apr", "1 mei", "1 jun",
+                   "1 jul", "1 aug", "1 sep", "1 okt", "1 nov", "1 dec"],
+            "pl": ["1 sty", "1 lut", "1 mar", "1 kwi", "1 maj", "1 cze",
+                   "1 lip", "1 sie", "1 wrz", "1 paź", "1 lis", "1 gru"],
+            "pt": ["1 jan", "1 fev", "1 mar", "1 abr", "1 mai", "1 jun",
+                   "1 jul", "1 ago", "1 set", "1 out", "1 nov", "1 dez"],
+            "ru": ["1 янв", "1 фев", "1 мар", "1 апр", "1 май", "1 июн",
+                   "1 июл", "1 авг", "1 сен", "1 окт", "1 ноя", "1 дек"],
+            "ja": ["1月1日", "2月1日", "3月1日", "4月1日", "5月1日", "6月1日",
+                   "7月1日", "8月1日", "9月1日", "10月1日", "11月1日", "12月1日"],
+            "zh": ["1月1日", "2月1日", "3月1日", "4月1日", "5月1日", "6月1日",
+                   "7月1日", "8月1日", "9月1日", "10月1日", "11月1日", "12月1日"],
+            "ko": ["1월1일", "2월1일", "3월1일", "4월1일", "5월1일", "6월1일",
+                   "7월1일", "8월1일", "9월1일", "10월1일", "11월1일", "12월1일"],
+        }
+        return names.get(lang) or names["en"]
+
+    def _monthly_markers(self, year: int) -> List[Dict[str, Any]]:
+        """Berechne Erd-Helio-Längengrade am 1. jedes Monats (Helio-Referenzen)."""
+        lang = getattr(getattr(self._hass, "config", None), "language", "en") or "en"
+        labels = self._month_names(lang)
+        marks: List[Dict[str, Any]] = []
+        for m in range(1, 13):
+            dt = datetime(year, m, 1, 0, 0, tzinfo=timezone.utc)
+            jd = self._datetime_to_jd(dt)
+            earth = self._calc_planet("earth", jd)
+            marks.append({"lon": float(earth["longitude"] % 360.0), "label": labels[m - 1]})
+        return marks
+
     # ----- Visualisierung (HTML/Canvas) -----
     def _generate_visualization_html(self) -> str:
         colors = {
@@ -918,12 +972,17 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
             if not pos:
                 continue
             data.append({
+                "id": pid,
                 "name": pname,
                 "longitude": float(pos.get("longitude", 0.0)),
                 "distance": float(pos.get("distance", 1.0)),
                 "color": colors.get(pid, "#FFFFFF"),
                 "symbol": pdata.get("symbol", ""),
             })
+
+        # Monats-Markierungen
+        year = datetime.now(timezone.utc).year
+        month_marks = self._monthly_markers(year)
 
         return f"""
         <div style="width:100%;max-width:600px;margin:auto">
@@ -936,6 +995,7 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
             const maxR = Math.min(cx, cy) - 30;
             const scale = "{self._visualization_scale}";
             const planets = {json.dumps(data)};
+            const marks = {json.dumps(month_marks)};
 
             function scaleR(d) {{
               if (scale === 'logarithmic') return Math.log(d + 1)/Math.log(40)*maxR;
@@ -950,19 +1010,34 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
             ctx.beginPath(); ctx.arc(cx,cy,15,0,2*Math.PI);
             ctx.fillStyle='#FFD700'; ctx.fill(); ctx.strokeStyle='#FFA500'; ctx.lineWidth=2; ctx.stroke();
 
-            // 0°/1.1. Referenz nach oben
-            ctx.strokeStyle = '#555'; ctx.lineWidth = 1; ctx.setLineDash([6,4]);
+            // 0°/1.1. Referenz nach oben (CCW)
+            ctx.strokeStyle = '#666'; ctx.lineWidth = 1; ctx.setLineDash([6,4]);
             ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx, 20); ctx.stroke(); ctx.setLineDash([]);
             ctx.fillStyle = '#FFFFFF'; ctx.font = '11px Arial'; ctx.textAlign = 'center';
             ctx.fillText('0° / 1.1.', cx, 16);
 
-            // Orbits & Planeten
+            // Monats-Linien (1. jedes Monats) – CCW: Winkel = (90 - lon)
+            ctx.strokeStyle = '#555'; ctx.lineWidth = 1; ctx.setLineDash([4,4]);
+            marks.forEach(m => {{
+              const ang = (90 - m.lon) * Math.PI/180;
+              const x = cx + Math.cos(ang) * (maxR);
+              const y = cy + Math.sin(ang) * (maxR);
+              ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x, y); ctx.stroke();
+              // Label außen leicht versetzt
+              const lx = cx + Math.cos(ang) * (maxR + 12);
+              const ly = cy + Math.sin(ang) * (maxR + 12);
+              ctx.fillStyle='#fff'; ctx.font='10px Arial'; ctx.textAlign='center';
+              ctx.fillText(m.label, lx, ly);
+            }});
+            ctx.setLineDash([]);
+
+            // Orbits & Planeten (CCW)
             planets.forEach(p => {{
               const r = scaleR(p.distance);
               ctx.beginPath(); ctx.arc(cx,cy,r,0,2*Math.PI);
               ctx.strokeStyle='#444'; ctx.lineWidth=0.5; ctx.stroke();
 
-              const ang = (p.longitude - 90) * Math.PI/180;
+              const ang = (90 - p.longitude) * Math.PI/180;  // CCW
               const x = cx + Math.cos(ang)*r;
               const y = cy + Math.sin(ang)*r;
 
@@ -977,7 +1052,7 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
             ctx.fillStyle = '#FFFFFF';
             ctx.font = '11px Arial';
             ctx.textAlign = 'left';
-            ctx.fillText('Sonne im Zentrum · 0°/1.1. oben · Maßstab: ' + scale, 10, canvas.height - 10);
+            ctx.fillText('CCW · Sonne im Zentrum · 0°/1.1. oben · Maßstab: ' + scale, 10, canvas.height - 10);
           }})();
           </script>
         </div>
@@ -985,7 +1060,7 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
 
     # ----- Visualisierung (SVG, kein JS) -----
     def _generate_visualization_svg(self) -> str:
-        """Inline-SVG: Draufsicht, Sonne in Mitte, 0°/1.1. oben."""
+        """Inline-SVG: Draufsicht, CCW, Sonne in Mitte, 0°/1.1. oben, Monatslinien."""
         width, height = 600, 600
         cx, cy = width // 2, height // 2
         margin = 30
@@ -1010,6 +1085,10 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
             else:
                 return (d / 40.0) * maxR
 
+        # Monats-Markierungen (Helio-Lon der Erde am 1. jedes Monats)
+        year = datetime.now(timezone.utc).year
+        marks = self._monthly_markers(year)
+
         items = []
         for pid, pdata in self._planets.items():
             if pid == "earth":
@@ -1028,24 +1107,38 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
             })
 
         parts = []
-        parts.append(f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-label="Solar System Map">')
+        parts.append(f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-label="Solar System Map (CCW)">')
         parts.append('<defs><style><![CDATA[text{font-family:Arial,system-ui,Segoe UI,Roboto,sans-serif}]]></style></defs>')
         parts.append(f'<rect x="0" y="0" width="{width}" height="{height}" fill="#000033"/>')
         parts.append(f'<circle cx="{cx}" cy="{cy}" r="15" fill="#FFD700" stroke="#FFA500" stroke-width="2"/>')
-        parts.append(f'<line x1="{cx}" y1="{cy}" x2="{cx}" y2="{margin}" stroke="#555" stroke-dasharray="6,4" stroke-width="1"/>')
+        # 0°/1.1. oben
+        parts.append(f'<line x1="{cx}" y1="{cy}" x2="{cx}" y2="{margin}" stroke="#666" stroke-dasharray="6,4" stroke-width="1"/>')
         parts.append(f'<text x="{cx}" y="{margin-6}" fill="#FFFFFF" font-size="11" text-anchor="middle">0° / 1.1.</text>')
 
+        # Monatslinien (CCW: ang = 90 - lon)
+        for m in marks:
+            ang = math.radians(90.0 - float(m["lon"]))
+            x = cx + math.cos(ang) * maxR
+            y = cy + math.sin(ang) * maxR
+            parts.append(f'<line x1="{cx}" y1="{cy}" x2="{x:.2f}" y2="{y:.2f}" stroke="#555" stroke-dasharray="4,4" stroke-width="1"/>')
+            lx = cx + math.cos(ang) * (maxR + 12)
+            ly = cy + math.sin(ang) * (maxR + 12)
+            label = str(m["label"]).replace("&", "&amp;")
+            parts.append(f'<text x="{lx:.2f}" y="{ly:.2f}" fill="#FFFFFF" font-size="10" text-anchor="middle">{label}</text>')
+
+        # Orbits & Planeten (CCW)
         for it in items:
             r = scale_r(it["dist"])
             parts.append(f'<circle cx="{cx}" cy="{cy}" r="{r:.2f}" fill="none" stroke="#444" stroke-width="0.6"/>')
-            ang = math.radians(it["lon"] - 90.0)
+            ang = math.radians(90.0 - it["lon"])  # CCW
             x = cx + math.cos(ang) * r
             y = cy + math.sin(ang) * r
             parts.append(f'<circle cx="{x:.2f}" cy="{y:.2f}" r="5" fill="{it["color"]}" stroke="#FFFFFF" stroke-width="1"/>')
             label = (it["symbol"] + " " if it["symbol"] else "") + it["name"]
+            label = label.replace("&", "&amp;")
             parts.append(f'<text x="{x:.2f}" y="{(y-10):.2f}" fill="#FFFFFF" font-size="10" text-anchor="middle">{label}</text>')
 
-        parts.append(f'<text x="10" y="{height-10}" fill="#FFFFFF" font-size="11">Sonne im Zentrum · 0°/1.1. oben · Maßstab: {scale}</text>')
+        parts.append(f'<text x="10" y="{height-10}" fill="#FFFFFF" font-size="11">CCW · Sonne im Zentrum · 0°/1.1. oben · Maßstab: {scale}</text>')
         parts.append('</svg>')
         return "".join(parts)
 
