@@ -20,7 +20,7 @@ Transform your Home Assistant into a multiversal clock supporting:
 - 💻 **Technical Formats** (Unix, Hexadecimal, Julian Date, Swatch Internet Time)
 - 🎖️ **Military Systems** (NATO DTG in multiple formats)
 
-## ✨ New in Version 2.5.1.145
+## ✨ New in Version 2.5.1.148
 
 ### 🪐 Solar System Positions Plugin
 - **Real-time Planetary Tracking**: Live positions of all planets, dwarf planets, and space probes
