@@ -4,7 +4,7 @@
 [![GitHub Release](https://img.shields.io/github/release/Lexorius/alternative_time.svg)](https://github.com/Lexorius/alternative_time/releases)
 [![GitHub Activity](https://img.shields.io/github/commit-activity/y/Lexorius/alternative_time.svg)](https://github.com/Lexorius/alternative_time/commits/main)
 [![License](https://img.shields.io/github/license/Lexorius/alternative_time.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.5.1.145-blue)](https://github.com/Lexorius/alternative_time)
+[![Version](https://img.shields.io/badge/version-2.5.1.158-blue)](https://github.com/Lexorius/alternative_time)
 
 A comprehensive Home Assistant integration providing **30+ alternative time systems** from science, science fiction, fantasy, history, religion, and various cultures. Transform your Home Assistant into a universal time machine!
 
@@ -14,13 +14,58 @@ Transform your Home Assistant into a multiversal clock supporting:
 - 🪐 **Solar System Tracker** (Real-time planetary positions with visual maps)
 - 🚀 **Science Fiction** (Star Trek, Star Wars, EVE Online, Warhammer 40K)
 - 🧙 **Fantasy Worlds** (Tolkien, Elder Scrolls, Discworld, Warcraft)
-- 🏛️ **Historical Calendars** (Maya, Egyptian, Attic, Roman, French Revolutionary)
+- 🛏️ **Historical Calendars** (Maya, Egyptian, Attic, Roman, French Revolutionary)
 - 🔴 **Mars Colonization** (Darian Calendar, Mars Time Zones)
-- 🌍 **Cultural Calendars** (Islamic, Thai, Taiwanese, Chinese)
+- 🌏 **Cultural Calendars** (Islamic, Thai, Taiwanese, Chinese, Japanese, Hindu)
 - 💻 **Technical Formats** (Unix, Hexadecimal, Julian Date, Swatch Internet Time)
 - 🎖️ **Military Systems** (NATO DTG in multiple formats)
 
-## ✨ New in Version 2.5.1.148
+## ✨ New in Version 2.5.1.158
+
+### 🇯🇵 Japanese Calendar Systems
+Three new comprehensive Japanese calendar implementations:
+
+#### Japanese Era Calendar (和暦, Wareki)
+- **Traditional era dating**: Reiwa, Heisei, Shōwa, Taishō, Meiji
+- **Multiple display formats**: Full kanji, romaji, numeric
+- **Options**: 
+  - Timezone selection (JST default)
+  - Show/hide Gregorian date
+  - Display current time in JST
+  - Japanese holidays and weekdays
+  - Rokuyō (六曜) lucky/unlucky day cycle
+- **Example**: `令和6年12月15日（日）15:30 JST`
+
+#### Japanese Lunar Calendar (旧暦, Kyūreki)
+- **Traditional lunisolar calendar**: Used for festivals and agriculture
+- **Moon phases**: 14 traditional Japanese moon phase names
+- **Options**:
+  - Auto language detection (Japanese/English)
+  - 24 Solar terms (二十四節気)
+  - Traditional events and festivals
+  - Zodiac animals (十二支)
+  - Display formats (traditional/modern/numeric)
+- **Example**: `旧暦 睦月十五日（満月）子年`
+
+### 🕉️ Hindu Calendar System
+
+#### Hindu Panchānga (पंचांग)
+- **Complete Panchānga elements**: 
+  - Tithi (lunar day)
+  - Nakshatra (lunar mansion)
+  - Yoga (sun-moon combination)
+  - Karana (half-tithi)
+  - Rashi (zodiac sign)
+- **Multiple era systems**:
+  - Shalivahana Shaka (default)
+  - Vikram Samvat
+  - Kali Yuga
+- **Options**:
+  - Display language (Sanskrit/Hindi/English)
+  - Individual Panchānga elements toggle
+  - Hindu festivals display
+  - IST timezone (default)
+- **Example**: `शुक्ल पक्ष द्वितीया, आषाढ़ 1946 (शक)`
 
 ### 🪐 Solar System Positions Plugin
 - **Real-time Planetary Tracking**: Live positions of all planets, dwarf planets, and space probes
@@ -40,7 +85,7 @@ Transform your Home Assistant into a multiversal clock supporting:
 - **No Restart Required**: Changes take effect immediately
 - **Preserve Existing Data**: All your configurations remain intact
 
-### 🌍 Complete Multi-Language Support
+### 🌐 Complete Multi-Language Support
 - Full translations for all UI elements in 12 languages
 - Calendar-specific descriptions and labels in your language
 - Options flow fully localized
@@ -89,7 +134,7 @@ Transform your Home Assistant into a multiversal clock supporting:
 
 ## 🌟 Available Time Systems
 
-### 🪐 Solar System Tracker (NEW!)
+### 🪐 Solar System Tracker
 
 #### Solar System Positions
 - **Real-time tracking**: All planets, Pluto, Voyager probes, JWST
@@ -142,7 +187,7 @@ Transform your Home Assistant into a multiversal clock supporting:
 - **Features**: Azeroth calendar with events
 - **Options**: Moon phase display, PvP seasons
 
-### 🏛️ Historical Calendars
+### 🛏️ Historical Calendars
 
 #### Maya Calendar
 - **Long Count**: `13.0.12.1.15`
@@ -160,7 +205,25 @@ Transform your Home Assistant into a multiversal clock supporting:
 - **Format**: Kalends/Nones/Ides
 - **Options**: Consular dating, Latin numerals
 
-### 🌍 Cultural Calendars
+### 🌏 Cultural Calendars
+
+#### Japanese Era Calendar (和暦, Wareki)
+- **Era system**: Reiwa, Heisei, Shōwa, Taishō, Meiji
+- **Display formats**: Kanji, Romaji, Numeric
+- **Options**: Timezone, Gregorian date, Time display, Weekdays, Holidays, Rokuyō
+- **Example**: `令和6年12月15日（日）15:30 JST`
+
+#### Japanese Lunar Calendar (旧暦, Kyūreki)
+- **Lunisolar calendar**: Traditional festival dates
+- **Moon phases**: 14 traditional names
+- **Options**: Language, Solar terms, Traditional events, Zodiac
+- **Example**: `旧暦 睦月十五日（満月）子年`
+
+#### Hindu Panchānga (पंचांग)
+- **Five elements**: Tithi, Nakshatra, Yoga, Karana, Rashi
+- **Era systems**: Shaka, Vikram Samvat, Kali Yuga
+- **Options**: Language (Sanskrit/Hindi/English), Festival display
+- **Example**: `शुक्ल पक्ष द्वितीया, आषाढ़ 1946 (शक)`
 
 #### Islamic (Hijri)
 - **Lunar calendar**: 354/355 days
@@ -321,7 +384,7 @@ CALENDAR_INFO = {
 - Verify translations exist for your language
 - Fallback to English if translation missing
 
-## 📝 License
+## 📄 License
 
 MIT License - See [LICENSE](LICENSE) file for details
 
@@ -345,4 +408,4 @@ MIT License - See [LICENSE](LICENSE) file for details
 
 ---
 
-**Version 2.5.1.145** - Made with ❤️ for the Home Assistant Community
+**Version 2.5.1.158** - Made with ❤️ for the Home Assistant Community
