@@ -303,7 +303,7 @@ CALENDAR_INFO = {
                 "zh": "选择如何显示阴历日期",
                 "ko": "음력 날짜 표시 방법 선택"
             }
-        }
+        
     },
     
     # Lunar calendar data
