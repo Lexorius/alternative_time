@@ -100,4 +100,4 @@ if ($showAll -eq 'y') {
             Write-Host "$($file.Name): $($matches[1])" -ForegroundColor White
         }
     }
-}
+}	

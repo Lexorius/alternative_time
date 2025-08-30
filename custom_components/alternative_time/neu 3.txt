@@ -1,0 +1,32 @@
+// ===== translations/ko.json (Koreanisch) =====
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "대체 시간 시스템",
+        "description": "대체 시간 시스템에 오신 것을 환영합니다!\n\n이 통합은 교육 및 엔터테인먼트 목적으로 다양한 대체 달력과 시간 시스템을 제공합니다.",
+        "data": {
+          "name": "통합 이름"
+        }
+      },
+      "select_categories": {
+        "title": "달력 카테고리 선택",
+        "description": "구성할 달력 카테고리를 선택하십시오:\n\n{details}",
+        "data": {
+          "categories": "포함할 카테고리"
+        }
+      },
+      "select_calendars_by_category": {
+        "title": "{category} 달력 선택",
+        "description": "{category} 카테고리에서 달력 선택:\n\n{details}",
+        "data": {
+          "calendars": "활성화할 달력"
+        }
+      },
+      "plugin_options": {
+        "title": "{calendar_name} 구성",
+        "description": "**{calendar_name}**\n\n{calendar_description}\n\n아래 옵션을 구성하십시오:"
+      },
+      "disclaimer": {
+        "title": "중요 공지",
+        "description": "## ⚠️ 대
