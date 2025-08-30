@@ -434,7 +434,7 @@ class JapaneseEraCalendarSensor(AlternativeTimeSensorBase):
             return
             
         # Get plugin options from config entry
-        plugin_options = self._get_plugin_options()
+        plugin_options = self.get_plugin_options()
         
         if plugin_options:
             _LOGGER.debug(f"Loading Japanese Era options: {plugin_options}")
