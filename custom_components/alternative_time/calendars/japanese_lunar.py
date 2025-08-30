@@ -424,11 +424,11 @@ class JapaneseLunarCalendarSensor(AlternativeTimeSensorBase):
         config_defaults = CALENDAR_INFO.get("config_options", {})
         self._timezone = config_defaults.get("timezone", {}).get("default", "Asia/Tokyo")
         self._display_language = config_defaults.get("display_language", {}).get("default", "auto")
+        self._display_format = config_defaults.get("display_format", {}).get("default", "traditional")
         self._show_moon_phase = config_defaults.get("show_moon_phase", {}).get("default", True)
         self._show_solar_terms = config_defaults.get("show_solar_terms", {}).get("default", True)
         self._show_traditional_events = config_defaults.get("show_traditional_events", {}).get("default", True)
         self._show_zodiac = config_defaults.get("show_zodiac", {}).get("default", True)
-        self._display_format = config_defaults.get("display_format", {}).get("default", "traditional")
         
         # Lunar data
         self._lunar_data = CALENDAR_INFO["lunar_data"]
@@ -702,7 +702,8 @@ class JapaneseLunarCalendarSensor(AlternativeTimeSensorBase):
         
         # Format the date
         formatted = self._format_lunar_date(
-            lunar_month, lunar_day, moon_phase_ja, moon_phase_en, zodiac, japan_time, is_leap
+            lunar_month, lunar_day, moon_phase_ja, moon_phase_en, 
+            zodiac, japan_time, is_leap
         )
         
         result = {
