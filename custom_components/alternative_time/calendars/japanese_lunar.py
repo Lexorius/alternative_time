@@ -272,6 +272,7 @@ CALENDAR_INFO = {
                 "ko": "표시 언어 선택 (auto는 Home Assistant 언어 사용)"
             }
         },
+        "display_format": {
             "type": "select",
             "default": "traditional",
             "options": ["traditional", "modern", "numeric"],
