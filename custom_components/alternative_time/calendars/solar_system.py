@@ -531,6 +531,11 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
         self._state = "Initializing..."
         self._first_update = True
 
+        # Pre-generated visualization data (generated in update(), used in extra_state_attributes)
+        self._cached_svg: Optional[str] = None
+        self._cached_png_data_uri: Optional[str] = None
+        self._cached_local_paths: Dict[str, str] = {}
+
     # -------------- helpers --------------
     def _lang(self) -> str:
         try:
@@ -1091,30 +1096,23 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
                 "visualization_scale": self._visualization_scale
             }
 
-            if self._enable_visualization:
-                svg = self._generate_visualization_svg()
-                attrs["solar_system_map_svg"] = svg
+            # Use cached visualization data (generated in update() to avoid blocking)
+            if self._enable_visualization and self._cached_svg:
+                attrs["solar_system_map_svg"] = self._cached_svg
 
-                # optional PNG
-                png_data_uri = ""
-                try:
-                    png_data_uri = self._generate_visualization_png_data_uri()
-                except Exception as e:
-                    _LOGGER.debug("PNG generation failed: %s", e)
-                if png_data_uri:
-                    attrs["solar_system_map_png"] = png_data_uri
+                if self._cached_png_data_uri:
+                    attrs["solar_system_map_png"] = self._cached_png_data_uri
 
                 # entity_picture: prefer PNG, fallback to SVG data URI
-                if png_data_uri:
-                    attrs["entity_picture"] = png_data_uri
+                if self._cached_png_data_uri:
+                    attrs["entity_picture"] = self._cached_png_data_uri
                 else:
                     # SVG as data-uri
-                    svg_b64 = base64.b64encode(svg.encode("utf-8")).decode("ascii")
+                    svg_b64 = base64.b64encode(self._cached_svg.encode("utf-8")).decode("ascii")
                     attrs["entity_picture"] = "data:image/svg+xml;base64," + svg_b64
 
-                # Write to /local
-                paths = self._write_local_assets(svg, png_data_uri if png_data_uri else None)
-                attrs.update(paths)
+                # Add local paths if available
+                attrs.update(self._cached_local_paths)
 
         return attrs
 
@@ -1187,6 +1185,36 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
         try:
             now = datetime.now(timezone.utc)
             self._positions_info = self._calculate_positions(now)
+
+            # Generate visualizations in update() where blocking I/O is allowed
+            if self._enable_visualization:
+                try:
+                    self._cached_svg = self._generate_visualization_svg()
+                except Exception as e:
+                    _LOGGER.warning("SVG generation failed: %s", e)
+                    self._cached_svg = None
+
+                try:
+                    self._cached_png_data_uri = self._generate_visualization_png_data_uri()
+                except Exception as e:
+                    _LOGGER.debug("PNG generation failed: %s", e)
+                    self._cached_png_data_uri = None
+
+                # Write files to /local (blocking I/O is OK here in update())
+                if self._cached_svg:
+                    try:
+                        self._cached_local_paths = self._write_local_assets(
+                            self._cached_svg,
+                            self._cached_png_data_uri if self._cached_png_data_uri else None
+                        )
+                    except Exception as e:
+                        _LOGGER.warning("Writing local assets failed: %s", e)
+                        self._cached_local_paths = {}
+            else:
+                self._cached_svg = None
+                self._cached_png_data_uri = None
+                self._cached_local_paths = {}
+
             if self._display_planet == "all":
                 num_objects = len(self._positions_info.get("positions", {}))
                 self._state = f"{num_objects} objects tracked"
