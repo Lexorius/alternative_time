@@ -669,21 +669,17 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
         Calculate the reference angle to rotate the visualization so that
         January is at the top (12 o'clock position).
 
-        The Earth's orbital position at January 1st should be at 0° (top).
-        We calculate the Earth's current heliocentric longitude and use
-        the angle at Jan 1 as the reference to rotate everything.
+        We calculate the Earth's heliocentric longitude on January 1st of the
+        current year and use that as the reference. All positions are then
+        adjusted relative to this, so Earth appears at the top in January.
         """
-        jd = self._datetime_to_jd(now)
-        earth_pos = self._calculate_planet_position("earth", jd)
-        earth_lon = earth_pos["longitude"]
-
-        # Earth's approximate heliocentric longitude on Jan 1 (perihelion is ~Jan 3)
-        # The Earth is at approximately 100° heliocentric longitude on Jan 1
-        jan1_earth_lon = 100.0
-
-        # The rotation offset: we want Jan 1 position to be at 0° (top)
-        # So we subtract the Jan 1 position from all angles
-        return jan1_earth_lon
+        # Calculate Earth's position on January 1st of the current year
+        jan1 = datetime(now.year, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+        jd_jan1 = self._datetime_to_jd(jan1)
+        earth_jan1_pos = self._calculate_planet_position("earth", jd_jan1)
+        
+        # This is the heliocentric longitude of Earth on Jan 1 (~206° for 2025)
+        return earth_jan1_pos["longitude"]
 
     def _generate_visualization_svg(self) -> str:
         width, height = 600, 600
