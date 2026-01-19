@@ -1,6 +1,7 @@
-# Solar System Planetary Positions implementation - Version 1.3.0
+# Solar System Planetary Positions implementation - Version 1.4.0
 # Displays current positions of planets in our solar system as SVG (and optional PNG).
 # Fixed: January at top, Earth with "You are here" marker, JWST removed
+# Fixed v1.4.0: Corrected planetary position calculation (mean longitude vs mean anomaly)
 
 from __future__ import annotations
 
@@ -33,7 +34,7 @@ UPDATE_INTERVAL = 300  # seconds
 
 CALENDAR_INFO = {
     "id": "solar_system",
-    "version": "1.3.0",
+    "version": "1.4.0",
     "icon": "mdi:orbit",
     "category": "space",
     "accuracy": "approximate",
@@ -238,25 +239,25 @@ CALENDAR_INFO = {
                 "color": "#00A3A3",
                 "special_type": "probe",
                 "anchor_longitude": 300.0,
-                "anchor_au": 136.0,  # Updated for 2025
+                "anchor_au": 137.0,  # Updated for 2025
                 "speed_au_per_year": 3.3
-            },
+            }
         },
 
-        # Zodiac constellations for position reference (30° sectors)
+        # Zodiac constellations (for positioning)
         "constellations": [
-            {"name": {"en": "Aries", "de": "Widder", "es": "Aries", "fr": "Bélier", "it": "Ariete", "nl": "Ram", "pl": "Baran", "pt": "Áries", "ru": "Овен", "ja": "牡羊座", "zh": "白羊座", "ko": "양자리"}, "start": 0, "symbol": "♈"},
-            {"name": {"en": "Taurus", "de": "Stier", "es": "Tauro", "fr": "Taureau", "it": "Toro", "nl": "Stier", "pl": "Byk", "pt": "Touro", "ru": "Телец", "ja": "牡牛座", "zh": "金牛座", "ko": "황소자리"}, "start": 30, "symbol": "♉"},
-            {"name": {"en": "Gemini", "de": "Zwillinge", "es": "Géminis", "fr": "Gémeaux", "it": "Gemelli", "nl": "Tweelingen", "pl": "Bliźnięta", "pt": "Gêmeos", "ru": "Близнецы", "ja": "双子座", "zh": "双子座", "ko": "쌍둥이자리"}, "start": 60, "symbol": "♊"},
-            {"name": {"en": "Cancer", "de": "Krebs", "es": "Cáncer", "fr": "Cancer", "it": "Cancro", "nl": "Kreeft", "pl": "Rak", "pt": "Câncer", "ru": "Рак", "ja": "蟹座", "zh": "巨蟹座", "ko": "게자리"}, "start": 90, "symbol": "♋"},
-            {"name": {"en": "Leo", "de": "Löwe", "es": "Leo", "fr": "Lion", "it": "Leone", "nl": "Leeuw", "pl": "Lew", "pt": "Leão", "ru": "Лев", "ja": "獅子座", "zh": "狮子座", "ko": "사자자리"}, "start": 120, "symbol": "♌"},
-            {"name": {"en": "Virgo", "de": "Jungfrau", "es": "Virgo", "fr": "Vierge", "it": "Vergine", "nl": "Maagd", "pl": "Panna", "pt": "Virgem", "ru": "Дева", "ja": "乙女座", "zh": "处女座", "ko": "처녀자리"}, "start": 150, "symbol": "♍"},
-            {"name": {"en": "Libra", "de": "Waage", "es": "Libra", "fr": "Balance", "it": "Bilancia", "nl": "Weegschaal", "pl": "Waga", "pt": "Libra", "ru": "Весы", "ja": "天秤座", "zh": "天秤座", "ko": "천칭자리"}, "start": 180, "symbol": "♎"},
-            {"name": {"en": "Scorpio", "de": "Skorpion", "es": "Escorpio", "fr": "Scorpion", "it": "Scorpione", "nl": "Schorpioen", "pl": "Skorpion", "pt": "Escorpião", "ru": "Скорпион", "ja": "蠍座", "zh": "天蝎座", "ko": "전갈자리"}, "start": 210, "symbol": "♏"},
-            {"name": {"en": "Sagittarius", "de": "Schütze", "es": "Sagitario", "fr": "Sagittaire", "it": "Sagittario", "nl": "Boogschutter", "pl": "Strzelec", "pt": "Sagitário", "ru": "Стрелец", "ja": "射手座", "zh": "射手座", "ko": "궁수자리"}, "start": 240, "symbol": "♐"},
-            {"name": {"en": "Capricorn", "de": "Steinbock", "es": "Capricornio", "fr": "Capricorne", "it": "Capricorno", "nl": "Steenbok", "pl": "Koziorożec", "pt": "Capricórnio", "ru": "Козерог", "ja": "山羊座", "zh": "摩羯座", "ko": "염소자리"}, "start": 270, "symbol": "♑"},
-            {"name": {"en": "Aquarius", "de": "Wassermann", "es": "Acuario", "fr": "Verseau", "it": "Acquario", "nl": "Waterman", "pl": "Wodnik", "pt": "Aquário", "ru": "Водолей", "ja": "水瓶座", "zh": "水瓶座", "ko": "물병자리"}, "start": 300, "symbol": "♒"},
-            {"name": {"en": "Pisces", "de": "Fische", "es": "Piscis", "fr": "Poissons", "it": "Pesci", "nl": "Vissen", "pl": "Ryby", "pt": "Peixes", "ru": "Рыбы", "ja": "魚座", "zh": "双鱼座", "ko": "물고기자리"}, "start": 330, "symbol": "♓"}
+            {"name": {"en": "Aries", "de": "Widder", "es": "Aries", "fr": "Bélier", "it": "Ariete", "nl": "Ram", "pl": "Baran", "pt": "Áries", "ru": "Овен", "ja": "牡羊座", "zh": "白羊座", "ko": "양자리"}, "symbol": "♈", "start": 0},
+            {"name": {"en": "Taurus", "de": "Stier", "es": "Tauro", "fr": "Taureau", "it": "Toro", "nl": "Stier", "pl": "Byk", "pt": "Touro", "ru": "Телец", "ja": "牡牛座", "zh": "金牛座", "ko": "황소자리"}, "symbol": "♉", "start": 30},
+            {"name": {"en": "Gemini", "de": "Zwillinge", "es": "Géminis", "fr": "Gémeaux", "it": "Gemelli", "nl": "Tweelingen", "pl": "Bliźnięta", "pt": "Gêmeos", "ru": "Близнецы", "ja": "双子座", "zh": "双子座", "ko": "쌍둥이자리"}, "symbol": "♊", "start": 60},
+            {"name": {"en": "Cancer", "de": "Krebs", "es": "Cáncer", "fr": "Cancer", "it": "Cancro", "nl": "Kreeft", "pl": "Rak", "pt": "Câncer", "ru": "Рак", "ja": "蟹座", "zh": "巨蟹座", "ko": "게자리"}, "symbol": "♋", "start": 90},
+            {"name": {"en": "Leo", "de": "Löwe", "es": "Leo", "fr": "Lion", "it": "Leone", "nl": "Leeuw", "pl": "Lew", "pt": "Leão", "ru": "Лев", "ja": "獅子座", "zh": "狮子座", "ko": "사자자리"}, "symbol": "♌", "start": 120},
+            {"name": {"en": "Virgo", "de": "Jungfrau", "es": "Virgo", "fr": "Vierge", "it": "Vergine", "nl": "Maagd", "pl": "Panna", "pt": "Virgem", "ru": "Дева", "ja": "乙女座", "zh": "处女座", "ko": "처녀자리"}, "symbol": "♍", "start": 150},
+            {"name": {"en": "Libra", "de": "Waage", "es": "Libra", "fr": "Balance", "it": "Bilancia", "nl": "Weegschaal", "pl": "Waga", "pt": "Libra", "ru": "Весы", "ja": "天秤座", "zh": "天秤座", "ko": "천칭자리"}, "symbol": "♎", "start": 180},
+            {"name": {"en": "Scorpio", "de": "Skorpion", "es": "Escorpio", "fr": "Scorpion", "it": "Scorpione", "nl": "Schorpioen", "pl": "Skorpion", "pt": "Escorpião", "ru": "Скорпион", "ja": "蠍座", "zh": "天蝎座", "ko": "전갈자리"}, "symbol": "♏", "start": 210},
+            {"name": {"en": "Sagittarius", "de": "Schütze", "es": "Sagitario", "fr": "Sagittaire", "it": "Sagittario", "nl": "Boogschutter", "pl": "Strzelec", "pt": "Sagitário", "ru": "Стрелец", "ja": "射手座", "zh": "射手座", "ko": "궁수자리"}, "symbol": "♐", "start": 240},
+            {"name": {"en": "Capricorn", "de": "Steinbock", "es": "Capricornio", "fr": "Capricorne", "it": "Capricorno", "nl": "Steenbok", "pl": "Koziorożec", "pt": "Capricórnio", "ru": "Козерог", "ja": "山羊座", "zh": "摩羯座", "ko": "염소자리"}, "symbol": "♑", "start": 270},
+            {"name": {"en": "Aquarius", "de": "Wassermann", "es": "Acuario", "fr": "Verseau", "it": "Acquario", "nl": "Waterman", "pl": "Wodnik", "pt": "Aquário", "ru": "Водолей", "ja": "水瓶座", "zh": "水瓶座", "ko": "물병자리"}, "symbol": "♒", "start": 300},
+            {"name": {"en": "Pisces", "de": "Fische", "es": "Piscis", "fr": "Poissons", "it": "Pesci", "nl": "Vissen", "pl": "Ryby", "pt": "Peixes", "ru": "Рыбы", "ja": "魚座", "zh": "双鱼座", "ko": "물고기자리"}, "symbol": "♓", "start": 330}
         ],
 
         # Month names for visualization
@@ -271,24 +272,15 @@ CALENDAR_INFO = {
             "pt": ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"],
             "ru": ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"],
             "ja": ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"],
-            "zh": ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"],
+            "zh": ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"],
             "ko": ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"]
         },
 
-        # "You are here" text for Earth marker
+        # Visualization labels
         "you_are_here": {
-            "en": "You are here",
-            "de": "Sie sind hier",
-            "es": "Usted está aquí",
-            "fr": "Vous êtes ici",
-            "it": "Sei qui",
-            "nl": "U bent hier",
-            "pl": "Jesteś tutaj",
-            "pt": "Você está aqui",
-            "ru": "Вы здесь",
-            "ja": "現在地",
-            "zh": "您在这里",
-            "ko": "현재 위치"
+            "en": "You are here", "de": "Sie sind hier", "es": "Usted está aquí", "fr": "Vous êtes ici",
+            "it": "Voi siete qui", "nl": "U bent hier", "pl": "Jesteś tutaj", "pt": "Você está aqui",
+            "ru": "Вы здесь", "ja": "あなたはここにいます", "zh": "你在这里", "ko": "당신은 여기 있습니다"
         },
 
         # Footer text
@@ -302,48 +294,28 @@ CALENDAR_INFO = {
             "pl": "Heliocentryczny · Słońce w centrum · Sty na górze",
             "pt": "Heliocêntrico · Sol no centro · Jan no topo",
             "ru": "Гелиоцентрический · Солнце в центре · Янв вверху",
-            "ja": "太陽中心 · 太陽が中央 · 1月が上",
-            "zh": "日心 · 太阳在中心 · 1月在上",
-            "ko": "태양 중심 · 태양이 가운데 · 1월이 위"
+            "ja": "太陽中心 · 太陽が中心 · 1月が上",
+            "zh": "日心 · 太阳在中心 · 一月在上",
+            "ko": "태양 중심 · 태양이 중심 · 1월이 위"
+        },
+
+        # Kuiper belt labels
+        "kuiper_belt": {
+            "en": "Kuiper Belt", "de": "Kuipergürtel", "es": "Cinturón de Kuiper", "fr": "Ceinture de Kuiper",
+            "it": "Fascia di Kuiper", "nl": "Kuipergordel", "pl": "Pas Kuipera", "pt": "Cinturão de Kuiper",
+            "ru": "Пояс Койпера", "ja": "カイパーベルト", "zh": "柯伊伯带", "ko": "카이퍼 벨트"
         }
     },
 
-    "reference_url": "https://en.wikipedia.org/wiki/Planetary_positions",
-
+    # Configuration options for config_flow
     "config_options": {
         "display_planet": {
             "type": "select",
             "default": "all",
-            "label": {
-                "en": "Display Planet",
-                "de": "Planet anzeigen",
-                "es": "Mostrar Planeta",
-                "fr": "Afficher Planète",
-                "it": "Mostra Pianeta",
-                "nl": "Planeet Weergeven",
-                "pl": "Wyświetl Planetę",
-                "pt": "Exibir Planeta",
-                "ru": "Показать планету",
-                "ja": "惑星を表示",
-                "zh": "显示行星",
-                "ko": "행성 표시"
-            },
-            "description": {
-                "en": "Select which planet to display or all planets",
-                "de": "Wählen Sie welchen Planeten oder alle Planeten anzeigen",
-                "es": "Seleccione qué planeta mostrar o todos los planetas",
-                "fr": "Sélectionnez quelle planète afficher ou toutes les planètes",
-                "it": "Seleziona quale pianeta visualizzare o tutti i pianeti",
-                "nl": "Selecteer welke planeet weer te geven of alle planeten",
-                "pl": "Wybierz planetę do wyświetlenia lub wszystkie planety",
-                "pt": "Selecione qual planeta exibir ou todos os planetas",
-                "ru": "Выберите планету для отображения или все планеты",
-                "ja": "表示する惑星または全惑星を選択",
-                "zh": "选择要显示的行星或所有行星",
-                "ko": "표시할 행성 또는 모든 행성 선택"
-            },
+            "label": {"en": "Display Planet", "de": "Planet anzeigen", "es": "Mostrar Planeta", "fr": "Afficher Planète", "it": "Mostra Pianeta", "nl": "Toon Planeet", "pl": "Wyświetl Planetę", "pt": "Mostrar Planeta", "ru": "Показать Планету", "ja": "惑星を表示", "zh": "显示行星", "ko": "행성 표시"},
+            "description": {"en": "Select a specific planet or show all", "de": "Wählen Sie einen bestimmten Planeten oder alle anzeigen", "es": "Seleccione un planeta específico o mostrar todos", "fr": "Sélectionnez une planète spécifique ou afficher tout", "it": "Seleziona un pianeta specifico o mostra tutti", "nl": "Selecteer een specifieke planeet of toon alles", "pl": "Wybierz konkretną planetę lub pokaż wszystkie", "pt": "Selecione um planeta específico ou mostrar todos", "ru": "Выберите конкретную планету или показать все", "ja": "特定の惑星を選択するか、すべてを表示", "zh": "选择特定行星或显示全部", "ko": "특정 행성을 선택하거나 모두 표시"},
             "options": [
-                {"value": "all", "label": {"en": "All Planets", "de": "Alle Planeten", "es": "Todos los Planetas", "fr": "Toutes les Planètes", "it": "Tutti i Pianeti", "nl": "Alle Planeten", "pl": "Wszystkie Planety", "pt": "Todos os Planetas", "ru": "Все планеты", "ja": "すべての惑星", "zh": "所有行星", "ko": "모든 행성"}},
+                {"value": "all", "label": {"en": "All Planets", "de": "Alle Planeten", "es": "Todos los Planetas", "fr": "Toutes les Planètes", "it": "Tutti i Pianeti", "nl": "Alle Planeten", "pl": "Wszystkie Planety", "pt": "Todos os Planetas", "ru": "Все Планеты", "ja": "すべての惑星", "zh": "所有行星", "ko": "모든 행성"}},
                 {"value": "mercury", "label": {"en": "Mercury", "de": "Merkur", "es": "Mercurio", "fr": "Mercure", "it": "Mercurio", "nl": "Mercurius", "pl": "Merkury", "pt": "Mercúrio", "ru": "Меркурий", "ja": "水星", "zh": "水星", "ko": "수성"}},
                 {"value": "venus", "label": {"en": "Venus", "de": "Venus", "es": "Venus", "fr": "Vénus", "it": "Venere", "nl": "Venus", "pl": "Wenus", "pt": "Vênus", "ru": "Венера", "ja": "金星", "zh": "金星", "ko": "금성"}},
                 {"value": "earth", "label": {"en": "Earth", "de": "Erde", "es": "Tierra", "fr": "Terre", "it": "Terra", "nl": "Aarde", "pl": "Ziemia", "pt": "Terra", "ru": "Земля", "ja": "地球", "zh": "地球", "ko": "지구"}},
@@ -352,121 +324,53 @@ CALENDAR_INFO = {
                 {"value": "saturn", "label": {"en": "Saturn", "de": "Saturn", "es": "Saturno", "fr": "Saturne", "it": "Saturno", "nl": "Saturnus", "pl": "Saturn", "pt": "Saturno", "ru": "Сатурн", "ja": "土星", "zh": "土星", "ko": "토성"}},
                 {"value": "uranus", "label": {"en": "Uranus", "de": "Uranus", "es": "Urano", "fr": "Uranus", "it": "Urano", "nl": "Uranus", "pl": "Uran", "pt": "Urano", "ru": "Уран", "ja": "天王星", "zh": "天王星", "ko": "천왕성"}},
                 {"value": "neptune", "label": {"en": "Neptune", "de": "Neptun", "es": "Neptuno", "fr": "Neptune", "it": "Nettuno", "nl": "Neptunus", "pl": "Neptun", "pt": "Netuno", "ru": "Нептун", "ja": "海王星", "zh": "海王星", "ko": "해왕성"}},
-                {"value": "pluto", "label": {"en": "Pluto (Dwarf)", "de": "Pluto (Zwergplanet)", "es": "Plutón (Enano)", "fr": "Pluton (Naine)", "it": "Plutone (Nano)", "nl": "Pluto (Dwerg)", "pl": "Pluton (Karłowata)", "pt": "Plutão (Anão)", "ru": "Плутон (Карлик)", "ja": "冥王星（準惑星）", "zh": "冥王星（矮行星）", "ko": "명왕성 (왜행성)"}},
-                {"value": "voyager1", "label": {"en": "Voyager 1", "de": "Voyager 1", "es": "Voyager 1", "fr": "Voyager 1", "it": "Voyager 1", "nl": "Voyager 1", "pl": "Voyager 1", "pt": "Voyager 1", "ru": "Вояджер-1", "ja": "ボイジャー1号", "zh": "旅行者1号", "ko": "보이저 1호"}},
-                {"value": "voyager2", "label": {"en": "Voyager 2", "de": "Voyager 2", "es": "Voyager 2", "fr": "Voyager 2", "it": "Voyager 2", "nl": "Voyager 2", "pl": "Voyager 2", "pt": "Voyager 2", "ru": "Вояджер-2", "ja": "ボイジャー2号", "zh": "旅行者2号", "ko": "보이저 2호"}}
+                {"value": "pluto", "label": {"en": "Pluto", "de": "Pluto", "es": "Plutón", "fr": "Pluton", "it": "Plutone", "nl": "Pluto", "pl": "Pluton", "pt": "Plutão", "ru": "Плутон", "ja": "冥王星", "zh": "冥王星", "ko": "명왕성"}}
             ]
         },
         "coordinate_system": {
             "type": "select",
             "default": "heliocentric",
-            "label": {
-                "en": "Coordinate System",
-                "de": "Koordinatensystem",
-                "es": "Sistema de Coordenadas",
-                "fr": "Système de Coordonnées",
-                "it": "Sistema di Coordinate",
-                "nl": "Coördinatensysteem",
-                "pl": "Układ Współrzędnych",
-                "pt": "Sistema de Coordenadas",
-                "ru": "Система координат",
-                "ja": "座標系",
-                "zh": "坐标系",
-                "ko": "좌표계"
-            },
-            "description": {
-                "en": "Choose heliocentric (Sun-centered) or geocentric (Earth-centered) view",
-                "de": "Wählen Sie heliozentrisch (sonnenzentriert) oder geozentrisch (erdzentriert)",
-                "es": "Elija vista heliocéntrica (centrada en el Sol) o geocéntrica (centrada en la Tierra)",
-                "fr": "Choisissez une vue héliocentrique (centrée sur le Soleil) ou géocentrique (centrée sur la Terre)",
-                "it": "Scegli vista eliocentrica (centrata sul Sole) o geocentrica (centrata sulla Terra)",
-                "nl": "Kies heliocentrisch (zon-gecentreerd) of geocentrisch (aarde-gecentreerd) weergave",
-                "pl": "Wybierz widok heliocentryczny (słoneczny) lub geocentryczny (ziemski)",
-                "pt": "Escolha visão heliocêntrica (centrada no Sol) ou geocêntrica (centrada na Terra)",
-                "ru": "Выберите гелиоцентрический (Солнце в центре) или геоцентрический (Земля в центре) вид",
-                "ja": "太陽中心（太陽系）または地球中心（地心）ビューを選択",
-                "zh": "选择日心（以太阳为中心）或地心（以地球为中心）视图",
-                "ko": "태양 중심(태양계) 또는 지구 중심(지구계) 보기 선택"
-            },
+            "label": {"en": "Coordinate System", "de": "Koordinatensystem", "es": "Sistema de Coordenadas", "fr": "Système de Coordonnées", "it": "Sistema di Coordinate", "nl": "Coördinatensysteem", "pl": "Układ Współrzędnych", "pt": "Sistema de Coordenadas", "ru": "Система Координат", "ja": "座標系", "zh": "坐标系", "ko": "좌표계"},
+            "description": {"en": "Choose coordinate reference", "de": "Koordinatenreferenz wählen", "es": "Elegir referencia de coordenadas", "fr": "Choisir référence de coordonnées", "it": "Scegli riferimento coordinate", "nl": "Kies coördinaatreferentie", "pl": "Wybierz odniesienie współrzędnych", "pt": "Escolher referência de coordenadas", "ru": "Выберите систему отсчёта", "ja": "座標基準を選択", "zh": "选择坐标参考", "ko": "좌표 기준 선택"},
             "options": [
-                {"value": "heliocentric", "label": {
-                    "en": "Heliocentric (Sun-centered)",
-                    "de": "Heliozentrisch (Sonnenzentriert)",
-                    "es": "Heliocéntrico (Centrado en el Sol)",
-                    "fr": "Héliocentrique (Centré sur le Soleil)",
-                    "it": "Eliocentrico (Centrato sul Sole)",
-                    "nl": "Heliocentrisch (Zon-gecentreerd)",
-                    "pl": "Heliocentryczny (Słoneczny)",
-                    "pt": "Heliocêntrico (Centrado no Sol)",
-                    "ru": "Гелиоцентрический (Солнце в центре)",
-                    "ja": "太陽中心",
-                    "zh": "日心（以太阳为中心）",
-                    "ko": "태양 중심"
-                }},
-                {"value": "geocentric", "label": {
-                    "en": "Geocentric (Earth-centered)",
-                    "de": "Geozentrisch (Erdzentriert)",
-                    "es": "Geocéntrico (Centrado en la Tierra)",
-                    "fr": "Géocentrique (Centré sur la Terre)",
-                    "it": "Geocentrico (Centrato sulla Terra)",
-                    "nl": "Geocentrisch (Aarde-gecentreerd)",
-                    "pl": "Geocentryczny (Ziemski)",
-                    "pt": "Geocêntrico (Centrado na Terra)",
-                    "ru": "Геоцентрический (Земля в центре)",
-                    "ja": "地球中心",
-                    "zh": "地心（以地球为中心）",
-                    "ko": "지구 중심"
-                }}
+                {"value": "heliocentric", "label": {"en": "Heliocentric (Sun-centered)", "de": "Heliozentrisch (Sonnenzentriert)", "es": "Heliocéntrico (Centrado en el Sol)", "fr": "Héliocentrique (Centré sur le Soleil)", "it": "Eliocentrico (Centrato sul Sole)", "nl": "Heliocentrisch (Zon-gecentreerd)", "pl": "Heliocentryczny (Słońce w centrum)", "pt": "Heliocêntrico (Centrado no Sol)", "ru": "Гелиоцентрическая (Солнце в центре)", "ja": "太陽中心（太陽中心）", "zh": "日心（以太阳为中心）", "ko": "태양 중심(태양 중심)"}},
+                {"value": "geocentric", "label": {"en": "Geocentric (Earth-centered)", "de": "Geozentrisch (Erdzentriert)", "es": "Geocéntrico (Centrado en la Tierra)", "fr": "Géocentrique (Centré sur la Terre)", "it": "Geocentrico (Centrato sulla Terra)", "nl": "Geocentrisch (Aarde-gecentreerd)", "pl": "Geocentryczny (Ziemia w centrum)", "pt": "Geocêntrico (Centrado na Terra)", "ru": "Геоцентрическая (Земля в центре)", "ja": "地球中心（地球中心）", "zh": "地心（以地球为中心）", "ko": "지구 중심(지구 중심)"}}
             ]
-        },
-        "observer_latitude": {
-            "type": "number",
-            "default": 0.0,
-            "min": -90.0, "max": 90.0, "step": 0.01,
-            "label": {"en": "Observer Latitude (uses HA location if empty)", "de": "Beobachter Breitengrad (nutzt HA-Position wenn leer)", "es": "Latitud del Observador (usa ubicación HA si está vacío)", "fr": "Latitude de l'Observateur (utilise position HA si vide)", "it": "Latitudine dell'Osservatore (usa posizione HA se vuoto)", "nl": "Waarnemersbreedte (gebruikt HA-locatie indien leeg)", "pl": "Szerokość Geograficzna (używa lokalizacji HA jeśli puste)", "pt": "Latitude do Observador (usa localização HA se vazio)", "ru": "Широта наблюдателя (использует местоположение HA если пусто)", "ja": "観測者の緯度（空の場合はHA位置を使用）", "zh": "观察者纬度（如果为空则使用HA位置）", "ko": "관찰자 위도 (비어있으면 HA 위치 사용)"},
-            "description": {"en": "Your latitude (-90 to 90). Leave at 0 to use Home Assistant location", "de": "Ihr Breitengrad (-90 bis 90). Bei 0 wird die Home Assistant Position verwendet", "es": "Su latitud (-90 a 90). Deje en 0 para usar la ubicación de Home Assistant", "fr": "Votre latitude (-90 à 90). Laissez à 0 pour utiliser la position Home Assistant", "it": "La tua latitudine (-90 a 90). Lascia a 0 per usare la posizione di Home Assistant", "nl": "Uw breedtegraad (-90 tot 90). Laat op 0 om Home Assistant locatie te gebruiken", "pl": "Twoja szerokość (-90 do 90). Zostaw 0 aby użyć lokalizacji Home Assistant", "pt": "Sua latitude (-90 a 90). Deixe em 0 para usar a localização do Home Assistant", "ru": "Ваша широта (-90 до 90). Оставьте 0 для использования местоположения Home Assistant", "ja": "緯度（-90から90）。0のままにするとHome Assistantの位置を使用", "zh": "纬度（-90至90）。保留0以使用Home Assistant位置", "ko": "위도 (-90에서 90). 0으로 두면 Home Assistant 위치 사용"}
-        },
-        "observer_longitude": {
-            "type": "number",
-            "default": 0.0,
-            "min": -180.0, "max": 180.0, "step": 0.01,
-            "label": {"en": "Observer Longitude (uses HA location if empty)", "de": "Beobachter Längengrad (nutzt HA-Position wenn leer)", "es": "Longitud del Observador (usa ubicación HA si está vacío)", "fr": "Longitude de l'Observateur (utilise position HA si vide)", "it": "Longitudine dell'Osservatore (usa posizione HA se vuoto)", "nl": "Waarnemerslengte (gebruikt HA-locatie indien leeg)", "pl": "Długość Geograficzna (używa lokalizacji HA jeśli puste)", "pt": "Longitude do Observador (usa localização HA se vazio)", "ru": "Долгота наблюдателя (использует местоположение HA если пусто)", "ja": "観測者の経度（空の場合はHA位置を使用）", "zh": "观察者经度（如果为空则使用HA位置）", "ko": "관찰자 경도 (비어있으면 HA 위치 사용)"},
-            "description": {"en": "Your longitude (-180 to 180). Leave at 0 to use Home Assistant location", "de": "Ihr Längengrad (-180 bis 180). Bei 0 wird die Home Assistant Position verwendet", "es": "Su longitud (-180 a 180). Deje en 0 para usar la ubicación de Home Assistant", "fr": "Votre longitude (-180 à 180). Laissez à 0 pour utiliser la position Home Assistant", "it": "La tua longitudine (-180 a 180). Lascia a 0 per usare la posizione di Home Assistant", "nl": "Uw lengtegraad (-180 tot 180). Laat op 0 om Home Assistant locatie te gebruiken", "pl": "Twoja długość (-180 do 180). Zostaw 0 aby użyć lokalizacji Home Assistant", "pt": "Sua longitude (-180 a 180). Deixe em 0 para usar a localização do Home Assistant", "ru": "Ваша долгота (-180 до 180). Оставьте 0 для использования местоположения Home Assistant", "ja": "経度（-180から180）。0のままにするとHome Assistantの位置を使用", "zh": "经度（-180至180）。保留0以使用Home Assistant位置", "ko": "경도 (-180에서 180). 0으로 두면 Home Assistant 위치 사용"}
-        },
-        "show_visibility": {
-            "type": "boolean",
-            "default": True,
-            "label": {"en": "Show Visibility Times", "de": "Sichtbarkeitszeiten anzeigen", "es": "Mostrar Tiempos de Visibilidad", "fr": "Afficher les Heures de Visibilité", "it": "Mostra Tempi di Visibilità", "nl": "Zichtbaarheidstijden Tonen", "pl": "Pokaż Czasy Widoczności", "pt": "Mostrar Tempos de Visibilidade", "ru": "Показать время видимости", "ja": "可視時間を表示", "zh": "显示可见时间", "ko": "가시 시간 표시"},
-            "description": {"en": "Display when planets are visible from your location", "de": "Anzeigen wann Planeten von Ihrem Standort sichtbar sind", "es": "Mostrar cuándo los planetas son visibles desde su ubicación", "fr": "Afficher quand les planètes sont visibles depuis votre position", "it": "Visualizza quando i pianeti sono visibili dalla tua posizione", "nl": "Weergeven wanneer planeten zichtbaar zijn vanaf uw locatie", "pl": "Wyświetl, kiedy planety są widoczne z Twojej lokalizacji", "pt": "Exibir quando os planetas são visíveis da sua localização", "ru": "Отображать, когда планеты видны из вашего местоположения", "ja": "あなたの場所から惑星が見える時間を表示", "zh": "显示从您的位置可以看到行星的时间", "ko": "당신의 위치에서 행성이 보이는 시간 표시"}
         },
         "show_distance": {
             "type": "boolean",
             "default": True,
-            "label": {"en": "Show Distance", "de": "Entfernung anzeigen", "es": "Mostrar Distancia", "fr": "Afficher Distance", "it": "Mostra Distanza", "nl": "Afstand Tonen", "pl": "Pokaż Odległość", "pt": "Mostrar Distância", "ru": "Показать расстояние", "ja": "距離を表示", "zh": "显示距离", "ko": "거리 표시"},
-            "description": {"en": "Display distance from Sun (or Earth in geocentric mode) in AU and km", "de": "Entfernung von der Sonne anzeigen (oder Erde im geozentrischen Modus) in AE und km", "es": "Mostrar distancia desde el Sol (o Tierra en modo geocéntrico) en UA y km", "fr": "Afficher la distance du Soleil (ou de la Terre en mode géocentrique) en UA et km", "it": "Visualizza distanza dal Sole (o Terra in modalità geocentrica) in UA e km", "nl": "Afstand van de zon weergeven (of aarde in geocentrische modus) in AE en km", "pl": "Wyświetl odległość od Słońca (lub Ziemi w trybie geocentrycznym) w j.a. i km", "pt": "Exibir distância do Sol (ou Terra no modo geocêntrico) em UA e km", "ru": "Отображать расстояние от Солнца (или Земли в геоцентрическом режиме) в а.е. и км", "ja": "太陽からの距離を表示（地心モードでは地球から）AUとkm", "zh": "显示与太阳的距离（地心模式下为地球）以AU和km为单位", "ko": "태양으로부터의 거리 표시 (지구 중심 모드에서는 지구) AU와 km 단위"}
+            "label": {"en": "Show Distance", "de": "Entfernung anzeigen", "es": "Mostrar Distancia", "fr": "Afficher Distance", "it": "Mostra Distanza", "nl": "Toon Afstand", "pl": "Pokaż Odległość", "pt": "Mostrar Distância", "ru": "Показать Расстояние", "ja": "距離を表示", "zh": "显示距离", "ko": "거리 표시"},
+            "description": {"en": "Display distance in AU and km", "de": "Entfernung in AE und km anzeigen", "es": "Mostrar distancia en UA y km", "fr": "Afficher distance en UA et km", "it": "Mostra distanza in UA e km", "nl": "Toon afstand in AE en km", "pl": "Pokaż odległość w AU i km", "pt": "Mostrar distância em UA e km", "ru": "Показать расстояние в а.е. и км", "ja": "AUとkmで距離を表示", "zh": "以AU和公里显示距离", "ko": "AU와 km로 거리 표시"}
         },
         "show_constellation": {
             "type": "boolean",
             "default": True,
-            "label": {"en": "Show Constellation", "de": "Sternbild anzeigen", "es": "Mostrar Constelación", "fr": "Afficher Constellation", "it": "Mostra Costellazione", "nl": "Sterrenbeeld Tonen", "pl": "Pokaż Konstelację", "pt": "Mostrar Constelação", "ru": "Показать созвездие", "ja": "星座を表示", "zh": "显示星座", "ko": "별자리 표시"},
-            "description": {"en": "Display zodiac constellation where planet is located", "de": "Tierkreissternbild anzeigen, in dem sich der Planet befindet", "es": "Mostrar constelación del zodíaco donde se encuentra el planeta", "fr": "Afficher la constellation du zodiaque où se trouve la planète", "it": "Visualizza costellazione zodiacale dove si trova il pianeta", "nl": "Dierenriem sterrenbeeld weergeven waar planeet zich bevindt", "pl": "Wyświetl konstelację zodiaku, w której znajduje się planeta", "pt": "Exibir constelação do zodíaco onde o planeta está localizado", "ru": "Отображать зодиакальное созвездие, где находится планета", "ja": "惑星が位置する黄道星座を表示", "zh": "显示行星所在的黄道星座", "ko": "행성이 위치한 황도 별자리 표시"}
+            "label": {"en": "Show Constellation", "de": "Sternbild anzeigen", "es": "Mostrar Constelación", "fr": "Afficher Constellation", "it": "Mostra Costellazione", "nl": "Toon Sterrenbeeld", "pl": "Pokaż Konstelację", "pt": "Mostrar Constelação", "ru": "Показать Созвездие", "ja": "星座を表示", "zh": "显示星座", "ko": "별자리 표시"},
+            "description": {"en": "Display zodiac constellation", "de": "Tierkreiszeichen anzeigen", "es": "Mostrar constelación zodiacal", "fr": "Afficher constellation du zodiaque", "it": "Mostra costellazione zodiacale", "nl": "Toon sterrenbeeld", "pl": "Pokaż konstelację zodiaku", "pt": "Mostrar constelação zodiacal", "ru": "Показать созвездие зодиака", "ja": "黄道星座を表示", "zh": "显示黄道星座", "ko": "황도 별자리 표시"}
         },
         "show_retrograde": {
             "type": "boolean",
             "default": True,
-            "label": {"en": "Show Retrograde Motion", "de": "Rückläufige Bewegung anzeigen", "es": "Mostrar Movimiento Retrógrado", "fr": "Afficher Mouvement Rétrograde", "it": "Mostra Moto Retrogrado", "nl": "Retrograde Beweging Tonen", "pl": "Pokaż Ruch Wsteczny", "pt": "Mostrar Movimento Retrógrado", "ru": "Показать ретроградное движение", "ja": "逆行を表示", "zh": "显示逆行", "ko": "역행 표시"},
-            "description": {"en": "Indicate when planets appear to move backward", "de": "Anzeigen wenn Planeten rückläufig erscheinen", "es": "Indicar cuando los planetas parecen moverse hacia atrás", "fr": "Indiquer quand les planètes semblent reculer", "it": "Indica quando i pianeti sembrano muoversi all'indietro", "nl": "Aangeven wanneer planeten achteruit lijken te bewegen", "pl": "Wskaż, gdy planety wydają się poruszać wstecz", "pt": "Indicar quando os planetas parecem se mover para trás", "ru": "Указывать, когда планеты движутся в обратном направлении", "ja": "惑星が逆行しているように見える時を示す", "zh": "指示行星看起来向后移动的时候", "ko": "행성이 뒤로 움직이는 것처럼 보일 때 표시"}
+            "label": {"en": "Show Retrograde Status", "de": "Retrograd-Status anzeigen", "es": "Mostrar Estado Retrógrado", "fr": "Afficher État Rétrograde", "it": "Mostra Stato Retrogrado", "nl": "Toon Retrograde Status", "pl": "Pokaż Status Retrograde", "pt": "Mostrar Estado Retrógrado", "ru": "Показать Ретроградный Статус", "ja": "逆行状態を表示", "zh": "显示逆行状态", "ko": "역행 상태 표시"},
+            "description": {"en": "Indicate when planets appear to move backwards", "de": "Anzeigen, wenn Planeten rückwärts zu laufen scheinen", "es": "Indicar cuando los planetas parecen moverse hacia atrás", "fr": "Indiquer quand les planètes semblent reculer", "it": "Indicare quando i pianeti sembrano muoversi all'indietro", "nl": "Aangeven wanneer planeten achteruit lijken te bewegen", "pl": "Wskazać, gdy planety wydają się cofać", "pt": "Indicar quando os planetas parecem mover-se para trás", "ru": "Показывать, когда планеты движутся назад", "ja": "惑星が後退しているように見えるときを示す", "zh": "指示行星逆行", "ko": "행성이 뒤로 움직이는 것처럼 보일 때 표시"}
+        },
+        "show_visibility": {
+            "type": "boolean",
+            "default": True,
+            "label": {"en": "Show Visibility Info", "de": "Sichtbarkeitsinfo anzeigen", "es": "Mostrar Info de Visibilidad", "fr": "Afficher Info de Visibilité", "it": "Mostra Info Visibilità", "nl": "Toon Zichtbaarheidsinfo", "pl": "Pokaż Info o Widoczności", "pt": "Mostrar Info de Visibilidade", "ru": "Показать Инфо о Видимости", "ja": "可視性情報を表示", "zh": "显示可见性信息", "ko": "가시성 정보 표시"},
+            "description": {"en": "Show best viewing times for planets", "de": "Beste Beobachtungszeiten anzeigen", "es": "Mostrar mejores horarios de observación", "fr": "Afficher meilleurs moments d'observation", "it": "Mostra migliori orari di osservazione", "nl": "Toon beste waarnemingstijden", "pl": "Pokaż najlepsze czasy obserwacji", "pt": "Mostrar melhores horários de observação", "ru": "Показать лучшее время наблюдения", "ja": "最適な観測時間を表示", "zh": "显示最佳观测时间", "ko": "최적 관측 시간 표시"}
         },
         "enable_visualization": {
             "type": "boolean",
             "default": True,
-            "label": {"en": "Enable Solar System Map", "de": "Sonnensystem-Karte aktivieren", "es": "Activar Mapa del Sistema Solar", "fr": "Activer la Carte du Système Solaire", "it": "Attiva Mappa del Sistema Solare", "nl": "Zonnestelselkaart Activeren", "pl": "Włącz Mapę Układu Słonecznego", "pt": "Ativar Mapa do Sistema Solar", "ru": "Включить карту Солнечной системы", "ja": "太陽系マップを有効化", "zh": "启用太阳系地图", "ko": "태양계 지도 활성화"},
-            "description": {"en": "Generate visualization of object positions", "de": "Visualisierung der Objektpositionen erzeugen", "es": "Generar visualización de las posiciones de los objetos", "fr": "Générer une visualisation des positions des objets", "it": "Genera la visualizzazione delle posizioni degli oggetti", "nl": "Genereer visualisatie van objectposities", "pl": "Generuj wizualizację pozycji obiektów", "pt": "Gerar visualização das posições dos objetos", "ru": "Создать визуализацию положений объектов", "ja": "天体位置の可視化を生成", "zh": "生成天体位置的可视化", "ko": "천체 위치 시각화 생성"}
+            "label": {"en": "Enable Visualization", "de": "Visualisierung aktivieren", "es": "Habilitar Visualización", "fr": "Activer Visualisation", "it": "Abilita Visualizzazione", "nl": "Visualisatie Inschakelen", "pl": "Włącz Wizualizację", "pt": "Habilitar Visualização", "ru": "Включить Визуализацию", "ja": "視覚化を有効にする", "zh": "启用可视化", "ko": "시각화 활성화"},
+            "description": {"en": "Generate SVG/PNG solar system map", "de": "SVG/PNG-Sonnensystemkarte generieren", "es": "Generar mapa del sistema solar SVG/PNG", "fr": "Générer carte système solaire SVG/PNG", "it": "Genera mappa sistema solare SVG/PNG", "nl": "Genereer SVG/PNG zonnestelselkaart", "pl": "Generuj mapę Układu Słonecznego SVG/PNG", "pt": "Gerar mapa do sistema solar SVG/PNG", "ru": "Создать карту солнечной системы SVG/PNG", "ja": "太陽系マップSVG/PNGを生成", "zh": "生成SVG/PNG太阳系地图", "ko": "SVG/PNG 태양계 지도 생성"}
         },
         "visualization_scale": {
             "type": "select",
             "default": "logarithmic",
-            "label": {"en": "Map Scale", "de": "Kartenskalierung", "es": "Escala del Mapa", "fr": "Échelle de la Carte", "it": "Scala della Mappa", "nl": "Kaartschaal", "pl": "Skala Mapy", "pt": "Escala do Mapa", "ru": "Масштаб карты", "ja": "地図の縮尺", "zh": "地图比例", "ko": "지도 축척"},
+            "label": {"en": "Visualization Scale", "de": "Visualisierungsskala", "es": "Escala de Visualización", "fr": "Échelle de Visualisation", "it": "Scala di Visualizzazione", "nl": "Visualisatieschaal", "pl": "Skala Wizualizacji", "pt": "Escala de Visualização", "ru": "Масштаб Визуализации", "ja": "視覚化スケール", "zh": "可视化比例", "ko": "시각화 축척"},
             "description": {"en": "Choose scale for orbit visualization", "de": "Skalierung für Umlaufbahn-Visualisierung wählen", "es": "Elegir escala para visualización de órbitas", "fr": "Choisir l'échelle pour la visualisation des orbites", "it": "Scegli scala per visualizzazione orbite", "nl": "Kies schaal voor baanvisualisatie", "pl": "Wybierz skalę dla wizualizacji orbit", "pt": "Escolher escala para visualização de órbitas", "ru": "Выберите масштаб для визуализации орбит", "ja": "軌道視覚化のスケールを選択", "zh": "选择轨道可视化的比例", "ko": "궤도 시각화를 위한 축척 선택"},
             "options": [
                 {"value": "logarithmic", "label": {"en": "Logarithmic (All visible)", "de": "Logarithmisch (Alles sichtbar)", "es": "Logarítmica (Todo visible)", "fr": "Logarithmique (Tout visible)", "it": "Logaritmica (Tutto visibile)", "nl": "Logaritmisch (Alles zichtbaar)", "pl": "Logarytmiczna (Wszystko widoczne)", "pt": "Logarítmica (Tudo visível)", "ru": "Логарифмическая (Всё видно)", "ja": "対数（すべて見える）", "zh": "对数（全部可见）", "ko": "로그(모두 표시)"}},
@@ -593,6 +497,19 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
 
     # -------------- positions --------------
     def _calculate_planet_position(self, planet_id: str, jd: float) -> Dict[str, Any]:
+        """
+        Calculate heliocentric position of a planet using Keplerian orbital elements.
+        
+        FIXED in v1.4.0: Corrected the calculation of heliocentric longitude.
+        The previous version incorrectly calculated the mean anomaly and added
+        perihelion_longitude twice, resulting in incorrect positions.
+        
+        The correct formulas (per JPL's "Approximate Positions of the Planets"):
+        1. L = L0 + n*d  (Mean Longitude)
+        2. M = L - ω     (Mean Anomaly, where ω = perihelion_longitude)
+        3. C = equation_of_center(M, e)
+        4. true_longitude = L + C  (NOT v + ω!)
+        """
         p = self._planets[planet_id]
 
         # Deep-space probes: radial outward (very rough), fixed longitude anchor
@@ -608,25 +525,48 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
                 "true_anomaly": 0.0
             }
 
-        # Planets - Standard Keplerian calculation
+        # Planets - Standard Keplerian calculation (CORRECTED)
         d = jd - 2451545.0  # Days since J2000.0
-        n = 360.0 / float(p["orbital_period"])  # Mean daily motion
-        M = (float(p["mean_longitude_j2000"]) + n * d) % 360.0  # Mean anomaly
+        n = 360.0 / float(p["orbital_period"])  # Mean daily motion (degrees/day)
+        
+        # Step 1: Calculate Mean Longitude (L)
+        # L = L0 + n*d, where L0 is mean_longitude_j2000
+        L = (float(p["mean_longitude_j2000"]) + n * d) % 360.0
+        
+        # Step 2: Calculate Mean Anomaly (M)
+        # M = L - ω, where ω is the longitude of perihelion
+        omega = float(p["perihelion_longitude"])
+        M = (L - omega + 360.0) % 360.0
+        
         e = float(p["eccentricity"])
 
-        # Equation of center (simplified)
-        C = (2.0 * e - e**3 / 4.0) * math.sin(math.radians(M)) * 180.0 / math.pi
-        C += (5.0 / 4.0) * e**2 * math.sin(math.radians(2 * M)) * 180.0 / math.pi
-        v = M + C  # True anomaly
+        # Step 3: Equation of center (simplified series expansion)
+        # C ≈ (2e - e³/4)sin(M) + (5/4)e²sin(2M) + (13/12)e³sin(3M)
+        M_rad = math.radians(M)
+        C = (2.0 * e - (e**3) / 4.0) * math.sin(M_rad) * (180.0 / math.pi)
+        C += (5.0 / 4.0) * (e**2) * math.sin(2.0 * M_rad) * (180.0 / math.pi)
+        C += (13.0 / 12.0) * (e**3) * math.sin(3.0 * M_rad) * (180.0 / math.pi)
+        
+        # True anomaly
+        v = M + C
+        
+        # Step 4: Heliocentric ecliptic longitude = L + C (true longitude)
+        # This is the CORRECTED formula - we add C to L, not to v+ω
+        longitude = (L + C) % 360.0
 
-        # Heliocentric ecliptic longitude
-        longitude = (v + float(p["perihelion_longitude"])) % 360.0
-
-        # Distance from Sun
+        # Distance from Sun (using the orbital equation)
         a = float(p["semi_major_axis"])
-        r = a * (1 - e**2) / (1 + e * math.cos(math.radians(v)))
+        v_rad = math.radians(v)
+        r = a * (1 - e**2) / (1 + e * math.cos(v_rad))
 
-        return {"longitude": longitude, "distance": r, "mean_anomaly": M, "true_anomaly": v}
+        return {
+            "longitude": longitude,
+            "distance": r,
+            "mean_anomaly": M,
+            "true_anomaly": v,
+            "mean_longitude": L,
+            "equation_of_center": C
+        }
 
     def _calculate_geocentric_position(self, planet_pos: Dict, earth_pos: Dict) -> Dict[str, Any]:
         geo_longitude = (planet_pos["longitude"] - earth_pos["longitude"]) % 360.0
@@ -678,7 +618,7 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
         jd_jan1 = self._datetime_to_jd(jan1)
         earth_jan1_pos = self._calculate_planet_position("earth", jd_jan1)
         
-        # This is the heliocentric longitude of Earth on Jan 1 (~206° for 2025)
+        # This is the heliocentric longitude of Earth on Jan 1
         return earth_jan1_pos["longitude"]
 
     def _generate_visualization_svg(self) -> str:
@@ -766,35 +706,29 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
         # Background
         out.append(f'<rect x="0" y="0" width="{int(width)}" height="{int(height)}" fill="#000022"/>')
 
-        # Sun at center
+        # Sun
         out.append(f'<circle cx="{cx}" cy="{cy}" r="18" fill="#FFD700" stroke="#FFA500" stroke-width="2"/>')
         out.append(f'<text x="{cx}" y="{cy + 5}" fill="#000000" font-size="16" text-anchor="middle">☉</text>')
 
-        # Kuiper Belt (30–50 AU)
+        # Kuiper Belt (if enabled)
         if self._show_kuiper_belt:
-            r_in = scale_r(30.0)
-            r_out = scale_r(50.0)
-            if r_out > 20:  # Only show if visible
-                out.append(f'<circle cx="{cx}" cy="{cy}" r="{r_in:.2f}" fill="none" stroke="rgba(102,204,255,0.25)" stroke-width="1"/>')
-                out.append(f'<circle cx="{cx}" cy="{cy}" r="{r_out:.2f}" fill="none" stroke="rgba(102,204,255,0.25)" stroke-width="1"/>')
-                r_mid = (r_in + r_out) / 2.0
-                belt_width = max(1, int(round(r_out - r_in)))
-                out.append(f'<circle cx="{cx}" cy="{cy}" r="{r_mid:.2f}" fill="none" stroke="rgba(102,204,255,0.15)" stroke-width="{belt_width}"/>')
+            kb_inner = scale_r(30.0)  # ~30 AU
+            kb_outer = scale_r(50.0)  # ~50 AU
+            kb_mid = (kb_inner + kb_outer) / 2
+            out.append(f'<circle cx="{cx}" cy="{cy}" r="{kb_inner:.2f}" fill="none" stroke="rgba(102,204,255,0.25)" stroke-width="1"/>')
+            out.append(f'<circle cx="{cx}" cy="{cy}" r="{kb_outer:.2f}" fill="none" stroke="rgba(102,204,255,0.25)" stroke-width="1"/>')
+            out.append(f'<circle cx="{cx}" cy="{cy}" r="{kb_mid:.2f}" fill="none" stroke="rgba(102,204,255,0.15)" stroke-width="{kb_outer - kb_inner:.0f}"/>')
 
-        # Month markers - 12 segments, January at top (0°)
+        # Month markers
         for i in range(12):
-            # Each month is 30° apart, starting with January at 0° (top)
-            angle_deg = i * 30.0
-            x1, y1 = angle_to_xy(angle_deg, 25)  # Inner radius (near sun)
-            x2, y2 = angle_to_xy(angle_deg, maxR)  # Outer radius
+            angle = i * 30.0
+            x1, y1 = angle_to_xy(angle, 25)
+            x2, y2 = angle_to_xy(angle, maxR + 20)
             out.append(f'<line x1="{x1:.2f}" y1="{y1:.2f}" x2="{x2:.2f}" y2="{y2:.2f}" stroke="#333333" stroke-width="1" stroke-dasharray="4,4"/>')
+            lx, ly = angle_to_xy(angle, maxR + 35)
+            out.append(f'<text x="{lx:.2f}" y="{ly:.2f}" class="month-label" text-anchor="middle" dominant-baseline="middle">{month_names[i]}</text>')
 
-            # Month label
-            lx, ly = angle_to_xy(angle_deg, maxR + 15)
-            month_name = month_names[i]
-            out.append(f'<text x="{lx:.2f}" y="{ly:.2f}" class="month-label" text-anchor="middle" dominant-baseline="middle">{month_name}</text>')
-
-        # Draw orbits and planets
+        # Orbits and planets
         for it in items:
             r = scale_r(it["dist"])
 
@@ -896,55 +830,58 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
                 "is_probe": pdata.get("special_type") == "probe"
             })
 
-        month_names = self._get_month_names()
+        # Create image
+        img = Image.new("RGBA", (width, height), (0, 0, 34, 255))
+        draw = ImageDraw.Draw(img)
 
-        img = Image.new("RGBA", (width, height), hex_to_rgb("#000022"))
-        draw = ImageDraw.Draw(img, "RGBA")
-        font_small = ImageFont.load_default()
-        font_label = ImageFont.load_default()
+        # Load fonts
+        try:
+            font_label = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 10)
+            font_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 9)
+        except Exception:
+            font_label = ImageFont.load_default()
+            font_small = font_label
 
         # Sun
-        sun_r = 18
-        draw.ellipse((cx - sun_r, cy - sun_r, cx + sun_r, cy + sun_r),
-                     fill=hex_to_rgb("#FFD700"),
-                     outline=hex_to_rgb("#FFA500"),
-                     width=2)
+        draw.ellipse((cx - 18, cy - 18, cx + 18, cy + 18), fill=(255, 215, 0, 255), outline=(255, 165, 0, 255), width=2)
+
+        # Kuiper Belt
+        if self._show_kuiper_belt:
+            kb_inner = int(scale_r(30.0))
+            kb_outer = int(scale_r(50.0))
+            draw.ellipse((cx - kb_inner, cy - kb_inner, cx + kb_inner, cy + kb_inner),
+                         outline=(102, 204, 255, 64), width=1)
+            draw.ellipse((cx - kb_outer, cy - kb_outer, cx + kb_outer, cy + kb_outer),
+                         outline=(102, 204, 255, 64), width=1)
 
         # Month markers
+        month_names = self._get_month_names()
         for i in range(12):
-            angle_deg = i * 30.0
-            x1, y1 = angle_to_xy(angle_deg, 25)
-            x2, y2 = angle_to_xy(angle_deg, maxR)
-            draw.line((x1, y1, x2, y2), fill=(51, 51, 51, 255), width=1)
-            lx, ly = angle_to_xy(angle_deg, maxR + 15)
-            month_name = month_names[i]
-            tw, th = self._text_size(draw, month_name, font_small)
-            draw.text((lx - tw // 2, ly - th // 2), month_name, fill=(170, 170, 170, 255), font=font_small)
+            angle = i * 30.0
+            x1, y1 = angle_to_xy(angle, 25)
+            x2, y2 = angle_to_xy(angle, maxR + 20)
+            draw.line([(x1, y1), (x2, y2)], fill=(51, 51, 51, 255), width=1)
+            lx, ly = angle_to_xy(angle, maxR + 35)
+            tw, th = self._text_size(draw, month_names[i], font_small)
+            draw.text((lx - tw // 2, ly - th // 2), month_names[i], fill=(170, 170, 170, 255), font=font_small)
 
-        # Orbits & objects
+        # Orbits and planets
         for it in items:
-            r = scale_r(it["dist"])
-            bbox = (cx - r, cy - r, cx + r, cy + r)
-            draw.ellipse(bbox, outline=(68, 68, 68, 255), width=1)
-
+            r = int(scale_r(it["dist"]))
+            # Orbit
+            draw.ellipse((cx - r, cy - r, cx + r, cy + r), outline=(68, 68, 68, 255), width=1)
+            # Planet
             x, y = angle_to_xy(it["lon"], r)
-
+            planet_r = 8 if it["is_earth"] else (3 if it["is_probe"] else (6 if it["id"] in ["jupiter", "saturn"] else 5))
             if it["is_earth"]:
-                draw.ellipse((x - 8, y - 8, x + 8, y + 8),
+                draw.ellipse((x - planet_r, y - planet_r, x + planet_r, y + planet_r),
                              fill=hex_to_rgb(it["color"]),
                              outline=(0, 255, 0, 255),
                              width=2)
-                you_are_here = self._get_solar_data_text("you_are_here", "You are here")
-                label = f'{it["symbol"]} {you_are_here}'
+                label = f'{it["symbol"]} {self._get_solar_data_text("you_are_here", "You are here")}'
                 tw, th = self._text_size(draw, label, font_label)
-                draw.text((x - tw // 2, y - 20 - th), label, fill=(74, 226, 74, 255), font=font_label)
-            elif it["is_probe"]:
-                draw.ellipse((x - 3, y - 3, x + 3, y + 3),
-                             fill=hex_to_rgb(it["color"]),
-                             outline=(255, 255, 255, 255),
-                             width=1)
+                draw.text((x - tw // 2, y - 18 - th), label, fill=(74, 226, 74, 255), font=font_label)
             else:
-                planet_r = 6 if it["id"] in ["jupiter", "saturn"] else 5
                 draw.ellipse((x - planet_r, y - planet_r, x + planet_r, y + planet_r),
                              fill=hex_to_rgb(it["color"]),
                              outline=(255, 255, 255, 255),
@@ -981,7 +918,7 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
         for planet_id in planets_to_calc:
             if planet_id not in self._planets:
                 continue
-            if self._planets[planet_id].get("special_type") == "space_telescope":
+            if self._planets.get(planet_id, {}).get("special_type") == "space_telescope":
                 continue  # Skip JWST
 
             helio_pos = self._calculate_planet_position(planet_id, jd)
@@ -1141,48 +1078,21 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
             self._user_language = getattr(self.hass.config, 'language', 'en') or 'en'
 
         options = self.get_plugin_options()
-        if self._first_update:
-            if options:
-                _LOGGER.info("Solar System sensor options on first update: %s", options)
-            else:
-                _LOGGER.debug("Solar System sensor using defaults (no options configured)")
-            self._first_update = False
-
         if options:
-            self._display_planet = options.get("display_planet", "all")
-            self._coordinate_system = options.get("coordinate_system", "heliocentric")
-            self._show_distance = bool(options.get("show_distance", True))
-            self._show_constellation = bool(options.get("show_constellation", True))
-            self._show_retrograde = bool(options.get("show_retrograde", True))
-            self._show_visibility = bool(options.get("show_visibility", True))
-            self._enable_visualization = bool(options.get("enable_visualization", True))
-            self._visualization_scale = options.get("visualization_scale", "logarithmic")
-
-            if "observer_latitude" in options:
-                try:
-                    lat = float(options.get("observer_latitude"))
-                    if -90.0 <= lat <= 90.0:
-                        self._observer_latitude = lat
-                except Exception:
-                    pass
-            elif self.hass and hasattr(self.hass, 'config'):
-                self._observer_latitude = getattr(self.hass.config, "latitude", self._observer_latitude)
-
-            if "observer_longitude" in options:
-                try:
-                    lon = float(options.get("observer_longitude"))
-                    if -180.0 <= lon <= 180.0:
-                        self._observer_longitude = lon
-                except Exception:
-                    pass
-            elif self.hass and hasattr(self.hass, 'config'):
-                self._observer_longitude = getattr(self.hass.config, "longitude", self._observer_longitude)
+            self._display_planet = options.get("display_planet", self._display_planet)
+            self._coordinate_system = options.get("coordinate_system", self._coordinate_system)
+            self._show_distance = options.get("show_distance", self._show_distance)
+            self._show_constellation = options.get("show_constellation", self._show_constellation)
+            self._show_retrograde = options.get("show_retrograde", self._show_retrograde)
+            self._show_visibility = options.get("show_visibility", self._show_visibility)
+            self._enable_visualization = options.get("enable_visualization", self._enable_visualization)
+            self._visualization_scale = options.get("visualization_scale", self._visualization_scale)
 
         try:
             now = datetime.now(timezone.utc)
             self._positions_info = self._calculate_positions(now)
 
-            # Generate visualizations in update() where blocking I/O is allowed
+            # Generate visualizations here where blocking I/O is allowed
             if self._enable_visualization:
                 try:
                     self._cached_svg = self._generate_visualization_svg()
