@@ -1,6 +1,7 @@
-# Cosmic Speedometer - Version 1.1.0
+# Cosmic Speedometer - Version 1.3.0
 # A fun "tachometer" showing how fast Earth and the Solar System are moving
 # through space at different scales.
+# Now with scientific uncertainty percentages and galactic calendar!
 
 from __future__ import annotations
 
@@ -31,9 +32,17 @@ EARTH_CIRCUMFERENCE_KM = 40075.017  # Earth's equatorial circumference in km
 MOON_DISTANCE_KM = 384400.0  # Average Earth-Moon distance in km
 LIGHTSECOND_IN_KM = 299792.458  # 1 light-second in km
 
+# Galactic year constants
+GALACTIC_YEAR_EARTH_YEARS = 225000000  # 225 million Earth years per galactic year
+GALACTIC_YEAR_UNCERTAINTY = 11.0  # ±11% (range 200-250 million years)
+SUN_AGE_EARTH_YEARS = 4600000000  # 4.6 billion Earth years
+SUN_AGE_UNCERTAINTY = 1.0  # ±1% (very well determined from meteorites)
+# Reference point: We estimate the Sun is currently ~4.2% into its current galactic orbit
+# Based on position relative to last perihelion passage
+
 CALENDAR_INFO = {
     "id": "cosmic_speedometer",
-    "version": "1.1.0",
+    "version": "1.3.0",
     "icon": "mdi:speedometer",
     "category": "space",
     "accuracy": "calculated",
@@ -419,18 +428,64 @@ CALENDAR_INFO = {
                 "zh": "作为主传感器状态显示哪个速度",
                 "ko": "주 센서 상태로 표시할 속도"
             }
+        },
+        "show_galactic_calendar": {
+            "type": "boolean",
+            "default": True,
+            "label": {
+                "en": "Show Galactic Calendar",
+                "de": "Galaktischen Kalender anzeigen",
+                "es": "Mostrar Calendario Galáctico",
+                "fr": "Afficher le Calendrier Galactique",
+                "it": "Mostra Calendario Galattico",
+                "nl": "Toon Galactische Kalender",
+                "pl": "Pokaż Kalendarz Galaktyczny",
+                "pt": "Mostrar Calendário Galáctico",
+                "ru": "Показать Галактический Календарь",
+                "ja": "銀河カレンダーを表示",
+                "zh": "显示银河日历",
+                "ko": "은하 달력 표시"
+            },
+            "description": {
+                "en": "Show Sun's galactic age, current galactic year progress, and time until next galactic new year",
+                "de": "Zeigt das galaktische Alter der Sonne, den Fortschritt im aktuellen galaktischen Jahr und die Zeit bis zum nächsten galaktischen Neujahr",
+                "es": "Muestra la edad galáctica del Sol, el progreso del año galáctico actual y el tiempo hasta el próximo año nuevo galáctico",
+                "fr": "Affiche l'âge galactique du Soleil, la progression de l'année galactique actuelle et le temps jusqu'au prochain nouvel an galactique",
+                "it": "Mostra l'età galattica del Sole, il progresso dell'anno galattico attuale e il tempo fino al prossimo capodanno galattico",
+                "nl": "Toont de galactische leeftijd van de Zon, de voortgang van het huidige galactische jaar en de tijd tot het volgende galactische nieuwjaar",
+                "pl": "Pokazuje wiek galaktyczny Słońca, postęp bieżącego roku galaktycznego i czas do następnego galaktycznego Nowego Roku",
+                "pt": "Mostra a idade galáctica do Sol, o progresso do ano galáctico atual e o tempo até o próximo ano novo galáctico",
+                "ru": "Показывает галактический возраст Солнца, прогресс текущего галактического года и время до следующего галактического Нового года",
+                "ja": "太陽の銀河年齢、現在の銀河年の進捗、次の銀河新年までの時間を表示",
+                "zh": "显示太阳的银河年龄、当前银河年进度以及距离下一个银河新年的时间",
+                "ko": "태양의 은하 나이, 현재 은하년 진행률, 다음 은하 새해까지의 시간 표시"
+            }
         }
     },
 
     # Speed data and constants
     "speed_data": {
         # All base speeds in km/h for consistency
+        # Uncertainty values based on current scientific measurements
         "earth_equator_rotation_kmh": 1674.4,  # km/h at equator
+        "earth_equator_rotation_uncertainty": 0.1,  # ±0.1% - very well known
         "earth_radius_km": 6371.0,  # km
         "earth_orbital_speed_kmh": 107208.0,  # ~29.78 km/s
-        "solar_system_galactic_speed_kmh": 828000.0,  # ~230 km/s
+        "earth_orbital_uncertainty": 0.1,  # ±0.1% - very well known from Kepler's laws
+        "solar_system_galactic_speed_kmh": 828000.0,  # ~230 km/s (NASA/Wikipedia current value)
+        "solar_system_galactic_uncertainty": 10.0,  # ±10% - range 200-250 km/s in literature
         "galaxy_speed_kmh": 2160000.0,  # ~600 km/s towards Great Attractor
+        "galaxy_speed_uncertainty": 15.0,  # ±15% - difficult to measure precisely
         "sun_equator_rotation_kmh": 7189.0,  # ~1.997 km/s at Sun's equator
+        "sun_equator_rotation_uncertainty": 1.0,  # ±1% - measured via sunspot tracking
+        
+        # Galactic calendar data
+        "galactic_year_earth_years": 225000000,  # 225 million Earth years
+        "galactic_year_uncertainty": 11.0,  # ±11% (range 200-250 million years)
+        "sun_age_earth_years": 4600000000,  # 4.6 billion Earth years
+        "sun_age_uncertainty": 1.0,  # ±1% - determined from meteorites
+        "sun_galactic_orbits_completed": 20.4,  # ~20 complete orbits
+        "current_orbit_progress_percent": 44.0,  # Estimated ~44% into current orbit
         
         # Fun comparison objects (in km/h)
         "comparisons": {
@@ -734,6 +789,76 @@ CALENDAR_INFO = {
             "ja": "宇宙を通る総速度",
             "zh": "穿越太空的总速度",
             "ko": "우주를 통과하는 총 속도"
+        },
+        "galactic_age": {
+            "en": "Sun's Galactic Age",
+            "de": "Galaktisches Alter der Sonne",
+            "es": "Edad Galáctica del Sol",
+            "fr": "Âge Galactique du Soleil",
+            "it": "Età Galattica del Sole",
+            "nl": "Galactische Leeftijd van de Zon",
+            "pl": "Wiek Galaktyczny Słońca",
+            "pt": "Idade Galáctica do Sol",
+            "ru": "Галактический Возраст Солнца",
+            "ja": "太陽の銀河年齢",
+            "zh": "太阳的银河年龄",
+            "ko": "태양의 은하 나이"
+        },
+        "galactic_year_progress": {
+            "en": "Current Galactic Year Progress",
+            "de": "Fortschritt im aktuellen galaktischen Jahr",
+            "es": "Progreso del Año Galáctico Actual",
+            "fr": "Progression de l'Année Galactique Actuelle",
+            "it": "Progresso dell'Anno Galattico Attuale",
+            "nl": "Voortgang Huidig Galactisch Jaar",
+            "pl": "Postęp Bieżącego Roku Galaktycznego",
+            "pt": "Progresso do Ano Galáctico Atual",
+            "ru": "Прогресс Текущего Галактического Года",
+            "ja": "現在の銀河年の進捗",
+            "zh": "当前银河年进度",
+            "ko": "현재 은하년 진행률"
+        },
+        "next_galactic_new_year": {
+            "en": "Time Until Next Galactic New Year",
+            "de": "Zeit bis zum nächsten galaktischen Neujahr",
+            "es": "Tiempo Hasta el Próximo Año Nuevo Galáctico",
+            "fr": "Temps Jusqu'au Prochain Nouvel An Galactique",
+            "it": "Tempo Fino al Prossimo Capodanno Galattico",
+            "nl": "Tijd Tot Volgend Galactisch Nieuwjaar",
+            "pl": "Czas do Następnego Galaktycznego Nowego Roku",
+            "pt": "Tempo Até o Próximo Ano Novo Galáctico",
+            "ru": "Время до Следующего Галактического Нового Года",
+            "ja": "次の銀河新年までの時間",
+            "zh": "距离下一个银河新年的时间",
+            "ko": "다음 은하 새해까지의 시간"
+        },
+        "galactic_years_unit": {
+            "en": "galactic years",
+            "de": "galaktische Jahre",
+            "es": "años galácticos",
+            "fr": "années galactiques",
+            "it": "anni galattici",
+            "nl": "galactische jaren",
+            "pl": "lat galaktycznych",
+            "pt": "anos galácticos",
+            "ru": "галактических лет",
+            "ja": "銀河年",
+            "zh": "银河年",
+            "ko": "은하년"
+        },
+        "million_years": {
+            "en": "million years",
+            "de": "Millionen Jahre",
+            "es": "millones de años",
+            "fr": "millions d'années",
+            "it": "milioni di anni",
+            "nl": "miljoen jaar",
+            "pl": "milionów lat",
+            "pt": "milhões de anos",
+            "ru": "миллионов лет",
+            "ja": "百万年",
+            "zh": "百万年",
+            "ko": "백만년"
         }
     },
 
@@ -746,7 +871,10 @@ CALENDAR_INFO = {
             "One galactic year (orbit around Milky Way) takes about 225 million Earth years!",
             "The fastest human-made object (Parker Solar Probe) is still slower than our galaxy moves!",
             "At galaxy speed, you could travel from Earth to the Moon in about 10 minutes!",
-            "You're moving at about 0.2% the speed of light right now!"
+            "You're moving at about 0.2% the speed of light right now!",
+            "The Sun is about 20 galactic years old - it has orbited the Milky Way ~20 times!",
+            "When the Sun was born, dinosaurs wouldn't exist for another 16 galactic years!",
+            "Humans have existed for only 0.001 galactic years - a cosmic eyeblink!"
         ],
         "de": [
             "Selbst im Stillstand rasen Sie schneller durch den Weltraum als jedes Raumschiff!",
@@ -755,7 +883,10 @@ CALENDAR_INFO = {
             "Ein galaktisches Jahr (Umlauf um die Milchstraße) dauert etwa 225 Millionen Erdenjahre!",
             "Das schnellste von Menschen geschaffene Objekt (Parker Solar Probe) ist immer noch langsamer als unsere Galaxie!",
             "Mit Galaxiegeschwindigkeit könnten Sie in etwa 10 Minuten von der Erde zum Mond reisen!",
-            "Sie bewegen sich gerade mit etwa 0,2% der Lichtgeschwindigkeit!"
+            "Sie bewegen sich gerade mit etwa 0,2% der Lichtgeschwindigkeit!",
+            "Die Sonne ist etwa 20 galaktische Jahre alt - sie hat die Milchstraße ~20 Mal umkreist!",
+            "Als die Sonne geboren wurde, würden Dinosaurier erst in 16 galaktischen Jahren existieren!",
+            "Menschen existieren erst seit 0,001 galaktischen Jahren - ein kosmischer Wimpernschlag!"
         ],
         "es": [
             "¡Incluso sentado quieto, estás atravesando el espacio más rápido que cualquier nave espacial!",
@@ -764,7 +895,10 @@ CALENDAR_INFO = {
             "¡Un año galáctico (órbita alrededor de la Vía Láctea) toma unos 225 millones de años terrestres!",
             "¡El objeto más rápido hecho por humanos (Parker Solar Probe) sigue siendo más lento que nuestra galaxia!",
             "¡A velocidad galáctica, podrías viajar de la Tierra a la Luna en unos 10 minutos!",
-            "¡Te estás moviendo a aproximadamente 0,2% de la velocidad de la luz ahora mismo!"
+            "¡Te estás moviendo a aproximadamente 0,2% de la velocidad de la luz ahora mismo!",
+            "¡El Sol tiene unos 20 años galácticos - ha orbitado la Vía Láctea ~20 veces!",
+            "¡Cuando nació el Sol, los dinosaurios no existirían por otros 16 años galácticos!",
+            "¡Los humanos han existido solo 0,001 años galácticos - un parpadeo cósmico!"
         ],
         "fr": [
             "Même assis immobile, vous traversez l'espace plus vite que n'importe quel vaisseau spatial !",
@@ -773,7 +907,10 @@ CALENDAR_INFO = {
             "Une année galactique (orbite autour de la Voie Lactée) prend environ 225 millions d'années terrestres !",
             "L'objet le plus rapide fait par l'homme (Parker Solar Probe) est encore plus lent que notre galaxie !",
             "À la vitesse galactique, vous pourriez voyager de la Terre à la Lune en environ 10 minutes !",
-            "Vous vous déplacez à environ 0,2% de la vitesse de la lumière en ce moment !"
+            "Vous vous déplacez à environ 0,2% de la vitesse de la lumière en ce moment !",
+            "Le Soleil a environ 20 années galactiques - il a orbité la Voie Lactée ~20 fois !",
+            "Quand le Soleil est né, les dinosaures n'existeraient pas avant 16 années galactiques !",
+            "Les humains n'existent que depuis 0,001 années galactiques - un clin d'œil cosmique !"
         ],
         "it": [
             "Anche stando fermo, stai attraversando lo spazio più velocemente di qualsiasi astronave!",
@@ -782,7 +919,10 @@ CALENDAR_INFO = {
             "Un anno galattico (orbita intorno alla Via Lattea) dura circa 225 milioni di anni terrestri!",
             "L'oggetto più veloce fatto dall'uomo (Parker Solar Probe) è ancora più lento della nostra galassia!",
             "Alla velocità galattica, potresti viaggiare dalla Terra alla Luna in circa 10 minuti!",
-            "Ti stai muovendo a circa lo 0,2% della velocità della luce in questo momento!"
+            "Ti stai muovendo a circa lo 0,2% della velocità della luce in questo momento!",
+            "Il Sole ha circa 20 anni galattici - ha orbitato la Via Lattea ~20 volte!",
+            "Quando il Sole è nato, i dinosauri non sarebbero esistiti per altri 16 anni galattici!",
+            "Gli umani esistono da solo 0,001 anni galattici - un battito di ciglia cosmico!"
         ],
         "nl": [
             "Zelfs stilzittend raas je sneller door de ruimte dan welk ruimteschip ook!",
@@ -791,7 +931,10 @@ CALENDAR_INFO = {
             "Een galactisch jaar (baan rond de Melkweg) duurt ongeveer 225 miljoen Aardse jaren!",
             "Het snelste door mensen gemaakte object (Parker Solar Probe) is nog steeds langzamer dan onze melkweg!",
             "Met melkwegsnelheid zou je in ongeveer 10 minuten van de Aarde naar de Maan kunnen reizen!",
-            "Je beweegt nu met ongeveer 0,2% van de lichtsnelheid!"
+            "Je beweegt nu met ongeveer 0,2% van de lichtsnelheid!",
+            "De Zon is ongeveer 20 galactische jaren oud - ze heeft de Melkweg ~20 keer omcirkeld!",
+            "Toen de Zon werd geboren, zouden dinosaurussen pas over 16 galactische jaren bestaan!",
+            "Mensen bestaan pas 0,001 galactische jaren - een kosmische oogwenk!"
         ],
         "pl": [
             "Nawet siedząc nieruchomo, pędzisz przez kosmos szybciej niż jakikolwiek statek kosmiczny!",
@@ -800,7 +943,10 @@ CALENDAR_INFO = {
             "Jeden rok galaktyczny (orbita wokół Drogi Mlecznej) trwa około 225 milionów lat ziemskich!",
             "Najszybszy obiekt stworzony przez człowieka (Parker Solar Probe) jest wciąż wolniejszy niż nasza galaktyka!",
             "Z prędkością galaktyczną mógłbyś podróżować z Ziemi na Księżyc w około 10 minut!",
-            "Poruszasz się teraz z prędkością około 0,2% prędkości światła!"
+            "Poruszasz się teraz z prędkością około 0,2% prędkości światła!",
+            "Słońce ma około 20 lat galaktycznych - okrążyło Drogę Mleczną ~20 razy!",
+            "Kiedy Słońce się narodziło, dinozaury nie istniałyby jeszcze przez 16 lat galaktycznych!",
+            "Ludzie istnieją tylko od 0,001 lat galaktycznych - kosmiczne mrugnięcie okiem!"
         ],
         "pt": [
             "Mesmo parado, você está atravessando o espaço mais rápido que qualquer nave espacial!",
@@ -809,7 +955,10 @@ CALENDAR_INFO = {
             "Um ano galáctico (órbita ao redor da Via Láctea) leva cerca de 225 milhões de anos terrestres!",
             "O objeto mais rápido feito pelo homem (Parker Solar Probe) ainda é mais lento que nossa galáxia!",
             "Na velocidade galáctica, você poderia viajar da Terra à Lua em cerca de 10 minutos!",
-            "Você está se movendo a cerca de 0,2% da velocidade da luz agora mesmo!"
+            "Você está se movendo a cerca de 0,2% da velocidade da luz agora mesmo!",
+            "O Sol tem cerca de 20 anos galácticos - orbitou a Via Láctea ~20 vezes!",
+            "Quando o Sol nasceu, os dinossauros não existiriam por mais 16 anos galácticos!",
+            "Os humanos existem há apenas 0,001 anos galácticos - uma piscada cósmica!"
         ],
         "ru": [
             "Даже сидя на месте, вы мчитесь через космос быстрее любого космического корабля!",
@@ -818,7 +967,10 @@ CALENDAR_INFO = {
             "Один галактический год (орбита вокруг Млечного Пути) занимает около 225 миллионов земных лет!",
             "Самый быстрый объект, созданный человеком (Parker Solar Probe), все еще медленнее нашей галактики!",
             "На галактической скорости вы могли бы добраться от Земли до Луны примерно за 10 минут!",
-            "Сейчас вы движетесь со скоростью около 0,2% скорости света!"
+            "Сейчас вы движетесь со скоростью около 0,2% скорости света!",
+            "Солнцу около 20 галактических лет - оно обошло Млечный Путь ~20 раз!",
+            "Когда Солнце родилось, динозавры не существовали бы еще 16 галактических лет!",
+            "Люди существуют всего 0,001 галактических лет - космическое мгновение!"
         ],
         "ja": [
             "じっと座っていても、どの宇宙船よりも速く宇宙を駆け抜けています！",
@@ -827,7 +979,10 @@ CALENDAR_INFO = {
             "銀河年（天の川周回）は約2億2500万年かかります！",
             "人類最速の物体（パーカーソーラープローブ）でも、銀河の動きより遅い！",
             "銀河の速度なら、地球から月まで約10分で行けます！",
-            "今、あなたは光速の約0.2%で移動しています！"
+            "今、あなたは光速の約0.2%で移動しています！",
+            "太陽は約20銀河年齢 - 天の川を約20回周回しました！",
+            "太陽が生まれた時、恐竜はまだ16銀河年後まで存在しませんでした！",
+            "人類は0.001銀河年しか存在していません - 宇宙のまばたき！"
         ],
         "zh": [
             "即使坐着不动，你穿越太空的速度也比任何宇宙飞船都快！",
@@ -836,7 +991,10 @@ CALENDAR_INFO = {
             "一个银河年（绕银河系一圈）大约需要2.25亿地球年！",
             "人类制造的最快物体（帕克太阳探测器）仍比我们银河系的移动速度慢！",
             "以银河速度，你可以在大约10分钟内从地球到达月球！",
-            "你现在正以光速的约0.2%移动！"
+            "你现在正以光速的约0.2%移动！",
+            "太阳大约有20个银河年 - 它已经绕银河系运行了约20次！",
+            "太阳诞生时，恐龙还要再过16个银河年才会存在！",
+            "人类只存在了0.001个银河年 - 宇宙的一瞬间！"
         ],
         "ko": [
             "가만히 앉아 있어도 어떤 우주선보다 빠르게 우주를 질주하고 있습니다!",
@@ -845,7 +1003,10 @@ CALENDAR_INFO = {
             "은하년(은하수 공전)은 약 2억 2,500만 지구년이 걸립니다!",
             "인류가 만든 가장 빠른 물체(파커 태양 탐사선)도 우리 은하의 속도보다 느립니다!",
             "은하 속도로 지구에서 달까지 약 10분 만에 갈 수 있습니다!",
-            "지금 당신은 빛의 속도의 약 0.2%로 움직이고 있습니다!"
+            "지금 당신은 빛의 속도의 약 0.2%로 움직이고 있습니다!",
+            "태양은 약 20 은하년입니다 - 은하수를 약 20번 공전했습니다!",
+            "태양이 태어났을 때, 공룡은 16 은하년 후에야 존재했습니다!",
+            "인류는 0.001 은하년밖에 존재하지 않았습니다 - 우주적 눈 깜짝할 사이!"
         ]
     },
 
@@ -894,6 +1055,7 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
         self._show_total_speed = config_defaults.get("show_total_speed", {}).get("default", True)
         self._show_fun_comparisons = config_defaults.get("show_fun_comparisons", {}).get("default", True)
         self._display_mode = config_defaults.get("display_mode", {}).get("default", "total")
+        self._show_galactic_calendar = config_defaults.get("show_galactic_calendar", {}).get("default", True)
         
         # Observer location (default to equator if not set)
         self._observer_latitude = 0.0
@@ -979,6 +1141,7 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
             self._show_total_speed = plugin_options.get("show_total_speed", self._show_total_speed)
             self._show_fun_comparisons = plugin_options.get("show_fun_comparisons", self._show_fun_comparisons)
             self._display_mode = plugin_options.get("display_mode", self._display_mode)
+            self._show_galactic_calendar = plugin_options.get("show_galactic_calendar", self._show_galactic_calendar)
         
         self._options_loaded = True
 
@@ -999,7 +1162,8 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
         show_sun_rotation: Optional[bool] = None,
         show_total_speed: Optional[bool] = None,
         show_fun_comparisons: Optional[bool] = None,
-        display_mode: Optional[str] = None
+        display_mode: Optional[str] = None,
+        show_galactic_calendar: Optional[bool] = None
     ) -> None:
         """Set sensor options programmatically."""
         if speed_unit is not None:
@@ -1022,6 +1186,8 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
             self._show_fun_comparisons = show_fun_comparisons
         if display_mode is not None:
             self._display_mode = display_mode
+        if show_galactic_calendar is not None:
+            self._show_galactic_calendar = show_galactic_calendar
 
     def _is_valid_unit(self, unit: str) -> bool:
         """Check if a unit is valid."""
@@ -1196,64 +1362,77 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
         
         # Earth rotation speed (varies by latitude)
         earth_rotation = self._calculate_earth_rotation_speed()
+        earth_rotation_uncertainty = self._speed_data.get("earth_equator_rotation_uncertainty", 0.1)
         speeds["earth_rotation"] = {
             "speed_kmh": earth_rotation,
             "formatted": self._format_speed(earth_rotation),
             "label": self._get_label("earth_rotation"),
             "latitude_factor": f"at {abs(self._observer_latitude):.1f}°{'N' if self._observer_latitude >= 0 else 'S'}" if self._use_observer_location else "at equator",
             "emoji": "🌍",
+            "uncertainty_percent": earth_rotation_uncertainty,
             "valid": is_valid_unit
         }
         
         # Earth orbital speed (relatively constant)
         earth_orbit = self._speed_data.get("earth_orbital_speed_kmh", 107208.0)
+        earth_orbit_uncertainty = self._speed_data.get("earth_orbital_uncertainty", 0.1)
         speeds["earth_orbit"] = {
             "speed_kmh": earth_orbit,
             "formatted": self._format_speed(earth_orbit),
             "label": self._get_label("earth_orbit"),
             "emoji": "☀️",
+            "uncertainty_percent": earth_orbit_uncertainty,
             "valid": is_valid_unit
         }
         
         # Solar system speed in galaxy
         solar_system = self._speed_data.get("solar_system_galactic_speed_kmh", 828000.0)
+        solar_system_uncertainty = self._speed_data.get("solar_system_galactic_uncertainty", 10.0)
         speeds["solar_system"] = {
             "speed_kmh": solar_system,
             "formatted": self._format_speed(solar_system),
             "label": self._get_label("solar_system"),
             "emoji": "🌌",
+            "uncertainty_percent": solar_system_uncertainty,
             "valid": is_valid_unit
         }
         
         # Galaxy speed in universe
         galaxy = self._speed_data.get("galaxy_speed_kmh", 2160000.0)
+        galaxy_uncertainty = self._speed_data.get("galaxy_speed_uncertainty", 15.0)
         speeds["galaxy"] = {
             "speed_kmh": galaxy,
             "formatted": self._format_speed(galaxy),
             "label": self._get_label("galaxy"),
             "destination": "Great Attractor",
             "emoji": "🌀",
+            "uncertainty_percent": galaxy_uncertainty,
             "valid": is_valid_unit
         }
         
         # Sun rotation (bonus)
         sun_rotation = self._speed_data.get("sun_equator_rotation_kmh", 7189.0)
+        sun_rotation_uncertainty = self._speed_data.get("sun_equator_rotation_uncertainty", 1.0)
         speeds["sun_rotation"] = {
             "speed_kmh": sun_rotation,
             "formatted": self._format_speed(sun_rotation),
             "label": self._get_label("sun_rotation"),
             "emoji": "☀️",
+            "uncertainty_percent": sun_rotation_uncertainty,
             "valid": is_valid_unit
         }
         
         # Calculate approximate total speed through space
+        # Uncertainty for total is dominated by the largest uncertainties (galaxy speed)
         total_approximate = galaxy  # The largest component dominates
+        total_uncertainty = galaxy_uncertainty  # Dominated by galaxy measurement uncertainty
         speeds["total"] = {
             "speed_kmh": total_approximate,
             "formatted": self._format_speed(total_approximate),
             "label": self._get_label("total"),
             "note": "Approximate (velocities are in different directions)",
             "emoji": "🚀",
+            "uncertainty_percent": total_uncertainty,
             "valid": is_valid_unit
         }
         
@@ -1272,6 +1451,44 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
         if facts:
             return random.choice(facts)
         return ""
+
+    def _calculate_galactic_calendar(self) -> Dict[str, Any]:
+        """Calculate galactic calendar data - Sun's galactic age and current orbit progress."""
+        galactic_year = self._speed_data.get("galactic_year_earth_years", GALACTIC_YEAR_EARTH_YEARS)
+        galactic_year_uncertainty = self._speed_data.get("galactic_year_uncertainty", GALACTIC_YEAR_UNCERTAINTY)
+        sun_age = self._speed_data.get("sun_age_earth_years", SUN_AGE_EARTH_YEARS)
+        sun_age_uncertainty = self._speed_data.get("sun_age_uncertainty", SUN_AGE_UNCERTAINTY)
+        
+        # Calculate Sun's galactic age (how many complete orbits)
+        sun_galactic_age = sun_age / galactic_year
+        
+        # Calculate progress in current orbit
+        current_orbit_progress = (sun_galactic_age % 1) * 100  # Percentage
+        
+        # Calculate time remaining until next galactic new year
+        remaining_progress = 100 - current_orbit_progress
+        remaining_earth_years = (remaining_progress / 100) * galactic_year
+        remaining_million_years = remaining_earth_years / 1000000
+        
+        # Get localized labels
+        galactic_years_unit = self._get_label("galactic_years_unit")
+        million_years_unit = self._get_label("million_years")
+        
+        return {
+            "sun_galactic_age": sun_galactic_age,
+            "sun_galactic_age_formatted": f"{sun_galactic_age:.1f} {galactic_years_unit} (±{galactic_year_uncertainty}%)",
+            "sun_galactic_orbits_complete": int(sun_galactic_age),
+            "current_orbit_progress_percent": current_orbit_progress,
+            "current_orbit_progress_formatted": f"{current_orbit_progress:.1f}%",
+            "remaining_earth_years": remaining_earth_years,
+            "remaining_million_years": remaining_million_years,
+            "next_galactic_new_year_formatted": f"~{remaining_million_years:.0f} {million_years_unit}",
+            "galactic_year_length_formatted": f"{galactic_year / 1000000:.0f} {million_years_unit}",
+            "uncertainties": {
+                "galactic_year": galactic_year_uncertainty,
+                "sun_age": sun_age_uncertainty
+            }
+        }
 
     @property
     def state(self) -> str:
@@ -1299,27 +1516,39 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
                 "ls/s", "🌍/h", "🌙/h"
             ]
         
-        # Add calculated speeds
+        # Add calculated speeds with uncertainty
         if self._show_earth_rotation:
-            attrs["earth_rotation_speed"] = self._speeds.get("earth_rotation", {}).get("formatted", "N/A")
+            earth_rot = self._speeds.get("earth_rotation", {})
+            uncertainty = earth_rot.get("uncertainty_percent", 0)
+            attrs["earth_rotation_speed"] = f"{earth_rot.get('formatted', 'N/A')} (±{uncertainty}%)"
             if self._use_observer_location:
-                attrs["earth_rotation_latitude"] = self._speeds.get("earth_rotation", {}).get("latitude_factor", "")
+                attrs["earth_rotation_latitude"] = earth_rot.get("latitude_factor", "")
         
         if self._show_earth_orbit:
-            attrs["earth_orbital_speed"] = self._speeds.get("earth_orbit", {}).get("formatted", "N/A")
+            earth_orb = self._speeds.get("earth_orbit", {})
+            uncertainty = earth_orb.get("uncertainty_percent", 0)
+            attrs["earth_orbital_speed"] = f"{earth_orb.get('formatted', 'N/A')} (±{uncertainty}%)"
         
         if self._show_solar_system_speed:
-            attrs["solar_system_galactic_speed"] = self._speeds.get("solar_system", {}).get("formatted", "N/A")
+            solar_sys = self._speeds.get("solar_system", {})
+            uncertainty = solar_sys.get("uncertainty_percent", 0)
+            attrs["solar_system_galactic_speed"] = f"{solar_sys.get('formatted', 'N/A')} (±{uncertainty}%)"
         
         if self._show_galaxy_speed:
-            attrs["milky_way_cosmic_speed"] = self._speeds.get("galaxy", {}).get("formatted", "N/A")
+            galaxy = self._speeds.get("galaxy", {})
+            uncertainty = galaxy.get("uncertainty_percent", 0)
+            attrs["milky_way_cosmic_speed"] = f"{galaxy.get('formatted', 'N/A')} (±{uncertainty}%)"
             attrs["destination"] = "Great Attractor"
         
         if self._show_sun_rotation:
-            attrs["sun_rotation_speed"] = self._speeds.get("sun_rotation", {}).get("formatted", "N/A")
+            sun_rot = self._speeds.get("sun_rotation", {})
+            uncertainty = sun_rot.get("uncertainty_percent", 0)
+            attrs["sun_rotation_speed"] = f"{sun_rot.get('formatted', 'N/A')} (±{uncertainty}%)"
         
         if self._show_total_speed:
-            attrs["total_cosmic_speed"] = self._speeds.get("total", {}).get("formatted", "N/A")
+            total = self._speeds.get("total", {})
+            uncertainty = total.get("uncertainty_percent", 0)
+            attrs["total_cosmic_speed"] = f"{total.get('formatted', 'N/A')} (±{uncertainty}%)"
         
         # Add fun comparisons (only if valid unit)
         if self._show_fun_comparisons and is_valid_unit:
@@ -1334,20 +1563,36 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
         # Add a fun fact
         attrs["fun_fact"] = self._get_random_fun_fact()
         
-        # Add speed breakdown with emojis
+        # Add galactic calendar data
+        if self._show_galactic_calendar:
+            galactic_calendar = self._calculate_galactic_calendar()
+            attrs["galactic_calendar"] = {
+                "sun_galactic_age": galactic_calendar["sun_galactic_age_formatted"],
+                "orbits_completed": galactic_calendar["sun_galactic_orbits_complete"],
+                "current_orbit_progress": galactic_calendar["current_orbit_progress_formatted"],
+                "next_galactic_new_year": galactic_calendar["next_galactic_new_year_formatted"],
+                "galactic_year_length": galactic_calendar["galactic_year_length_formatted"]
+            }
+            # Also add as individual attributes for easier access
+            attrs["sun_galactic_age"] = galactic_calendar["sun_galactic_age_formatted"]
+            attrs["galactic_orbits_completed"] = galactic_calendar["sun_galactic_orbits_complete"]
+            attrs["current_galactic_year_progress"] = galactic_calendar["current_orbit_progress_formatted"]
+            attrs["next_galactic_new_year_in"] = galactic_calendar["next_galactic_new_year_formatted"]
+        
+        # Add speed breakdown with emojis and uncertainty
         speed_breakdown = []
         if self._show_earth_rotation and "earth_rotation" in self._speeds:
             s = self._speeds["earth_rotation"]
-            speed_breakdown.append(f"🌍 {s['label']}: {s['formatted']}")
+            speed_breakdown.append(f"🌍 {s['label']}: {s['formatted']} (±{s.get('uncertainty_percent', 0)}%)")
         if self._show_earth_orbit and "earth_orbit" in self._speeds:
             s = self._speeds["earth_orbit"]
-            speed_breakdown.append(f"☀️ {s['label']}: {s['formatted']}")
+            speed_breakdown.append(f"☀️ {s['label']}: {s['formatted']} (±{s.get('uncertainty_percent', 0)}%)")
         if self._show_solar_system_speed and "solar_system" in self._speeds:
             s = self._speeds["solar_system"]
-            speed_breakdown.append(f"🌌 {s['label']}: {s['formatted']}")
+            speed_breakdown.append(f"🌌 {s['label']}: {s['formatted']} (±{s.get('uncertainty_percent', 0)}%)")
         if self._show_galaxy_speed and "galaxy" in self._speeds:
             s = self._speeds["galaxy"]
-            speed_breakdown.append(f"🌀 {s['label']}: {s['formatted']}")
+            speed_breakdown.append(f"🌀 {s['label']}: {s['formatted']} (±{s.get('uncertainty_percent', 0)}%)")
         if speed_breakdown:
             attrs["speed_breakdown"] = speed_breakdown
         
@@ -1363,6 +1608,12 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
         # Add all raw speeds in km/h for automations (always in km/h regardless of display unit)
         attrs["raw_speeds_kmh"] = {
             key: info.get("speed_kmh", 0) 
+            for key, info in self._speeds.items()
+        }
+        
+        # Add uncertainty percentages for all speeds
+        attrs["uncertainties_percent"] = {
+            key: info.get("uncertainty_percent", 0) 
             for key, info in self._speeds.items()
         }
         
