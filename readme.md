@@ -4,13 +4,13 @@
 [![GitHub Release](https://img.shields.io/github/release/Lexorius/alternative_time.svg)](https://github.com/Lexorius/alternative_time/releases)
 [![GitHub Activity](https://img.shields.io/github/commit-activity/y/Lexorius/alternative_time.svg)](https://github.com/Lexorius/alternative_time/commits/main)
 [![License](https://img.shields.io/github/license/Lexorius/alternative_time.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.5.2.170-blue)](https://github.com/Lexorius/alternative_time)
+[![Version](https://img.shields.io/badge/version-2.5.2.175-blue)](https://github.com/Lexorius/alternative_time)
 
-A comprehensive Home Assistant integration providing **30+ alternative time systems** from science, science fiction, fantasy, history, religion, and various cultures. Transform your Home Assistant into a universal time machine!
+A comprehensive Home Assistant integration providing **30+ alternative time systems** from science, science fiction, fantasy, history, religion, and various cultures.
 
 ## 🎯 Overview
 
-Transform your Home Assistant into a multiversal clock supporting:
+- 🌙 **Lunar Time** (Relativistic Moon time based on LTE440 ephemeris)
 - ⭐ **Stellar Distances** (Real-time distances to stars & pulsars with accuracy data)
 - 🪐 **Solar System Tracker** (Real-time planetary positions with visual maps)
 - 🚀 **Science Fiction** (Star Trek, Star Wars, EVE Online, Warhammer 40K)
@@ -21,10 +21,48 @@ Transform your Home Assistant into a multiversal clock supporting:
 - 💻 **Technical Formats** (Unix, Hexadecimal, Julian Date, Swatch, TAI, UT1)
 - 🎖️ **Military Systems** (NATO DTG in multiple formats)
 
-## ✨ New in Version 2.5.2.170
+## ✨ New in Version 2.5.2.175
 
-### ⭐ Stellar Distances Calculator 🆕
-Real-time distances to notable stars and pulsars with measurement accuracy!
+### 🌙 Lunar Coordinate Time (TCL)
+Relativistic lunar timescale based on the LTE440 Lunar Time Ephemeris.
+
+| Parameter | Value |
+|-----------|-------|
+| Daily Drift | ~56.7 µs/day (Moon clock runs faster) |
+| Annual Variation | ~1.65 ms amplitude |
+| Monthly Variation | ~126 µs amplitude |
+| Accuracy | <0.15 ns until 2050 |
+| Scientific Basis | JPL DE440, IAU 2024 Resolution II |
+
+**Features:**
+- Relativistic time dilation calculation (general + special relativity)
+- 13 periodic variation terms from orbital mechanics
+- Multiple display formats (µs/day, ns/day, clock ratio, accumulated ms)
+- Calibrated drift rate option (LTE441)
+- Based on peer-reviewed research (Lu, Yang & Xie, A&A 704, A76, 2025)
+
+**Reference:** [DOI: 10.1051/0004-6361/202557345](https://doi.org/10.1051/0004-6361/202557345)
+
+---
+
+## 🌟 Available Time Systems
+
+### 🌙 Lunar Time
+
+#### **Lunar Coordinate Time (TCL)**
+- **Format**: `58.738 µs/day` or `+1.23 ms accumulated`
+- **Features**:
+  - Relativistic time dilation between Earth and Moon
+  - Based on LTE440 ephemeris (JPL DE440)
+  - Annual term (~1.65 ms from Earth-Moon barycenter orbit)
+  - Monthly term (~126 µs from Moon's orbit)
+  - IAU 2024 Resolution II compliant
+- **Update**: Every 60 seconds
+
+### ⭐ Stellar Distances
+
+#### **Stellar Distance Calculator**
+Real-time distances to notable stars and pulsars with measurement accuracy.
 
 **7 Stars:**
 | Star | Distance | Accuracy | Note |
@@ -53,52 +91,195 @@ Real-time distances to notable stars and pulsars with measurement accuracy!
 - Distance range (min-max) based on parallax error
 - Accuracy ratings: excellent / very good / good / moderate / uncertain
 - Data sources: Gaia DR3, VLBI parallax, Pulsar Timing
-- Approaching/receding motion indicator
-- 12 languages supported
 
-### Previous Updates (2.5.2.165)
+### 🪐 Solar System
 
-#### 🕐 TAI - International Atomic Time
-- **Continuous atomic timescale**: No leap seconds
-- **Related time systems**: GPS Time, Terrestrial Time (TT)
-- **Leap second history**: Complete since 1972
-- **Example**: `2026-01-05T00:36:52 TAI`
+#### **Solar System Tracker**
+- **Features**: Real-time planetary positions, visual orbit maps
+- **Update**: Hourly
 
-#### 🌍 UT1 - Universal Time 1
-- **Earth rotation time**: Based on actual Earth rotation
-- **IERS REST API integration**: Real-time DUT1 values
-- **Intelligent caching**: Configurable 5 min to 24 hours
-- **Example**: `2026-01-05T00:43:31.767 UT1`
+### 🚀 Science Fiction
 
-#### ✝️ Ge'ez (Ethiopian) Calendar
-- **13-month calendar**: 12 × 30 days + Pagume (5-6 days)
-- **Native script support**: Ge'ez/Amharic month and weekday names
-- **Ge'ez numerals**: Ethiopian number system (፩፪፫...)
-- **Example**: `15 መስከረም 2017` or `፲፭ መስከረም ፳፻፲፯`
+#### **Stardate (Star Trek TNG)**
+- **Format**: `[41]XXX.X` (e.g., `[41]986.0`)
+- **Features**: TNG-style calculation, configurable year offset
+- **Update**: Every 10 seconds
 
-#### 🪐 Solar System Improvements
-- **"You are here" marker**: Earth position clearly marked
-- **Corrected month orientation**: January now at top
-- **Improved planet positions**: More accurate calculations
+#### **Star Wars Galactic Calendar**
+- **Format**: `35:3:21 GrS | Taungsday | Expansion Week`
+- **Features**: Galactic Standard Calendar, 10 months, 7 weeks, 5 days per week, 368-day year
+- **Update**: Hourly
+
+#### **EVE Online Time**
+- **Format**: `YC 127.03.15 14:30:45`
+- **Features**: New Eden Standard Time, YC dating
+- **Update**: Every second
+
+#### **Warhammer 40K Imperial Dating**
+- **Format**: `0.523.025.M42`
+- **Features**: Check number, year fraction, millennium designation
+- **Update**: Every 5 minutes
+
+### 🧙 Fantasy Calendars
+
+#### **Middle-earth Collection**
+- **Shire Calendar**: Hobbit time with 7 meals
+- **Calendar of Imladris**: Elvish 6-season year
+- **Calendar of Gondor**: Númenórean system
+
+#### **Elder Scrolls (Tamriel)**
+- **Format**: `4E 201, 17 Last Seed (Fredas)`
+- **Features**: 8-day weeks, Divine blessings, Daedric influence
+- **Update**: Hourly
+
+#### **Discworld Calendar**
+- **Format**: `Century of the Anchovy, UC 25, 32 Offle`
+- **Features**: Impossible dates (32nd of months), Guild influences, L-Space anomalies
+- **Update**: Hourly
+
+#### **World of Warcraft Calendar**
+- **Format**: `Year 35, Day of the Wisp, 4th of Deepwood`
+- **Features**: Azeroth dates, seasonal events, moon phases
+- **Update**: Hourly
+
+### 🏛️ Historical Calendars
+
+#### **Ancient Egyptian**
+- **Format**: `Dynasty 1 Year 25, 𓊖 15 Thoth`
+- **Features**: Hieroglyphic numbers, 3 seasons, Nile status
+- **Update**: Hourly
+
+#### **Maya Long Count**
+- **Format**: `13.0.12.1.15 | 8 Ahau | 3 Pop`
+- **Features**: Long Count, Tzolk'in, Haab calendars
+- **Update**: Hourly
+
+#### **Roman Calendar**
+- **Format**: `a.d. XVII Kal. Ian. MMDCCLXXVIII A.U.C.`
+- **Features**: Kalends, Nones, Ides system, Roman numerals, A.U.C. dating
+- **Update**: Hourly
+
+#### **Attic Calendar**
+- **Format**: `5 histamenou Hekatombaion | Ol.700.2`
+- **Features**: Archon years, Olympiad counting
+- **Update**: Hourly
+
+#### **French Revolutionary Calendar**
+- **Features**: Decimal time (10 hours/day, 100 minutes/hour), Revolutionary months
+- **Update**: Every second
+
+### ☪️ Religious Calendars
+
+#### **Islamic (Hijri) Calendar**
+- **Format**: `15 Ramadan 1447 AH`
+- **Features**: Tabular calculation, Arabic month names, Islamic holidays
+- **Update**: Hourly
+
+#### **Hebrew Calendar**
+- **Format**: `15 Tishrei 5785`
+- **Features**: Jewish holidays, Sabbath indication
+- **Update**: Hourly
+
+#### **Chinese Calendar**
+- **Format**: `甲辰年 十月 十五 | Wood Dragon`
+- **Features**: Lunar calendar, Zodiac animals, Heavenly stems & Earthly branches
+- **Update**: Hourly
+
+### 🌍 Cultural Calendars
+
+#### **Suriyakati (Thai Buddhist)**
+- **Format**: `๒๕ ธันวาคม ๒๕๖๘`
+- **Features**: Buddhist Era (BE = CE + 543), Thai numerals
+- **Update**: Hourly
+
+#### **Minguo (Taiwan/ROC)**
+- **Format**: `民國114年 十二月 二十五日`
+- **Features**: Republic Era (Year 1 = 1912 CE)
+- **Update**: Hourly
+
+#### **Japanese Era Calendar**
+- **Format**: `令和7年1月24日`
+- **Features**: Imperial era names, Japanese holidays, Rokuyou
+- **Update**: Hourly
+
+#### **Hindu Panchang**
+- **Features**: Tithi, Nakshatra, Yoga, Karana, festivals
+- **Update**: Hourly
+
+#### **Ge'ez (Ethiopian) Calendar**
+- **Format**: `15 መስከረም 2017` or `፲፭ መስከረም ፳፻፲፯`
+- **Features**: 13-month calendar, native Ge'ez script and numerals
+- **Update**: Hourly
+
+### 🔴 Mars Time Systems
+
+#### **Darian Calendar**
+- **Format**: `Sol 15 Gemini 217`
+- **Features**: 24 months, 668 sols per year
+- **Update**: Hourly
+
+#### **Mars Time with Zones**
+- **Format**: `14:25:30 Olympus Mons | Sol 234/MY36`
+- **Features**: 24 Mars timezones, mission sol tracking
+- **Update**: Every 30 seconds
+
+### 💻 Technical Formats
+
+#### **Unix Timestamp**
+- **Format**: `1735689600`
+- **Update**: Every second
+
+#### **Swatch Internet Time**
+- **Format**: `@500.00`
+- **Features**: 1000 .beats per day
+- **Update**: Every second
+
+#### **Hexadecimal Time**
+- **Format**: `A.F3.C8`
+- **Update**: Every 5 seconds
+
+#### **Julian Date**
+- **Format**: `2460678.50000`
+- **Update**: Every 30 seconds
+
+#### **TAI (International Atomic Time)**
+- **Format**: `2026-01-24T00:36:52 TAI`
+- **Features**: Continuous atomic timescale, leap second history
+- **Update**: Every second
+
+#### **UT1 (Universal Time 1)**
+- **Format**: `2026-01-24T00:43:31.767 UT1`
+- **Features**: Earth rotation time, IERS API integration
+- **Update**: Configurable (5 min to 24 hours)
+
+### 🎖️ Military Systems
+
+#### **NATO Date-Time Group**
+- **German Format**: `241530AJAN26`
+- **US/UK Format**: `241530Z JAN 26`
+- **Features**: Multiple timezone designators, configurable formats
+
+---
 
 ## 📦 Installation
 
 ### Via HACS (Recommended)
 
 1. Open HACS in your Home Assistant
-2. Click the three dots in the top right corner
-3. Select "Custom repositories"
-4. Add URL: `https://github.com/Lexorius/alternative_time`
-5. Select "Integration" as category
-6. Click "Add"
-7. Search for "Alternative Time Systems" and install
-8. Restart Home Assistant
+2. Click the three dots → "Custom repositories"
+3. Add URL: `https://github.com/Lexorius/alternative_time`
+4. Select "Integration" as category
+5. Click "Add"
+6. Search for "Alternative Time Systems" and install
+7. Restart Home Assistant
 
 ### Manual Installation
 
 1. Download the `alternative_time` folder from the repository
-2. Copy it to your `/config/custom_components/` directory
+2. Copy to `/config/custom_components/`
 3. Restart Home Assistant
+
+---
 
 ## ⚙️ Configuration
 
@@ -107,14 +288,15 @@ Real-time distances to notable stars and pulsars with measurement accuracy!
 1. Go to **Settings** → **Devices & Services**
 2. Click **Add Integration**
 3. Search for **Alternative Time Systems**
-4. Follow the enhanced configuration wizard:
+4. Follow the configuration wizard:
    - **Step 1**: Name your instance
    - **Step 2**: Select categories (Technical, Historical, Cultural, Space, etc.)
    - **Step 3**: Choose calendars from each category
    - **Step 4**: Configure calendar-specific options
-5. Done! Your sensors will appear automatically
 
-## 🎨 Version 2.5 Architecture
+---
+
+## 🎨 Architecture
 
 ### Standardized Calendar Format
 Each calendar follows the unified `CALENDAR_INFO` structure:
@@ -128,27 +310,38 @@ Each calendar follows the unified `CALENDAR_INFO` structure:
 🇬🇧 English (en) | 🇩🇪 Deutsch (de) | 🇪🇸 Español (es) | 🇫🇷 Français (fr) | 🇮🇹 Italiano (it) | 🇳🇱 Nederlands (nl) | 🇵🇱 Polski (pl) | 🇵🇹 Português (pt) | 🇷🇺 Русский (ru) | 🇯🇵 日本語 (ja) | 🇨🇳 中文 (zh) | 🇰🇷 한국어 (ko)
 
 ### Categories
-- **space**: Solar System, Stellar Distances, Mars calendars
+- **space**: Lunar Time, Solar System, Stellar Distances, Mars calendars
 - **technical**: Unix, Swatch, Hexadecimal, Decimal, TAI, UT1
 - **historical**: Egyptian, Maya, Roman, Attic
-- **cultural**: Thai, Taiwan, Chinese, Ethiopian
+- **cultural**: Thai, Taiwan, Chinese, Japanese, Ethiopian
 - **religious**: Islamic, Hebrew
 - **fantasy**: Middle-earth, Tamriel, Discworld
 - **scifi**: Star Trek, Star Wars, EVE, Warhammer
+
+---
 
 ## 🚀 Performance Optimization
 
 | Category | Update Interval | Calendars |
 |----------|-----------------|-----------|
-| Real-time | 1 second | Unix, Swatch, Timezones |
+| Real-time | 1 second | Unix, Swatch, TAI |
 | Near real-time | 5-10 seconds | Hexadecimal, Stardate |
-| Time-based | 30-60 seconds | Mars Time, Julian Date |
+| Time-based | 30-60 seconds | Mars Time, Julian Date, Lunar Time |
 | Date-based | 1 hour | Calendar systems, Stellar Distances |
 | Event-based | 5 minutes | Warhammer 40K |
 
+---
+
 ## 📈 Version History
 
-### v2.5.2.170 (Current) 🆕
+### v2.5.2.175 (Current)
+- 🌙 **Lunar Coordinate Time (TCL)**: Relativistic lunar timescale based on LTE440 ephemeris
+- ⏱️ **Daily drift calculation**: ~56.7 µs/day (Moon clock faster than Earth)
+- 📊 **13 periodic terms**: Annual (~1.65 ms), monthly (~126 µs), and 11 minor terms
+- 🔬 **Scientific basis**: Lu, Yang & Xie (2025), A&A 704, A76
+- 📐 **IAU compliant**: IAU 2024 Resolution II (LCRS/TCL standard)
+
+### v2.5.2.170
 - ⭐ **Stellar Distances Calculator**: Real-time distances to 7 stars & 6 pulsars
 - 📊 **Measurement Accuracy**: Uncertainty percentages for all objects
 - 📏 **Distance Ranges**: Min-max based on parallax errors
@@ -176,6 +369,8 @@ Each calendar follows the unified `CALENDAR_INFO` structure:
 - **v1.2.0**: NATO time formats
 - **v1.1.0**: Maya calendar, async improvements
 - **v1.0.0**: Initial release
+
+---
 
 ## 🛠️ Development
 
@@ -216,6 +411,8 @@ CALENDAR_INFO = {
 }
 ```
 
+---
+
 ## 🐛 Troubleshooting
 
 ### Calendar Not Appearing
@@ -233,28 +430,20 @@ CALENDAR_INFO = {
 - Verify translations exist for your language
 - Fallback to English if translation missing
 
-### Stellar Distances Issues
-- All calculations are based on J2000.0 epoch data
-- Uncertainty values come from parallax measurement errors
-- Pulsars with unknown radial velocity show 0 km/s
+---
 
 ## 📄 License
 
-MIT License - See [LICENSE](LICENSE) file for details
+MIT License - See [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
-
-- Home Assistant Community for feedback and testing
-- Gaia DR3 for stellar parallax data
-- VLBI networks for pulsar distance measurements
-- IERS for UT1 data services
-- All contributors to the project
+---
 
 ## 📮 Support
 
 - **Bug Reports**: [GitHub Issues](https://github.com/Lexorius/alternative_time/issues)
 - **Feature Requests**: Open a GitHub issue with [Enhancement] tag
-- **Questions**: Use GitHub Discussions
+
+---
 
 ## 🔗 Links
 
@@ -264,4 +453,4 @@ MIT License - See [LICENSE](LICENSE) file for details
 
 ---
 
-**Version 2.5.2.170** - Made with ❤️ for the Home Assistant Community
+**Version 2.5.2.175**
