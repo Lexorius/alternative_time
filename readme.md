@@ -21,24 +21,24 @@ A comprehensive Home Assistant integration providing **30+ alternative time syst
 - 💻 **Technical Formats** (Unix, Hexadecimal, Julian Date, Swatch, TAI, UT1)
 - 🎖️ **Military Systems** (NATO DTG in multiple formats)
 
-## ✨ New in Version 2.5.2.175
+## ✨ New in Version 2.5.2.180
 
 ### 🌙 Lunar Coordinate Time (TCL)
-Relativistic lunar timescale based on the LTE440 Lunar Time Ephemeris.
+Actual lunar clock time based on the LTE440 Lunar Time Ephemeris.
 
 | Parameter | Value |
 |-----------|-------|
+| Display | `14:30:45 TCL` (actual Moon time) |
 | Daily Drift | ~56.7 µs/day (Moon clock runs faster) |
-| Annual Variation | ~1.65 ms amplitude |
-| Monthly Variation | ~126 µs amplitude |
+| Accumulated | ~1-2 ms since J2000.0 epoch |
 | Accuracy | <0.15 ns until 2050 |
 | Scientific Basis | JPL DE440, IAU 2024 Resolution II |
 
 **Features:**
-- Relativistic time dilation calculation (general + special relativity)
+- Shows actual TCL time (what a clock on the Moon would show)
+- Multiple display formats: Time, DateTime, Time+Drift, Drift only
+- Relativistic calculation (general + special relativity)
 - 13 periodic variation terms from orbital mechanics
-- Multiple display formats (µs/day, ns/day, clock ratio, accumulated ms)
-- Calibrated drift rate option (LTE441)
 - Based on peer-reviewed research (Lu, Yang & Xie, A&A 704, A76, 2025)
 
 **Reference:** [DOI: 10.1051/0004-6361/202557345](https://doi.org/10.1051/0004-6361/202557345)
@@ -49,14 +49,28 @@ Relativistic lunar timescale based on the LTE440 Lunar Time Ephemeris.
 
 ### 🌙 Lunar Time
 
-#### **Lunar Coordinate Time (TCL)**
-- **Format**: `58.738 µs/day` or `+1.23 ms accumulated`
+#### **Lunar Coordinate Time (TCL)** 🆕
+- **ID**: `lunar_tcl`
+- **Format**: `14:30:45 TCL` or `2026-01-24 14:30:45 TCL`
 - **Features**:
+  - Actual lunar clock time (UTC + relativistic drift)
   - Relativistic time dilation between Earth and Moon
   - Based on LTE440 ephemeris (JPL DE440)
-  - Annual term (~1.65 ms from Earth-Moon barycenter orbit)
-  - Monthly term (~126 µs from Moon's orbit)
+  - Daily drift ~56.7 µs (Moon clock runs faster)
+  - Accumulated difference since epoch (currently ~1-2 ms)
   - IAU 2024 Resolution II compliant
+  - Scientific reference: Lu, Yang & Xie (2025), A&A 704, A76
+- **Display options**: TCL Time, TCL DateTime, TCL+Drift, Daily Drift (µs), Accumulated (ms)
+- **Update**: Every 60 seconds
+
+#### **ESA Lunar Time (LTC)**
+- **ID**: `lunar_time`
+- **Format**: `LTC 14:30:45 | 🌓 Day 8`
+- **Features**:
+  - ESA's proposed Lunar Time Coordinated system
+  - Lunar timezones (Apollo, Chang'e, Luna landing sites)
+  - Moon phase display
+  - Time dilation indicator (56 µs/day)
 - **Update**: Every 60 seconds
 
 ### ⭐ Stellar Distances
@@ -310,7 +324,7 @@ Each calendar follows the unified `CALENDAR_INFO` structure:
 🇬🇧 English (en) | 🇩🇪 Deutsch (de) | 🇪🇸 Español (es) | 🇫🇷 Français (fr) | 🇮🇹 Italiano (it) | 🇳🇱 Nederlands (nl) | 🇵🇱 Polski (pl) | 🇵🇹 Português (pt) | 🇷🇺 Русский (ru) | 🇯🇵 日本語 (ja) | 🇨🇳 中文 (zh) | 🇰🇷 한국어 (ko)
 
 ### Categories
-- **space**: Lunar Time, Solar System, Stellar Distances, Mars calendars
+- **space**: Lunar TCL, ESA Lunar Time, Solar System, Stellar Distances, Mars calendars
 - **technical**: Unix, Swatch, Hexadecimal, Decimal, TAI, UT1
 - **historical**: Egyptian, Maya, Roman, Attic
 - **cultural**: Thai, Taiwan, Chinese, Japanese, Ethiopian
@@ -334,12 +348,16 @@ Each calendar follows the unified `CALENDAR_INFO` structure:
 
 ## 📈 Version History
 
-### v2.5.2.175 (Current)
-- 🌙 **Lunar Coordinate Time (TCL)**: Relativistic lunar timescale based on LTE440 ephemeris
-- ⏱️ **Daily drift calculation**: ~56.7 µs/day (Moon clock faster than Earth)
-- 📊 **13 periodic terms**: Annual (~1.65 ms), monthly (~126 µs), and 11 minor terms
-- 🔬 **Scientific basis**: Lu, Yang & Xie (2025), A&A 704, A76
+### v2.5.2.180 (Current)
+- 🌙 **Lunar Coordinate Time (TCL)**: New plugin `lunar_tcl.py` showing actual lunar clock time
+- 🕐 **TCL Time Display**: Shows what time it would be on the Moon (`14:30:45 TCL`)
+- ⏱️ **LTE440 Ephemeris**: Based on JPL DE440, scientific accuracy <0.15 ns until 2050
+- 📊 **Daily drift**: ~56.7 µs/day (Moon clock faster than Earth)
+- 📈 **13 periodic terms**: Annual (~1.65 ms), monthly (~126 µs), and 11 minor terms
+- 🔬 **Scientific basis**: Lu, Yang & Xie (2025), Astronomy & Astrophysics 704, A76
 - 📐 **IAU compliant**: IAU 2024 Resolution II (LCRS/TCL standard)
+- 🌙 **ESA Lunar Time**: Updated config options with emoji labels for landing sites
+- 🛠️ **Config Flow Fix**: Fixed dropdown labels for select options
 
 ### v2.5.2.170
 - ⭐ **Stellar Distances Calculator**: Real-time distances to 7 stars & 6 pulsars
@@ -453,4 +471,4 @@ MIT License - See [LICENSE](LICENSE) file for details.
 
 ---
 
-**Version 2.5.2.175**
+**Version 2.5.2.180**
