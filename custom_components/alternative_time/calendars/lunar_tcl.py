@@ -178,7 +178,93 @@ CALENDAR_INFO = {
         "display_format": {
             "type": "select",
             "default": "tcl_time",
-            "options": ["tcl_time", "tcl_datetime", "tcl_with_drift", "drift_microseconds", "accumulated_ms"],
+            "options": [
+                {
+                    "value": "tcl_time",
+                    "label": {
+                        "en": "🕐 TCL Time (HH:MM:SS)",
+                        "de": "🕐 TCL-Zeit (HH:MM:SS)",
+                        "es": "🕐 Hora TCL (HH:MM:SS)",
+                        "fr": "🕐 Heure TCL (HH:MM:SS)",
+                        "it": "🕐 Ora TCL (HH:MM:SS)",
+                        "nl": "🕐 TCL-tijd (HH:MM:SS)",
+                        "pl": "🕐 Czas TCL (HH:MM:SS)",
+                        "pt": "🕐 Hora TCL (HH:MM:SS)",
+                        "ru": "🕐 Время TCL (ЧЧ:ММ:СС)",
+                        "ja": "🕐 TCL時刻 (HH:MM:SS)",
+                        "zh": "🕐 TCL时间 (HH:MM:SS)",
+                        "ko": "🕐 TCL 시간 (HH:MM:SS)"
+                    }
+                },
+                {
+                    "value": "tcl_datetime",
+                    "label": {
+                        "en": "📅 TCL Date & Time",
+                        "de": "📅 TCL-Datum & Zeit",
+                        "es": "📅 Fecha y Hora TCL",
+                        "fr": "📅 Date et Heure TCL",
+                        "it": "📅 Data e Ora TCL",
+                        "nl": "📅 TCL-datum & tijd",
+                        "pl": "📅 Data i Czas TCL",
+                        "pt": "📅 Data e Hora TCL",
+                        "ru": "📅 Дата и Время TCL",
+                        "ja": "📅 TCL日時",
+                        "zh": "📅 TCL日期和时间",
+                        "ko": "📅 TCL 날짜 및 시간"
+                    }
+                },
+                {
+                    "value": "tcl_with_drift",
+                    "label": {
+                        "en": "🕐 TCL Time + Drift Info",
+                        "de": "🕐 TCL-Zeit + Drift-Info",
+                        "es": "🕐 Hora TCL + Info Deriva",
+                        "fr": "🕐 Heure TCL + Info Dérive",
+                        "it": "🕐 Ora TCL + Info Deriva",
+                        "nl": "🕐 TCL-tijd + Drift-info",
+                        "pl": "🕐 Czas TCL + Info Dryfu",
+                        "pt": "🕐 Hora TCL + Info Deriva",
+                        "ru": "🕐 Время TCL + Инфо дрейфа",
+                        "ja": "🕐 TCL時刻 + ドリフト情報",
+                        "zh": "🕐 TCL时间 + 漂移信息",
+                        "ko": "🕐 TCL 시간 + 드리프트 정보"
+                    }
+                },
+                {
+                    "value": "drift_microseconds",
+                    "label": {
+                        "en": "📊 Daily Drift (µs/day)",
+                        "de": "📊 Tägliche Drift (µs/Tag)",
+                        "es": "📊 Deriva Diaria (µs/día)",
+                        "fr": "📊 Dérive Quotidienne (µs/jour)",
+                        "it": "📊 Deriva Giornaliera (µs/giorno)",
+                        "nl": "📊 Dagelijkse Drift (µs/dag)",
+                        "pl": "📊 Dzienny Dryf (µs/dzień)",
+                        "pt": "📊 Deriva Diária (µs/dia)",
+                        "ru": "📊 Суточный Дрейф (мкс/день)",
+                        "ja": "📊 日次ドリフト (µs/日)",
+                        "zh": "📊 每日漂移 (µs/天)",
+                        "ko": "📊 일일 드리프트 (µs/일)"
+                    }
+                },
+                {
+                    "value": "accumulated_ms",
+                    "label": {
+                        "en": "📈 Accumulated Difference (ms)",
+                        "de": "📈 Akkumulierte Differenz (ms)",
+                        "es": "📈 Diferencia Acumulada (ms)",
+                        "fr": "📈 Différence Cumulée (ms)",
+                        "it": "📈 Differenza Accumulata (ms)",
+                        "nl": "📈 Geaccumuleerd Verschil (ms)",
+                        "pl": "📈 Skumulowana Różnica (ms)",
+                        "pt": "📈 Diferença Acumulada (ms)",
+                        "ru": "📈 Накопленная Разница (мс)",
+                        "ja": "📈 累積差 (ms)",
+                        "zh": "📈 累积差 (ms)",
+                        "ko": "📈 누적 차이 (ms)"
+                    }
+                }
+            ],
             "label": {
                 "en": "Display Format",
                 "de": "Anzeigeformat",
@@ -206,78 +292,6 @@ CALENDAR_INFO = {
                 "ja": "月座標時の表示方法を選択",
                 "zh": "选择月球坐标时的显示方式",
                 "ko": "달 좌표시 표시 방법 선택"
-            },
-            "option_labels": {
-                "tcl_time": {
-                    "en": "TCL Time (HH:MM:SS)",
-                    "de": "TCL-Zeit (HH:MM:SS)",
-                    "es": "Hora TCL (HH:MM:SS)",
-                    "fr": "Heure TCL (HH:MM:SS)",
-                    "it": "Ora TCL (HH:MM:SS)",
-                    "nl": "TCL-tijd (HH:MM:SS)",
-                    "pl": "Czas TCL (HH:MM:SS)",
-                    "pt": "Hora TCL (HH:MM:SS)",
-                    "ru": "Время TCL (ЧЧ:ММ:СС)",
-                    "ja": "TCL時刻 (HH:MM:SS)",
-                    "zh": "TCL时间 (HH:MM:SS)",
-                    "ko": "TCL 시간 (HH:MM:SS)"
-                },
-                "tcl_datetime": {
-                    "en": "TCL Date & Time",
-                    "de": "TCL-Datum & Zeit",
-                    "es": "Fecha y Hora TCL",
-                    "fr": "Date et Heure TCL",
-                    "it": "Data e Ora TCL",
-                    "nl": "TCL-datum & tijd",
-                    "pl": "Data i Czas TCL",
-                    "pt": "Data e Hora TCL",
-                    "ru": "Дата и Время TCL",
-                    "ja": "TCL日時",
-                    "zh": "TCL日期和时间",
-                    "ko": "TCL 날짜 및 시간"
-                },
-                "tcl_with_drift": {
-                    "en": "TCL Time + Drift",
-                    "de": "TCL-Zeit + Drift",
-                    "es": "Hora TCL + Deriva",
-                    "fr": "Heure TCL + Dérive",
-                    "it": "Ora TCL + Deriva",
-                    "nl": "TCL-tijd + Drift",
-                    "pl": "Czas TCL + Dryf",
-                    "pt": "Hora TCL + Deriva",
-                    "ru": "Время TCL + Дрейф",
-                    "ja": "TCL時刻 + ドリフト",
-                    "zh": "TCL时间 + 漂移",
-                    "ko": "TCL 시간 + 드리프트"
-                },
-                "drift_microseconds": {
-                    "en": "Daily Drift (µs/day)",
-                    "de": "Tägliche Drift (µs/Tag)",
-                    "es": "Deriva Diaria (µs/día)",
-                    "fr": "Dérive Quotidienne (µs/jour)",
-                    "it": "Deriva Giornaliera (µs/giorno)",
-                    "nl": "Dagelijkse Drift (µs/dag)",
-                    "pl": "Dzienny Dryf (µs/dzień)",
-                    "pt": "Deriva Diária (µs/dia)",
-                    "ru": "Суточный Дрейф (мкс/день)",
-                    "ja": "日次ドリフト (µs/日)",
-                    "zh": "每日漂移 (µs/天)",
-                    "ko": "일일 드리프트 (µs/일)"
-                },
-                "accumulated_ms": {
-                    "en": "Accumulated Difference (ms)",
-                    "de": "Akkumulierte Differenz (ms)",
-                    "es": "Diferencia Acumulada (ms)",
-                    "fr": "Différence Cumulée (ms)",
-                    "it": "Differenza Accumulata (ms)",
-                    "nl": "Geaccumuleerd Verschil (ms)",
-                    "pl": "Skumulowana Różnica (ms)",
-                    "pt": "Diferença Acumulada (ms)",
-                    "ru": "Накопленная Разница (мс)",
-                    "ja": "累積差 (ms)",
-                    "zh": "累积差 (ms)",
-                    "ko": "누적 차이 (ms)"
-                }
             }
         },
         "show_periodic_terms": {
