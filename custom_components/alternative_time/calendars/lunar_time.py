@@ -40,6 +40,7 @@ CALENDAR_INFO = {
         "fr": "Temps Lunaire ESA",
         "it": "Tempo Lunare ESA",
         "nl": "ESA Maantijd",
+        "pl": "Czas Księżycowy ESA",
         "pt": "Tempo Lunar ESA",
         "ru": "Лунное время ESA",
         "ja": "ESA月面時間",
@@ -55,6 +56,7 @@ CALENDAR_INFO = {
         "fr": "Temps Lunaire Coordonné (LTC) pour les futures missions lunaires",
         "it": "Tempo Lunare Coordinato (LTC) per future missioni lunari",
         "nl": "Lunar Time Coordinated (LTC) voor toekomstige maanmissies",
+        "pl": "Skoordynowany Czas Księżycowy (LTC) dla przyszłych misji księżycowych",
         "pt": "Tempo Lunar Coordenado (LTC) para futuras missões lunares",
         "ru": "Координированное лунное время (LTC) для будущих лунных миссий",
         "ja": "将来の月面ミッションのための月面協定時（LTC）",
@@ -80,6 +82,7 @@ CALENDAR_INFO = {
                     "fr": "LTC - Temps Lunaire Coordonné (Méridien Principal 0°)",
                     "it": "LTC - Tempo Lunare Coordinato (Meridiano Primo 0°)",
                     "nl": "LTC - Lunar Time Coordinated (Nulmeridiaan 0°)",
+                    "pl": "LTC - Skoordynowany Czas Księżycowy (Południk zerowy 0°)",
                     "pt": "LTC - Tempo Lunar Coordenado (Meridiano Principal 0°)",
                     "ru": "LTC - Координированное лунное время (Нулевой меридиан 0°)",
                     "ja": "LTC - 月面協定時（本初子午線 0°）",
@@ -87,8 +90,24 @@ CALENDAR_INFO = {
                     "ko": "LTC - 달 협정시 (본초 자오선 0°)"
                 }
             },
-            
-            # Apollo landing sites
+            "LTC+1": {
+                "offset": 1,
+                "name": "Lunar Time +1",
+                "dropdown_label": {
+                    "en": "LTC+1 - East Longitude 15°",
+                    "de": "LTC+1 - Östliche Länge 15°",
+                    "es": "LTC+1 - Longitud Este 15°",
+                    "fr": "LTC+1 - Longitude Est 15°",
+                    "it": "LTC+1 - Longitudine Est 15°",
+                    "nl": "LTC+1 - Oosterlengte 15°",
+                    "pl": "LTC+1 - Długość wschodnia 15°",
+                    "pt": "LTC+1 - Longitude Leste 15°",
+                    "ru": "LTC+1 - Восточная долгота 15°",
+                    "ja": "LTC+1 - 東経15°",
+                    "zh": "LTC+1 - 东经15°",
+                    "ko": "LTC+1 - 동경 15°"
+                }
+            },
             "LTC+2": {
                 "offset": 2,
                 "name": "Mare Tranquillitatis Time",
@@ -100,6 +119,7 @@ CALENDAR_INFO = {
                     "fr": "LTC+2 - Site Apollo 11 (Mer de la Tranquillité ~31°E)",
                     "it": "LTC+2 - Sito Apollo 11 (Mare della Tranquillità ~31°E)",
                     "nl": "LTC+2 - Apollo 11 Locatie (Zee van de Rust ~31°O)",
+                    "pl": "LTC+2 - Miejsce Apollo 11 (Morze Spokoju ~31°E)",
                     "pt": "LTC+2 - Local Apollo 11 (Mar da Tranquilidade ~31°L)",
                     "ru": "LTC+2 - Место посадки Аполлон-11 (Море Спокойствия ~31°В)",
                     "ja": "LTC+2 - アポロ11号着陸地点（静かの海 ~東経31°）",
@@ -107,96 +127,23 @@ CALENDAR_INFO = {
                     "ko": "LTC+2 - 아폴로 11호 착륙지 (고요의 바다 ~동경 31°)"
                 }
             },
-            "LTC-2": {
-                "offset": -2,
-                "name": "Oceanus Procellarum Time",
-                "site": "Apollo 12",
-                "dropdown_label": {
-                    "en": "LTC-2 - Apollo 12 Site (Ocean of Storms ~23°W)",
-                    "de": "LTC-2 - Apollo 12 Landeplatz (Ozean der Stürme ~23°W)",
-                    "es": "LTC-2 - Sitio Apollo 12 (Océano de las Tormentas ~23°O)",
-                    "fr": "LTC-2 - Site Apollo 12 (Océan des Tempêtes ~23°O)",
-                    "it": "LTC-2 - Sito Apollo 12 (Oceano delle Tempeste ~23°O)",
-                    "nl": "LTC-2 - Apollo 12 Locatie (Oceaan der Stormen ~23°W)",
-                    "pt": "LTC-2 - Local Apollo 12 (Oceano das Tempestades ~23°O)",
-                    "ru": "LTC-2 - Место посадки Аполлон-12 (Океан Бурь ~23°З)",
-                    "ja": "LTC-2 - アポロ12号着陸地点（嵐の大洋 ~西経23°）",
-                    "zh": "LTC-2 - 阿波罗12号着陆点（风暴洋 ~西经23°）",
-                    "ko": "LTC-2 - 아폴로 12호 착륙지 (폭풍의 바다 ~서경 23°)"
-                }
-            },
-            "LTC-1": {
-                "offset": -1,
-                "name": "Fra Mauro Time",
-                "site": "Apollo 14",
-                "dropdown_label": {
-                    "en": "LTC-1 - Apollo 14 Site (Fra Mauro ~17°W)",
-                    "de": "LTC-1 - Apollo 14 Landeplatz (Fra Mauro ~17°W)",
-                    "es": "LTC-1 - Sitio Apollo 14 (Fra Mauro ~17°O)",
-                    "fr": "LTC-1 - Site Apollo 14 (Fra Mauro ~17°O)",
-                    "it": "LTC-1 - Sito Apollo 14 (Fra Mauro ~17°O)",
-                    "nl": "LTC-1 - Apollo 14 Locatie (Fra Mauro ~17°W)",
-                    "pt": "LTC-1 - Local Apollo 14 (Fra Mauro ~17°O)",
-                    "ru": "LTC-1 - Место посадки Аполлон-14 (Фра Мауро ~17°З)",
-                    "ja": "LTC-1 - アポロ14号着陸地点（フラ・マウロ ~西経17°）",
-                    "zh": "LTC-1 - 阿波罗14号着陆点（弗拉·毛罗 ~西经17°）",
-                    "ko": "LTC-1 - 아폴로 14호 착륙지 (프라 마우로 ~서경 17°)"
-                }
-            },
-            "LTC+1": {
-                "offset": 1,
-                "name": "Hadley Rille Time",
-                "site": "Apollo 15",
-                "dropdown_label": {
-                    "en": "LTC+1 - Apollo 15 Site (Hadley Rille ~26°E)",
-                    "de": "LTC+1 - Apollo 15 Landeplatz (Hadley-Rille ~26°O)",
-                    "es": "LTC+1 - Sitio Apollo 15 (Hadley Rille ~26°E)",
-                    "fr": "LTC+1 - Site Apollo 15 (Hadley Rille ~26°E)",
-                    "it": "LTC+1 - Sito Apollo 15 (Hadley Rille ~26°E)",
-                    "nl": "LTC+1 - Apollo 15 Locatie (Hadley Rille ~26°O)",
-                    "pt": "LTC+1 - Local Apollo 15 (Hadley Rille ~26°L)",
-                    "ru": "LTC+1 - Место посадки Аполлон-15 (Борозда Хэдли ~26°В)",
-                    "ja": "LTC+1 - アポロ15号着陸地点（ハドリー谷 ~東経26°）",
-                    "zh": "LTC+1 - 阿波罗15号着陆点（哈德利谷 ~东经26°）",
-                    "ko": "LTC+1 - 아폴로 15호 착륙지 (해들리 릴 ~동경 26°)"
-                }
-            },
             "LTC+3": {
                 "offset": 3,
-                "name": "Taurus-Littrow Time",
-                "site": "Apollo 17",
+                "name": "Mare Fecunditatis Time",
+                "site": "Apollo 16",
                 "dropdown_label": {
-                    "en": "LTC+3 - Apollo 17 Site (Taurus-Littrow Valley ~31°E)",
-                    "de": "LTC+3 - Apollo 17 Landeplatz (Taurus-Littrow-Tal ~31°O)",
-                    "es": "LTC+3 - Sitio Apollo 17 (Valle Taurus-Littrow ~31°E)",
-                    "fr": "LTC+3 - Site Apollo 17 (Vallée Taurus-Littrow ~31°E)",
-                    "it": "LTC+3 - Sito Apollo 17 (Valle Taurus-Littrow ~31°E)",
-                    "nl": "LTC+3 - Apollo 17 Locatie (Taurus-Littrow Vallei ~31°O)",
-                    "pt": "LTC+3 - Local Apollo 17 (Vale Taurus-Littrow ~31°L)",
-                    "ru": "LTC+3 - Место посадки Аполлон-17 (Долина Таурус-Литтров ~31°В)",
-                    "ja": "LTC+3 - アポロ17号着陸地点（タウルス・リトロー谷 ~東経31°）",
-                    "zh": "LTC+3 - 阿波罗17号着陆点（陶拉斯-利特罗山谷 ~东经31°）",
-                    "ko": "LTC+3 - 아폴로 17호 착륙지 (타우루스-리트로 계곡 ~동경 31°)"
-                }
-            },
-            
-            # Chinese missions
-            "LTC+12": {
-                "offset": 12,
-                "name": "Von Kármán Crater Time",
-                "site": "Chang'e 4",
-                "dropdown_label": {
-                    "en": "LTC+12 - Chang'e 4 Site (Von Kármán Crater, Far Side ~177°E)",
-                    "de": "LTC+12 - Chang'e 4 Landeplatz (Von-Kármán-Krater, Rückseite ~177°O)",
-                    "es": "LTC+12 - Sitio Chang'e 4 (Cráter Von Kármán, Cara Oculta ~177°E)",
-                    "fr": "LTC+12 - Site Chang'e 4 (Cratère Von Kármán, Face Cachée ~177°E)",
-                    "it": "LTC+12 - Sito Chang'e 4 (Cratere Von Kármán, Faccia Nascosta ~177°E)",
-                    "nl": "LTC+12 - Chang'e 4 Locatie (Von Kármán Krater, Achterkant ~177°O)",
-                    "pt": "LTC+12 - Local Chang'e 4 (Cratera Von Kármán, Lado Oculto ~177°L)",
-                    "ru": "LTC+12 - Место посадки Чанъэ-4 (Кратер фон Кармана, Обратная сторона ~177°В)",
-                    "ja": "LTC+12 - 嫦娥4号着陸地点（フォン・カルマン・クレーター、裏側 ~東経177°）",
-                    "zh": "LTC+12 - 嫦娥四号着陆点（冯·卡门撞击坑，月球背面 ~东经177°）",
-                    "ko": "LTC+12 - 창어 4호 착륙지 (폰 카르만 분화구, 뒷면 ~동경 177°)"
+                    "en": "LTC+3 - Apollo 16 Region (Descartes Highlands ~45°E)",
+                    "de": "LTC+3 - Apollo 16 Region (Descartes-Hochland ~45°O)",
+                    "es": "LTC+3 - Región Apollo 16 (Tierras Altas de Descartes ~45°E)",
+                    "fr": "LTC+3 - Région Apollo 16 (Hauts-Plateaux de Descartes ~45°E)",
+                    "it": "LTC+3 - Regione Apollo 16 (Altopiani di Descartes ~45°E)",
+                    "nl": "LTC+3 - Apollo 16 Regio (Descartes Hooglanden ~45°O)",
+                    "pl": "LTC+3 - Region Apollo 16 (Wyżyny Descartesa ~45°E)",
+                    "pt": "LTC+3 - Região Apollo 16 (Terras Altas de Descartes ~45°L)",
+                    "ru": "LTC+3 - Район Аполлон-16 (Нагорье Декарта ~45°В)",
+                    "ja": "LTC+3 - アポロ16号地域（デカルト高地 ~東経45°）",
+                    "zh": "LTC+3 - 阿波罗16号区域（笛卡尔高地 ~东经45°）",
+                    "ko": "LTC+3 - 아폴로 16호 지역 (데카르트 고지 ~동경 45°)"
                 }
             },
             "LTC+4": {
@@ -210,6 +157,7 @@ CALENDAR_INFO = {
                     "fr": "LTC+4 - Site Chang'e 5 (Océan des Tempêtes Nord ~51°O)",
                     "it": "LTC+4 - Sito Chang'e 5 (Oceano delle Tempeste Nord ~51°O)",
                     "nl": "LTC+4 - Chang'e 5 Locatie (Oceaan der Stormen Noord ~51°W)",
+                    "pl": "LTC+4 - Miejsce Chang'e 5 (Oceanus Procellarum Północ ~51°W)",
                     "pt": "LTC+4 - Local Chang'e 5 (Oceano das Tempestades Norte ~51°O)",
                     "ru": "LTC+4 - Место посадки Чанъэ-5 (Океан Бурь Север ~51°З)",
                     "ja": "LTC+4 - 嫦娥5号着陸地点（嵐の大洋北部 ~西経51°）",
@@ -217,8 +165,62 @@ CALENDAR_INFO = {
                     "ko": "LTC+4 - 창어 5호 착륙지 (폭풍의 바다 북부 ~서경 51°)"
                 }
             },
-            
-            # Soviet missions
+            "LTC+12": {
+                "offset": 12,
+                "name": "Von Kármán Crater Time",
+                "site": "Chang'e 4",
+                "dropdown_label": {
+                    "en": "LTC+12 - Chang'e 4 Site (Von Kármán Crater, Far Side ~177°E)",
+                    "de": "LTC+12 - Chang'e 4 Landeplatz (Von-Kármán-Krater, Rückseite ~177°O)",
+                    "es": "LTC+12 - Sitio Chang'e 4 (Cráter Von Kármán, Cara Oculta ~177°E)",
+                    "fr": "LTC+12 - Site Chang'e 4 (Cratère Von Kármán, Face Cachée ~177°E)",
+                    "it": "LTC+12 - Sito Chang'e 4 (Cratere Von Kármán, Lato Nascosto ~177°E)",
+                    "nl": "LTC+12 - Chang'e 4 Locatie (Von Kármán Krater, Achterkant ~177°O)",
+                    "pl": "LTC+12 - Miejsce Chang'e 4 (Krater Von Kármána, Niewidoczna strona ~177°E)",
+                    "pt": "LTC+12 - Local Chang'e 4 (Cratera Von Kármán, Lado Oculto ~177°L)",
+                    "ru": "LTC+12 - Место посадки Чанъэ-4 (Кратер фон Кармана, Обратная сторона ~177°В)",
+                    "ja": "LTC+12 - 嫦娥4号着陸地点（フォン・カルマン・クレーター、裏側 ~東経177°）",
+                    "zh": "LTC+12 - 嫦娥四号着陆点（冯·卡门撞击坑，背面 ~东经177°）",
+                    "ko": "LTC+12 - 창어 4호 착륙지 (폰 카르만 분화구, 뒷면 ~동경 177°)"
+                }
+            },
+            "LTC-1": {
+                "offset": -1,
+                "name": "Lunar Time -1",
+                "dropdown_label": {
+                    "en": "LTC-1 - West Longitude 15°",
+                    "de": "LTC-1 - Westliche Länge 15°",
+                    "es": "LTC-1 - Longitud Oeste 15°",
+                    "fr": "LTC-1 - Longitude Ouest 15°",
+                    "it": "LTC-1 - Longitudine Ovest 15°",
+                    "nl": "LTC-1 - Westerlengte 15°",
+                    "pl": "LTC-1 - Długość zachodnia 15°",
+                    "pt": "LTC-1 - Longitude Oeste 15°",
+                    "ru": "LTC-1 - Западная долгота 15°",
+                    "ja": "LTC-1 - 西経15°",
+                    "zh": "LTC-1 - 西经15°",
+                    "ko": "LTC-1 - 서경 15°"
+                }
+            },
+            "LTC-2": {
+                "offset": -2,
+                "name": "Oceanus Procellarum Time",
+                "site": "Apollo 12",
+                "dropdown_label": {
+                    "en": "LTC-2 - Apollo 12 Site (Ocean of Storms ~23°W)",
+                    "de": "LTC-2 - Apollo 12 Landeplatz (Ozean der Stürme ~23°W)",
+                    "es": "LTC-2 - Sitio Apollo 12 (Océano de las Tormentas ~23°O)",
+                    "fr": "LTC-2 - Site Apollo 12 (Océan des Tempêtes ~23°O)",
+                    "it": "LTC-2 - Sito Apollo 12 (Oceano delle Tempeste ~23°O)",
+                    "nl": "LTC-2 - Apollo 12 Locatie (Oceaan der Stormen ~23°W)",
+                    "pl": "LTC-2 - Miejsce Apollo 12 (Ocean Burz ~23°W)",
+                    "pt": "LTC-2 - Local Apollo 12 (Oceano das Tempestades ~23°O)",
+                    "ru": "LTC-2 - Место посадки Аполлон-12 (Океан Бурь ~23°З)",
+                    "ja": "LTC-2 - アポロ12号着陸地点（嵐の大洋 ~西経23°）",
+                    "zh": "LTC-2 - 阿波罗12号着陆点（风暴洋 ~西经23°）",
+                    "ko": "LTC-2 - 아폴로 12호 착륙지 (폭풍의 바다 ~서경 23°)"
+                }
+            },
             "LTC-4": {
                 "offset": -4,
                 "name": "Mare Imbrium Time",
@@ -230,6 +232,7 @@ CALENDAR_INFO = {
                     "fr": "LTC-4 - Site Luna 17 (Mer des Pluies ~35°O)",
                     "it": "LTC-4 - Sito Luna 17 (Mare Imbrium ~35°O)",
                     "nl": "LTC-4 - Luna 17 Locatie (Regenzee ~35°W)",
+                    "pl": "LTC-4 - Miejsce Luna 17 (Mare Imbrium ~35°W)",
                     "pt": "LTC-4 - Local Luna 17 (Mar das Chuvas ~35°O)",
                     "ru": "LTC-4 - Место посадки Луна-17 (Море Дождей ~35°З)",
                     "ja": "LTC-4 - ルナ17号着陸地点（雨の海 ~西経35°）",
@@ -237,8 +240,6 @@ CALENDAR_INFO = {
                     "ko": "LTC-4 - 루나 17호 착륙지 (비의 바다 ~서경 35°)"
                 }
             },
-            
-            # Future mission sites
             "LTC_SOUTH": {
                 "offset": 0,
                 "name": "Lunar South Pole Time",
@@ -250,6 +251,7 @@ CALENDAR_INFO = {
                     "fr": "LTC Sud - Pôle Sud Lunaire (Camp de Base Artemis)",
                     "it": "LTC Sud - Polo Sud Lunare (Campo Base Artemis)",
                     "nl": "LTC Zuid - Maan Zuidpool (Artemis Basiskamp)",
+                    "pl": "LTC Południe - Biegun południowy Księżyca (Baza Artemis)",
                     "pt": "LTC Sul - Polo Sul Lunar (Base Artemis)",
                     "ru": "LTC Юг - Лунный южный полюс (База Артемида)",
                     "ja": "LTC南極 - 月面南極（アルテミス基地）",
@@ -290,19 +292,123 @@ CALENDAR_INFO = {
         "timezone": {
             "type": "select",
             "default": "LTC",
-            "options": ["LTC", "LTC+1", "LTC+2", "LTC+3", "LTC+4", "LTC+12", "LTC-1", "LTC-2", "LTC-4", "LTC_SOUTH"],
+            "options": [
+                {
+                    "value": "LTC",
+                    "label": {
+                        "en": "🌙 LTC - Prime Meridian (0°)",
+                        "de": "🌙 LTC - Nullmeridian (0°)",
+                        "es": "🌙 LTC - Meridiano Principal (0°)",
+                        "fr": "🌙 LTC - Méridien Principal (0°)",
+                        "it": "🌙 LTC - Meridiano Primo (0°)",
+                        "nl": "🌙 LTC - Nulmeridiaan (0°)",
+                        "pl": "🌙 LTC - Południk zerowy (0°)",
+                        "pt": "🌙 LTC - Meridiano Principal (0°)",
+                        "ru": "🌙 LTC - Нулевой меридиан (0°)",
+                        "ja": "🌙 LTC - 本初子午線 (0°)",
+                        "zh": "🌙 LTC - 本初子午线 (0°)",
+                        "ko": "🌙 LTC - 본초 자오선 (0°)"
+                    }
+                },
+                {
+                    "value": "LTC+2",
+                    "label": {
+                        "en": "🚀 Apollo 11 - Sea of Tranquility",
+                        "de": "🚀 Apollo 11 - Meer der Ruhe",
+                        "es": "🚀 Apollo 11 - Mar de la Tranquilidad",
+                        "fr": "🚀 Apollo 11 - Mer de la Tranquillité",
+                        "it": "🚀 Apollo 11 - Mare della Tranquillità",
+                        "nl": "🚀 Apollo 11 - Zee van de Rust",
+                        "pl": "🚀 Apollo 11 - Morze Spokoju",
+                        "pt": "🚀 Apollo 11 - Mar da Tranquilidade",
+                        "ru": "🚀 Аполлон-11 - Море Спокойствия",
+                        "ja": "🚀 アポロ11号 - 静かの海",
+                        "zh": "🚀 阿波罗11号 - 静海",
+                        "ko": "🚀 아폴로 11호 - 고요의 바다"
+                    }
+                },
+                {
+                    "value": "LTC-2",
+                    "label": {
+                        "en": "🚀 Apollo 12 - Ocean of Storms",
+                        "de": "🚀 Apollo 12 - Ozean der Stürme",
+                        "es": "🚀 Apollo 12 - Océano de las Tormentas",
+                        "fr": "🚀 Apollo 12 - Océan des Tempêtes",
+                        "it": "🚀 Apollo 12 - Oceano delle Tempeste",
+                        "nl": "🚀 Apollo 12 - Oceaan der Stormen",
+                        "pl": "🚀 Apollo 12 - Ocean Burz",
+                        "pt": "🚀 Apollo 12 - Oceano das Tempestades",
+                        "ru": "🚀 Аполлон-12 - Океан Бурь",
+                        "ja": "🚀 アポロ12号 - 嵐の大洋",
+                        "zh": "🚀 阿波罗12号 - 风暴洋",
+                        "ko": "🚀 아폴로 12호 - 폭풍의 바다"
+                    }
+                },
+                {
+                    "value": "LTC+12",
+                    "label": {
+                        "en": "🇨🇳 Chang'e 4 - Far Side (Von Kármán)",
+                        "de": "🇨🇳 Chang'e 4 - Rückseite (Von Kármán)",
+                        "es": "🇨🇳 Chang'e 4 - Cara Oculta (Von Kármán)",
+                        "fr": "🇨🇳 Chang'e 4 - Face Cachée (Von Kármán)",
+                        "it": "🇨🇳 Chang'e 4 - Lato Nascosto (Von Kármán)",
+                        "nl": "🇨🇳 Chang'e 4 - Achterkant (Von Kármán)",
+                        "pl": "🇨🇳 Chang'e 4 - Niewidoczna strona (Von Kármán)",
+                        "pt": "🇨🇳 Chang'e 4 - Lado Oculto (Von Kármán)",
+                        "ru": "🇨🇳 Чанъэ-4 - Обратная сторона (Фон Карман)",
+                        "ja": "🇨🇳 嫦娥4号 - 裏側（フォン・カルマン）",
+                        "zh": "🇨🇳 嫦娥四号 - 背面（冯·卡门）",
+                        "ko": "🇨🇳 창어 4호 - 뒷면 (폰 카르만)"
+                    }
+                },
+                {
+                    "value": "LTC-4",
+                    "label": {
+                        "en": "🇷🇺 Luna 17 - Mare Imbrium",
+                        "de": "🇷🇺 Luna 17 - Regenmeer",
+                        "es": "🇷🇺 Luna 17 - Mare Imbrium",
+                        "fr": "🇷🇺 Luna 17 - Mer des Pluies",
+                        "it": "🇷🇺 Luna 17 - Mare Imbrium",
+                        "nl": "🇷🇺 Luna 17 - Regenzee",
+                        "pl": "🇷🇺 Luna 17 - Mare Imbrium",
+                        "pt": "🇷🇺 Luna 17 - Mar das Chuvas",
+                        "ru": "🇷🇺 Луна-17 - Море Дождей",
+                        "ja": "🇷🇺 ルナ17号 - 雨の海",
+                        "zh": "🇷🇺 月球17号 - 雨海",
+                        "ko": "🇷🇺 루나 17호 - 비의 바다"
+                    }
+                },
+                {
+                    "value": "LTC_SOUTH",
+                    "label": {
+                        "en": "🏕️ Artemis - South Pole Base",
+                        "de": "🏕️ Artemis - Südpol-Basis",
+                        "es": "🏕️ Artemis - Base del Polo Sur",
+                        "fr": "🏕️ Artemis - Base du Pôle Sud",
+                        "it": "🏕️ Artemis - Base del Polo Sud",
+                        "nl": "🏕️ Artemis - Zuidpool Basis",
+                        "pl": "🏕️ Artemis - Baza na biegunie południowym",
+                        "pt": "🏕️ Artemis - Base do Polo Sul",
+                        "ru": "🏕️ Артемида - База на южном полюсе",
+                        "ja": "🏕️ アルテミス - 南極基地",
+                        "zh": "🏕️ 阿尔忒弥斯 - 南极基地",
+                        "ko": "🏕️ 아르테미스 - 남극 기지"
+                    }
+                }
+            ],
             "label": {
-                "en": "Lunar Timezone",
-                "de": "Mond-Zeitzone",
-                "es": "Zona horaria lunar",
-                "fr": "Fuseau horaire lunaire",
-                "it": "Fuso orario lunare",
-                "nl": "Maan tijdzone",
-                "pt": "Fuso horário lunar",
-                "ru": "Лунный часовой пояс",
-                "ja": "月面タイムゾーン",
-                "zh": "月球时区",
-                "ko": "달 시간대"
+                "en": "Lunar Timezone / Landing Site",
+                "de": "Mond-Zeitzone / Landeplatz",
+                "es": "Zona Horaria Lunar / Sitio de Alunizaje",
+                "fr": "Fuseau Horaire Lunaire / Site d'Alunissage",
+                "it": "Fuso Orario Lunare / Sito di Allunaggio",
+                "nl": "Maan Tijdzone / Landingsplaats",
+                "pl": "Strefa czasowa Księżyca / Miejsce lądowania",
+                "pt": "Fuso Horário Lunar / Local de Pouso",
+                "ru": "Лунный часовой пояс / Место посадки",
+                "ja": "月面タイムゾーン / 着陸地点",
+                "zh": "月球时区 / 着陆点",
+                "ko": "달 시간대 / 착륙 지점"
             },
             "description": {
                 "en": "Select lunar timezone or historic landing site",
@@ -311,6 +417,7 @@ CALENDAR_INFO = {
                 "fr": "Sélectionnez le fuseau horaire lunaire ou le site d'alunissage historique",
                 "it": "Seleziona fuso orario lunare o sito di allunaggio storico",
                 "nl": "Selecteer maan tijdzone of historische landingsplaats",
+                "pl": "Wybierz strefę czasową Księżyca lub historyczne miejsce lądowania",
                 "pt": "Selecione fuso horário lunar ou local de pouso histórico",
                 "ru": "Выберите лунный часовой пояс или историческое место посадки",
                 "ja": "月面タイムゾーンまたは歴史的着陸地点を選択",
@@ -328,6 +435,7 @@ CALENDAR_INFO = {
                 "fr": "Afficher la phase lunaire",
                 "it": "Mostra fase lunare",
                 "nl": "Toon maanfase",
+                "pl": "Pokaż fazę Księżyca",
                 "pt": "Mostrar fase lunar",
                 "ru": "Показать фазу Луны",
                 "ja": "月相を表示",
@@ -341,6 +449,7 @@ CALENDAR_INFO = {
                 "fr": "Afficher la phase lunaire actuelle avec emoji",
                 "it": "Mostra la fase lunare attuale con emoji",
                 "nl": "Toon huidige maanfase met emoji",
+                "pl": "Wyświetl aktualną fazę Księżyca z emoji",
                 "pt": "Mostrar fase lunar atual com emoji",
                 "ru": "Показывать текущую фазу Луны с эмодзи",
                 "ja": "現在の月相を絵文字で表示",
@@ -358,6 +467,7 @@ CALENDAR_INFO = {
                 "fr": "Afficher le jour lunaire",
                 "it": "Mostra giorno lunare",
                 "nl": "Toon maandag",
+                "pl": "Pokaż dzień księżycowy",
                 "pt": "Mostrar dia lunar",
                 "ru": "Показать лунный день",
                 "ja": "太陰日を表示",
@@ -371,6 +481,7 @@ CALENDAR_INFO = {
                 "fr": "Afficher le numéro du jour lunaire (1-30)",
                 "it": "Mostra numero del giorno lunare (1-30)",
                 "nl": "Toon maandag nummer (1-30)",
+                "pl": "Pokaż numer dnia księżycowego (1-30)",
                 "pt": "Mostrar número do dia lunar (1-30)",
                 "ru": "Показывать номер лунного дня (1-30)",
                 "ja": "太陰日番号を表示（1-30）",
@@ -388,6 +499,7 @@ CALENDAR_INFO = {
                 "fr": "Afficher l'heure terrestre",
                 "it": "Mostra ora terrestre",
                 "nl": "Toon Aardse tijd",
+                "pl": "Pokaż czas ziemski",
                 "pt": "Mostrar hora terrestre",
                 "ru": "Показать земное время",
                 "ja": "地球時間を表示",
@@ -401,6 +513,7 @@ CALENDAR_INFO = {
                 "fr": "Afficher l'heure UTC terrestre correspondante",
                 "it": "Mostra l'ora UTC terrestre corrispondente",
                 "nl": "Toon overeenkomstige Aardse UTC tijd",
+                "pl": "Wyświetl odpowiadający czas UTC Ziemi",
                 "pt": "Mostrar hora UTC terrestre correspondente",
                 "ru": "Показывать соответствующее земное время UTC",
                 "ja": "対応する地球のUTC時間を表示",
@@ -418,6 +531,7 @@ CALENDAR_INFO = {
                 "fr": "Afficher la dilatation temporelle",
                 "it": "Mostra dilatazione temporale",
                 "nl": "Toon tijddilatatie",
+                "pl": "Pokaż dylatację czasu",
                 "pt": "Mostrar dilatação temporal",
                 "ru": "Показать замедление времени",
                 "ja": "時間の遅れを表示",
@@ -431,6 +545,7 @@ CALENDAR_INFO = {
                 "fr": "Afficher l'effet de dilatation temporelle (56 μs/jour)",
                 "it": "Mostra effetto di dilatazione temporale (56 μs/giorno)",
                 "nl": "Toon tijddilatatie effect (56 μs/dag)",
+                "pl": "Pokaż efekt dylatacji czasu (56 μs/dzień)",
                 "pt": "Mostrar efeito de dilatação temporal (56 μs/dia)",
                 "ru": "Показывать эффект замедления времени (56 мкс/день)",
                 "ja": "時間の遅れ効果を表示（56μs/日）",
@@ -448,7 +563,7 @@ CALENDAR_INFO = {
     "introduced": "2023 (Proposed)",
     
     # Related calendars
-    "related": ["mars", "darian", "gregorian"],
+    "related": ["mars", "darian", "gregorian", "lunar_tcl"],
     
     # Tags for searching and filtering
     "tags": [
@@ -469,10 +584,55 @@ CALENDAR_INFO = {
             "Monduhren laufen aufgrund der gravitativen Zeitdilatation 56 Mikrosekunden pro Tag schneller als auf der Erde. "
             "Zeitzonen umfassen historische Apollo-, Chang'e- und Luna-Landeplätze."
         ),
+        "es": (
+            "Sistema de Tiempo Lunar Coordinado (LTC) propuesto por la ESA para futuras misiones lunares. "
+            "Los relojes lunares funcionan 56 microsegundos por día más rápido que los terrestres debido a la dilatación temporal gravitacional. "
+            "Las zonas horarias incluyen los sitios históricos de aterrizaje de Apollo, Chang'e y Luna."
+        ),
+        "fr": (
+            "Système de Temps Lunaire Coordonné (LTC) proposé par l'ESA pour les futures missions lunaires. "
+            "Les horloges lunaires avancent de 56 microsecondes par jour par rapport à la Terre en raison de la dilatation temporelle gravitationnelle. "
+            "Les fuseaux horaires incluent les sites d'alunissage historiques d'Apollo, Chang'e et Luna."
+        ),
+        "it": (
+            "Sistema di Tempo Lunare Coordinato (LTC) proposto dall'ESA per future missioni lunari. "
+            "Gli orologi lunari funzionano 56 microsecondi al giorno più veloci di quelli terrestri a causa della dilatazione temporale gravitazionale. "
+            "I fusi orari includono i siti storici di allunaggio di Apollo, Chang'e e Luna."
+        ),
+        "nl": (
+            "ESA's voorgestelde Lunar Time Coordinated (LTC) systeem voor toekomstige maanmissies. "
+            "Maanklokken lopen 56 microseconden per dag sneller dan aardse klokken door gravitationele tijddilatatie. "
+            "Tijdzones omvatten historische Apollo, Chang'e en Luna landingsplaatsen."
+        ),
+        "pl": (
+            "Proponowany przez ESA system Skoordynowanego Czasu Księżycowego (LTC) dla przyszłych misji księżycowych. "
+            "Zegary księżycowe działają 56 mikrosekund dziennie szybciej niż ziemskie z powodu grawitacyjnej dylatacji czasu. "
+            "Strefy czasowe obejmują historyczne miejsca lądowania Apollo, Chang'e i Luna."
+        ),
+        "pt": (
+            "Sistema de Tempo Lunar Coordenado (LTC) proposto pela ESA para futuras missões lunares. "
+            "Os relógios lunares funcionam 56 microssegundos por dia mais rápido que os terrestres devido à dilatação temporal gravitacional. "
+            "Os fusos horários incluem os locais históricos de pouso de Apollo, Chang'e e Luna."
+        ),
+        "ru": (
+            "Предложенная ESA система координированного лунного времени (LTC) для будущих лунных миссий. "
+            "Лунные часы идут на 56 микросекунд в день быстрее земных из-за гравитационного замедления времени. "
+            "Часовые пояса включают исторические места посадки Аполлон, Чанъэ и Луна."
+        ),
+        "ja": (
+            "将来の月面ミッションのためのESAが提案した月面協定時（LTC）システム。"
+            "重力による時間の遅れのため、月の時計は地球より1日あたり56マイクロ秒速く進みます。"
+            "タイムゾーンには、アポロ、嫦娥、ルナの歴史的着陸地点が含まれます。"
+        ),
         "zh": (
             "欧空局提出的月球协调时间（LTC）系统，用于未来的月球任务。"
             "由于引力时间膨胀，月球时钟每天比地球快56微秒。"
             "时区包括历史性的阿波罗、嫦娥和月球号着陆点。"
+        ),
+        "ko": (
+            "미래 달 임무를 위한 ESA의 달 협정시(LTC) 시스템 제안. "
+            "중력에 의한 시간 팽창으로 인해 달의 시계는 지구보다 하루에 56마이크로초 빠르게 작동합니다. "
+            "시간대에는 역사적인 아폴로, 창어, 루나 착륙 지점이 포함됩니다."
         )
     }
 }
@@ -528,66 +688,23 @@ class LunarTimeSensor(AlternativeTimeSensorBase):
         if self._options_loaded:
             return
             
-        # Get plugin options from config entry
-        plugin_options = self._get_plugin_options()
-        
-        if plugin_options:
-            _LOGGER.debug(f"Loading Lunar Time options: {plugin_options}")
-            
-            # Apply options using set_options method
-            self.set_options(
-                timezone=plugin_options.get("timezone"),
-                show_phase=plugin_options.get("show_phase"),
-                show_lunar_day=plugin_options.get("show_lunar_day"),
-                show_earth_time=plugin_options.get("show_earth_time"),
-                show_time_dilation=plugin_options.get("show_time_dilation")
-            )
-        
-        self._options_loaded = True
+        try:
+            options = self.get_plugin_options()
+            if options:
+                self._timezone = options.get("timezone", self._timezone)
+                self._show_phase = options.get("show_phase", self._show_phase)
+                self._show_lunar_day = options.get("show_lunar_day", self._show_lunar_day)
+                self._show_earth_time = options.get("show_earth_time", self._show_earth_time)
+                self._show_time_dilation = options.get("show_time_dilation", self._show_time_dilation)
+                _LOGGER.debug(f"Lunar Time options loaded: timezone={self._timezone}")
+            self._options_loaded = True
+        except Exception as e:
+            _LOGGER.debug(f"Could not load options: {e}")
     
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        
-        # Load options after entity is registered
         self._load_options()
-        
-        _LOGGER.debug(f"Lunar Time sensor added to hass with options: "
-                     f"timezone={self._timezone}, phase={self._show_phase}, "
-                     f"lunar_day={self._show_lunar_day}, earth_time={self._show_earth_time}")
-    
-    def set_options(
-        self,
-        *,
-        timezone: Optional[str] = None,
-        show_phase: Optional[bool] = None,
-        show_lunar_day: Optional[bool] = None,
-        show_earth_time: Optional[bool] = None,
-        show_time_dilation: Optional[bool] = None
-    ) -> None:
-        """Set calendar options from config flow."""
-        if timezone is not None:
-            if timezone in self._lunar_data.get("timezones", {}):
-                self._timezone = timezone
-                _LOGGER.debug(f"Set timezone to: {timezone}")
-            else:
-                _LOGGER.warning(f"Invalid timezone: {timezone}, keeping {self._timezone}")
-        
-        if show_phase is not None:
-            self._show_phase = bool(show_phase)
-            _LOGGER.debug(f"Set show_phase to: {show_phase}")
-        
-        if show_lunar_day is not None:
-            self._show_lunar_day = bool(show_lunar_day)
-            _LOGGER.debug(f"Set show_lunar_day to: {show_lunar_day}")
-        
-        if show_earth_time is not None:
-            self._show_earth_time = bool(show_earth_time)
-            _LOGGER.debug(f"Set show_earth_time to: {show_earth_time}")
-        
-        if show_time_dilation is not None:
-            self._show_time_dilation = bool(show_time_dilation)
-            _LOGGER.debug(f"Set show_time_dilation to: {show_time_dilation}")
     
     @property
     def state(self):
