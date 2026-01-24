@@ -11,7 +11,7 @@ GitHub: https://github.com/xlucn/LTE440
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import logging
 import math
 from typing import Dict, Any, Optional
@@ -177,8 +177,8 @@ CALENDAR_INFO = {
     "config_options": {
         "display_format": {
             "type": "select",
-            "default": "drift_microseconds",
-            "options": ["drift_microseconds", "drift_nanoseconds", "drift_seconds", "clock_ratio", "accumulated_ms"],
+            "default": "tcl_time",
+            "options": ["tcl_time", "tcl_datetime", "tcl_with_drift", "drift_microseconds", "accumulated_ms"],
             "label": {
                 "en": "Display Format",
                 "de": "Anzeigeformat",
@@ -194,20 +194,62 @@ CALENDAR_INFO = {
                 "ko": "표시 형식"
             },
             "description": {
-                "en": "Choose how to display the lunar time drift",
-                "de": "Wählen Sie die Anzeige der Mondzeit-Drift",
-                "es": "Elija cómo mostrar la deriva del tiempo lunar",
-                "fr": "Choisissez l'affichage de la dérive temporelle lunaire",
-                "it": "Scegli come visualizzare la deriva temporale lunare",
-                "nl": "Kies hoe de maantijdsdrift wordt weergegeven",
-                "pl": "Wybierz sposób wyświetlania dryfu czasu księżycowego",
-                "pt": "Escolha como exibir a deriva do tempo lunar",
-                "ru": "Выберите отображение лунного временного дрейфа",
-                "ja": "月時間ドリフトの表示方法を選択",
-                "zh": "选择月球时间漂移的显示方式",
-                "ko": "달 시간 드리프트 표시 방법 선택"
+                "en": "Choose how to display the lunar coordinate time",
+                "de": "Wählen Sie die Anzeige der Mondkoordinatenzeit",
+                "es": "Elija cómo mostrar el tiempo de coordenadas lunares",
+                "fr": "Choisissez l'affichage du temps de coordonnées lunaires",
+                "it": "Scegli come visualizzare il tempo di coordinate lunari",
+                "nl": "Kies hoe de maancoördinatentijd wordt weergegeven",
+                "pl": "Wybierz sposób wyświetlania księżycowego czasu koordynatowego",
+                "pt": "Escolha como exibir o tempo de coordenadas lunares",
+                "ru": "Выберите отображение лунного координатного времени",
+                "ja": "月座標時の表示方法を選択",
+                "zh": "选择月球坐标时的显示方式",
+                "ko": "달 좌표시 표시 방법 선택"
             },
             "option_labels": {
+                "tcl_time": {
+                    "en": "TCL Time (HH:MM:SS)",
+                    "de": "TCL-Zeit (HH:MM:SS)",
+                    "es": "Hora TCL (HH:MM:SS)",
+                    "fr": "Heure TCL (HH:MM:SS)",
+                    "it": "Ora TCL (HH:MM:SS)",
+                    "nl": "TCL-tijd (HH:MM:SS)",
+                    "pl": "Czas TCL (HH:MM:SS)",
+                    "pt": "Hora TCL (HH:MM:SS)",
+                    "ru": "Время TCL (ЧЧ:ММ:СС)",
+                    "ja": "TCL時刻 (HH:MM:SS)",
+                    "zh": "TCL时间 (HH:MM:SS)",
+                    "ko": "TCL 시간 (HH:MM:SS)"
+                },
+                "tcl_datetime": {
+                    "en": "TCL Date & Time",
+                    "de": "TCL-Datum & Zeit",
+                    "es": "Fecha y Hora TCL",
+                    "fr": "Date et Heure TCL",
+                    "it": "Data e Ora TCL",
+                    "nl": "TCL-datum & tijd",
+                    "pl": "Data i Czas TCL",
+                    "pt": "Data e Hora TCL",
+                    "ru": "Дата и Время TCL",
+                    "ja": "TCL日時",
+                    "zh": "TCL日期和时间",
+                    "ko": "TCL 날짜 및 시간"
+                },
+                "tcl_with_drift": {
+                    "en": "TCL Time + Drift",
+                    "de": "TCL-Zeit + Drift",
+                    "es": "Hora TCL + Deriva",
+                    "fr": "Heure TCL + Dérive",
+                    "it": "Ora TCL + Deriva",
+                    "nl": "TCL-tijd + Drift",
+                    "pl": "Czas TCL + Dryf",
+                    "pt": "Hora TCL + Deriva",
+                    "ru": "Время TCL + Дрейф",
+                    "ja": "TCL時刻 + ドリフト",
+                    "zh": "TCL时间 + 漂移",
+                    "ko": "TCL 시간 + 드리프트"
+                },
                 "drift_microseconds": {
                     "en": "Daily Drift (µs/day)",
                     "de": "Tägliche Drift (µs/Tag)",
@@ -221,48 +263,6 @@ CALENDAR_INFO = {
                     "ja": "日次ドリフト (µs/日)",
                     "zh": "每日漂移 (µs/天)",
                     "ko": "일일 드리프트 (µs/일)"
-                },
-                "drift_nanoseconds": {
-                    "en": "Daily Drift (ns/day)",
-                    "de": "Tägliche Drift (ns/Tag)",
-                    "es": "Deriva Diaria (ns/día)",
-                    "fr": "Dérive Quotidienne (ns/jour)",
-                    "it": "Deriva Giornaliera (ns/giorno)",
-                    "nl": "Dagelijkse Drift (ns/dag)",
-                    "pl": "Dzienny Dryf (ns/dzień)",
-                    "pt": "Deriva Diária (ns/dia)",
-                    "ru": "Суточный Дрейф (нс/день)",
-                    "ja": "日次ドリフト (ns/日)",
-                    "zh": "每日漂移 (ns/天)",
-                    "ko": "일일 드리프트 (ns/일)"
-                },
-                "drift_seconds": {
-                    "en": "Drift Rate (s/s)",
-                    "de": "Driftrate (s/s)",
-                    "es": "Tasa de Deriva (s/s)",
-                    "fr": "Taux de Dérive (s/s)",
-                    "it": "Tasso di Deriva (s/s)",
-                    "nl": "Driftsnelheid (s/s)",
-                    "pl": "Wskaźnik Dryfu (s/s)",
-                    "pt": "Taxa de Deriva (s/s)",
-                    "ru": "Скорость Дрейфа (с/с)",
-                    "ja": "ドリフト率 (s/s)",
-                    "zh": "漂移率 (s/s)",
-                    "ko": "드리프트율 (s/s)"
-                },
-                "clock_ratio": {
-                    "en": "Clock Ratio (TCL/TDB)",
-                    "de": "Uhrverhältnis (TCL/TDB)",
-                    "es": "Razón de Reloj (TCL/TDB)",
-                    "fr": "Rapport d'Horloge (TCL/TDB)",
-                    "it": "Rapporto Orologio (TCL/TDB)",
-                    "nl": "Klokverhouding (TCL/TDB)",
-                    "pl": "Stosunek Zegarów (TCL/TDB)",
-                    "pt": "Razão do Relógio (TCL/TDB)",
-                    "ru": "Соотношение Часов (TCL/TDB)",
-                    "ja": "クロック比 (TCL/TDB)",
-                    "zh": "时钟比率 (TCL/TDB)",
-                    "ko": "시계 비율 (TCL/TDB)"
                 },
                 "accumulated_ms": {
                     "en": "Accumulated Difference (ms)",
@@ -475,14 +475,14 @@ CALENDAR_INFO = {
 # SENSOR CLASS
 # ============================================
 
-class LunarTimeSensor(AlternativeTimeSensorBase):
+class LunarTCLSensor(AlternativeTimeSensorBase):
     """Sensor for displaying Lunar Coordinate Time (TCL) based on LTE440."""
 
     # Class-level update interval
     UPDATE_INTERVAL = UPDATE_INTERVAL
 
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
-        """Initialize the Lunar Time sensor."""
+        """Initialize the Lunar TCL sensor."""
         super().__init__(base_name, hass)
 
         # Store CALENDAR_INFO as instance variable
@@ -498,7 +498,7 @@ class LunarTimeSensor(AlternativeTimeSensorBase):
 
         # Configuration options with defaults
         config_defaults = CALENDAR_INFO.get("config_options", {})
-        self._display_format = config_defaults.get("display_format", {}).get("default", "drift_microseconds")
+        self._display_format = config_defaults.get("display_format", {}).get("default", "tcl_time")
         self._show_periodic_terms = config_defaults.get("show_periodic_terms", {}).get("default", True)
         self._use_calibrated_drift = config_defaults.get("use_calibrated_drift", {}).get("default", True)
         self._precision_digits = int(config_defaults.get("precision_digits", {}).get("default", "3"))
@@ -512,8 +512,9 @@ class LunarTimeSensor(AlternativeTimeSensorBase):
         # Initialize state
         self._state = None
         self._tcl_info: Dict[str, Any] = {}
+        self._tcl_datetime: Optional[datetime] = None
 
-        _LOGGER.debug(f"Initialized Lunar Time sensor: {self._attr_name}")
+        _LOGGER.debug(f"Initialized Lunar TCL sensor: {self._attr_name}")
 
     def _load_options(self) -> None:
         """Load plugin options after IDs are set."""
@@ -528,14 +529,14 @@ class LunarTimeSensor(AlternativeTimeSensorBase):
                 self._use_calibrated_drift = options.get("use_calibrated_drift", self._use_calibrated_drift)
                 self._precision_digits = int(options.get("precision_digits", self._precision_digits))
 
-                _LOGGER.debug(f"Lunar Time sensor loaded options: format={self._display_format}, "
+                _LOGGER.debug(f"Lunar TCL sensor loaded options: format={self._display_format}, "
                              f"periodic={self._show_periodic_terms}, calibrated={self._use_calibrated_drift}")
             else:
-                _LOGGER.debug("Lunar Time sensor using default options")
+                _LOGGER.debug("Lunar TCL sensor using default options")
 
             self._options_loaded = True
         except Exception as e:
-            _LOGGER.debug(f"Lunar Time sensor could not load options yet: {e}")
+            _LOGGER.debug(f"Lunar TCL sensor could not load options yet: {e}")
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -559,6 +560,17 @@ class LunarTimeSensor(AlternativeTimeSensorBase):
 
         if self._tcl_info:
             attrs.update(self._tcl_info)
+
+            # Add TCL datetime if calculated
+            if hasattr(self, '_tcl_datetime') and self._tcl_datetime:
+                attrs["tcl_time"] = self._tcl_datetime.strftime('%H:%M:%S')
+                attrs["tcl_datetime"] = self._tcl_datetime.strftime('%Y-%m-%d %H:%M:%S')
+                attrs["tcl_iso"] = self._tcl_datetime.isoformat()
+            
+            # Add current UTC for comparison
+            now_utc = datetime.now(timezone.utc)
+            attrs["utc_time"] = now_utc.strftime('%H:%M:%S')
+            attrs["utc_datetime"] = now_utc.strftime('%Y-%m-%d %H:%M:%S')
 
             # Add description in user's language
             attrs["description"] = self._translate('description')
@@ -735,7 +747,31 @@ class LunarTimeSensor(AlternativeTimeSensorBase):
         """Format the sensor state based on display format setting."""
         precision = self._precision_digits
         
-        if self._display_format == "drift_microseconds":
+        # Get accumulated difference in seconds
+        tcl_minus_tdb_seconds = tcl_info.get("tcl_minus_tdb_seconds", 0)
+        
+        # Calculate TCL time by adding the difference to current UTC
+        now_utc = datetime.now(timezone.utc)
+        tcl_datetime = now_utc + timedelta(seconds=tcl_minus_tdb_seconds)
+        
+        # Store for attributes
+        self._tcl_datetime = tcl_datetime
+        
+        if self._display_format == "tcl_time":
+            # Just the time: HH:MM:SS.mmm TCL
+            return f"{tcl_datetime.strftime('%H:%M:%S')} TCL"
+        
+        elif self._display_format == "tcl_datetime":
+            # Full date and time: YYYY-MM-DD HH:MM:SS TCL
+            return f"{tcl_datetime.strftime('%Y-%m-%d %H:%M:%S')} TCL"
+        
+        elif self._display_format == "tcl_with_drift":
+            # Time plus drift info: HH:MM:SS TCL (+X.XXX ms)
+            diff_ms = tcl_info.get("tcl_minus_tdb_milliseconds", 0)
+            sign = "+" if diff_ms >= 0 else ""
+            return f"{tcl_datetime.strftime('%H:%M:%S')} TCL ({sign}{diff_ms:.{precision}f} ms)"
+        
+        elif self._display_format == "drift_microseconds":
             value = tcl_info["daily_drift_microseconds"]
             return f"{value:.{precision}f} µs/day"
         
@@ -743,23 +779,14 @@ class LunarTimeSensor(AlternativeTimeSensorBase):
             value = tcl_info["daily_drift_nanoseconds"]
             return f"{value:.{precision}f} ns/day"
         
-        elif self._display_format == "drift_seconds":
-            value = float(tcl_info["drift_rate_dimensionless"])
-            return f"{value:.{precision}e}"
-        
-        elif self._display_format == "clock_ratio":
-            ratio = tcl_info["clock_ratio_tcl_tdb"]
-            # Show deviation from 1
-            return ratio
-        
         elif self._display_format == "accumulated_ms":
             value = tcl_info["tcl_minus_tdb_milliseconds"]
-            return f"{value:.{precision}f} ms"
+            sign = "+" if value >= 0 else ""
+            return f"{sign}{value:.{precision}f} ms"
         
         else:
-            # Default to microseconds
-            value = tcl_info["daily_drift_microseconds"]
-            return f"{value:.{precision}f} µs/day"
+            # Default to TCL time
+            return f"{tcl_datetime.strftime('%H:%M:%S')} TCL"
 
     def set_options(
         self,
@@ -771,7 +798,7 @@ class LunarTimeSensor(AlternativeTimeSensorBase):
     ) -> None:
         """Set calendar options from config flow."""
         if display_format is not None:
-            valid_formats = ["drift_microseconds", "drift_nanoseconds", "drift_seconds", "clock_ratio", "accumulated_ms"]
+            valid_formats = ["tcl_time", "tcl_datetime", "tcl_with_drift", "drift_microseconds", "drift_nanoseconds", "accumulated_ms"]
             if display_format in valid_formats:
                 self._display_format = display_format
                 _LOGGER.debug(f"Set display_format to: {display_format}")
@@ -799,9 +826,9 @@ class LunarTimeSensor(AlternativeTimeSensorBase):
             # Format state
             self._state = self._format_state(self._tcl_info)
             
-            _LOGGER.debug(f"Lunar Time updated: {self._state}")
+            _LOGGER.debug(f"Lunar TCL updated: {self._state}")
             
         except Exception as e:
-            _LOGGER.error(f"Error updating Lunar Time sensor: {e}")
+            _LOGGER.error(f"Error updating Lunar TCL sensor: {e}")
             self._state = "Error"
             self._tcl_info = {"error": str(e)}
