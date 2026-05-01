@@ -28,7 +28,7 @@
       },
       "disclaimer": {
         "title": "Aviso importante",
-        "description": "## ⚠️ Sistemas de Tiempo Alternativos - Descargo de responsabilidad\n\nLos calendarios y sistemas de tiempo alternativos proporcionados por esta integración son **solo con fines educativos y de entretenimiento**.\n\n### Tenga en cuenta:\n• Los cálculos pueden no ser 100% precisos\n• Algunos calendarios son ficticios o teóricos\n• Los calendarios históricos pueden tener variaciones\n• Las zonas horarias y conversiones son aproximaciones\n\n### ¿Encontró un problema?\nSi descubre errores o tiene sugerencias de mejora, infórmelos en nuestro repositorio de GitHub:\n\n**https://github.com/Lexorius/alternative_time**\n\nAl continuar, reconoce que estos sistemas de tiempo no deben usarse para el cronometraje crítico o propósitos oficiales."
+        "description": "## ⚠️ Sistemas de Tiempo Alternativos - Descargo de responsabilidad\n\nLos calendarios y sistemas de tiempo alternativos proporcionados por esta integración son **solo con fines educativos y de entretenimiento**.\n\n### Tenga en cuenta:\n• Los cálculos pueden no ser 100% precisos\n• Algunos calendarios son ficticios o teóricos\n• Los calendarios históricos pueden tener variaciones\n• Las zonas horarias y conversiones son aproximaciones\n\n### ¿Encontró un problema?\nSi descubre errores o tiene sugerencias de mejora, infórmelos en nuestro repositorio de GitHub:\n\n**{github_url}**\n\nAl continuar, reconoce que estos sistemas de tiempo no deben usarse para el cronometraje crítico o propósitos oficiales."
       }
     },
     "error": {

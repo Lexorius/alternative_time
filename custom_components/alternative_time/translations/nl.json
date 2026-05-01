@@ -28,7 +28,7 @@
       },
       "disclaimer": {
         "title": "Belangrijke mededeling",
-        "description": "## ⚠️ Alternatieve Tijdsystemen - Disclaimer\n\nDe alternatieve kalenders en tijdsystemen die door deze integratie worden geleverd zijn **alleen voor educatieve en entertainmentdoeleinden**.\n\n### Let op:\n• De berekeningen zijn mogelijk niet 100% nauwkeurig\n• Sommige kalenders zijn fictief of theoretisch\n• Historische kalenders kunnen variaties hebben\n• Tijdzones en conversies zijn benaderingen\n\n### Een probleem gevonden?\nAls u fouten ontdekt of suggesties voor verbeteringen heeft, meld deze dan op onze GitHub-repository:\n\n**https://github.com/Lexorius/alternative_time**\n\nDoor verder te gaan erkent u dat deze tijdsystemen niet mogen worden gebruikt voor kritische tijdregistratie of officiële doeleinden."
+        "description": "## ⚠️ Alternatieve Tijdsystemen - Disclaimer\n\nDe alternatieve kalenders en tijdsystemen die door deze integratie worden geleverd zijn **alleen voor educatieve en entertainmentdoeleinden**.\n\n### Let op:\n• De berekeningen zijn mogelijk niet 100% nauwkeurig\n• Sommige kalenders zijn fictief of theoretisch\n• Historische kalenders kunnen variaties hebben\n• Tijdzones en conversies zijn benaderingen\n\n### Een probleem gevonden?\nAls u fouten ontdekt of suggesties voor verbeteringen heeft, meld deze dan op onze GitHub-repository:\n\n**{github_url}**\n\nDoor verder te gaan erkent u dat deze tijdsystemen niet mogen worden gebruikt voor kritische tijdregistratie of officiële doeleinden."
       }
     },
     "error": {
