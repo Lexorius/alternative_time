@@ -14,5 +14,5 @@
     "LunarCalendar>=0.0.9",
     "Pillow>=10.0.0"
   ],
-  "version": "2.6.0.1"
+  "version": "2.6.0.2"
 }

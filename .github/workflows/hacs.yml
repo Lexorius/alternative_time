@@ -1,0 +1,25 @@
+name: HACS validation
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  hacs:
+    name: HACS validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hacs/action@main
+        with:
+          category: integration
+          # Bei Custom-Repos die noch nicht für hacs/default applied sind:
+          # - brands:      kein Icon im home-assistant/brands hinterlegt
+          # - topics:      GitHub-Repo-Topics (auf Repo-Seite setzbar)
+          # - description: GitHub-Repo-Beschreibung (auf Repo-Seite setzbar)
+          # Sobald die drei oben erledigt sind, kann der ignore-Eintrag
+          # entsprechend gekürzt werden.
+          ignore: brands topics description

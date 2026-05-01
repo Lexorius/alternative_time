@@ -1,10 +1,13 @@
 # Alternative Time Systems for Home Assistant
 
+[![hassfest](https://github.com/Lexorius/alternative_time/actions/workflows/hassfest.yml/badge.svg)](https://github.com/Lexorius/alternative_time/actions/workflows/hassfest.yml)
+[![HACS validation](https://github.com/Lexorius/alternative_time/actions/workflows/hacs.yml/badge.svg)](https://github.com/Lexorius/alternative_time/actions/workflows/hacs.yml)
+[![Python checks](https://github.com/Lexorius/alternative_time/actions/workflows/python-checks.yml/badge.svg)](https://github.com/Lexorius/alternative_time/actions/workflows/python-checks.yml)
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
 [![GitHub Release](https://img.shields.io/github/release/Lexorius/alternative_time.svg)](https://github.com/Lexorius/alternative_time/releases)
 [![GitHub Activity](https://img.shields.io/github/commit-activity/y/Lexorius/alternative_time.svg)](https://github.com/Lexorius/alternative_time/commits/main)
 [![License](https://img.shields.io/github/license/Lexorius/alternative_time.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.6.0.1-blue)](https://github.com/Lexorius/alternative_time)
+[![Version](https://img.shields.io/badge/version-2.6.0.2-blue)](https://github.com/Lexorius/alternative_time)
 
 A comprehensive Home Assistant integration providing **30+ alternative time systems** from science, science fiction, fantasy, history, religion, and various cultures.
 
@@ -348,7 +351,11 @@ Each calendar follows the unified `CALENDAR_INFO` structure:
 
 ## 📈 Version History
 
-### v2.6.0.1 (Current)
+### v2.6.0.2 (Current)
+- 🚦 **CI workflows split**: the previous `validate.yml` was split into `hassfest.yml`, `hacs.yml`, and `python-checks.yml` so each check has its own status badge (visible at the top of this README)
+- 🏷️ **Status badges**: hassfest, HACS validation, and Python checks badges added to the README header
+
+### v2.6.0.1
 - 🧹 **Code cleanup**: all calendar plugin files are now ruff-clean (E, F, W, I — `--ignore E501`)
 - 🐛 **Bare excepts** in `dtg.py`, `german_rescue_dtg.py`, `mars.py`, `hindu_panchang.py`, `japanese_era.py`, `japanese_lunar.py`, `stellar_distances.py` replaced with `except Exception:`
 - 🗑️ **Dead variables** removed in `geez.py`, `japanese_lunar.py`, `lunar_tcl.py`, `maya.py`, `solar_system.py`, `star_wars.py`
@@ -438,6 +445,45 @@ CALENDAR_INFO = {
 }
 ```
 
+### 🔍 CI / Validation
+
+Four GitHub workflows guard the repository — three validation workflows that run on every push/PR (each with its own status badge at the top of this README), plus the release workflow.
+
+#### `.github/workflows/hassfest.yml` — push & pull-request to `main`/`master`
+
+| Job | What it checks |
+|---|---|
+| **Home Assistant hassfest** | Official HA integration validation (`home-assistant/actions/hassfest`) |
+
+#### `.github/workflows/hacs.yml` — push & pull-request to `main`/`master`
+
+| Job | What it checks |
+|---|---|
+| **HACS validation** | HACS compliance (`hacs/action`, category `integration`); `brands`, `topics`, `description` are currently in the `ignore` list and can be removed once they're set on the GitHub repo |
+
+#### `.github/workflows/python-checks.yml` — push & pull-request to `main`/`master`
+
+Six sequential steps in one job:
+
+| Step | Purpose |
+|---|---|
+| **Compile-check** | `python -m compileall -q custom_components/` — fails on any syntax error |
+| **Manifest-Check** | `bash scripts/check-manifest.sh` — required keys + hassfest-compatible key order |
+| **Ruff** | `ruff check custom_components/ --select E,F,W,I --ignore E501` — `E501` (line-too-long) is intentionally ignored because of multilingual description strings in 12 languages |
+| **JSON lint** | `json.loads()` over every `*.json` file outside `.git/` |
+| **YAML lint** | `yaml.safe_load()` over every `*.yml` / `*.yaml` file |
+| **Version-Konsistenz** | If `CHANGELOG.md` exists, `manifest.json`'s version must appear as a `## [version]` heading; missing `CHANGELOG.md` only emits a warning, a missing version entry is a hard error |
+
+#### `.github/workflows/release.yml` — push of a `v*` tag (or manual `workflow_dispatch`)
+
+| Step | Purpose |
+|---|---|
+| **Tag und Version ermitteln** | Derives `version` from the tag (`v2.6.0.1` → `2.6.0.1`) |
+| **manifest.json muss zum Tag passen** | Fails if `manifest.json` version doesn't match the tag — the bump must be committed before tagging |
+| **ZIP-Asset bauen** | Packs the contents of `custom_components/alternative_time/` into `alternative_time.zip` (excluding `__pycache__` and `*.pyc`) |
+| **Release-Notes aus CHANGELOG ziehen** | Extracts the `## [version]` section from `CHANGELOG.md` if present; otherwise falls back to `Release <version>` |
+| **GitHub-Release erstellen** | Creates the GitHub release with the ZIP attached; tags containing `-` (e.g. `v2.6.0.1-rc1`) are marked as prerelease |
+
 ---
 
 ## 🐛 Troubleshooting
@@ -480,4 +526,4 @@ MIT License - See [LICENSE](LICENSE) file for details.
 
 ---
 
-**Version 2.6.0.1**
+**Version 2.6.0.2**

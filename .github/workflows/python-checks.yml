@@ -1,4 +1,4 @@
-name: Validate
+name: Python checks
 
 on:
   push:
@@ -8,29 +8,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  hassfest:
-    name: Home Assistant hassfest
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: home-assistant/actions/hassfest@master
-
-  hacs:
-    name: HACS validation
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: hacs/action@main
-        with:
-          category: integration
-          # Bei Custom-Repos die noch nicht für hacs/default applied sind:
-          # - brands:      kein Icon im home-assistant/brands hinterlegt
-          # - topics:      GitHub-Repo-Topics (auf Repo-Seite setzbar)
-          # - description: GitHub-Repo-Beschreibung (auf Repo-Seite setzbar)
-          # Sobald die drei oben erledigt sind, kann der ignore-Eintrag
-          # entsprechend gekürzt werden.
-          ignore: brands topics description
-
   python:
     name: Python checks
     runs-on: ubuntu-latest
