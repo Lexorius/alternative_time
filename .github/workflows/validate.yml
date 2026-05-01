@@ -1,0 +1,91 @@
+name: Validate
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  hassfest:
+    name: Home Assistant hassfest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: home-assistant/actions/hassfest@master
+
+  hacs:
+    name: HACS validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hacs/action@main
+        with:
+          category: integration
+          # Bei Custom-Repos die noch nicht für hacs/default applied sind:
+          # - brands:      kein Icon im home-assistant/brands hinterlegt
+          # - topics:      GitHub-Repo-Topics (auf Repo-Seite setzbar)
+          # - description: GitHub-Repo-Beschreibung (auf Repo-Seite setzbar)
+          # Sobald die drei oben erledigt sind, kann der ignore-Eintrag
+          # entsprechend gekürzt werden.
+          ignore: brands topics description
+
+  python:
+    name: Python checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install ruff pyyaml
+
+      - name: Compile-check
+        run: python -m compileall -q custom_components/
+
+      - name: Manifest-Check
+        run: bash scripts/check-manifest.sh
+
+      - name: Ruff
+        run: ruff check custom_components/ --select E,F,W,I --line-length 100
+
+      - name: JSON lint
+        run: |
+          python - <<'PY'
+          import json, sys
+          from pathlib import Path
+          ok = True
+          for f in Path(".").rglob("*.json"):
+              if ".git" in f.parts:
+                  continue
+              try:
+                  json.loads(f.read_text(encoding="utf-8"))
+              except Exception as e:
+                  print(f"FAIL {f}: {e}"); ok = False
+          sys.exit(0 if ok else 1)
+          PY
+
+      - name: YAML lint
+        run: |
+          python - <<'PY'
+          import sys, yaml
+          from pathlib import Path
+          ok = True
+          for f in list(Path(".").rglob("*.yml")) + list(Path(".").rglob("*.yaml")):
+              try:
+                  yaml.safe_load(f.read_text(encoding="utf-8"))
+              except Exception as e:
+                  print(f"FAIL {f}: {e}"); ok = False
+          sys.exit(0 if ok else 1)
+          PY
+
+      - name: Version-Konsistenz
+        run: |
+          V=$(python -c "import json; print(json.load(open('custom_components/haushaltsdoku/manifest.json'))['version'])")
+          if ! grep -q "\[$V\]" CHANGELOG.md; then
+            echo "::error::Version $V fehlt im CHANGELOG.md"; exit 1
+          fi
+          echo "✓ Version $V im CHANGELOG"

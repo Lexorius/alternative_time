@@ -1,0 +1,50 @@
+name: Bug Report
+description: Ein Fehler in der Integration
+labels: ["bug"]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Welche Version der Integration?
+      placeholder: "0.2.1"
+    validations:
+      required: true
+
+  - type: input
+    id: ha_version
+    attributes:
+      label: Home Assistant Version
+      placeholder: "2026.4.0"
+    validations:
+      required: true
+
+  - type: textarea
+    id: what_happened
+    attributes:
+      label: Was ist passiert?
+      description: Beschreibe das Problem so genau wie möglich.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Erwartetes Verhalten
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: HA-Log (relevante Auszüge)
+      description: |
+        Logs aus Einstellungen → System → Logs, gefiltert auf "haushaltsdoku".
+      render: text
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Zähler-Konfiguration
+      description: Konfigurationsausschnitt aus den Integration-Options (ohne sensible Daten).
+      render: yaml
