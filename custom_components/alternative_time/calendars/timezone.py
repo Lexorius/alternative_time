@@ -1,11 +1,12 @@
 """Timezone sensor implementation - Version 2.5.3 - Complete IANA timezone list."""
 from __future__ import annotations
 
-from datetime import datetime
 import logging
-from typing import Dict, Any
+from datetime import datetime
+from typing import Any, Dict
 
 from homeassistant.core import HomeAssistant
+
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,7 +33,7 @@ CALENDAR_INFO = {
     "category": "technical",
     "accuracy": "precise",
     "update_interval": UPDATE_INTERVAL,
-    
+
     # Multi-language names
     "name": {
         "en": "World Timezones",
@@ -47,7 +48,7 @@ CALENDAR_INFO = {
         "zh": "世界时区",
         "ko": "세계 시간대"
     },
-    
+
     # Short descriptions for UI
     "description": {
         "en": "Display time in different timezones around the world",
@@ -62,7 +63,7 @@ CALENDAR_INFO = {
         "zh": "显示世界各地不同时区的时间",
         "ko": "전 세계 다양한 시간대의 시간 표시"
     },
-    
+
     # Complete IANA timezone data for dropdown population
     # Organized by region for better usability
     "timezone_data": {
@@ -200,26 +201,26 @@ CALENDAR_INFO = {
             ]
         }
     },
-    
+
     # Additional metadata
     "reference_url": "https://en.wikipedia.org/wiki/Time_zone",
     "documentation_url": "https://www.timeanddate.com/time/map/",
     "origin": "IANA Time Zone Database",
     "created_by": "International standards",
-    
+
     # Example format
     "example": "14:30:00 CET (UTC+1)",
     "example_meaning": "2:30 PM Central European Time",
-    
+
     # Related calendars
     "related": ["unix", "julian", "gregorian"],
-    
+
     # Tags for searching and filtering
     "tags": [
         "timezone", "world", "clock", "time", "global",
         "utc", "gmt", "dst", "international", "travel", "iana"
     ],
-    
+
     # Special features
     "features": {
         "supports_dst": True,
@@ -228,7 +229,7 @@ CALENDAR_INFO = {
         "precision": "second",
         "real_time": True
     },
-    
+
     # Configuration options for this calendar
     "config_options": {
         "timezone": {
@@ -318,52 +319,52 @@ CALENDAR_INFO = {
 
 class TimezoneSensor(AlternativeTimeSensorBase):
     """Sensor for displaying time in different timezones."""
-    
+
     # Class-level update interval
     UPDATE_INTERVAL = 1  # Update every second
-    
+
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the timezone sensor with standard 2-parameter signature."""
         super().__init__(base_name, hass)
-        
+
         # Store CALENDAR_INFO as instance variable
         self._calendar_info = CALENDAR_INFO
-        
+
         # Get translated name from metadata
         calendar_name = self._translate('name', 'World Timezones')
-        
+
         # Defaults - werden in update() überschrieben
         self._timezone_str = "UTC"
         self._show_offset = True
         self._show_dst = True
         self._format_24h = True
         self._show_date = False
-        
+
         # Set sensor attributes
         self._attr_name = f"{base_name} {calendar_name}"
         self._attr_unique_id = f"{base_name}_timezone"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:clock-time-four-outline")
-        
+
         # Timezone wird lazy geladen
         self._timezone = None
         self._timezone_initialized = False
-        
+
         # Timezone data
         self._timezone_data = CALENDAR_INFO["timezone_data"]
-        
+
         # Initialize state
         self._state = "Initializing..."
         self._tz_info = {}
-        
+
         # Flag für erstes Update
         self._first_update = True
-        
+
         _LOGGER.debug(f"Initialized Timezone sensor: {self._attr_name}")
-    
+
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
-        
+
         # Lade Optionen beim Hinzufügen
         options = self.get_plugin_options()
         if options:
@@ -378,9 +379,9 @@ class TimezoneSensor(AlternativeTimeSensorBase):
             try:
                 self._timezone_str = self._hass.config.time_zone or "UTC"
                 _LOGGER.info(f"Using system timezone: {self._timezone_str}")
-            except:
+            except Exception:
                 self._timezone_str = "UTC"
-        
+
         # Initialisiere Timezone async
         if HAS_PYTZ and not self._timezone_initialized:
             try:
@@ -390,11 +391,11 @@ class TimezoneSensor(AlternativeTimeSensorBase):
                 )
                 self._timezone_initialized = True
                 _LOGGER.info(f"Loaded timezone: {self._timezone_str}")
-                
+
                 # Update Name mit Timezone
                 calendar_name = self._translate('name', 'World Timezones')
                 self._attr_name = f"{self._base_name} {calendar_name} ({self._timezone_str})"
-                
+
             except Exception as e:
                 _LOGGER.warning(f"Could not load timezone {self._timezone_str}: {e}, using UTC")
                 try:
@@ -403,34 +404,34 @@ class TimezoneSensor(AlternativeTimeSensorBase):
                     )
                     self._timezone_str = "UTC"
                     self._attr_name = f"{self._base_name} {calendar_name} (UTC)"
-                except:
+                except Exception:
                     self._timezone = None
                 self._timezone_initialized = True  # Prevent retry
-    
+
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
-    
+
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes."""
         attrs = super().extra_state_attributes
-        
+
         # Add timezone-specific attributes
         if hasattr(self, '_tz_info'):
             attrs.update(self._tz_info)
-            
+
             # Add description in user's language
             attrs["description"] = self._translate('description')
-            
+
             # Add reference
             attrs["reference"] = CALENDAR_INFO.get('reference_url', '')
-            
+
             # Add timezone database info
             attrs["timezone_id"] = self._timezone_str
             attrs["database"] = "IANA tzdata"
-            
+
             # Add config info
             attrs["config"] = {
                 "timezone": self._timezone_str,
@@ -439,9 +440,9 @@ class TimezoneSensor(AlternativeTimeSensorBase):
                 "format_24h": self._format_24h,
                 "show_date": self._show_date
             }
-        
+
         return attrs
-    
+
     def _calculate_timezone_info(self, now_tz: datetime) -> Dict[str, Any]:
         """Calculate timezone information."""
         # Format time based on configuration
@@ -451,10 +452,10 @@ class TimezoneSensor(AlternativeTimeSensorBase):
         else:
             time_format = "%I:%M:%S %p"
             time_display = now_tz.strftime(time_format).lstrip('0')
-        
+
         # Get timezone abbreviation
         tz_abbr = now_tz.strftime("%Z")
-        
+
         # Calculate UTC offset
         offset = now_tz.strftime("%z")
         if offset:
@@ -462,7 +463,7 @@ class TimezoneSensor(AlternativeTimeSensorBase):
             sign = offset[0]
             hours = int(offset[1:3])
             minutes = int(offset[3:5]) if len(offset) >= 5 else 0
-            
+
             # Format with sign
             if minutes:
                 offset_display = f"UTC{sign}{hours:02d}:{minutes:02d}"
@@ -470,37 +471,37 @@ class TimezoneSensor(AlternativeTimeSensorBase):
                 offset_display = f"UTC{sign}{hours}"
         else:
             offset_display = "UTC"
-        
+
         # Check DST status
         is_dst = False
         if HAS_PYTZ and self._timezone and self._timezone_initialized:
             try:
                 is_dst = bool(now_tz.dst())
-            except:
+            except Exception:
                 is_dst = False
-        
+
         # Build display string
         display_parts = []
-        
+
         if self._show_date:
             date_str = now_tz.strftime("%Y-%m-%d")
             display_parts.append(date_str)
-        
+
         display_parts.append(time_display)
         display_parts.append(tz_abbr)
-        
+
         if self._show_offset:
             display_parts.append(f"({offset_display})")
-        
+
         if self._show_dst and is_dst:
             display_parts.append("DST")
-        
+
         full_display = " ".join(display_parts)
-        
+
         # Get day info
         weekday = now_tz.strftime("%A")
         date = now_tz.strftime("%Y-%m-%d")
-        
+
         # Determine time period
         hour = now_tz.hour
         if 5 <= hour < 12:
@@ -511,7 +512,7 @@ class TimezoneSensor(AlternativeTimeSensorBase):
             period = "Evening"
         else:
             period = "Night"
-        
+
         result = {
             "time": time_display,
             "timezone_abbr": tz_abbr,
@@ -527,14 +528,14 @@ class TimezoneSensor(AlternativeTimeSensorBase):
             "iso_format": now_tz.isoformat(),
             "unix_timestamp": int(now_tz.timestamp())
         }
-        
+
         return result
-    
+
     def update(self) -> None:
         """Update the sensor."""
         # Lade Optionen bei jedem Update
         options = self.get_plugin_options()
-        
+
         # Debug beim ersten Update
         if self._first_update:
             if options:
@@ -542,7 +543,7 @@ class TimezoneSensor(AlternativeTimeSensorBase):
             else:
                 _LOGGER.debug("Timezone sensor using defaults (no options configured)")
             self._first_update = False
-        
+
         # Aktualisiere Konfiguration
         if options:
             new_timezone = options.get("timezone", self._timezone_str)
@@ -550,7 +551,7 @@ class TimezoneSensor(AlternativeTimeSensorBase):
             self._show_dst = bool(options.get("show_dst", True))
             self._format_24h = bool(options.get("format_24h", True))
             self._show_date = bool(options.get("show_date", False))
-            
+
             # Prüfe ob Timezone geändert wurde
             if new_timezone != self._timezone_str and HAS_PYTZ:
                 _LOGGER.info(f"Timezone changed from {self._timezone_str} to {new_timezone}")
@@ -568,9 +569,9 @@ class TimezoneSensor(AlternativeTimeSensorBase):
                         try:
                             self._timezone = pytz.timezone("UTC")
                             self._timezone_str = "UTC"
-                        except:
+                        except Exception:
                             self._timezone = None
-        
+
         # Update state
         if HAS_PYTZ and self._timezone:
             try:
@@ -590,5 +591,5 @@ class TimezoneSensor(AlternativeTimeSensorBase):
                 "timezone_id": self._timezone_str,
                 "error": "pytz not available or timezone not loaded"
             }
-        
+
         _LOGGER.debug(f"Updated Timezone to {self._state}")
