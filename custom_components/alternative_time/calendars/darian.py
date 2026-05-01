@@ -1,12 +1,12 @@
 """Darian Calendar (Mars) implementation - Version 2.5.1."""
 from __future__ import annotations
 
-from datetime import datetime
 import logging
-import math
-from typing import Dict, Any
+from datetime import datetime
+from typing import Any, Dict
 
 from homeassistant.core import HomeAssistant
+
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ CALENDAR_INFO = {
     "category": "space",
     "accuracy": "scientific",
     "update_interval": UPDATE_INTERVAL,
-    
+
     # Multi-language names
     "name": {
         "en": "Darian Calendar (Mars)",
@@ -42,7 +42,7 @@ CALENDAR_INFO = {
         "zh": "达里安历（火星）",
         "ko": "다리안 달력 (화성)"
     },
-    
+
     # Translations for compatibility
     "translations": {
         "en": {
@@ -94,7 +94,7 @@ CALENDAR_INFO = {
             "description": "24개월, 연간 668솔의 화성 달력"
         }
     },
-    
+
     # Short descriptions for UI
     "description": {
         "en": "Mars calendar with 24 months and 668 sols per year (e.g. 15 Gemini 217)",
@@ -110,7 +110,7 @@ CALENDAR_INFO = {
         "zh": "24个月，每年668火星日的火星历（例：15 Gemini 217）",
         "ko": "24개월, 연간 668솔의 화성 달력 (예: 15 Gemini 217)"
     },
-    
+
     # Darian-specific data
     "darian_data": {
         # Constants
@@ -119,7 +119,7 @@ CALENDAR_INFO = {
         "earth_day_seconds": 86400.0,
         "sols_per_year": 668,  # standard year
         "sols_per_leap_year": 669,
-        
+
         # Darian months (24 months)
         "months": [
             {"name": "Sagittarius", "sols": 28, "type": "zodiac", "season": "Spring (North)"},
@@ -147,7 +147,7 @@ CALENDAR_INFO = {
             {"name": "Scorpius", "sols": 28, "type": "zodiac", "season": "Winter (North)"},
             {"name": "Vrishchika", "sols": 27, "type": "sanskrit", "season": "Winter (North)"}
         ],
-        
+
         # Week sols (7-sol week)
         "week_sols": [
             {"name": "Sol Solis", "meaning": "Sun's day"},
@@ -158,12 +158,12 @@ CALENDAR_INFO = {
             {"name": "Sol Veneris", "meaning": "Venus' day"},
             {"name": "Sol Saturni", "meaning": "Saturn's day"}
         ],
-        
+
         # MSD epoch for calculations
         "msd_epoch_jd": 2405522.0,  # December 29, 1873
         "j2000_jd": 2451545.0  # January 1, 2000, 12:00 UTC
     },
-    
+
     # Configuration options for this calendar
     "config_options": {
         "month_names": {
@@ -258,49 +258,49 @@ CALENDAR_INFO = {
 
 class DarianCalendarSensor(AlternativeTimeSensorBase):
     """Sensor for displaying Darian Mars Calendar."""
-    
+
     # Class-level update interval
     UPDATE_INTERVAL = UPDATE_INTERVAL
-    
+
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the Darian calendar sensor."""
         super().__init__(base_name, hass)
-        
+
         # Store CALENDAR_INFO as instance variable
         self._calendar_info = CALENDAR_INFO
-        
+
         # Get translated name from metadata
         calendar_name = self._translate('name', 'Darian Calendar')
-        
+
         # Set sensor attributes
         self._attr_name = f"{base_name} {calendar_name}"
         self._attr_unique_id = f"{base_name}_darian_calendar"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:rocket-launch")
-        
+
         # Configuration options with defaults
         config_defaults = CALENDAR_INFO.get("config_options", {})
         self._month_names = config_defaults.get("month_names", {}).get("default", "zodiac")
         self._show_week_sol = config_defaults.get("show_week_sol", {}).get("default", True)
         self._show_msd = config_defaults.get("show_msd", {}).get("default", True)
-        
+
         # Darian data
         self._darian_data = CALENDAR_INFO["darian_data"]
-        
+
         # Initialize state
         self._state = "0 Sagittarius 1"
         self._darian_date = {}
-        
+
         # Flag to track if options have been loaded
         self._options_loaded = False
-        
+
         _LOGGER.debug(f"Initialized Darian Calendar sensor: {self._attr_name}")
         _LOGGER.debug(f"  Default settings: month_names={self._month_names}, week_sol={self._show_week_sol}, msd={self._show_msd}")
-    
+
     def _load_options(self) -> None:
         """Load plugin options after IDs are set."""
         if self._options_loaded:
             return
-            
+
         try:
             options = self.get_plugin_options()
             if options:
@@ -308,76 +308,76 @@ class DarianCalendarSensor(AlternativeTimeSensorBase):
                 self._month_names = options.get("month_names", self._month_names)
                 self._show_week_sol = options.get("show_week_sol", self._show_week_sol)
                 self._show_msd = options.get("show_msd", self._show_msd)
-                
+
                 _LOGGER.debug(f"Darian sensor loaded options: month_names={self._month_names}, week_sol={self._show_week_sol}, msd={self._show_msd}")
             else:
                 _LOGGER.debug("Darian sensor using default options - no custom options found")
-                
+
             self._options_loaded = True
         except Exception as e:
             _LOGGER.debug(f"Darian sensor could not load options yet: {e}")
-    
+
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
-        
+
         # Try to load options now that IDs should be set
         self._load_options()
-        
+
         # Perform initial update
         self.update()
-    
+
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
-    
+
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes."""
         attrs = super().extra_state_attributes or {}
-        
+
         # Add Darian-specific attributes
         if self._darian_date:
             attrs.update(self._darian_date)
-            
+
             # Add description in user's language
             attrs["description"] = self._translate('description')
-            
+
             # Add current configuration
             attrs["month_names_setting"] = self._month_names
             attrs["show_week_sol_setting"] = self._show_week_sol
             attrs["show_msd_setting"] = self._show_msd
-        
+
         return attrs
-    
+
     def _calculate_darian_date(self, earth_date: datetime) -> Dict[str, Any]:
         """Calculate Darian calendar date from Earth date."""
-        
+
         # Calculate days since J2000 epoch
         j2000_epoch = datetime(2000, 1, 1, 12, 0, 0)
         delta = earth_date - j2000_epoch
         days_since_j2000 = delta.total_seconds() / self._darian_data["earth_day_seconds"]
-        
+
         # Calculate current Julian Date
         current_jd = self._darian_data["j2000_jd"] + days_since_j2000
-        
+
         # Calculate Mars Sol Date (MSD)
         # MSD = (JD - 2405522.0) / 1.02749125
         sol_per_earth_day = self._darian_data["earth_day_seconds"] / self._darian_data["mars_sol_seconds"]
         msd = (current_jd - self._darian_data["msd_epoch_jd"]) / sol_per_earth_day
         total_sols = int(msd)
-        
+
         # Calculate Darian date
         # Starting from year 0 (1608 CE)
         mars_years_elapsed = int(total_sols / self._darian_data["sols_per_year"])
         sols_in_current_year = total_sols % self._darian_data["sols_per_year"]
-        
+
         # Determine month and sol
         sols_counted = 0
         current_month_index = 0
         current_sol = 0
-        
+
         for i, month_data in enumerate(self._darian_data["months"]):
             if sols_counted + month_data["sols"] > sols_in_current_year:
                 current_month_index = i
@@ -388,9 +388,9 @@ class DarianCalendarSensor(AlternativeTimeSensorBase):
             # Last month of year
             current_month_index = 23
             current_sol = sols_in_current_year - sols_counted + 1
-        
+
         month_data = self._darian_data["months"][current_month_index]
-        
+
         # Get month name based on configuration
         if self._month_names == "sanskrit":
             # Use Sanskrit names (odd indices)
@@ -414,22 +414,22 @@ class DarianCalendarSensor(AlternativeTimeSensorBase):
                 month_name = self._darian_data["months"][current_month_index - 1]["name"] if current_month_index > 0 else month_data["name"]
             else:
                 month_name = month_data["name"]
-        
+
         # Calculate week sol
         week_sol_index = total_sols % 7
         week_sol_data = self._darian_data["week_sols"][week_sol_index]
-        
+
         # Determine season
         season = month_data["season"]
-        
+
         # Calculate approximate Ls (solar longitude)
         ls = (sols_in_current_year / self._darian_data["sols_per_year"]) * 360
-        
+
         # Format the date
         full_date = f"{current_sol} {month_name} {mars_years_elapsed}"
         if self._show_week_sol:
             full_date += f" ({week_sol_data['name']})"
-        
+
         result = {
             "year": mars_years_elapsed,
             "month_number": current_month_index + 1,
@@ -446,34 +446,34 @@ class DarianCalendarSensor(AlternativeTimeSensorBase):
             "earth_date": earth_date.strftime("%Y-%m-%d"),
             "full_date": full_date
         }
-        
+
         if self._show_msd:
             result["mars_sol_date"] = round(msd, 4)
             result["msd_integer"] = total_sols
-        
+
         # Add solar longitude
         result["solar_longitude"] = round(ls, 1)
-        
+
         return result
-    
+
     def update(self) -> None:
         """Update the sensor."""
         # Ensure options are loaded
         if not self._options_loaded:
             self._load_options()
-        
+
         try:
             now = datetime.now()
             self._darian_date = self._calculate_darian_date(now)
-            
+
             # Set state to formatted Darian date
             self._state = self._darian_date.get("full_date", "0 Sagittarius 1")
-            
+
             _LOGGER.debug(f"Updated Darian Calendar to {self._state}")
         except Exception as e:
             _LOGGER.error(f"Error updating Darian calendar: {e}", exc_info=True)
             self._state = "ERROR"
-    
+
     async def async_update(self) -> None:
         """Update sensor asynchronously."""
         # Run synchronous update in executor

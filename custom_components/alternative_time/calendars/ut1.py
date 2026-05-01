@@ -4,10 +4,10 @@ Uses IERS REST API to fetch current UT1-UTC (DUT1) values.
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone, timedelta
-import logging
 import asyncio
-from typing import Dict, Any, Optional
+import logging
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, Optional
 
 from homeassistant.core import HomeAssistant
 
@@ -46,7 +46,7 @@ CALENDAR_INFO = {
     "category": "technical",
     "accuracy": "millisecond",
     "update_interval": UPDATE_INTERVAL,
-    
+
     # Multi-language names
     "name": {
         "en": "Universal Time 1 (UT1)",
@@ -62,7 +62,7 @@ CALENDAR_INFO = {
         "zh": "世界时1 (UT1)",
         "ko": "세계시 1 (UT1)"
     },
-    
+
     # Translations for compatibility
     "translations": {
         "en": {
@@ -114,7 +114,7 @@ CALENDAR_INFO = {
             "description": "실제 자전을 기반으로 한 지구 자전 시간. UT1 = UTC + DUT1 (IERS 제공)"
         }
     },
-    
+
     # Short descriptions for UI
     "description": {
         "en": "Earth rotation time based on actual rotation. UT1 = UTC + DUT1 (from IERS)",
@@ -130,7 +130,7 @@ CALENDAR_INFO = {
         "zh": "基于实际自转的地球自转时间。UT1 = UTC + DUT1（来自IERS）",
         "ko": "실제 자전을 기반으로 한 지구 자전 시간. UT1 = UTC + DUT1 (IERS 제공)"
     },
-    
+
     # Detailed information for documentation
     "detailed_info": {
         "en": {
@@ -154,19 +154,19 @@ CALENDAR_INFO = {
             "note": "Im Gegensatz zu atomaren Zeitskalen folgt UT1 der tatsächlichen Erdrotation"
         }
     },
-    
+
     # UT1-specific data
     "ut1_data": {
         "definition": "Earth Rotation Angle converted to time",
         "era_formula": "ERA = 2π(0.7790572732640 + 1.00273781191135448 × Tu) radians",
-        
+
         # DUT1 constraints
         "dut1_range": {
             "min": -0.9,
             "max": 0.9,
             "unit": "seconds"
         },
-        
+
         # Related time systems
         "related_systems": {
             "UTC": "Coordinated Universal Time (UT1 = UTC + DUT1)",
@@ -175,7 +175,7 @@ CALENDAR_INFO = {
             "UT2": "UT1 with seasonal variations removed (deprecated)",
             "GMST": "Greenwich Mean Sidereal Time"
         },
-        
+
         # Data sources
         "data_sources": {
             "iers_api": IERS_API_BASE,
@@ -183,7 +183,7 @@ CALENDAR_INFO = {
             "bulletin_b": "https://datacenter.iers.org/availableVersions.php?id=207",
             "bulletin_d": "DUT1 announcements"
         },
-        
+
         # Measurement info
         "measurement": {
             "method": "Very Long Baseline Interferometry (VLBI)",
@@ -191,27 +191,27 @@ CALENDAR_INFO = {
             "stations": "Global network of radio telescopes"
         }
     },
-    
+
     # Additional metadata
     "reference_url": "https://en.wikipedia.org/wiki/Universal_Time",
     "documentation_url": "https://www.iers.org/IERS/EN/Science/EarthRotation/UT1LOD.html",
     "origin": "International Earth Rotation and Reference Systems Service (IERS)",
     "created_by": "IERS",
     "introduced": "1956 (as distinct from UT0)",
-    
+
     # Example format
     "example": "2024-12-31 12:00:00.123 UT1",
     "example_meaning": "Earth rotation time, typically within 0.9s of UTC",
-    
+
     # Related calendars
     "related": ["tai", "unix", "julian"],
-    
+
     # Tags for searching and filtering
     "tags": [
         "technical", "earth", "rotation", "astronomy", "navigation",
         "geodesy", "vlbi", "iers", "universal", "time"
     ],
-    
+
     # Special features
     "features": {
         "earth_rotation_based": True,
@@ -220,7 +220,7 @@ CALENDAR_INFO = {
         "iers_data": True,
         "navigation_standard": True
     },
-    
+
     # Configuration options for this calendar
     "config_options": {
         "show_dut1": {
@@ -416,56 +416,56 @@ CALENDAR_INFO = {
 
 class Ut1TimeSensor(AlternativeTimeSensorBase):
     """Sensor for displaying Universal Time 1 (UT1) with IERS data."""
-    
+
     # Class-level update interval
     UPDATE_INTERVAL = UPDATE_INTERVAL
-    
+
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the UT1 time sensor."""
         super().__init__(base_name, hass)
-        
+
         # Store CALENDAR_INFO as instance variable
         self._calendar_info = CALENDAR_INFO
-        
+
         # Get translated name from metadata
         calendar_name = self._translate('name', 'Universal Time 1 (UT1)')
-        
+
         # Set sensor attributes
         self._attr_name = f"{base_name} {calendar_name}"
         self._attr_unique_id = f"{base_name}_ut1"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:earth")
-        
+
         # Configuration options with defaults from CALENDAR_INFO
         config_defaults = CALENDAR_INFO.get("config_options", {})
         self._show_dut1 = config_defaults.get("show_dut1", {}).get("default", True)
         self._show_utc_comparison = config_defaults.get("show_utc_comparison", {}).get("default", True)
         self._time_format = config_defaults.get("time_format", {}).get("default", "iso")
         self._cache_duration = config_defaults.get("cache_duration", {}).get("default", IERS_CACHE_DURATION)
-        
+
         # UT1 data
         self._ut1_data = CALENDAR_INFO["ut1_data"]
-        
+
         # IERS data cache
         self._dut1_value: float = FALLBACK_DUT1  # Current DUT1 (UT1-UTC) in seconds
         self._dut1_last_fetch: Optional[datetime] = None
         self._dut1_source: str = "fallback"  # "iers_api", "fallback", "cached"
         self._iers_fetch_lock = asyncio.Lock()
-        
+
         # Initialize state
         self._state = None
         self._ut1_time = {}
-        
+
         # Flag to track if options have been loaded
         self._options_loaded = False
-        
+
         _LOGGER.debug(f"Initialized UT1 sensor: {self._attr_name}")
         _LOGGER.debug(f"  Initial DUT1: {self._dut1_value}s (source: {self._dut1_source})")
-    
+
     def _load_options(self) -> None:
         """Load plugin options after IDs are set."""
         if self._options_loaded:
             return
-            
+
         try:
             options = self.get_plugin_options()
             if options:
@@ -474,69 +474,69 @@ class Ut1TimeSensor(AlternativeTimeSensorBase):
                 self._show_utc_comparison = options.get("show_utc_comparison", self._show_utc_comparison)
                 self._time_format = options.get("time_format", self._time_format)
                 self._cache_duration = options.get("cache_duration", self._cache_duration)
-                
+
                 _LOGGER.debug(f"UT1 sensor loaded options: dut1={self._show_dut1}, "
                             f"utc_compare={self._show_utc_comparison}, format={self._time_format}, "
                             f"cache={self._cache_duration}s")
             else:
                 _LOGGER.debug("UT1 sensor using default options - no custom options found")
-                
+
             self._options_loaded = True
         except Exception as e:
             _LOGGER.debug(f"UT1 sensor could not load options yet: {e}")
-    
+
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
-        
+
         # Try to load options now that IDs should be set
         self._load_options()
-        
+
         # Fetch initial IERS data
         await self._async_fetch_iers_data()
-        
+
         # Perform initial update
         await self.async_update()
-    
+
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
-    
+
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes."""
         attrs = super().extra_state_attributes or {}
-        
+
         # Add UT1-specific attributes
         if self._ut1_time:
             attrs.update(self._ut1_time)
-            
+
             # Add description in user's language
             attrs["description"] = self._translate('description')
-            
+
             # Add reference
             attrs["reference"] = CALENDAR_INFO.get('reference_url', '')
-            
+
             # Add IERS data source info
             attrs["dut1_source"] = self._dut1_source
             if self._dut1_last_fetch:
                 attrs["dut1_last_updated"] = self._dut1_last_fetch.isoformat()
-            
+
             # Add current configuration
             attrs["format_setting"] = self._time_format
-        
+
         return attrs
-    
+
     async def _async_fetch_iers_data(self) -> bool:
         """Fetch DUT1 data from IERS REST API.
-        
+
         Returns True if data was successfully fetched, False otherwise.
         """
         if not HAS_AIOHTTP:
             _LOGGER.warning("aiohttp not available, using fallback DUT1 value")
             return False
-        
+
         # Check if cache is still valid
         if self._dut1_last_fetch:
             cache_age = (datetime.now(timezone.utc) - self._dut1_last_fetch).total_seconds()
@@ -544,7 +544,7 @@ class Ut1TimeSensor(AlternativeTimeSensorBase):
                 _LOGGER.debug(f"Using cached DUT1 value (age: {cache_age:.0f}s)")
                 self._dut1_source = "cached"
                 return True
-        
+
         # Use lock to prevent multiple simultaneous fetches
         async with self._iers_fetch_lock:
             # Double-check cache after acquiring lock
@@ -552,7 +552,7 @@ class Ut1TimeSensor(AlternativeTimeSensorBase):
                 cache_age = (datetime.now(timezone.utc) - self._dut1_last_fetch).total_seconds()
                 if cache_age < self._cache_duration:
                     return True
-            
+
             try:
                 # Build API URL with proper URL encoding
                 import urllib.parse
@@ -560,12 +560,12 @@ class Ut1TimeSensor(AlternativeTimeSensorBase):
                 datetime_str = now.strftime("%Y-%m-%d %H:%M:%S")
                 datetime_encoded = urllib.parse.quote(datetime_str)
                 url = f"{IERS_API_BASE}?param=UT1-UTC&datetime={datetime_encoded}"
-                
+
                 _LOGGER.debug(f"Fetching IERS data from: {url}")
-                
+
                 # Create timeout
                 timeout = aiohttp.ClientTimeout(total=10)
-                
+
                 async with aiohttp.ClientSession(timeout=timeout) as session:
                     async with session.get(url, headers={"Accept": "application/json"}) as response:
                         if response.status == 200:
@@ -586,24 +586,24 @@ class Ut1TimeSensor(AlternativeTimeSensorBase):
                                 _LOGGER.debug(f"IERS response text: {text[:200]}")
                         else:
                             _LOGGER.warning(f"IERS API returned status {response.status}")
-                
+
             except asyncio.TimeoutError:
                 _LOGGER.warning("IERS API request timed out")
             except aiohttp.ClientError as e:
                 _LOGGER.warning(f"IERS API request failed: {e}")
             except Exception as e:
                 _LOGGER.error(f"Unexpected error fetching IERS data: {e}", exc_info=True)
-        
+
         # If we get here, fetch failed - use fallback
         if self._dut1_source != "cached":
             self._dut1_source = "fallback"
             _LOGGER.info(f"Using fallback DUT1 value: {self._dut1_value}s")
-        
+
         return False
-    
+
     def _calculate_ut1_time(self, utc_time: datetime) -> Dict[str, Any]:
         """Calculate UT1 from UTC time using DUT1.
-        
+
         UT1 = UTC + DUT1
         """
         # Ensure we're working with UTC
@@ -611,11 +611,11 @@ class Ut1TimeSensor(AlternativeTimeSensorBase):
             utc_time = utc_time.replace(tzinfo=timezone.utc)
         else:
             utc_time = utc_time.astimezone(timezone.utc)
-        
+
         # Calculate UT1 by adding DUT1 to UTC
         # DUT1 = UT1 - UTC, so UT1 = UTC + DUT1
         ut1_time = utc_time + timedelta(seconds=self._dut1_value)
-        
+
         # Format based on user preference
         if self._time_format == "time_only":
             formatted = ut1_time.strftime("%H:%M:%S.%f")[:-3] + " UT1"
@@ -623,26 +623,26 @@ class Ut1TimeSensor(AlternativeTimeSensorBase):
             formatted = ut1_time.strftime("%d %b %Y, %H:%M:%S.%f")[:-3] + " UT1"
         else:  # iso (default)
             formatted = ut1_time.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + " UT1"
-        
+
         # Calculate Earth Rotation Angle (ERA)
         # ERA = 2π(0.7790572732640 + 1.00273781191135448 × Tu) radians
         # where Tu = Julian UT1 date - 2451545.0
         j2000 = datetime(2000, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
         days_since_j2000 = (ut1_time - j2000).total_seconds() / 86400.0
         tu = days_since_j2000
-        
+
         import math
         era_radians = 2 * math.pi * (0.7790572732640 + 1.00273781191135448 * tu)
         era_radians = era_radians % (2 * math.pi)  # Normalize to [0, 2π]
         era_degrees = math.degrees(era_radians)
-        
+
         # Calculate Greenwich Mean Sidereal Time approximation
         # GMST ≈ ERA (for most practical purposes)
         gmst_hours = (era_degrees / 15.0)  # Convert degrees to hours
         gmst_h = int(gmst_hours)
         gmst_m = int((gmst_hours - gmst_h) * 60)
         gmst_s = ((gmst_hours - gmst_h) * 60 - gmst_m) * 60
-        
+
         result = {
             "ut1_datetime": ut1_time.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3] + " UT1",
             "ut1_iso": ut1_time.isoformat(),
@@ -654,53 +654,53 @@ class Ut1TimeSensor(AlternativeTimeSensorBase):
             "gmst_approx": f"{gmst_h:02d}:{gmst_m:02d}:{gmst_s:05.2f}",
             "days_since_j2000": round(days_since_j2000, 6)
         }
-        
+
         # Add DUT1 display if enabled
         if self._show_dut1:
             sign = "+" if self._dut1_value >= 0 else ""
             result["dut1_display"] = f"DUT1 = {sign}{self._dut1_value:.3f}s"
             result["ut1_utc_relation"] = f"UT1 = UTC {sign}{self._dut1_value:.3f}s"
-        
+
         # Add UTC comparison if enabled
         if self._show_utc_comparison:
             result["utc_datetime"] = utc_time.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3] + " UTC"
             result["utc_iso"] = utc_time.isoformat()
-            
+
             # Show the difference clearly
             diff_ms = self._dut1_value * 1000
             if diff_ms >= 0:
                 result["comparison"] = f"UT1 is {abs(diff_ms):.1f}ms ahead of UTC"
             else:
                 result["comparison"] = f"UT1 is {abs(diff_ms):.1f}ms behind UTC"
-        
+
         return result
-    
+
     def update(self) -> None:
         """Update the sensor (synchronous version)."""
         # Ensure options are loaded
         if not self._options_loaded:
             self._load_options()
-        
+
         try:
             now = datetime.now(timezone.utc)
             self._ut1_time = self._calculate_ut1_time(now)
-            
+
             # Set state to formatted UT1 time
             self._state = self._ut1_time.get("formatted", "UT1 ERROR")
-            
+
             _LOGGER.debug(f"Updated UT1 to {self._state} (DUT1: {self._dut1_value}s)")
         except Exception as e:
             _LOGGER.error(f"Error updating UT1: {e}", exc_info=True)
             self._state = "UT1 ERROR"
-    
+
     async def async_update(self) -> None:
         """Update sensor asynchronously."""
         # Ensure options are loaded
         if not self._options_loaded:
             self._load_options()
-        
+
         # Try to refresh IERS data if cache expired
         await self._async_fetch_iers_data()
-        
+
         # Run time calculation
         await self.hass.async_add_executor_job(self.update)

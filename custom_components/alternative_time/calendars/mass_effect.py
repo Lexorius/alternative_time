@@ -3,7 +3,7 @@ Config Flow Compatible with Enhanced Features
 
 Galactic Standard Time (GST):
 - 20 hours per day
-- 100 minutes per hour  
+- 100 minutes per hour
 - 100 seconds per minute
 - 1 GST second = 0.5 Earth seconds
 
@@ -13,11 +13,12 @@ Galactic Standard Year (GSY):
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone, timedelta
 import logging
-from typing import Dict, Any, Optional
+from datetime import datetime, timezone
+from typing import Any, Dict, Optional
 
 from homeassistant.core import HomeAssistant
+
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -71,7 +72,7 @@ CALENDAR_INFO = {
         "enable_gst": {
             "type": "boolean",
             "default": True,
-            "label": { 
+            "label": {
                 "en": "Show GST Clock",
                 "de": "GST-Uhr anzeigen",
                 "es": "Mostrar reloj GST",
@@ -84,7 +85,7 @@ CALENDAR_INFO = {
                 "zh": "显示GST时钟",
                 "ko": "GST 시계 표시"
             },
-            "description": { 
+            "description": {
                 "en": "Display the Galactic Standard Time clock",
                 "de": "Zeige die Galactic Standard Time Uhr",
                 "es": "Mostrar el reloj de Tiempo Estándar Galáctico",
@@ -102,7 +103,7 @@ CALENDAR_INFO = {
             "type": "select",
             "default": "second",
             "options": ["second", "centisecond", "millisecond"],
-            "label": { 
+            "label": {
                 "en": "Clock Precision",
                 "de": "Uhr-Präzision",
                 "es": "Precisión del reloj",
@@ -115,7 +116,7 @@ CALENDAR_INFO = {
                 "zh": "时钟精度",
                 "ko": "시계 정밀도"
             },
-            "description": { 
+            "description": {
                 "en": "How precise should the GST clock display be",
                 "de": "Wie präzise soll die GST-Uhr angezeigt werden",
                 "es": "Qué tan preciso debe ser el reloj GST",
@@ -145,7 +146,7 @@ CALENDAR_INFO = {
                 "zh": "显示时段",
                 "ko": "시간대 표시"
             },
-            "description": { 
+            "description": {
                 "en": "Show time period (Night/Morning/Afternoon/etc.)",
                 "de": "Tagesabschnitt anzeigen (Nacht/Morgen/Nachmittag/usw.)",
                 "es": "Mostrar período del día (Noche/Mañana/Tarde/etc.)",
@@ -175,7 +176,7 @@ CALENDAR_INFO = {
                 "zh": "启用GSY计数器",
                 "ko": "GSY 카운터 활성화"
             },
-            "description": { 
+            "description": {
                 "en": "Enable Galactic Standard Year counter (approximate)",
                 "de": "Galactic Standard Year Zähler aktivieren (annähernd)",
                 "es": "Habilitar contador de Año Estándar Galáctico (aproximado)",
@@ -205,7 +206,7 @@ CALENDAR_INFO = {
                 "zh": "GSY纪元",
                 "ko": "GSY 기원"
             },
-            "description": { 
+            "description": {
                 "en": "Epoch for 0 GSY in UTC ISO-8601 format (default: First Contact War)",
                 "de": "Epoche für 0 GSY im UTC ISO-8601 Format (Standard: Erstkontaktkrieg)",
                 "es": "Época para 0 GSY en formato UTC ISO-8601 (predeterminado: Guerra del Primer Contacto)",
@@ -237,7 +238,7 @@ CALENDAR_INFO = {
                 "zh": "GSY长度（天）",
                 "ko": "GSY 길이 (일)"
             },
-            "description": { 
+            "description": {
                 "en": "Length of 1 GSY in Earth days (approximately 398.1)",
                 "de": "Länge von 1 GSY in Erdtagen (ca. 398,1)",
                 "es": "Duración de 1 GSY en días terrestres (aproximadamente 398,1)",
@@ -290,7 +291,7 @@ CALENDAR_INFO = {
         "gst_seconds_per_min": 100,
         "gst_minutes_per_hour": 100,
         "gst_hours_per_day": 20,
-        
+
         # Species and their homeworld time systems
         "species": {
             "Human": {"homeworld": "Earth", "joined_citadel": 2157},
@@ -304,7 +305,7 @@ CALENDAR_INFO = {
             "Hanar": {"homeworld": "Kahje", "joined_citadel": 200},
             "Drell": {"homeworld": "Rakhana", "joined_citadel": 250}
         },
-        
+
         # Important events in the Mass Effect timeline
         "events": {
             "2157": "First Contact War",
@@ -321,16 +322,16 @@ CALENDAR_INFO = {
     "origin": "BioWare / Electronic Arts",
     "created_by": "Mass Effect Universe",
     "introduced": "2007",
-    
+
     # Related calendars
     "related": ["stardate", "star_wars", "eve_online"],
-    
+
     # Tags for searching and filtering
     "tags": [
         "scifi", "mass_effect", "galactic", "space", "bioware",
         "citadel", "commander_shepard", "normandy", "fictional"
     ],
-    
+
     # Extended notes
     "notes": {
         "en": (
@@ -366,7 +367,7 @@ class MassEffectGalacticStandardSensor(AlternativeTimeSensorBase):
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the Mass Effect sensor."""
         super().__init__(base_name, hass)
-        
+
         # Store CALENDAR_INFO as instance variable
         self._calendar_info = CALENDAR_INFO
 
@@ -388,23 +389,23 @@ class MassEffectGalacticStandardSensor(AlternativeTimeSensorBase):
         # State variables
         self._data: Dict[str, Any] = {}
         self._state = "Initializing..."
-        
+
         # Flag for options loading
         self._options_loaded = False
-        
+
         _LOGGER.debug(f"Initialized Mass Effect sensor: {self._attr_name}")
-    
+
     def _load_options(self) -> None:
         """Load plugin options after IDs are set."""
         if self._options_loaded:
             return
-            
+
         # Get plugin options from config entry
         plugin_options = self._get_plugin_options()
-        
+
         if plugin_options:
             _LOGGER.debug(f"Loading Mass Effect options: {plugin_options}")
-            
+
             # Apply options using set_options method
             self.set_options(
                 enable_gst=plugin_options.get("enable_gst"),
@@ -415,16 +416,16 @@ class MassEffectGalacticStandardSensor(AlternativeTimeSensorBase):
                 gsy_length_days=plugin_options.get("gsy_length_days"),
                 show_citadel_time=plugin_options.get("show_citadel_time")
             )
-        
+
         self._options_loaded = True
-    
+
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        
+
         # Load options after entity is registered
         self._load_options()
-        
+
         _LOGGER.debug(f"Mass Effect sensor added to hass with options: "
                      f"gst={self._enable_gst}, precision={self._precision}, "
                      f"gsy={self._enable_gsy}, citadel={self._show_citadel_time}")
@@ -445,7 +446,7 @@ class MassEffectGalacticStandardSensor(AlternativeTimeSensorBase):
             attrs["reference"] = CALENDAR_INFO.get("reference_url")
             attrs["notes"] = self._translate('notes')
         return attrs
-    
+
     def set_options(
         self,
         *,
@@ -461,30 +462,30 @@ class MassEffectGalacticStandardSensor(AlternativeTimeSensorBase):
         if enable_gst is not None:
             self._enable_gst = bool(enable_gst)
             _LOGGER.debug(f"Set enable_gst to: {enable_gst}")
-        
+
         if precision is not None and precision in ["second", "centisecond", "millisecond"]:
             self._precision = precision
             _LOGGER.debug(f"Set precision to: {precision}")
-        
+
         if show_period is not None:
             self._show_period = bool(show_period)
             _LOGGER.debug(f"Set show_period to: {show_period}")
-        
+
         if enable_gsy is not None:
             self._enable_gsy = bool(enable_gsy)
             _LOGGER.debug(f"Set enable_gsy to: {enable_gsy}")
-        
+
         if epoch_gs0_utc is not None:
             self._epoch_gs0_utc = str(epoch_gs0_utc)
             _LOGGER.debug(f"Set epoch_gs0_utc to: {epoch_gs0_utc}")
-        
+
         if gsy_length_days is not None:
             if 300 <= gsy_length_days <= 500:
                 self._gsy_length_days = float(gsy_length_days)
                 _LOGGER.debug(f"Set gsy_length_days to: {gsy_length_days}")
             else:
                 _LOGGER.warning(f"Invalid gsy_length_days: {gsy_length_days}, keeping {self._gsy_length_days}")
-        
+
         if show_citadel_time is not None:
             self._show_citadel_time = bool(show_citadel_time)
             _LOGGER.debug(f"Set show_citadel_time to: {show_citadel_time}")
@@ -555,7 +556,7 @@ class MassEffectGalacticStandardSensor(AlternativeTimeSensorBase):
             "gst_day_progress": f"{progress:.1f}%",
             "gst_period": period if self._show_period else None
         }
-    
+
     def _get_event_for_year(self, year: int) -> Optional[str]:
         """Get historical event for a given year."""
         events = CALENDAR_INFO["mass_effect_data"]["events"]
@@ -567,7 +568,7 @@ class MassEffectGalacticStandardSensor(AlternativeTimeSensorBase):
         # Ensure options are loaded
         if not self._options_loaded:
             self._load_options()
-        
+
         try:
             now_utc = datetime.now(timezone.utc)
 
@@ -619,10 +620,10 @@ class MassEffectGalacticStandardSensor(AlternativeTimeSensorBase):
                     "gsy_day_of_year_gst": round(doy_gst, 2),
                     "earth_year_equivalent": current_earth_year
                 })
-                
+
                 if event:
                     data["historical_event"] = event
-                
+
                 display_parts.append(f"GSY {gsy_year}")
 
             # Citadel Time (optional)
@@ -641,9 +642,9 @@ class MassEffectGalacticStandardSensor(AlternativeTimeSensorBase):
                 self._state = "Disabled (enable GST or GSY)"
             else:
                 self._state = "No data"
-                
+
             self._data = data
-            
+
             _LOGGER.debug(f"Updated Mass Effect to: {self._state}")
 
         except Exception as exc:

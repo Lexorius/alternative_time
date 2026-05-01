@@ -5,14 +5,13 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-import math
-import json
-import logging
-import os
-import io
 import base64
-from typing import Dict, Any, Optional, Tuple, List
+import io
+import logging
+import math
+import os
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional, Tuple
 
 try:
     from PIL import Image, ImageDraw, ImageFont  # optional
@@ -22,6 +21,7 @@ except Exception:
     ImageFont = None
 
 from homeassistant.core import HomeAssistant
+
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -499,11 +499,11 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
     def _calculate_planet_position(self, planet_id: str, jd: float) -> Dict[str, Any]:
         """
         Calculate heliocentric position of a planet using Keplerian orbital elements.
-        
+
         FIXED in v1.4.0: Corrected the calculation of heliocentric longitude.
         The previous version incorrectly calculated the mean anomaly and added
         perihelion_longitude twice, resulting in incorrect positions.
-        
+
         The correct formulas (per JPL's "Approximate Positions of the Planets"):
         1. L = L0 + n*d  (Mean Longitude)
         2. M = L - ω     (Mean Anomaly, where ω = perihelion_longitude)
@@ -528,16 +528,16 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
         # Planets - Standard Keplerian calculation (CORRECTED)
         d = jd - 2451545.0  # Days since J2000.0
         n = 360.0 / float(p["orbital_period"])  # Mean daily motion (degrees/day)
-        
+
         # Step 1: Calculate Mean Longitude (L)
         # L = L0 + n*d, where L0 is mean_longitude_j2000
         L = (float(p["mean_longitude_j2000"]) + n * d) % 360.0
-        
+
         # Step 2: Calculate Mean Anomaly (M)
         # M = L - ω, where ω is the longitude of perihelion
         omega = float(p["perihelion_longitude"])
         M = (L - omega + 360.0) % 360.0
-        
+
         e = float(p["eccentricity"])
 
         # Step 3: Equation of center (simplified series expansion)
@@ -546,10 +546,10 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
         C = (2.0 * e - (e**3) / 4.0) * math.sin(M_rad) * (180.0 / math.pi)
         C += (5.0 / 4.0) * (e**2) * math.sin(2.0 * M_rad) * (180.0 / math.pi)
         C += (13.0 / 12.0) * (e**3) * math.sin(3.0 * M_rad) * (180.0 / math.pi)
-        
+
         # True anomaly
         v = M + C
-        
+
         # Step 4: Heliocentric ecliptic longitude = L + C (true longitude)
         # This is the CORRECTED formula - we add C to L, not to v+ω
         longitude = (L + C) % 360.0
@@ -617,7 +617,7 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
         jan1 = datetime(now.year, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
         jd_jan1 = self._datetime_to_jd(jan1)
         earth_jan1_pos = self._calculate_planet_position("earth", jd_jan1)
-        
+
         # This is the heliocentric longitude of Earth on Jan 1
         return earth_jan1_pos["longitude"]
 
@@ -658,9 +658,6 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
             x = cx + math.cos(rad) * radius
             y = cy - math.sin(rad) * radius
             return x, y
-
-        # Get all planet positions
-        positions = self._positions_info.get("positions", {})
 
         # Prepare planet items for visualization
         items = []

@@ -5,12 +5,12 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-import math
 import logging
-from typing import Dict, Any, Optional, Tuple
+import math
+from typing import Any, Dict, Optional, Tuple
 
 from homeassistant.core import HomeAssistant
+
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -478,7 +478,7 @@ CALENDAR_INFO = {
         "galaxy_speed_uncertainty": 15.0,  # ±15% - difficult to measure precisely
         "sun_equator_rotation_kmh": 7189.0,  # ~1.997 km/s at Sun's equator
         "sun_equator_rotation_uncertainty": 1.0,  # ±1% - measured via sunspot tracking
-        
+
         # Galactic calendar data
         "galactic_year_earth_years": 225000000,  # 225 million Earth years
         "galactic_year_uncertainty": 11.0,  # ±11% (range 200-250 million years)
@@ -486,7 +486,7 @@ CALENDAR_INFO = {
         "sun_age_uncertainty": 1.0,  # ±1% - determined from meteorites
         "sun_galactic_orbits_completed": 20.4,  # ~20 complete orbits
         "current_orbit_progress_percent": 44.0,  # Estimated ~44% into current orbit
-        
+
         # Fun comparison objects (in km/h)
         "comparisons": {
             "walking": {"speed_kmh": 5, "emoji": "🚶"},
@@ -1026,23 +1026,23 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the Cosmic Speedometer sensor."""
         super().__init__(base_name, hass)
-        
+
         # Store CALENDAR_INFO as instance variable for _translate method
         self._calendar_info = CALENDAR_INFO
-        
+
         # Get user's language
         self._user_language = "en"
         if hass and hasattr(hass, "config"):
             self._user_language = getattr(hass.config, "language", "en") or "en"
-        
+
         # Get translated name
         calendar_name = self._translate("name", "Cosmic Speedometer")
-        
+
         # Set sensor attributes
         self._attr_name = f"{base_name} {calendar_name}"
         self._attr_unique_id = f"{base_name}_cosmic_speedometer"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:speedometer")
-        
+
         # Configuration options with defaults
         config_defaults = CALENDAR_INFO.get("config_options", {})
         self._speed_unit = config_defaults.get("speed_unit", {}).get("default", "km/h")
@@ -1056,25 +1056,25 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
         self._show_fun_comparisons = config_defaults.get("show_fun_comparisons", {}).get("default", True)
         self._display_mode = config_defaults.get("display_mode", {}).get("default", "total")
         self._show_galactic_calendar = config_defaults.get("show_galactic_calendar", {}).get("default", True)
-        
+
         # Observer location (default to equator if not set)
         self._observer_latitude = 0.0
         self._observer_longitude = 0.0
         if hass and hasattr(hass, "config"):
             self._observer_latitude = getattr(hass.config, "latitude", 0.0)
             self._observer_longitude = getattr(hass.config, "longitude", 0.0)
-        
+
         # Speed data
         self._speed_data = CALENDAR_INFO.get("speed_data", {})
-        
+
         # State
         self._state = "Initializing..."
         self._speeds = {}
-        
+
         # Flag to track if options have been loaded
         self._options_loaded = False
         self._first_update = True
-        
+
         _LOGGER.debug(f"Initialized Cosmic Speedometer sensor: {self._attr_name}")
 
     def _lang(self) -> str:
@@ -1124,13 +1124,13 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
         """Load plugin options after IDs are set."""
         if self._options_loaded:
             return
-        
+
         # Get plugin options from config entry
         plugin_options = self.get_plugin_options()
-        
+
         if plugin_options:
             _LOGGER.debug(f"Loading Cosmic Speedometer options: {plugin_options}")
-            
+
             self._speed_unit = plugin_options.get("speed_unit", self._speed_unit)
             self._use_observer_location = plugin_options.get("use_observer_location", self._use_observer_location)
             self._show_earth_rotation = plugin_options.get("show_earth_rotation", self._show_earth_rotation)
@@ -1142,7 +1142,7 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
             self._show_fun_comparisons = plugin_options.get("show_fun_comparisons", self._show_fun_comparisons)
             self._display_mode = plugin_options.get("display_mode", self._display_mode)
             self._show_galactic_calendar = plugin_options.get("show_galactic_calendar", self._show_galactic_calendar)
-        
+
         self._options_loaded = True
 
     async def async_added_to_hass(self) -> None:
@@ -1204,19 +1204,19 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
 
     def _convert_speed(self, speed_kmh: float) -> Tuple[float, str, bool]:
         """Convert speed from km/h to the configured unit.
-        
+
         Returns:
             tuple: (converted_value, unit_string, is_valid)
         """
         unit = self._speed_unit
-        
+
         # Check for invalid units (like mph)
         if not self._is_valid_unit(unit):
             return 0.0, self._get_invalid_unit_message(), False
-        
+
         # Get localized unit name
         unit_display = self._get_unit_name(unit)
-        
+
         # Metrisch
         if unit == "km/h":
             return speed_kmh, unit_display, True
@@ -1224,41 +1224,41 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
             return speed_kmh / 3600, unit_display, True
         elif unit == "m/s":
             return speed_kmh * 1000 / 3600, unit_display, True
-        
+
         # Relativ
         elif unit == "c":
             return speed_kmh / SPEED_OF_LIGHT_KMH, unit_display, True
         elif unit == "Mach":
             return speed_kmh / SPEED_OF_SOUND_KMH, unit_display, True
-        
+
         # Astronomische Einheiten
         elif unit == "AU/h":
             return speed_kmh / AU_IN_KM, unit_display, True
         elif unit == "AU/s":
             return speed_kmh / 3600 / AU_IN_KM, unit_display, True
-        
+
         # Lichtjahre
         elif unit == "ly/h":
             return speed_kmh / LIGHTYEAR_IN_KM, unit_display, True
         elif unit == "ly/s":
             return speed_kmh / 3600 / LIGHTYEAR_IN_KM, unit_display, True
-        
+
         # Parsec
         elif unit == "pc/h":
             return speed_kmh / PARSEC_IN_KM, unit_display, True
         elif unit == "pc/s":
             return speed_kmh / 3600 / PARSEC_IN_KM, unit_display, True
-        
+
         # Lichtsekunden pro Sekunde (= Bruchteil von c)
         elif unit == "ls/s":
             return speed_kmh / 3600 / LIGHTSECOND_IN_KM, unit_display, True
-        
+
         # Anschaulich
         elif unit == "🌍/h":
             return speed_kmh / EARTH_CIRCUMFERENCE_KM, unit_display, True
         elif unit == "🌙/h":
             return speed_kmh / MOON_DISTANCE_KM, unit_display, True
-        
+
         else:
             # Fallback to km/h for any unexpected unit
             return speed_kmh, "km/h", True
@@ -1266,11 +1266,11 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
     def _format_speed(self, speed_kmh: float, include_unit: bool = True) -> str:
         """Format a speed value with appropriate precision."""
         value, unit, is_valid = self._convert_speed(speed_kmh)
-        
+
         # If unit is invalid, return the error message
         if not is_valid:
             return f"⚠️ {unit}"
-        
+
         # Determine precision based on magnitude - always use readable numbers, fully written out
         # Use dots as thousand separators (European format, not imperial commas!)
         if abs(value) >= 1000:
@@ -1309,7 +1309,7 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
         else:
             # For extremely small values, show with maximum precision
             formatted = f"{value:.18f}".rstrip('0').rstrip('.').replace(".", ",")
-        
+
         if include_unit:
             return f"{formatted} {unit}"
         return formatted
@@ -1320,7 +1320,7 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
             latitude = self._observer_latitude
         else:
             latitude = 0.0  # Equator
-        
+
         # Earth rotation speed varies with latitude: v = v_equator * cos(latitude)
         equator_speed = self._speed_data.get("earth_equator_rotation_kmh", 1674.4)
         latitude_rad = math.radians(abs(latitude))
@@ -1329,20 +1329,20 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
     def _get_fun_comparison(self, speed_kmh: float) -> Dict[str, Any]:
         """Get a fun comparison for a given speed."""
         comparisons = self._speed_data.get("comparisons", {})
-        
+
         best_match = None
         best_ratio = float("inf")
-        
+
         for name, data in comparisons.items():
             comp_speed = data.get("speed_kmh", 1)
             ratio = speed_kmh / comp_speed
-            
+
             # Find the closest match that's not too far off
             if ratio >= 0.5:  # Speed is at least half of comparison
                 if best_match is None or ratio < best_ratio:
                     best_match = name
                     best_ratio = ratio
-        
+
         if best_match:
             data = comparisons[best_match]
             return {
@@ -1350,16 +1350,16 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
                 "emoji": data.get("emoji", "🚀"),
                 "times_faster": round(speed_kmh / data.get("speed_kmh", 1), 1)
             }
-        
+
         return {"name": "walking", "emoji": "🚶", "times_faster": round(speed_kmh / 5, 1)}
 
     def _calculate_speeds(self) -> Dict[str, Any]:
         """Calculate all cosmic speeds."""
         speeds = {}
-        
+
         # Check if we have a valid unit
         is_valid_unit = self._is_valid_unit(self._speed_unit)
-        
+
         # Earth rotation speed (varies by latitude)
         earth_rotation = self._calculate_earth_rotation_speed()
         earth_rotation_uncertainty = self._speed_data.get("earth_equator_rotation_uncertainty", 0.1)
@@ -1372,7 +1372,7 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
             "uncertainty_percent": earth_rotation_uncertainty,
             "valid": is_valid_unit
         }
-        
+
         # Earth orbital speed (relatively constant)
         earth_orbit = self._speed_data.get("earth_orbital_speed_kmh", 107208.0)
         earth_orbit_uncertainty = self._speed_data.get("earth_orbital_uncertainty", 0.1)
@@ -1384,7 +1384,7 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
             "uncertainty_percent": earth_orbit_uncertainty,
             "valid": is_valid_unit
         }
-        
+
         # Solar system speed in galaxy
         solar_system = self._speed_data.get("solar_system_galactic_speed_kmh", 828000.0)
         solar_system_uncertainty = self._speed_data.get("solar_system_galactic_uncertainty", 10.0)
@@ -1396,7 +1396,7 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
             "uncertainty_percent": solar_system_uncertainty,
             "valid": is_valid_unit
         }
-        
+
         # Galaxy speed in universe
         galaxy = self._speed_data.get("galaxy_speed_kmh", 2160000.0)
         galaxy_uncertainty = self._speed_data.get("galaxy_speed_uncertainty", 15.0)
@@ -1409,7 +1409,7 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
             "uncertainty_percent": galaxy_uncertainty,
             "valid": is_valid_unit
         }
-        
+
         # Sun rotation (bonus)
         sun_rotation = self._speed_data.get("sun_equator_rotation_kmh", 7189.0)
         sun_rotation_uncertainty = self._speed_data.get("sun_equator_rotation_uncertainty", 1.0)
@@ -1421,7 +1421,7 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
             "uncertainty_percent": sun_rotation_uncertainty,
             "valid": is_valid_unit
         }
-        
+
         # Calculate approximate total speed through space
         # Uncertainty for total is dominated by the largest uncertainties (galaxy speed)
         total_approximate = galaxy  # The largest component dominates
@@ -1435,18 +1435,18 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
             "uncertainty_percent": total_uncertainty,
             "valid": is_valid_unit
         }
-        
+
         # Add fun comparisons (only if valid unit)
         if self._show_fun_comparisons and is_valid_unit:
             for key, speed_info in speeds.items():
                 speed_info["comparison"] = self._get_fun_comparison(speed_info["speed_kmh"])
-        
+
         return speeds
 
     def _get_random_fun_fact(self) -> str:
         """Get a random fun fact in the user's language."""
         import random
-        facts = CALENDAR_INFO.get("fun_facts", {}).get(self._lang(), 
+        facts = CALENDAR_INFO.get("fun_facts", {}).get(self._lang(),
                 CALENDAR_INFO.get("fun_facts", {}).get("en", []))
         if facts:
             return random.choice(facts)
@@ -1458,22 +1458,22 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
         galactic_year_uncertainty = self._speed_data.get("galactic_year_uncertainty", GALACTIC_YEAR_UNCERTAINTY)
         sun_age = self._speed_data.get("sun_age_earth_years", SUN_AGE_EARTH_YEARS)
         sun_age_uncertainty = self._speed_data.get("sun_age_uncertainty", SUN_AGE_UNCERTAINTY)
-        
+
         # Calculate Sun's galactic age (how many complete orbits)
         sun_galactic_age = sun_age / galactic_year
-        
+
         # Calculate progress in current orbit
         current_orbit_progress = (sun_galactic_age % 1) * 100  # Percentage
-        
+
         # Calculate time remaining until next galactic new year
         remaining_progress = 100 - current_orbit_progress
         remaining_earth_years = (remaining_progress / 100) * galactic_year
         remaining_million_years = remaining_earth_years / 1000000
-        
+
         # Get localized labels
         galactic_years_unit = self._get_label("galactic_years_unit")
         million_years_unit = self._get_label("million_years")
-        
+
         return {
             "sun_galactic_age": sun_galactic_age,
             "sun_galactic_age_formatted": f"{sun_galactic_age:.1f} {galactic_years_unit} (±{galactic_year_uncertainty}%)",
@@ -1499,13 +1499,13 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes."""
         attrs = super().extra_state_attributes
-        
+
         # Check if unit is valid
         is_valid_unit = self._is_valid_unit(self._speed_unit)
-        
+
         # Add description
         attrs["description"] = self._translate("description")
-        
+
         # Add unit validity status
         if not is_valid_unit:
             attrs["unit_error"] = self._get_invalid_unit_message()
@@ -1515,7 +1515,7 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
                 "AU/h", "AU/s", "ly/h", "ly/s", "pc/h", "pc/s",
                 "ls/s", "🌍/h", "🌙/h"
             ]
-        
+
         # Add calculated speeds with uncertainty
         if self._show_earth_rotation:
             earth_rot = self._speeds.get("earth_rotation", {})
@@ -1523,33 +1523,33 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
             attrs["earth_rotation_speed"] = f"{earth_rot.get('formatted', 'N/A')} (±{uncertainty}%)"
             if self._use_observer_location:
                 attrs["earth_rotation_latitude"] = earth_rot.get("latitude_factor", "")
-        
+
         if self._show_earth_orbit:
             earth_orb = self._speeds.get("earth_orbit", {})
             uncertainty = earth_orb.get("uncertainty_percent", 0)
             attrs["earth_orbital_speed"] = f"{earth_orb.get('formatted', 'N/A')} (±{uncertainty}%)"
-        
+
         if self._show_solar_system_speed:
             solar_sys = self._speeds.get("solar_system", {})
             uncertainty = solar_sys.get("uncertainty_percent", 0)
             attrs["solar_system_galactic_speed"] = f"{solar_sys.get('formatted', 'N/A')} (±{uncertainty}%)"
-        
+
         if self._show_galaxy_speed:
             galaxy = self._speeds.get("galaxy", {})
             uncertainty = galaxy.get("uncertainty_percent", 0)
             attrs["milky_way_cosmic_speed"] = f"{galaxy.get('formatted', 'N/A')} (±{uncertainty}%)"
             attrs["destination"] = "Great Attractor"
-        
+
         if self._show_sun_rotation:
             sun_rot = self._speeds.get("sun_rotation", {})
             uncertainty = sun_rot.get("uncertainty_percent", 0)
             attrs["sun_rotation_speed"] = f"{sun_rot.get('formatted', 'N/A')} (±{uncertainty}%)"
-        
+
         if self._show_total_speed:
             total = self._speeds.get("total", {})
             uncertainty = total.get("uncertainty_percent", 0)
             attrs["total_cosmic_speed"] = f"{total.get('formatted', 'N/A')} (±{uncertainty}%)"
-        
+
         # Add fun comparisons (only if valid unit)
         if self._show_fun_comparisons and is_valid_unit:
             comparisons = {}
@@ -1559,10 +1559,10 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
                     comparisons[key] = f"{comp['emoji']} {comp['times_faster']}x faster than a {comp['name']}"
             if comparisons:
                 attrs["speed_comparisons"] = comparisons
-        
+
         # Add a fun fact
         attrs["fun_fact"] = self._get_random_fun_fact()
-        
+
         # Add galactic calendar data
         if self._show_galactic_calendar:
             galactic_calendar = self._calculate_galactic_calendar()
@@ -1578,7 +1578,7 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
             attrs["galactic_orbits_completed"] = galactic_calendar["sun_galactic_orbits_complete"]
             attrs["current_galactic_year_progress"] = galactic_calendar["current_orbit_progress_formatted"]
             attrs["next_galactic_new_year_in"] = galactic_calendar["next_galactic_new_year_formatted"]
-        
+
         # Add speed breakdown with emojis and uncertainty
         speed_breakdown = []
         if self._show_earth_rotation and "earth_rotation" in self._speeds:
@@ -1595,7 +1595,7 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
             speed_breakdown.append(f"🌀 {s['label']}: {s['formatted']} (±{s.get('uncertainty_percent', 0)}%)")
         if speed_breakdown:
             attrs["speed_breakdown"] = speed_breakdown
-        
+
         # Add configuration info
         attrs["config"] = {
             "speed_unit": self._speed_unit,
@@ -1604,19 +1604,19 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
             "observer_latitude": self._observer_latitude if self._use_observer_location else None,
             "display_mode": self._display_mode
         }
-        
+
         # Add all raw speeds in km/h for automations (always in km/h regardless of display unit)
         attrs["raw_speeds_kmh"] = {
-            key: info.get("speed_kmh", 0) 
+            key: info.get("speed_kmh", 0)
             for key, info in self._speeds.items()
         }
-        
+
         # Add uncertainty percentages for all speeds
         attrs["uncertainties_percent"] = {
-            key: info.get("uncertainty_percent", 0) 
+            key: info.get("uncertainty_percent", 0)
             for key, info in self._speeds.items()
         }
-        
+
         return attrs
 
     def update(self) -> None:
@@ -1624,11 +1624,11 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
         # Update user language
         if self.hass and hasattr(self.hass, "config"):
             self._user_language = getattr(self.hass.config, "language", "en") or "en"
-        
+
         # Load options if not yet loaded
         if not self._options_loaded:
             self._load_options()
-        
+
         # Log on first update
         if self._first_update:
             options = self.get_plugin_options()
@@ -1637,24 +1637,24 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
             else:
                 _LOGGER.debug("Cosmic Speedometer using defaults")
             self._first_update = False
-        
+
         # Update observer location from Home Assistant config
         if self._use_observer_location and self.hass and hasattr(self.hass, "config"):
             self._observer_latitude = getattr(self.hass.config, "latitude", self._observer_latitude)
             self._observer_longitude = getattr(self.hass.config, "longitude", self._observer_longitude)
-        
+
         # Calculate all speeds
         self._speeds = self._calculate_speeds()
-        
+
         # Check if unit is valid
         is_valid_unit = self._is_valid_unit(self._speed_unit)
-        
+
         # If unit is invalid, show error message as state
         if not is_valid_unit:
             self._state = f"⚠️ {self._get_invalid_unit_message()}"
             _LOGGER.debug(f"Updated Cosmic Speedometer with invalid unit: {self._speed_unit}")
             return
-        
+
         # Set state based on display mode
         if self._display_mode == "all":
             # Show a summary
@@ -1675,7 +1675,7 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
                 self._state = f"🚀 {self._speeds['total']['formatted']}"
             else:
                 self._state = "Active"
-        
+
         _LOGGER.debug(f"Updated Cosmic Speedometer to {self._state}")
 
 

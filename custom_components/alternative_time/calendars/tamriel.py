@@ -1,11 +1,12 @@
 """Tamriel Calendar (Elder Scrolls) implementation - Version 3.0."""
 from __future__ import annotations
 
-from datetime import datetime
 import logging
-from typing import Dict, Any, Optional
+from datetime import datetime
+from typing import Any, Dict
 
 from homeassistant.core import HomeAssistant
+
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +26,7 @@ CALENDAR_INFO = {
     "category": "fantasy",
     "accuracy": "fictional",
     "update_interval": UPDATE_INTERVAL,
-    
+
     # Multi-language names
     "name": {
         "en": "Tamriel Calendar (Elder Scrolls)",
@@ -41,7 +42,7 @@ CALENDAR_INFO = {
         "zh": "泰姆瑞尔历 (上古卷轴)",
         "ko": "탐리엘 달력 (엘더스크롤)"
     },
-    
+
     # Short descriptions for UI
     "description": {
         "en": "Elder Scrolls calendar with two moons, birthsigns, and Daedric summoning days",
@@ -57,7 +58,7 @@ CALENDAR_INFO = {
         "zh": "上古卷轴日历，包含双月、诞生星座和魔神召唤日",
         "ko": "두 개의 달, 탄생 별자리, 데이드라 소환일이 있는 엘더스크롤 달력"
     },
-    
+
     # Detailed information for documentation
     "detailed_info": {
         "en": {
@@ -81,7 +82,7 @@ CALENDAR_INFO = {
             "note": "Basierend auf Skyrims Zeitlinie, wo 4Ä 201 = Erdjahr 2011"
         }
     },
-    
+
     # Configuration options
     "config_options": {
         "show_moons": {
@@ -318,7 +319,7 @@ CALENDAR_INFO = {
             }
         }
     },
-    
+
     # Tamriel-specific data
     "tamriel_data": {
         "months": [
@@ -336,7 +337,7 @@ CALENDAR_INFO = {
             {"name": "Evening Star", "days": 31, "earth": "December"}
         ],
         "weekdays": [
-            "Morndas", "Tirdas", "Middas", "Turdas", 
+            "Morndas", "Tirdas", "Middas", "Turdas",
             "Fredas", "Loredas", "Sundas"
         ],
         "birthsigns": [
@@ -374,28 +375,28 @@ CALENDAR_INFO = {
             "5E": {"name": "Fifth Era", "start": 1, "end": None}
         }
     },
-    
+
     # Additional metadata
     "reference_url": "https://en.uesp.net/wiki/Lore:Calendar",
     "documentation_url": "https://elderscrolls.fandom.com/wiki/Calendar",
     "origin": "The Elder Scrolls series by Bethesda Game Studios",
     "created_by": "Bethesda Game Studios",
     "introduced": "The Elder Scrolls: Arena (1994)",
-    
+
     # Example format
     "example": "4E 201, Last Seed 17 (Tirdas)",
     "example_meaning": "Fourth Era year 201, 17th day of Last Seed, Tirdas (Tuesday)",
-    
+
     # Related calendars
     "related": ["shire", "rivendell", "warcraft"],
-    
+
     # Tags for searching and filtering
     "tags": [
         "fantasy", "elder_scrolls", "skyrim", "tamriel", "gaming",
         "rpg", "bethesda", "tes", "oblivion", "morrowind", "eso",
         "fourth_era", "daedric", "aedric", "khajiit", "argonian"
     ],
-    
+
     # Special features
     "features": {
         "supports_eras": True,
@@ -411,22 +412,22 @@ CALENDAR_INFO = {
 
 class TamrielCalendarSensor(AlternativeTimeSensorBase):
     """Sensor for displaying Tamrielic Calendar from Elder Scrolls."""
-    
+
     # Class-level update interval
     UPDATE_INTERVAL = UPDATE_INTERVAL
-    
+
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the Tamriel calendar sensor."""
         super().__init__(base_name, hass)
-        
+
         # Get translated name from metadata
         calendar_name = self._translate('name', 'Tamriel Calendar')
-        
+
         # Set sensor attributes
         self._attr_name = f"{base_name} {calendar_name}"
         self._attr_unique_id = f"{base_name}_tamriel_calendar"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:sword-cross")
-        
+
         # Configuration options with defaults
         config_defaults = CALENDAR_INFO.get("config_options", {})
         self._show_moons = config_defaults.get("show_moons", {}).get("default", True)
@@ -434,16 +435,16 @@ class TamrielCalendarSensor(AlternativeTimeSensorBase):
         self._show_daedric = config_defaults.get("show_daedric", {}).get("default", True)
         self._show_birthsign = config_defaults.get("show_birthsign", {}).get("default", True)
         self._era = config_defaults.get("era", {}).get("default", "4E")
-        
+
         # Tamriel data
         self._tamriel_data = CALENDAR_INFO["tamriel_data"]
-        
+
         # Initialize state
         self._state = None
         self._tamriel_date = {}
-        
+
         _LOGGER.debug(f"Initialized Tamriel Calendar sensor: {self._attr_name}")
-    
+
     def set_options(self, options: Dict[str, Any]) -> None:
         """Set options from config flow."""
         if options:
@@ -452,31 +453,31 @@ class TamrielCalendarSensor(AlternativeTimeSensorBase):
             self._show_daedric = options.get("show_daedric", self._show_daedric)
             self._show_birthsign = options.get("show_birthsign", self._show_birthsign)
             self._era = options.get("era", self._era)
-            
+
             _LOGGER.debug(f"Tamriel sensor options updated: show_moons={self._show_moons}, "
                          f"show_holidays={self._show_holidays}, show_daedric={self._show_daedric}, "
                          f"show_birthsign={self._show_birthsign}, era={self._era}")
-    
+
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
-    
+
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes."""
         attrs = super().extra_state_attributes
-        
+
         # Add Tamriel-specific attributes
         if self._tamriel_date:
             attrs.update(self._tamriel_date)
-            
+
             # Add description in user's language
             attrs["description"] = self._translate('description')
-            
+
             # Add reference
             attrs["reference"] = CALENDAR_INFO.get('reference_url', '')
-            
+
             # Add configuration status
             attrs["config"] = {
                 "show_moons": self._show_moons,
@@ -485,9 +486,9 @@ class TamrielCalendarSensor(AlternativeTimeSensorBase):
                 "show_birthsign": self._show_birthsign,
                 "era": self._era
             }
-        
+
         return attrs
-    
+
     def _get_tamriel_holiday(self, month: int, day: int) -> str:
         """Get Tamrielic holiday for given date."""
         holidays = {
@@ -516,7 +517,7 @@ class TamrielCalendarSensor(AlternativeTimeSensorBase):
             (12, 31): "🎭 Saturalia"
         }
         return holidays.get((month, day), "")
-    
+
     def _get_daedric_summoning_day(self, month: int, day: int) -> str:
         """Get Daedric Prince summoning day."""
         daedric_days = {
@@ -538,11 +539,11 @@ class TamrielCalendarSensor(AlternativeTimeSensorBase):
             (12, 31): "⚔️ Molag Bal"
         }
         return daedric_days.get((month, day), "")
-    
+
     def _get_moon_phase(self, day_in_cycle: int, cycle_length: int, moon_name: str) -> str:
         """Calculate moon phase with emoji."""
         phase_portion = day_in_cycle / cycle_length
-        
+
         if phase_portion < 0.125:
             return f"🌑 {moon_name}: New"
         elif phase_portion < 0.25:
@@ -559,7 +560,7 @@ class TamrielCalendarSensor(AlternativeTimeSensorBase):
             return f"🌗 {moon_name}: Last Quarter"
         else:
             return f"🌘 {moon_name}: Waning Crescent"
-    
+
     def _get_khajiit_form(self, masser: str, secunda: str) -> str:
         """Determine Khajiit form based on moon phases (simplified)."""
         if "Full" in masser and "Full" in secunda:
@@ -572,14 +573,14 @@ class TamrielCalendarSensor(AlternativeTimeSensorBase):
             return "🧝 Ohmes (Elven appearance)"
         else:
             return "🐱 Cathay (Humanoid)"
-    
+
     def _calculate_tamriel_date(self, earth_date: datetime) -> Dict[str, Any]:
         """Calculate Tamrielic date from Earth date."""
         # Era calculation based on Skyrim timeline (4E 201 = 2011)
         era_info = self._tamriel_data["era_info"][self._era]
         era = self._era
         era_name = era_info["name"]
-        
+
         # Calculate year within era (simplified - using Skyrim as reference)
         if era == "4E":
             # 4E 201 = 2011 (Skyrim's year)
@@ -589,26 +590,26 @@ class TamrielCalendarSensor(AlternativeTimeSensorBase):
         else:
             # For other eras, use a simple offset
             display_year = 100 + (earth_date.year - 2000)
-        
+
         # Get month data
         month_index = earth_date.month - 1
         month_data = self._tamriel_data["months"][month_index]
         tamriel_month = month_data["name"]
         tamriel_day = earth_date.day
-        
+
         # Get weekday (aligned with Earth weekdays)
         weekday_index = earth_date.weekday()
         tamriel_weekday = self._tamriel_data["weekdays"][weekday_index]
-        
+
         # Get birthsign
         birthsign_data = self._tamriel_data["birthsigns"][month_index] if self._show_birthsign else None
         birthsign = birthsign_data["name"] if birthsign_data else ""
-        
+
         # Get divine blessing (cycles through the Nine Divines)
         divines = self._tamriel_data["divines"]
         divine_index = (earth_date.day - 1) % 9
         divine_blessing = divines[divine_index]
-        
+
         # Season determination
         if month_index in [11, 0, 1]:  # Dec, Jan, Feb
             season = "Winter"
@@ -622,7 +623,7 @@ class TamrielCalendarSensor(AlternativeTimeSensorBase):
         else:  # Sep, Oct, Nov
             season = "Autumn"
             season_emoji = "🍂"
-        
+
         # Time period
         hour = earth_date.hour
         if 5 <= hour < 8:
@@ -643,10 +644,10 @@ class TamrielCalendarSensor(AlternativeTimeSensorBase):
         else:
             time_period = "Witching Hour"
             time_emoji = "⭐"
-        
+
         # Guild activity
         guild_day = self._tamriel_data["guild_days"].get(tamriel_weekday, "")
-        
+
         # Build result
         result = {
             "era": era,
@@ -661,44 +662,44 @@ class TamrielCalendarSensor(AlternativeTimeSensorBase):
             "time_period": f"{time_emoji} {time_period}",
             "full_date": f"{era} {display_year}, {tamriel_month} {tamriel_day}"
         }
-        
+
         # Add birthsign if enabled
         if birthsign and self._show_birthsign:
             result["birthsign"] = f"⭐ {birthsign}"
-        
+
         # Check for holidays if enabled
         if self._show_holidays:
             holiday = self._get_tamriel_holiday(earth_date.month, earth_date.day)
             if holiday:
                 result["holiday"] = holiday
-        
+
         # Check for Daedric days if enabled
         if self._show_daedric:
             daedric_prince = self._get_daedric_summoning_day(earth_date.month, earth_date.day)
             if daedric_prince:
                 result["daedric_prince"] = daedric_prince
-        
+
         # Calculate moon phases if enabled
         if self._show_moons:
             # Masser (larger moon) - 24 day cycle
             masser_phase = self._get_moon_phase(earth_date.day % 24, 24, "Masser")
-            
-            # Secunda (smaller moon) - 32 day cycle  
+
+            # Secunda (smaller moon) - 32 day cycle
             secunda_phase = self._get_moon_phase(earth_date.day % 32, 32, "Secunda")
-            
+
             result["moon_phase_masser"] = masser_phase
             result["moon_phase_secunda"] = secunda_phase
             result["khajiit_form"] = self._get_khajiit_form(masser_phase, secunda_phase)
-        
+
         return result
-    
+
     def update(self) -> None:
         """Update the sensor."""
         now = datetime.now()
         self._tamriel_date = self._calculate_tamriel_date(now)
-        
+
         # Format: Era Year, Month Day (Weekday)
         # Example: "4E 225, Morning Star 16 (Tirdas)"
         self._state = f"{self._tamriel_date['full_date']} ({self._tamriel_date['weekday']})"
-        
+
         _LOGGER.debug(f"Updated Tamriel calendar to {self._state}")

@@ -1,11 +1,12 @@
 """Shire Calendar (Hobbit/LOTR) implementation - Version 3.0."""
 from __future__ import annotations
 
-from datetime import datetime
 import logging
-from typing import Dict, Any, Optional
+from datetime import datetime
+from typing import Any, Dict
 
 from homeassistant.core import HomeAssistant
+
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +26,7 @@ CALENDAR_INFO = {
     "category": "fantasy",
     "accuracy": "fictional",
     "update_interval": UPDATE_INTERVAL,
-    
+
     # Multi-language names
     "name": {
         "en": "Shire Calendar (LOTR)",
@@ -41,7 +42,7 @@ CALENDAR_INFO = {
         "zh": "夏尔历",
         "ko": "샤이어 달력"
     },
-    
+
     # Short descriptions for UI
     "description": {
         "en": "Hobbit calendar from Lord of the Rings with seven meals and special days",
@@ -57,7 +58,7 @@ CALENDAR_INFO = {
         "zh": "指环王霍比特人日历，包含七餐和特殊节日",
         "ko": "반지의 제왕 호빗 달력 (일곱 끼니와 특별한 날 포함)"
     },
-    
+
     # Detailed information for documentation
     "detailed_info": {
         "en": {
@@ -81,7 +82,7 @@ CALENDAR_INFO = {
             "note": "HdR endet in D.Z. 3021 = A.Z. 1421"
         }
     },
-    
+
     # Configuration options
     "config_options": {
         "show_meals": {
@@ -258,7 +259,7 @@ CALENDAR_INFO = {
             }
         }
     },
-    
+
     # Shire-specific data
     "shire_data": {
         # Shire months
@@ -276,7 +277,7 @@ CALENDAR_INFO = {
             {"name": "Blotmath", "days": 30, "season": "Harvest"},
             {"name": "Foreyule", "days": 30, "season": "Winter"}
         ],
-        
+
         # Shire weekdays
         "weekdays": [
             "Sterday",    # Saturday (Stars)
@@ -287,7 +288,7 @@ CALENDAR_INFO = {
             "Mersday",    # Thursday (Sea)
             "Highday"     # Friday (High day)
         ],
-        
+
         # Special days
         "special_days": {
             (1, 1): "🎊 2 Yule - New Year's Day",
@@ -299,7 +300,7 @@ CALENDAR_INFO = {
             (9, 22): "🎂 Bilbo & Frodo's Birthday!",
             (12, 21): "❄️ 1 Yule - Midwinter"
         },
-        
+
         # Hobbit meals
         "meals": {
             (6, 8): {"name": "First Breakfast", "emoji": "🍳"},
@@ -310,7 +311,7 @@ CALENDAR_INFO = {
             (18, 20): {"name": "Dinner", "emoji": "🍖"},
             (20, 22): {"name": "Supper", "emoji": "🍷"}
         },
-        
+
         # Time periods
         "time_periods": {
             (5, 7): "Dawn - The Shire awakens",
@@ -320,38 +321,38 @@ CALENDAR_INFO = {
             (20, 23): "Night - Stars are out",
             (23, 5): "Late Night - All respectable hobbits abed"
         },
-        
+
         # Hobbit family names for name days
         "name_days": {
             1: "Baggins", 5: "Took", 10: "Brandybuck",
             15: "Gamgee", 20: "Cotton", 25: "Proudfoot", 30: "Bracegirdle"
         },
-        
+
         # Shire Reckoning base year
         "sr_base": 1600,  # Year 2000 = S.R. 1600 for our conversion
         "earth_base": 2000
     },
-    
+
     # Additional metadata
     "reference_url": "https://tolkiengateway.net/wiki/Shire_Calendar",
     "documentation_url": "http://shire-reckoning.com/calendar.html",
     "origin": "J.R.R. Tolkien's Middle-earth",
     "created_by": "J.R.R. Tolkien",
     "introduced": "The Hobbit (1937) / The Lord of the Rings (1954-1955)",
-    
+
     # Example format
     "example": "S.R. 1624, Afteryule 16 (Trewsday)",
     "example_meaning": "Shire Reckoning year 1624, 16th of Afteryule, Trewsday",
-    
+
     # Related calendars
     "related": ["rivendell", "gregorian"],
-    
+
     # Tags for searching and filtering
     "tags": [
         "fantasy", "tolkien", "hobbit", "lotr", "shire",
         "middle_earth", "bilbo", "frodo", "gandalf", "seven_meals"
     ],
-    
+
     # Special features
     "features": {
         "seven_meals": True,
@@ -365,38 +366,38 @@ CALENDAR_INFO = {
 
 class ShireCalendarSensor(AlternativeTimeSensorBase):
     """Sensor for displaying Shire Calendar from Middle-earth."""
-    
+
     # Class-level update interval
     UPDATE_INTERVAL = UPDATE_INTERVAL
-    
+
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the Shire calendar sensor."""
         super().__init__(base_name, hass)
-        
+
         # Get translated name from metadata
         calendar_name = self._translate('name', 'Shire Calendar')
-        
+
         # Set sensor attributes
         self._attr_name = f"{base_name} {calendar_name}"
         self._attr_unique_id = f"{base_name}_shire_calendar"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:pipe")
-        
+
         # Configuration options with defaults
         config_defaults = CALENDAR_INFO.get("config_options", {})
         self._show_meals = config_defaults.get("show_meals", {}).get("default", True)
         self._show_moon = config_defaults.get("show_moon", {}).get("default", True)
         self._show_name_day = config_defaults.get("show_name_day", {}).get("default", True)
         self._display_format = config_defaults.get("display_format", {}).get("default", "full")
-        
+
         # Shire data
         self._shire_data = CALENDAR_INFO["shire_data"]
-        
+
         # Initialize state
         self._state = None
         self._shire_date = {}
-        
+
         _LOGGER.debug(f"Initialized Shire Calendar sensor: {self._attr_name}")
-    
+
     def set_options(self, options: Dict[str, Any]) -> None:
         """Set options from config flow."""
         if options:
@@ -404,31 +405,31 @@ class ShireCalendarSensor(AlternativeTimeSensorBase):
             self._show_moon = options.get("show_moon", self._show_moon)
             self._show_name_day = options.get("show_name_day", self._show_name_day)
             self._display_format = options.get("display_format", self._display_format)
-            
+
             _LOGGER.debug(f"Shire sensor options updated: show_meals={self._show_meals}, "
                          f"show_moon={self._show_moon}, show_name_day={self._show_name_day}, "
                          f"display_format={self._display_format}")
-    
+
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
-    
+
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes."""
         attrs = super().extra_state_attributes
-        
+
         # Add Shire-specific attributes
         if self._shire_date:
             attrs.update(self._shire_date)
-            
+
             # Add description in user's language
             attrs["description"] = self._translate('description')
-            
+
             # Add reference
             attrs["reference"] = CALENDAR_INFO.get('reference_url', '')
-            
+
             # Add configuration status
             attrs["config"] = {
                 "show_meals": self._show_meals,
@@ -436,23 +437,23 @@ class ShireCalendarSensor(AlternativeTimeSensorBase):
                 "show_name_day": self._show_name_day,
                 "display_format": self._display_format
             }
-        
+
         return attrs
-    
+
     def _get_meal_time(self, hour: int) -> Dict[str, str]:
         """Get current Hobbit meal time."""
         for (start, end), meal in self._shire_data["meals"].items():
             if start <= hour < end:
                 return meal
         return {"name": "Resting Time", "emoji": "🌙"}
-    
+
     def _get_time_period(self, hour: int) -> str:
         """Get time of day description."""
         for (start, end), period in self._shire_data["time_periods"].items():
             if start <= hour or (start > end and hour < end):
                 return period
         return "Time for adventures"
-    
+
     def _get_moon_phase(self, day: int) -> str:
         """Calculate simplified moon phase."""
         day_in_lunar = day % 29.5
@@ -472,7 +473,7 @@ class ShireCalendarSensor(AlternativeTimeSensorBase):
             return "🌗 Last Quarter"
         else:
             return "🌘 Waning Crescent"
-    
+
     def _format_date(self, shire_date: Dict[str, Any]) -> str:
         """Format the date according to display_format setting."""
         year = shire_date["year"]
@@ -480,46 +481,46 @@ class ShireCalendarSensor(AlternativeTimeSensorBase):
         day = shire_date["day"]
         weekday = shire_date["weekday"]
         season = shire_date["season"]
-        
+
         if self._display_format == "short":
             return f"{day} {month} {year}"
         elif self._display_format == "detailed":
             return f"S.R. {year}, {month} {day} ({weekday}) - {season}"
         else:  # full (default)
             return f"S.R. {year}, {month} {day}"
-    
+
     def _calculate_shire_date(self, earth_date: datetime) -> Dict[str, Any]:
         """Calculate Shire Reckoning date from Earth date."""
         # Calculate Shire year
         years_since_base = earth_date.year - self._shire_data["earth_base"]
         shire_year = self._shire_data["sr_base"] + years_since_base
-        
+
         # Map Earth months to Shire months (simplified)
         month_index = min(earth_date.month - 1, 11)
         month_data = self._shire_data["months"][month_index]
-        
+
         # Shire day (1-30 for regular days)
         shire_day = min(earth_date.day, 30)
-        
+
         # Weekday (shift to make Sterday = Saturday)
         weekday_index = (earth_date.weekday() + 2) % 7
         shire_weekday = self._shire_data["weekdays"][weekday_index]
-        
+
         # Check for special days
         special_day = self._shire_data["special_days"].get((earth_date.month, earth_date.day), "")
-        
+
         # Meal time
         meal_data = self._get_meal_time(earth_date.hour) if self._show_meals else {}
-        
+
         # Time period
         time_of_day = self._get_time_period(earth_date.hour)
-        
+
         # Moon phase
         moon_phase = self._get_moon_phase(earth_date.day) if self._show_moon else ""
-        
+
         # Hobbit name day
         name_day = self._shire_data["name_days"].get(shire_day, "") if self._show_name_day else ""
-        
+
         result = {
             "year": shire_year,
             "month": month_data["name"],
@@ -530,27 +531,27 @@ class ShireCalendarSensor(AlternativeTimeSensorBase):
             "gregorian_date": earth_date.strftime("%Y-%m-%d"),
             "full_date": f"S.R. {shire_year}, {month_data['name']} {shire_day}"
         }
-        
+
         if special_day:
             result["special_day"] = special_day
-        
+
         if meal_data:
             result["meal_time"] = f"{meal_data['emoji']} {meal_data['name']}"
-        
+
         if moon_phase:
             result["moon_phase"] = moon_phase
-        
+
         if name_day:
             result["hobbit_name_day"] = f"Name day of {name_day}"
-        
+
         return result
-    
+
     def update(self) -> None:
         """Update the sensor."""
         now = datetime.now()
         self._shire_date = self._calculate_shire_date(now)
-        
+
         # Set state to formatted Shire date
         self._state = self._format_date(self._shire_date)
-        
+
         _LOGGER.debug(f"Updated Shire Calendar to {self._state}")

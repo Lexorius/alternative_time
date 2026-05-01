@@ -24,12 +24,13 @@ Data sources: Gaia DR3, VLBI parallax measurements, pulsar timing.
 """
 from __future__ import annotations
 
-from datetime import datetime
 import logging
 import math
-from typing import Dict, Any, Optional, Tuple, List
+from datetime import datetime
+from typing import Any, Dict, Optional, Tuple
 
 from homeassistant.core import HomeAssistant
+
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -173,7 +174,7 @@ STELLAR_DATA = {
         "spectral_type": "M1-M2 Ia-ab",
         "note_key": "supernova_candidate", "icon": "mdi:star-face"
     },
-    
+
     # ==========================================
     # PULSARS (6 nearest)
     # ==========================================
@@ -294,14 +295,14 @@ CALENDAR_INFO = {
     "category": "space",
     "accuracy": "high",
     "update_interval": UPDATE_INTERVAL,
-    
+
     "name": {
         "en": "Stellar Distances", "de": "Sternentfernungen", "es": "Distancias Estelares",
         "fr": "Distances Stellaires", "it": "Distanze Stellari", "nl": "Sterrenafstanden",
         "pl": "Odległości Gwiezdne", "pt": "Distâncias Estelares", "ru": "Звёздные расстояния",
         "ja": "恒星距離", "zh": "恒星距离", "ko": "항성 거리"
     },
-    
+
     "description": {
         "en": "Real-time distances with measurement accuracy (±%) to notable stars and the 6 nearest pulsars. Data: Gaia DR3, VLBI",
         "de": "Echtzeit-Entfernungen mit Messgenauigkeit (±%) zu bemerkenswerten Sternen und den 6 nächsten Pulsaren. Daten: Gaia DR3, VLBI",
@@ -316,12 +317,12 @@ CALENDAR_INFO = {
         "zh": "实时计算到著名恒星和6颗最近脉冲星的距离，含测量精度(±%)。数据来源: Gaia DR3, VLBI",
         "ko": "주목할 만한 별과 가장 가까운 6개 펄서까지의 측정 정확도(±%) 포함 실시간 거리. 데이터: Gaia DR3, VLBI"
     },
-    
+
     "detailed_info": {
         "en": "Calculates distances to 7 notable stars and 6 nearest pulsars using Gaia DR3 and VLBI data.",
         "de": "Berechnet Entfernungen zu 7 bemerkenswerten Sternen und 6 nächsten Pulsaren mit Gaia DR3 und VLBI-Daten."
     },
-    
+
     "star_notes": {
         "nearest_star": {"en": "Nearest known star to the Sun (4.24 ly)", "de": "Nächster bekannter Stern zur Sonne (4,24 Lj)", "es": "Estrella conocida más cercana al Sol (4,24 al)", "fr": "Étoile connue la plus proche du Soleil (4,24 al)", "it": "Stella conosciuta più vicina al Sole (4,24 al)", "nl": "Dichtstbijzijnde bekende ster bij de Zon (4,24 lj)", "pl": "Najbliższa znana gwiazda od Słońca (4,24 ls)", "pt": "Estrela conhecida mais próxima do Sol (4,24 al)", "ru": "Ближайшая известная звезда к Солнцу (4,24 св.г.)", "ja": "太陽に最も近い既知の恒星（4.24光年）", "zh": "已知距离太阳最近的恒星（4.24光年）", "ko": "태양에서 가장 가까운 알려진 별 (4.24광년)"},
         "fastest_star": {"en": "Fastest proper motion: 10.3 arcsec/year", "de": "Schnellste Eigenbewegung: 10,3 Bogensek./Jahr", "es": "Movimiento propio más rápido: 10,3\"/año", "fr": "Mouvement propre le plus rapide: 10,3\"/an", "it": "Moto proprio più veloce: 10,3\"/anno", "nl": "Snelste eigenbeweging: 10,3\"/jaar", "pl": "Najszybszy ruch własny: 10,3\"/rok", "pt": "Movimento próprio mais rápido: 10,3\"/ano", "ru": "Самое быстрое собственное движение: 10,3\"/год", "ja": "最速の固有運動: 10.3秒角/年", "zh": "最快的自行运动: 10.3角秒/年", "ko": "가장 빠른 고유 운동: 10.3초각/년"},
@@ -337,12 +338,12 @@ CALENDAR_INFO = {
         "three_musketeers": {"en": "One of the 'Three Musketeers' middle-aged pulsars", "de": "Einer der 'Drei Musketiere' - mittelaltrige Pulsare", "es": "Uno de los pulsares de mediana edad 'Tres Mosqueteros'", "fr": "L'un des pulsars d'age moyen 'Trois Mousquetaires'", "it": "Uno dei pulsar di mezza eta 'Tre Moschettieri'", "nl": "Een van de 'Drie Musketiers' middelbare pulsars", "pl": "Jeden z pulsarow w srednim wieku 'Trzej Muszkieterowie'", "pt": "Um dos pulsares de meia-idade 'Tres Mosqueteiros'", "ru": "Один из пульсаров среднего возраста 'Три мушкетёра'", "ja": "三銃士の中年パルサーの一つ", "zh": "三剑客中年脉冲星之一", "ko": "삼총사 중년 펄서 중 하나"},
         "old_leo_pulsar": {"en": "Old pulsar in Leo constellation - 17.5 million years", "de": "Alter Pulsar im Sternbild Löwe - 17,5 Millionen Jahre", "es": "Púlsar antiguo en la constelación de Leo - 17,5 millones de años", "fr": "Ancien pulsar dans la constellation du Lion - 17,5 millions d'années", "it": "Vecchio pulsar nella costellazione del Leone - 17,5 milioni di anni", "nl": "Oude pulsar in sterrenbeeld Leeuw - 17,5 miljoen jaar", "pl": "Stary pulsar w gwiazdozbiorze Lwa - 17,5 mln lat", "pt": "Pulsar antigo na constelação de Leão - 17,5 milhões de anos", "ru": "Старый пульсар в созвездии Льва - 17,5 миллионов лет", "ja": "しし座の古いパルサー - 1750万歳", "zh": "狮子座的古老脉冲星 - 1750万年", "ko": "사자자리의 오래된 펄서 - 1750만 년"}
     },
-    
+
     "labels": {
         "approaching": {"en": "Approaching", "de": "Nähert sich", "es": "Acercándose", "fr": "S'approche", "it": "In avvicinamento", "nl": "Nadert", "pl": "Zbliża się", "pt": "Aproximando-se", "ru": "Приближается", "ja": "接近中", "zh": "接近中", "ko": "접근 중"},
         "receding": {"en": "Receding", "de": "Entfernt sich", "es": "Alejándose", "fr": "S'éloigne", "it": "In allontanamento", "nl": "Wijkt terug", "pl": "Oddala się", "pt": "Afastando-se", "ru": "Удаляется", "ja": "後退中", "zh": "远离中", "ko": "멀어지는 중"}
     },
-    
+
     "config_options": {
         "primary_object": {
             "type": "select", "default": "proxima_centauri",
@@ -364,7 +365,7 @@ CALENDAR_INFO = {
         "show_pulsars": {"type": "boolean", "default": True, "label": {"en": "Show Pulsars", "de": "Pulsare anzeigen", "es": "Mostrar Púlsares", "fr": "Afficher Pulsars", "it": "Mostra Pulsar", "nl": "Pulsars Tonen", "pl": "Pokaż Pulsary", "pt": "Mostrar Pulsares", "ru": "Показать пульсары", "ja": "パルサーを表示", "zh": "显示脉冲星", "ko": "펄서 표시"}, "description": {"en": "Include pulsars in attributes", "de": "Pulsare in Attributen einschließen"}},
         "show_motion": {"type": "boolean", "default": True, "label": {"en": "Show Motion Direction", "de": "Bewegungsrichtung anzeigen", "es": "Mostrar Dirección", "fr": "Afficher Direction", "it": "Mostra Direzione", "nl": "Richting Tonen", "pl": "Pokaż Kierunek", "pt": "Mostrar Direção", "ru": "Показать направление", "ja": "移動方向を表示", "zh": "显示方向", "ko": "방향 표시"}, "description": {"en": "Show if object is approaching or receding", "de": "Zeigt an, ob sich das Objekt nähert oder entfernt"}}
     },
-    
+
     "stellar_data": STELLAR_DATA
 }
 
@@ -375,36 +376,40 @@ CALENDAR_INFO = {
 def julian_date(dt: datetime) -> float:
     year, month = dt.year, dt.month
     day = dt.day + (dt.hour + dt.minute / 60 + dt.second / 3600) / 24
-    if month <= 2: year -= 1; month += 12
-    A = int(year / 100); B = 2 - A + int(A / 4)
+    if month <= 2:
+        year -= 1
+        month += 12
+    A = int(year / 100)
+    B = 2 - A + int(A / 4)
     return int(365.25 * (year + 4716)) + int(30.6001 * (month + 1)) + day + B - 1524.5
 
 def years_since_j2000(dt: datetime) -> float:
     return (julian_date(dt) - 2451545.0) / 365.25
 
 def parallax_to_distance_au(parallax_mas: float) -> float:
-    if parallax_mas <= 0: return float('inf')
+    if parallax_mas <= 0:
+        return float('inf')
     return (1000.0 / parallax_mas) * PARSEC_IN_AU
 
 def calculate_current_distance(star_data: dict, dt: datetime) -> Tuple[float, float, float, float, float, float, float]:
     """Calculate current distance with uncertainty.
-    
+
     Returns:
-        Tuple of (distance_au, distance_ly, distance_pc, radial_change_au, 
+        Tuple of (distance_au, distance_ly, distance_pc, radial_change_au,
                   uncertainty_percent, distance_min_au, distance_max_au)
     """
     parallax = star_data["parallax_mas"]
     parallax_error = star_data.get("parallax_error_mas", 0.0)
-    
+
     base_distance_au = parallax_to_distance_au(parallax)
-    
+
     # Calculate uncertainty from parallax error
     # For parallax: d = 1/π, so δd/d ≈ δπ/π (for small errors)
     # This gives the relative uncertainty
     if parallax > 0 and parallax_error > 0:
         relative_uncertainty = parallax_error / parallax
         uncertainty_percent = relative_uncertainty * 100
-        
+
         # Calculate min/max distances (parallax ± error)
         parallax_min = max(parallax - parallax_error, 0.001)  # Avoid division by zero
         parallax_max = parallax + parallax_error
@@ -414,14 +419,14 @@ def calculate_current_distance(star_data: dict, dt: datetime) -> Tuple[float, fl
         uncertainty_percent = 0.0
         distance_min_au = base_distance_au
         distance_max_au = base_distance_au
-    
+
     # Add radial velocity contribution
     years = years_since_j2000(dt)
     rv_km_s = star_data.get("rv_km_s", 0.0)
     rv_error = star_data.get("rv_error_km_s", 0.0)
     rv_au_per_year = rv_km_s * SECONDS_PER_YEAR / KM_PER_AU
     radial_change_au = rv_au_per_year * years
-    
+
     # Add RV uncertainty contribution (for long time spans)
     if abs(years) > 1 and rv_error > 0:
         rv_uncertainty_au = (rv_error * SECONDS_PER_YEAR / KM_PER_AU) * abs(years)
@@ -431,10 +436,10 @@ def calculate_current_distance(star_data: dict, dt: datetime) -> Tuple[float, fl
     else:
         distance_min_au += radial_change_au
         distance_max_au += radial_change_au
-    
+
     current_distance_au = base_distance_au + radial_change_au
-    
-    return (current_distance_au, current_distance_au / LIGHT_YEAR_IN_AU, 
+
+    return (current_distance_au, current_distance_au / LIGHT_YEAR_IN_AU,
             current_distance_au / PARSEC_IN_AU, radial_change_au,
             uncertainty_percent, distance_min_au, distance_max_au)
 
@@ -442,10 +447,14 @@ def format_distance(distance_au: float, unit: str, precision: str) -> str:
     dp = {"standard": 2, "high": 4, "scientific": 6}.get(precision, 2)
     ly = distance_au / LIGHT_YEAR_IN_AU
     pc = distance_au / PARSEC_IN_AU
-    if unit == "au": return f"{distance_au:,.{dp}f} AU"
-    elif unit == "ly": return f"{ly:.{dp}f} ly"
-    elif unit == "pc": return f"{pc:.{dp}f} pc"
-    else: return f"{ly:.{dp}f} ly ({distance_au:,.0f} AU)"
+    if unit == "au":
+        return f"{distance_au:,.{dp}f} AU"
+    elif unit == "ly":
+        return f"{ly:.{dp}f} ly"
+    elif unit == "pc":
+        return f"{pc:.{dp}f} pc"
+    else:
+        return f"{ly:.{dp}f} ly ({distance_au:,.0f} AU)"
 
 # ============================================
 # SENSOR CLASS
@@ -453,7 +462,7 @@ def format_distance(distance_au: float, unit: str, precision: str) -> str:
 
 class StellarDistancesSensor(AlternativeTimeSensorBase):
     UPDATE_INTERVAL = UPDATE_INTERVAL
-    
+
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         super().__init__(base_name, hass)
         self._calendar_info = CALENDAR_INFO
@@ -461,7 +470,7 @@ class StellarDistancesSensor(AlternativeTimeSensorBase):
         self._attr_name = f"{base_name} {calendar_name}"
         self._attr_unique_id = f"{base_name}_stellar_distances"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:star-shooting")
-        
+
         cfg = CALENDAR_INFO.get("config_options", {})
         self._primary_object = cfg.get("primary_object", {}).get("default", "proxima_centauri")
         self._distance_unit = cfg.get("distance_unit", {}).get("default", "ly")
@@ -469,14 +478,15 @@ class StellarDistancesSensor(AlternativeTimeSensorBase):
         self._show_stars = cfg.get("show_stars", {}).get("default", True)
         self._show_pulsars = cfg.get("show_pulsars", {}).get("default", True)
         self._show_motion = cfg.get("show_motion", {}).get("default", True)
-        
+
         self._stellar_data = STELLAR_DATA
         self._options_loaded = False
         self._state = None
         self._object_distances = {}
-    
+
     def _load_options(self) -> None:
-        if self._options_loaded: return
+        if self._options_loaded:
+            return
         try:
             opts = self.get_plugin_options()
             if opts:
@@ -487,46 +497,50 @@ class StellarDistancesSensor(AlternativeTimeSensorBase):
                 self._show_pulsars = opts.get("show_pulsars", self._show_pulsars)
                 self._show_motion = opts.get("show_motion", self._show_motion)
             self._options_loaded = True
-        except: pass
-    
+        except Exception:
+            pass
+
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
         self._load_options()
         self.update()
-    
+
     def _get_label(self, key: str, default: str = "") -> str:
         labels = CALENDAR_INFO.get("labels", {}).get(key, {})
-        if not labels: return default
+        if not labels:
+            return default
         lang = getattr(self._hass.config, "language", "en")
         return labels.get(lang, labels.get(lang.split("-")[0], labels.get("en", default)))
-    
+
     def _get_name(self, obj_id: str) -> str:
         obj = self._stellar_data.get(obj_id, {})
         names = obj.get("names_i18n", {})
         lang = getattr(self._hass.config, "language", "en")
         return names.get(lang, names.get(lang.split("-")[0], names.get("en", obj.get("name", obj_id))))
-    
+
     def _get_note(self, note_key: str) -> str:
         notes = CALENDAR_INFO.get("star_notes", {}).get(note_key, {})
-        if not notes: return ""
+        if not notes:
+            return ""
         lang = getattr(self._hass.config, "language", "en")
         return notes.get(lang, notes.get(lang.split("-")[0], notes.get("en", "")))
-    
+
     def _calc_object(self, obj_id: str, now: datetime) -> Dict[str, Any]:
         obj = self._stellar_data.get(obj_id, {})
-        if not obj: return {}
-        
+        if not obj:
+            return {}
+
         dist_au, dist_ly, dist_pc, radial, uncertainty_pct, dist_min_au, dist_max_au = calculate_current_distance(obj, now)
         dp = {"standard": 2, "high": 4, "scientific": 6}.get(self._precision, 4)
         rv = obj.get("rv_km_s", 0.0)
         approaching = rv < 0
-        
+
         # Calculate uncertainty in different units
         dist_min_ly = dist_min_au / LIGHT_YEAR_IN_AU
         dist_max_ly = dist_max_au / LIGHT_YEAR_IN_AU
         uncertainty_ly = (dist_max_ly - dist_min_ly) / 2
         uncertainty_au = (dist_max_au - dist_min_au) / 2
-        
+
         # Format uncertainty string
         if uncertainty_pct < 0.1:
             accuracy_str = f"±{uncertainty_pct:.3f}% (excellent)"
@@ -543,18 +557,18 @@ class StellarDistancesSensor(AlternativeTimeSensorBase):
         else:
             accuracy_str = f"±{uncertainty_pct:.0f}% (uncertain)"
             accuracy_rating = "uncertain"
-        
+
         result = {
-            "name": self._get_name(obj_id), 
-            "object_id": obj_id, 
+            "name": self._get_name(obj_id),
+            "object_id": obj_id,
             "category": obj.get("category", "unknown"),
-            "distance_au": round(dist_au, dp), 
-            "distance_ly": round(dist_ly, dp), 
+            "distance_au": round(dist_au, dp),
+            "distance_ly": round(dist_ly, dp),
             "distance_pc": round(dist_pc, dp),
             "distance_formatted": format_distance(dist_au, self._distance_unit, self._precision),
-            "is_approaching": approaching, 
+            "is_approaching": approaching,
             "motion": self._get_label("approaching" if approaching else "receding"),
-            "radial_velocity_km_s": rv, 
+            "radial_velocity_km_s": rv,
             "spectral_type": obj.get("spectral_type", "Unknown"),
             # Uncertainty data
             "uncertainty_percent": round(uncertainty_pct, 3),
@@ -569,24 +583,29 @@ class StellarDistancesSensor(AlternativeTimeSensorBase):
             "parallax_error_mas": obj.get("parallax_error_mas", 0),
             "data_quality": f"Parallax: {obj.get('parallax_mas', 0):.4f} ± {obj.get('parallax_error_mas', 0):.4f} mas"
         }
-        
-        if obj.get("note_key"): result["note"] = self._get_note(obj["note_key"])
-        if "period_ms" in obj: result["period_ms"] = obj["period_ms"]
+
+        if obj.get("note_key"):
+            result["note"] = self._get_note(obj["note_key"])
+        if "period_ms" in obj:
+            result["period_ms"] = obj["period_ms"]
         if obj_id == "gliese_710":
             result["closest_approach_au"] = obj.get("closest_approach_au", 10635)
             result["closest_approach_years"] = obj.get("closest_approach_years", 1350000)
         return result
-    
+
     def update(self) -> None:
-        if not self._options_loaded: self._load_options()
+        if not self._options_loaded:
+            self._load_options()
         try:
             now = datetime.utcnow()
             all_data = {}
             for obj_id in self._stellar_data.keys():
                 data = self._calc_object(obj_id, now)
                 cat = data.get("category", "unknown")
-                if cat == "star" and not self._show_stars: continue
-                if cat == "pulsar" and not self._show_pulsars: continue
+                if cat == "star" and not self._show_stars:
+                    continue
+                if cat == "pulsar" and not self._show_pulsars:
+                    continue
                 all_data[obj_id] = data
             self._object_distances = all_data
             primary = all_data.get(self._primary_object, {})
@@ -595,20 +614,21 @@ class StellarDistancesSensor(AlternativeTimeSensorBase):
                 if self._show_motion and primary.get("radial_velocity_km_s", 0) != 0:
                     parts.append(f"({primary['motion']})")
                 self._state = " ".join(parts)
-            else: self._state = "Error: Unknown object"
+            else:
+                self._state = "Error: Unknown object"
         except Exception as e:
             self._state = f"Error: {e}"
-    
+
     @property
     def state(self) -> Optional[str]: return self._state
-    
+
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         attrs = super().extra_state_attributes
         attrs["last_calculated"] = datetime.utcnow().isoformat() + "Z"
         attrs["data_sources"] = "Gaia DR3, VLBI, Pulsar Timing"
         attrs["measurement_epoch"] = "J2000.0 (2000-01-01T12:00:00Z)"
-        
+
         primary = self._object_distances.get(self._primary_object, {})
         if primary:
             attrs["primary_object"] = primary["name"]
@@ -624,15 +644,15 @@ class StellarDistancesSensor(AlternativeTimeSensorBase):
             if self._show_motion:
                 attrs["primary_motion"] = primary["motion"]
                 attrs["primary_rv_km_s"] = primary["radial_velocity_km_s"]
-        
+
         stars, pulsars = {}, {}
         for oid, data in self._object_distances.items():
             entry = {
-                "name": data["name"], 
-                "distance_ly": data["distance_ly"], 
+                "name": data["name"],
+                "distance_ly": data["distance_ly"],
                 "distance_au": data["distance_au"],
-                "motion": data["motion"], 
-                "rv_km_s": data["radial_velocity_km_s"], 
+                "motion": data["motion"],
+                "rv_km_s": data["radial_velocity_km_s"],
                 "note": data.get("note", ""),
                 # Uncertainty data
                 "uncertainty_percent": data["uncertainty_percent"],
@@ -642,25 +662,25 @@ class StellarDistancesSensor(AlternativeTimeSensorBase):
                 "parallax_mas": data["parallax_mas"],
                 "parallax_error_mas": data["parallax_error_mas"]
             }
-            if data["category"] == "star": 
+            if data["category"] == "star":
                 stars[oid] = entry
             elif data["category"] == "pulsar":
                 entry["period_ms"] = data.get("period_ms", 0)
                 pulsars[oid] = entry
-        
-        if self._show_stars and stars: 
+
+        if self._show_stars and stars:
             attrs["stars"] = stars
             attrs["star_count"] = len(stars)
-        if self._show_pulsars and pulsars: 
+        if self._show_pulsars and pulsars:
             attrs["pulsars"] = pulsars
             attrs["pulsar_count"] = len(pulsars)
         attrs["total_objects"] = len(self._object_distances)
-        
+
         # Summary of measurement quality
         all_uncertainties = [d["uncertainty_percent"] for d in self._object_distances.values()]
         if all_uncertainties:
             attrs["best_measured"] = min(all_uncertainties)
             attrs["worst_measured"] = max(all_uncertainties)
             attrs["average_uncertainty"] = round(sum(all_uncertainties) / len(all_uncertainties), 2)
-        
+
         return attrs

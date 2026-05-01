@@ -6,11 +6,12 @@ Example: JD 2460636.235417 (decimal days since epoch)
 """
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
 import logging
-from typing import Dict, Any, Optional
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict
 
 from homeassistant.core import HomeAssistant
+
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,7 +31,7 @@ CALENDAR_INFO = {
     "category": "technical",
     "accuracy": "scientific",
     "update_interval": UPDATE_INTERVAL,
-    
+
     # Multi-language names
     "name": {
         "en": "Julian Date",
@@ -46,7 +47,7 @@ CALENDAR_INFO = {
         "zh": "儒略日",
         "ko": "율리우스일"
     },
-    
+
     # Short descriptions for UI
     "description": {
         "en": "Continuous day count since January 1, 4713 BCE noon UTC",
@@ -62,7 +63,7 @@ CALENDAR_INFO = {
         "zh": "自公元前4713年1月1日中午UTC起的连续天数",
         "ko": "기원전 4713년 1월 1일 정오 UTC부터의 연속 일수"
     },
-    
+
     # Julian Date specific data
     "julian_data": {
         # Epoch (noon UTC on January 1, 4713 BCE in proleptic Julian calendar)
@@ -73,7 +74,7 @@ CALENDAR_INFO = {
             "hour": 12,  # Noon UTC
             "description": "Julian Day Zero"
         },
-        
+
         # Important Julian Dates
         "milestones": {
             0.0: "Julian Day Zero (January 1, 4713 BCE noon)",
@@ -85,7 +86,7 @@ CALENDAR_INFO = {
             2451545.0: "January 1, 2000 noon (J2000.0)",
             2460000.5: "February 23, 2023"
         },
-        
+
         # Related systems
         "variants": {
             "MJD": {
@@ -105,10 +106,10 @@ CALENDAR_INFO = {
             }
         }
     },
-    
+
     # Reference URL
     "reference_url": "https://en.wikipedia.org/wiki/Julian_day",
-    
+
     # Plugin configuration options
     "plugin_options": {
         "format": {
@@ -264,60 +265,60 @@ CALENDAR_INFO = {
 
 class JulianDateSensor(AlternativeTimeSensorBase):
     """Sensor for displaying Julian Date."""
-    
+
     # Class-level update interval
     UPDATE_INTERVAL = 1  # Update every second for precise fractional days
-    
+
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the Julian Date sensor with standard 2-parameter signature."""
         super().__init__(base_name, hass)
-        
+
         # Get calendar info
         calendar_name = self._translate('name', 'Julian Date')
         self._attr_name = f"{base_name} {calendar_name}"
         self._attr_unique_id = f"julian_date_{base_name.lower().replace(' ', '_')}"
-        
+
         # Set update interval
         self._update_interval = timedelta(seconds=UPDATE_INTERVAL)
-        
+
         # Julian Date specific data
         self._julian_data = CALENDAR_INFO.get("julian_data", {})
         self._variants = self._julian_data.get("variants", {})
         self._milestones = self._julian_data.get("milestones", {})
-        
+
         # Initialize with defaults
         self._format = "jd"
         self._decimal_places = 5
         self._show_time = False
         self._show_all_variants = False
-        
+
         # Julian Date data storage
         self._jd_info = {}
         self._state = "Initializing..."
-        
+
         # Debug flag
         self._first_update = True
-    
+
     @property
     def state(self) -> str:
         """Return the state of the sensor."""
         return self._state
-    
+
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes."""
         attrs = super().extra_state_attributes
-        
+
         # Add Julian Date specific attributes
         if self._jd_info:
             attrs.update(self._jd_info)
-            
+
             # Add description
             attrs["description"] = self._translate('description')
-            
+
             # Add reference
             attrs["reference"] = CALENDAR_INFO.get('reference_url', '')
-            
+
             # Add config info
             attrs["config"] = {
                 "format": self._format,
@@ -325,12 +326,12 @@ class JulianDateSensor(AlternativeTimeSensorBase):
                 "show_time": self._show_time,
                 "show_all_variants": self._show_all_variants
             }
-        
+
         return attrs
-    
+
     def _gregorian_to_julian_date(self, dt: datetime) -> float:
         """Convert Gregorian datetime to Julian Date.
-        
+
         Algorithm from Meeus, "Astronomical Algorithms"
         """
         # Ensure we're working with UTC
@@ -338,7 +339,7 @@ class JulianDateSensor(AlternativeTimeSensorBase):
             dt = dt.replace(tzinfo=timezone.utc)
         else:
             dt = dt.astimezone(timezone.utc)
-        
+
         # Extract components
         year = dt.year
         month = dt.month
@@ -347,49 +348,49 @@ class JulianDateSensor(AlternativeTimeSensorBase):
         minute = dt.minute
         second = dt.second
         microsecond = dt.microsecond
-        
+
         # Calculate fractional day from noon UTC
         # Julian Date starts at noon, so we need to adjust
         fractional_day = (hour - 12) / 24.0 + minute / 1440.0 + second / 86400.0 + microsecond / 86400000000.0
-        
+
         # Algorithm from Meeus
         if month <= 2:
             year -= 1
             month += 12
-        
+
         # Check if date is after Gregorian reform (October 15, 1582)
         gregorian = (year > 1582) or (year == 1582 and month > 10) or (year == 1582 and month == 10 and day >= 15)
-        
+
         if gregorian:
             a = int(year / 100)
             b = 2 - a + int(a / 4)
         else:
             b = 0
-        
+
         jd = int(365.25 * (year + 4716)) + int(30.6001 * (month + 1)) + day + b - 1524.5
         jd += fractional_day
-        
+
         return jd
-    
+
     def _fraction_to_time(self, fraction: float) -> str:
         """Convert fractional day to time string."""
         # Fractional part represents time from noon UTC
         # 0.0 = noon, 0.5 = midnight, 1.0 = next noon
-        
+
         # Convert to hours from midnight
         hours_from_noon = fraction * 24
         hours_from_midnight = (hours_from_noon + 12) % 24
-        
+
         hours = int(hours_from_midnight)
         remainder = hours_from_midnight - hours
-        
+
         minutes = int(remainder * 60)
         remainder = (remainder * 60) - minutes
-        
+
         seconds = int(remainder * 60)
-        
+
         return f"{hours:02d}:{minutes:02d}:{seconds:02d} UTC"
-    
+
     def _format_julian_date(self, jd: float, format_type: str, decimal_places: int) -> str:
         """Format Julian Date according to selected format."""
         if format_type == "mjd":
@@ -404,36 +405,36 @@ class JulianDateSensor(AlternativeTimeSensorBase):
         else:  # jd
             value = jd
             prefix = "JD"
-        
+
         return f"{prefix} {value:.{decimal_places}f}"
-    
+
     def _find_nearest_milestone(self, jd: float) -> tuple:
         """Find the nearest milestone Julian Date."""
         nearest_jd = None
         nearest_desc = None
         min_diff = float('inf')
-        
+
         for milestone_jd, description in self._milestones.items():
             diff = abs(jd - milestone_jd)
             if diff < min_diff:
                 min_diff = diff
                 nearest_jd = milestone_jd
                 nearest_desc = description
-        
+
         return (nearest_jd, nearest_desc, jd - nearest_jd if nearest_jd else 0)
-    
+
     def _calculate_jd_info(self, dt: datetime) -> Dict[str, Any]:
         """Calculate Julian Date information."""
         # Calculate Julian Date
         jd = self._gregorian_to_julian_date(dt)
-        
+
         # Get integer and fractional parts
         jd_integer = int(jd)
         jd_fraction = jd - jd_integer
-        
+
         # Format primary display
         formatted = self._format_julian_date(jd, self._format, self._decimal_places)
-        
+
         result = {
             "julian_date": jd,
             "julian_date_integer": jd_integer,
@@ -441,13 +442,13 @@ class JulianDateSensor(AlternativeTimeSensorBase):
             "formatted": formatted,
             "gregorian_date": dt.strftime("%Y-%m-%d %H:%M:%S UTC")
         }
-        
+
         # Add time component if configured
         if self._show_time:
             time_str = self._fraction_to_time(jd_fraction)
             result["fraction_as_time"] = time_str
             result["hours_from_noon"] = jd_fraction * 24
-        
+
         # Add all variants if configured
         if self._show_all_variants:
             result["variants"] = {
@@ -456,38 +457,38 @@ class JulianDateSensor(AlternativeTimeSensorBase):
                 "TJD": self._format_julian_date(jd, "tjd", self._decimal_places),
                 "RJD": self._format_julian_date(jd, "rjd", self._decimal_places)
             }
-        
+
         # Find nearest milestone
         nearest_jd, nearest_desc, diff_days = self._find_nearest_milestone(jd)
         if nearest_desc:
             result["nearest_milestone"] = nearest_desc
             result["days_from_milestone"] = f"{diff_days:+.1f} days"
-        
+
         # Calculate century and millennium from J2000.0
         j2000_jd = 2451545.0  # J2000.0 epoch
         days_from_j2000 = jd - j2000_jd
         julian_century = days_from_j2000 / 36525.0  # Julian century = 36525 days
         julian_millennium = julian_century / 10.0
-        
+
         result["julian_century"] = f"T{julian_century:+.8f}"
         result["julian_millennium"] = f"{julian_millennium:+.8f}"
-        
+
         # Add day of week (JD 0.0 was a Monday)
         day_of_week = int((jd + 0.5)) % 7
         weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
         result["day_of_week"] = weekdays[day_of_week]
-        
+
         # Add Julian Day Number (integer part at noon)
         jdn = int(jd + 0.5)
         result["julian_day_number"] = jdn
-        
+
         return result
-    
+
     def update(self) -> None:
         """Update the sensor."""
         # Load options on every update
         options = self.get_plugin_options()
-        
+
         # Debug on first update
         if self._first_update:
             if options:
@@ -495,7 +496,7 @@ class JulianDateSensor(AlternativeTimeSensorBase):
             else:
                 _LOGGER.debug("Julian Date sensor using defaults (no options configured)")
             self._first_update = False
-        
+
         # Update configuration
         if options:
             self._format = options.get("format", "jd")
@@ -506,18 +507,18 @@ class JulianDateSensor(AlternativeTimeSensorBase):
                 self._decimal_places = 5
             self._show_time = bool(options.get("show_time", False))
             self._show_all_variants = bool(options.get("show_all_variants", False))
-        
+
         # Calculate Julian Date
         try:
             now = datetime.now(timezone.utc)
             self._jd_info = self._calculate_jd_info(now)
             self._state = self._jd_info["formatted"]
-            
+
         except Exception as e:
             _LOGGER.error(f"Error calculating Julian Date: {e}")
             self._state = "Error"
             self._jd_info = {"error": str(e)}
-        
+
         _LOGGER.debug(f"Updated Julian Date to {self._state}")
 
 

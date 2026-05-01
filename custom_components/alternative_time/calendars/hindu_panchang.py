@@ -1,13 +1,13 @@
 """Indian Hindu Calendar (पंचांग, Panchānga) implementation - Version 2.5."""
 from __future__ import annotations
 
-from datetime import datetime, date, timezone, timedelta
 import logging
-from typing import Dict, Any, Optional, Tuple
+from datetime import datetime, timezone
+from typing import Any, Dict, Optional, Tuple
 from zoneinfo import ZoneInfo
-import math
 
 from homeassistant.core import HomeAssistant
+
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ CALENDAR_INFO = {
     "category": "religious",
     "accuracy": "traditional",
     "update_interval": UPDATE_INTERVAL,
-    
+
     # Multi-language names
     "name": {
         "en": "Hindu Calendar (Panchānga)",
@@ -43,7 +43,7 @@ CALENDAR_INFO = {
         "zh": "印度教历法（五历）",
         "ko": "힌두 달력 (판창가)"
     },
-    
+
     # Short descriptions for UI
     "description": {
         "en": "Traditional Hindu lunisolar calendar with Tithi, Nakshatra, Yoga, Karana, and festivals",
@@ -59,7 +59,7 @@ CALENDAR_INFO = {
         "zh": "包含提提、纳克沙特拉、瑜伽、卡拉纳和节日的传统印度教阴阳历",
         "ko": "티티, 낙샤트라, 요가, 카라나 및 축제가 포함된 전통 힌두 태음태양력"
     },
-    
+
     # Extended information for tooltips
     "notes": {
         "en": "The Panchānga (पंचांग) is the Hindu calendar and almanac, which follows traditional units of Hindu timekeeping. It presents important dates and their calculations in a tabulated form. Time is displayed in India Standard Time (IST).",
@@ -75,7 +75,7 @@ CALENDAR_INFO = {
         "zh": "五历（पंचांग）是印度教历法和年鉴，遵循印度教传统的时间单位。它以表格形式展示重要日期及其计算。时间以印度标准时间（IST）显示。",
         "ko": "판창가(पंचांग)는 힌두교 전통 시간 단위를 따르는 힌두 달력과 연감입니다. 중요한 날짜와 계산을 표 형식으로 제시합니다. 시간은 인도 표준시(IST)로 표시됩니다."
     },
-    
+
     # Configuration options
     "config_options": {
         "timezone": {
@@ -370,7 +370,7 @@ CALENDAR_INFO = {
             }
         }
     },
-    
+
     # Hindu calendar data
     "hindu_data": {
         "months": {
@@ -477,26 +477,26 @@ CALENDAR_INFO = {
             "kali": 3102        # Kali Yuga (CE - 3102)
         }
     },
-    
+
     # Additional metadata
     "reference_url": "https://www.drikpanchang.com/",
     "documentation_url": "https://en.wikipedia.org/wiki/Hindu_calendar",
     "created_by": "Traditional Hindu System",
     "introduced": "Ancient (Vedic period)",
-    
+
     # Example format
     "example": "शुक्ल पक्ष द्वितीया, आषाढ़ 1946 (शक)",
     "example_meaning": "Shukla Paksha Dwitiya, Ashadha 1946 (Shaka Era)",
-    
+
     # Related calendars
     "related": ["buddhist", "jain", "sikh", "nepali"],
-    
+
     # Tags for searching and filtering
     "tags": [
         "hindu", "panchang", "vedic", "indian", "lunisolar", "religious",
         "tithi", "nakshatra", "yoga", "karana", "festivals", "astrology"
     ],
-    
+
     # Special features
     "features": {
         "supports_tithi": True,
@@ -513,25 +513,25 @@ CALENDAR_INFO = {
 
 class HinduPanchangCalendarSensor(AlternativeTimeSensorBase):
     """Sensor for displaying Hindu Calendar (Panchānga)."""
-    
+
     # Class-level update interval
     UPDATE_INTERVAL = UPDATE_INTERVAL
-    
+
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the Hindu Panchang calendar sensor."""
         super().__init__(base_name, hass)
-        
+
         # Store CALENDAR_INFO as instance variable for _translate method
         self._calendar_info = CALENDAR_INFO
-        
+
         # Get translated name from metadata
         calendar_name = self._translate('name', 'Hindu Calendar (Panchānga)')
-        
+
         # Set sensor attributes
         self._attr_name = f"{base_name} {calendar_name}"
         self._attr_unique_id = f"{base_name}_hindu_panchang"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:om")
-        
+
         # Configuration options with defaults from CALENDAR_INFO
         config_defaults = CALENDAR_INFO.get("config_options", {})
         self._timezone = config_defaults.get("timezone", {}).get("default", "Asia/Kolkata")
@@ -543,30 +543,30 @@ class HinduPanchangCalendarSensor(AlternativeTimeSensorBase):
         self._show_karana = config_defaults.get("show_karana", {}).get("default", True)
         self._show_festivals = config_defaults.get("show_festivals", {}).get("default", True)
         self._show_rashi = config_defaults.get("show_rashi", {}).get("default", True)
-        
+
         # Hindu data
         self._hindu_data = CALENDAR_INFO["hindu_data"]
-        
+
         # Flag to track if options have been loaded
         self._options_loaded = False
-        
+
         # Initialize state
         self._state = None
         self._panchang_date = {}
-        
+
         _LOGGER.debug(f"Initialized Hindu Panchang Calendar sensor: {self._attr_name}")
-    
+
     def _load_options(self) -> None:
         """Load plugin options after IDs are set."""
         if self._options_loaded:
             return
-            
+
         # Get plugin options from config entry
         plugin_options = self.get_plugin_options()
-        
+
         if plugin_options:
             _LOGGER.debug(f"Loading Hindu Panchang options: {plugin_options}")
-            
+
             # Apply options using set_options method
             self.set_options(
                 timezone=plugin_options.get("timezone"),
@@ -579,20 +579,20 @@ class HinduPanchangCalendarSensor(AlternativeTimeSensorBase):
                 show_festivals=plugin_options.get("show_festivals"),
                 show_rashi=plugin_options.get("show_rashi")
             )
-        
+
         self._options_loaded = True
-    
+
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        
+
         # Load options after entity is registered
         self._load_options()
-        
+
         _LOGGER.debug(f"Hindu Panchang sensor added to hass with options: "
                      f"timezone={self._timezone}, system={self._calendar_system}, "
                      f"language={self._display_language}")
-    
+
     def set_options(
         self,
         *,
@@ -610,39 +610,39 @@ class HinduPanchangCalendarSensor(AlternativeTimeSensorBase):
         if timezone is not None and timezone in ["Asia/Kolkata", "local", "UTC"]:
             self._timezone = timezone
             _LOGGER.debug(f"Set timezone to: {timezone}")
-        
+
         if calendar_system is not None and calendar_system in ["shalivahana", "vikram", "kali"]:
             self._calendar_system = calendar_system
             _LOGGER.debug(f"Set calendar_system to: {calendar_system}")
-        
+
         if display_language is not None and display_language in ["auto", "sanskrit", "hindi", "english"]:
             self._display_language = display_language
             _LOGGER.debug(f"Set display_language to: {display_language}")
-        
+
         if show_tithi is not None:
             self._show_tithi = bool(show_tithi)
             _LOGGER.debug(f"Set show_tithi to: {show_tithi}")
-        
+
         if show_nakshatra is not None:
             self._show_nakshatra = bool(show_nakshatra)
             _LOGGER.debug(f"Set show_nakshatra to: {show_nakshatra}")
-        
+
         if show_yoga is not None:
             self._show_yoga = bool(show_yoga)
             _LOGGER.debug(f"Set show_yoga to: {show_yoga}")
-        
+
         if show_karana is not None:
             self._show_karana = bool(show_karana)
             _LOGGER.debug(f"Set show_karana to: {show_karana}")
-        
+
         if show_festivals is not None:
             self._show_festivals = bool(show_festivals)
             _LOGGER.debug(f"Set show_festivals to: {show_festivals}")
-        
+
         if show_rashi is not None:
             self._show_rashi = bool(show_rashi)
             _LOGGER.debug(f"Set show_rashi to: {show_rashi}")
-    
+
     def _get_timezone(self) -> ZoneInfo:
         """Get the configured timezone."""
         if self._timezone == "Asia/Kolkata":
@@ -654,9 +654,9 @@ class HinduPanchangCalendarSensor(AlternativeTimeSensorBase):
             try:
                 import tzlocal
                 return tzlocal.get_localzone()
-            except:
+            except Exception:
                 return ZoneInfo("UTC")
-    
+
     def _calculate_tithi(self, india_time: datetime) -> Tuple[int, str]:
         """Calculate Tithi (lunar day) for given date."""
         # Simplified calculation - actual calculation is complex
@@ -665,33 +665,33 @@ class HinduPanchangCalendarSensor(AlternativeTimeSensorBase):
         tithi_index = min(days_since_new_moon, 14)
         paksha = "bright" if days_since_new_moon <= 15 else "dark"
         return tithi_index, paksha
-    
+
     def _calculate_nakshatra(self, india_time: datetime) -> int:
         """Calculate Nakshatra (lunar mansion) for given date."""
         # Simplified calculation - actual calculation involves Moon's longitude
         day_of_year = india_time.timetuple().tm_yday
         nakshatra_index = (day_of_year * 27 // 365) % 27
         return nakshatra_index
-    
+
     def _calculate_yoga(self, india_time: datetime) -> int:
         """Calculate Yoga for given date."""
         # Simplified calculation - actual involves Sun and Moon longitudes
         day_of_month = india_time.day
         yoga_index = (day_of_month - 1) % 27
         return yoga_index
-    
+
     def _calculate_karana(self, tithi_index: int) -> int:
         """Calculate Karana (half of Tithi) for given Tithi."""
         # There are 11 Karanas that repeat
         karana_index = (tithi_index * 2) % 11
         return karana_index
-    
+
     def _calculate_rashi(self, india_time: datetime) -> int:
         """Calculate Rashi (zodiac sign) for given date."""
         # Simplified calculation based on Sun's position
         month = india_time.month
         day = india_time.day
-        
+
         # Approximate zodiac boundaries
         if (month == 3 and day >= 21) or (month == 4 and day <= 19):
             return 0  # Aries
@@ -699,32 +699,32 @@ class HinduPanchangCalendarSensor(AlternativeTimeSensorBase):
             return 1  # Taurus
         # ... simplified for brevity
         return (month - 1) % 12
-    
+
     def _get_hindu_year(self, india_time: datetime) -> int:
         """Calculate Hindu year based on selected era."""
         gregorian_year = india_time.year
         era_offset = self._hindu_data["era_offsets"][self._calendar_system]
-        
+
         # Adjust for Hindu New Year (typically in March/April)
         if india_time.month < 3:
             gregorian_year -= 1
-        
+
         return gregorian_year - era_offset
-    
+
     def _get_hindu_month(self, india_time: datetime) -> int:
         """Get Hindu month (simplified)."""
         # Hindu months typically start with new moon
         # This is a simplified approximation
         month = (india_time.month + 1) % 12
         return month
-    
+
     def _get_festival(self, month: int, tithi: int) -> Optional[Dict[str, str]]:
         """Check if current date has a festival."""
         date_key = f"{month}-{tithi+1}"
         if date_key in self._hindu_data["festivals"]:
             return self._hindu_data["festivals"][date_key]
         return None
-    
+
     def _format_panchang_date(self, hindu_year: int, month: int, tithi: int, paksha: str,
                              nakshatra: int, yoga: int, karana: int, rashi: int,
                              india_time: datetime) -> str:
@@ -742,16 +742,16 @@ class HinduPanchangCalendarSensor(AlternativeTimeSensorBase):
                 lang = "hindi"
             else:
                 lang = "english"
-        
+
         # Get month name
         month_name = self._hindu_data["months"][lang][month]
-        
+
         # Get Tithi name
         tithi_name = self._hindu_data["tithi"][tithi][lang if lang != "hindi" else "sanskrit"]
-        
+
         # Get Paksha
         paksha_name = self._hindu_data["paksha"][lang][paksha]
-        
+
         # Format based on language
         if lang == "english":
             result = f"{month_name} {paksha_name} {tithi_name}"
@@ -769,37 +769,37 @@ class HinduPanchangCalendarSensor(AlternativeTimeSensorBase):
                 result += f" {hindu_year} (विक्रम)"
             else:  # kali
                 result += f" {hindu_year} (कलि)"
-        
+
         return result
-    
+
     def _calculate_panchang(self, now: datetime) -> Dict[str, Any]:
         """Calculate the Hindu Panchang for given time."""
         # Convert to configured timezone
         tz = self._get_timezone()
         india_time = now.astimezone(tz)
-        
+
         # If using IST, ensure we're getting India time
         if self._timezone == "Asia/Kolkata":
             india_time = now.astimezone(ZoneInfo("Asia/Kolkata"))
-        
+
         # Calculate various Panchang elements
         tithi_index, paksha = self._calculate_tithi(india_time)
         nakshatra_index = self._calculate_nakshatra(india_time)
         yoga_index = self._calculate_yoga(india_time)
         karana_index = self._calculate_karana(tithi_index)
         rashi_index = self._calculate_rashi(india_time)
-        
+
         # Get Hindu year and month
         hindu_year = self._get_hindu_year(india_time)
         hindu_month = self._get_hindu_month(india_time)
-        
+
         # Format the date
         formatted = self._format_panchang_date(
             hindu_year, hindu_month, tithi_index, paksha,
             nakshatra_index, yoga_index, karana_index, rashi_index,
             india_time
         )
-        
+
         result = {
             "hindu_year": hindu_year,
             "hindu_month": hindu_month,
@@ -809,70 +809,70 @@ class HinduPanchangCalendarSensor(AlternativeTimeSensorBase):
             "gregorian_date": f"{india_time.year}/{india_time.month:02d}/{india_time.day:02d}",
             "formatted": formatted
         }
-        
+
         # Add Tithi if enabled
         if self._show_tithi:
             tithi_info = self._hindu_data["tithi"][tithi_index]
             result["tithi"] = tithi_info["english"]
             result["tithi_sanskrit"] = tithi_info["sanskrit"]
             result["tithi_deity"] = tithi_info["deity"]
-        
+
         # Add Nakshatra if enabled
         if self._show_nakshatra:
             nakshatra_info = self._hindu_data["nakshatra"][nakshatra_index]
             result["nakshatra"] = nakshatra_info["english"]
             result["nakshatra_sanskrit"] = nakshatra_info["sanskrit"]
             result["nakshatra_deity"] = nakshatra_info["deity"]
-        
+
         # Add Yoga if enabled
         if self._show_yoga:
             result["yoga"] = self._hindu_data["yoga"][yoga_index]
-        
+
         # Add Karana if enabled
         if self._show_karana:
             result["karana"] = self._hindu_data["karana"][karana_index]
-        
+
         # Add Rashi if enabled
         if self._show_rashi:
             rashi_info = self._hindu_data["rashi"][rashi_index]
             result["rashi"] = rashi_info["english"]
             result["rashi_sanskrit"] = rashi_info["sanskrit"]
             result["rashi_symbol"] = rashi_info["symbol"]
-        
+
         # Add festival if applicable
         if self._show_festivals:
             festival = self._get_festival(hindu_month, tithi_index)
             if festival:
                 result["festival"] = festival["english"]
                 result["festival_sanskrit"] = festival["sanskrit"]
-        
+
         return result
-    
+
     def update(self) -> None:
         """Update the sensor."""
         # Ensure options are loaded (in case async_added_to_hass hasn't run yet)
         if not self._options_loaded:
             self._load_options()
-        
+
         now = datetime.now(timezone.utc)
         self._panchang_date = self._calculate_panchang(now)
-        
+
         # Set state to formatted Panchang date
         self._state = self._panchang_date["formatted"]
-        
+
         _LOGGER.debug(f"Updated Hindu Panchang to {self._state}")
-    
+
     @property
     def state(self) -> str:
         """Return the state of the sensor."""
         return self._state or "Unknown"
-    
+
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return additional attributes."""
         if not self._panchang_date:
             return {}
-        
+
         # Build attributes dictionary
         attrs = {
             "hindu_year": self._panchang_date.get("hindu_year"),
@@ -887,33 +887,33 @@ class HinduPanchangCalendarSensor(AlternativeTimeSensorBase):
             "reference": CALENDAR_INFO.get("reference_url"),
             "notes": self._translate("notes")
         }
-        
+
         # Add optional Panchang elements
         if "tithi" in self._panchang_date:
             attrs["tithi"] = self._panchang_date["tithi"]
             attrs["tithi_sanskrit"] = self._panchang_date["tithi_sanskrit"]
             attrs["tithi_deity"] = self._panchang_date["tithi_deity"]
-        
+
         if "nakshatra" in self._panchang_date:
             attrs["nakshatra"] = self._panchang_date["nakshatra"]
             attrs["nakshatra_sanskrit"] = self._panchang_date["nakshatra_sanskrit"]
             attrs["nakshatra_deity"] = self._panchang_date["nakshatra_deity"]
-        
+
         if "yoga" in self._panchang_date:
             attrs["yoga"] = self._panchang_date["yoga"]
-        
+
         if "karana" in self._panchang_date:
             attrs["karana"] = self._panchang_date["karana"]
-        
+
         if "rashi" in self._panchang_date:
             attrs["rashi"] = self._panchang_date["rashi"]
             attrs["rashi_sanskrit"] = self._panchang_date["rashi_sanskrit"]
             attrs["rashi_symbol"] = self._panchang_date["rashi_symbol"]
-        
+
         if "festival" in self._panchang_date:
             attrs["festival"] = self._panchang_date["festival"]
             attrs["festival_sanskrit"] = self._panchang_date["festival_sanskrit"]
-        
+
         # Add configuration state
         attrs["config_timezone"] = self._timezone
         attrs["config_calendar_system"] = self._calendar_system
@@ -924,7 +924,7 @@ class HinduPanchangCalendarSensor(AlternativeTimeSensorBase):
         attrs["config_show_karana"] = self._show_karana
         attrs["config_show_festivals"] = self._show_festivals
         attrs["config_show_rashi"] = self._show_rashi
-        
+
         return attrs
 
 

@@ -6,11 +6,12 @@ Example: 241530Z DEC 25 (24th day, 15:30 Zulu time, December 2025)
 """
 from __future__ import annotations
 
-from datetime import datetime, timedelta
 import logging
-from typing import Dict, Any, Optional
+from datetime import datetime, timedelta
+from typing import Any, Dict
 
 from homeassistant.core import HomeAssistant
+
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,7 +38,7 @@ CALENDAR_INFO = {
     "category": "military",
     "accuracy": "precise",
     "update_interval": UPDATE_INTERVAL,
-    
+
     # Multi-language names
     "name": {
         "en": "NATO Date Time Group",
@@ -53,7 +54,7 @@ CALENDAR_INFO = {
         "zh": "北约日期时间组",
         "ko": "NATO 날짜 시간 그룹"
     },
-    
+
     # Short descriptions for UI
     "description": {
         "en": "Military Date Time Group format with timezone designation",
@@ -69,7 +70,7 @@ CALENDAR_INFO = {
         "zh": "带时区标识的军事日期时间组格式",
         "ko": "시간대 지정이 있는 군사 날짜 시간 그룹 형식"
     },
-    
+
     # DTG-specific data
     "dtg_data": {
         # NATO timezone codes with their offsets and descriptions
@@ -550,7 +551,7 @@ CALENDAR_INFO = {
                 "iana_zones": ["Etc/GMT+12"]
             }
         },
-        
+
         # Month abbreviations for DTG format
         "months": {
             "01": "JAN", "02": "FEB", "03": "MAR", "04": "APR",
@@ -558,10 +559,10 @@ CALENDAR_INFO = {
             "09": "SEP", "10": "OCT", "11": "NOV", "12": "DEC"
         }
     },
-    
+
     # Reference URL
     "reference_url": "https://en.wikipedia.org/wiki/Date-time_group",
-    
+
     # Plugin configuration options
     "plugin_options": {
         "timezone": {
@@ -726,27 +727,27 @@ CALENDAR_INFO = {
 
 class DTGSensor(AlternativeTimeSensorBase):
     """Sensor for displaying NATO Date Time Group format."""
-    
+
     # Class-level update interval
     UPDATE_INTERVAL = 1  # Update every second
-    
+
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the DTG sensor with standard 2-parameter signature."""
         super().__init__(base_name, hass)
-        
+
         # Get calendar info
         calendar_name = self._translate('name', 'NATO Date Time Group')
         self._attr_name = f"{base_name} {calendar_name}"
         self._attr_unique_id = f"dtg_{base_name.lower().replace(' ', '_')}"
-        
+
         # Set update interval
         self._update_interval = timedelta(seconds=UPDATE_INTERVAL)
-        
+
         # DTG-specific data
         self._dtg_data = CALENDAR_INFO.get("dtg_data", {})
         self._timezones = self._dtg_data.get("timezones", {})
         self._months = self._dtg_data.get("months", {})
-        
+
         # Initialize with defaults
         self._nato_zone = "Z"  # Default to Zulu time
         self._use_iana = False
@@ -754,7 +755,7 @@ class DTGSensor(AlternativeTimeSensorBase):
         self._uppercase = True
         self._timezone = None
         self._timezone_initialized = False
-        
+
         # Try to initialize pytz timezone
         if HAS_PYTZ:
             try:
@@ -762,41 +763,41 @@ class DTGSensor(AlternativeTimeSensorBase):
                 self._timezone_initialized = True
             except Exception as e:
                 _LOGGER.error(f"Failed to initialize default timezone: {e}")
-        
+
         # DTG data storage
         self._dtg_info = {}
         self._state = "Initializing..."
-        
+
         # Debug flag
         self._first_update = True
-    
+
     @property
     def state(self) -> str:
         """Return the state of the sensor."""
         return self._state
-    
+
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes."""
         attrs = super().extra_state_attributes
-        
+
         # Add DTG-specific attributes
         if self._dtg_info:
             attrs.update(self._dtg_info)
-            
+
             # Add description
             attrs["description"] = self._translate('description')
-            
+
             # Add reference
             attrs["reference"] = CALENDAR_INFO.get('reference_url', '')
-            
+
             # Add NATO zone info
             if self._nato_zone in self._timezones:
                 zone_info = self._timezones[self._nato_zone]
                 attrs["nato_zone"] = self._nato_zone
                 attrs["nato_zone_name"] = zone_info.get("name", self._nato_zone)
                 attrs["utc_offset"] = zone_info.get("offset", 0)
-            
+
             # Add config info
             attrs["config"] = {
                 "nato_zone": self._nato_zone,
@@ -804,9 +805,9 @@ class DTGSensor(AlternativeTimeSensorBase):
                 "iana_zone": self._iana_zone_str if self._use_iana else None,
                 "uppercase": self._uppercase
             }
-        
+
         return attrs
-    
+
     def _format_dtg(self, dt: datetime) -> str:
         """Format datetime as NATO DTG."""
         # Format: DDHHMM[Z]MONYY
@@ -816,18 +817,18 @@ class DTGSensor(AlternativeTimeSensorBase):
         zone = self._nato_zone
         month = self._months.get(f"{dt.month:02d}", "UNK")
         year = f"{dt.year % 100:02d}"
-        
+
         # Build DTG string
         dtg = f"{day}{hour}{minute}{zone} {month} {year}"
-        
+
         # Apply uppercase setting
         if self._uppercase:
             dtg = dtg.upper()
         else:
             dtg = dtg.lower()
-        
+
         return dtg
-    
+
     def _calculate_dtg_info(self, dt: datetime) -> Dict[str, Any]:
         """Calculate DTG information."""
         # Get components
@@ -837,29 +838,29 @@ class DTGSensor(AlternativeTimeSensorBase):
         second = dt.second
         month_num = dt.month
         year = dt.year
-        
+
         # Get month abbreviation
         month_abbr = self._months.get(f"{month_num:02d}", "UNK")
-        
+
         # Get zone info
         zone_info = self._timezones.get(self._nato_zone, {})
         zone_name = zone_info.get("name", self._nato_zone)
         utc_offset = zone_info.get("offset", 0)
-        
+
         # Format full DTG
         dtg_display = self._format_dtg(dt)
-        
+
         # Calculate Julian day
         julian_day = dt.timetuple().tm_yday
-        
+
         # Determine if DST is active (if using IANA timezone)
         is_dst = False
         if self._use_iana and HAS_PYTZ and self._timezone and self._timezone_initialized:
             try:
                 is_dst = bool(dt.dst())
-            except:
+            except Exception:
                 is_dst = False
-        
+
         result = {
             "dtg": dtg_display,
             "components": {
@@ -885,14 +886,14 @@ class DTGSensor(AlternativeTimeSensorBase):
                 "iana": self._iana_zone_str if self._use_iana else None
             }
         }
-        
+
         return result
-    
+
     def update(self) -> None:
         """Update the sensor."""
         # Load options on every update
         options = self.get_plugin_options()
-        
+
         # Debug on first update
         if self._first_update:
             if options:
@@ -900,23 +901,23 @@ class DTGSensor(AlternativeTimeSensorBase):
             else:
                 _LOGGER.debug("DTG sensor using defaults (no options configured)")
             self._first_update = False
-        
+
         # Update configuration
         if options:
             new_nato_zone = options.get("timezone", "Z")
             self._use_iana = bool(options.get("use_iana_timezone", False))
             new_iana_zone = options.get("iana_timezone", "UTC")
             self._uppercase = bool(options.get("uppercase", True))
-            
+
             # Check if NATO zone changed
             if new_nato_zone != self._nato_zone:
                 _LOGGER.info(f"NATO zone changed from {self._nato_zone} to {new_nato_zone}")
                 self._nato_zone = new_nato_zone
-                
+
                 # Update name
                 calendar_name = self._translate('name', 'NATO Date Time Group')
                 self._attr_name = f"{self._base_name} {calendar_name} ({self._nato_zone})"
-            
+
             # Check if IANA zone changed (if enabled)
             if self._use_iana and new_iana_zone != self._iana_zone_str and HAS_PYTZ:
                 _LOGGER.info(f"IANA timezone changed from {self._iana_zone_str} to {new_iana_zone}")
@@ -929,7 +930,7 @@ class DTGSensor(AlternativeTimeSensorBase):
                     # Fallback to UTC
                     self._timezone = pytz.timezone("UTC")
                     self._iana_zone_str = "UTC"
-        
+
         # Calculate time based on configuration
         try:
             if self._use_iana and HAS_PYTZ and self._timezone and self._timezone_initialized:
@@ -939,7 +940,7 @@ class DTGSensor(AlternativeTimeSensorBase):
                 # Use NATO zone offset
                 zone_info = self._timezones.get(self._nato_zone, {})
                 offset_hours = zone_info.get("offset", 0)
-                
+
                 if HAS_PYTZ:
                     # Create fixed offset timezone
                     from datetime import timezone as dt_timezone
@@ -950,16 +951,16 @@ class DTGSensor(AlternativeTimeSensorBase):
                     from datetime import timezone as dt_timezone
                     now = datetime.now(dt_timezone.utc)
                     now = now + timedelta(hours=offset_hours)
-            
+
             # Calculate DTG info
             self._dtg_info = self._calculate_dtg_info(now)
             self._state = self._dtg_info["dtg"]
-            
+
         except Exception as e:
             _LOGGER.error(f"Error calculating DTG: {e}")
             self._state = f"Error: {self._nato_zone}"
             self._dtg_info = {"error": str(e)}
-        
+
         _LOGGER.debug(f"Updated DTG to {self._state}")
 
 

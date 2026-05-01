@@ -1,12 +1,13 @@
 """Japanese Era Calendar (和暦, Wareki) implementation - Version 2.5."""
 from __future__ import annotations
 
-from datetime import datetime, date, timezone
 import logging
-from typing import Dict, Any, Optional, Tuple
+from datetime import date, datetime, timezone
+from typing import Any, Dict, Optional, Tuple
 from zoneinfo import ZoneInfo
 
 from homeassistant.core import HomeAssistant
+
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,7 +27,7 @@ CALENDAR_INFO = {
     "category": "cultural",
     "accuracy": "official",
     "update_interval": UPDATE_INTERVAL,
-    
+
     # Multi-language names
     "name": {
         "en": "Japanese Era Calendar",
@@ -42,7 +43,7 @@ CALENDAR_INFO = {
         "zh": "日本年号历",
         "ko": "일본 연호력"
     },
-    
+
     # Short descriptions for UI
     "description": {
         "en": "Traditional Japanese calendar system using imperial era names (Reiwa, Heisei, Shōwa, etc.)",
@@ -58,7 +59,7 @@ CALENDAR_INFO = {
         "zh": "使用天皇年号的日本传统历法（令和、平成、昭和等）",
         "ko": "천황 연호를 사용하는 일본 전통 달력 시스템 (레이와, 헤이세이, 쇼와 등)"
     },
-    
+
     # Extended information for tooltips
     "notes": {
         "en": "The Japanese Era Calendar (和暦, wareki) dates years according to the reign of the current Emperor. Each era begins with a new Emperor's ascension. Time is displayed in Japan Standard Time (JST).",
@@ -74,7 +75,7 @@ CALENDAR_INFO = {
         "zh": "日本年号历（和历）根据当前天皇的统治来纪年。每个年号随着新天皇的即位而开始。时间以日本标准时间（JST）显示。",
         "ko": "일본 연호력(와레키)은 현재 천황의 재위 기간에 따라 연도를 매깁니다. 각 연호는 새로운 천황의 즉위와 함께 시작됩니다. 시간은 일본 표준시(JST)로 표시됩니다."
     },
-    
+
     # Configuration options
     "config_options": {
         "timezone": {
@@ -304,7 +305,7 @@ CALENDAR_INFO = {
             }
         }
     },
-    
+
     # Japanese era data
     "era_data": {
         "eras": [
@@ -321,7 +322,7 @@ CALENDAR_INFO = {
             "ja_short": ["月", "火", "水", "木", "金", "土", "日"]
         },
         "months": {
-            "traditional": ["睦月", "如月", "弥生", "卯月", "皐月", "水無月", 
+            "traditional": ["睦月", "如月", "弥生", "卯月", "皐月", "水無月",
                           "文月", "葉月", "長月", "神無月", "霜月", "師走"],
             "modern": ["1月", "2月", "3月", "4月", "5月", "6月",
                       "7月", "8月", "9月", "10月", "11月", "12月"]
@@ -353,26 +354,26 @@ CALENDAR_INFO = {
             "11-23": {"ja": "勤労感謝の日", "en": "Labor Thanksgiving Day"}
         }
     },
-    
+
     # Additional metadata
     "reference_url": "https://www.japanesecalendar.net/",
     "documentation_url": "https://en.wikipedia.org/wiki/Japanese_calendar",
     "created_by": "Japanese Imperial System",
     "introduced": "645 CE (first era: Taika)",
-    
+
     # Example format
     "example": "令和6年12月15日（日）15:30 JST",
     "example_meaning": "Reiwa 6 (2024), December 15th (Sunday) 15:30 Japan Standard Time",
-    
+
     # Related calendars
     "related": ["chinese_lunar", "taiwan_minguo", "korean"],
-    
+
     # Tags for searching and filtering
     "tags": [
         "japanese", "era", "imperial", "wareki", "reiwa", "heisei",
         "showa", "cultural", "official", "asia", "japan", "jst"
     ],
-    
+
     # Special features
     "features": {
         "supports_eras": True,
@@ -387,25 +388,25 @@ CALENDAR_INFO = {
 
 class JapaneseEraCalendarSensor(AlternativeTimeSensorBase):
     """Sensor for displaying Japanese Era Calendar (Wareki)."""
-    
+
     # Class-level update interval
     UPDATE_INTERVAL = UPDATE_INTERVAL
-    
+
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the Japanese Era calendar sensor."""
         super().__init__(base_name, hass)
-        
+
         # Store CALENDAR_INFO as instance variable for _translate method
         self._calendar_info = CALENDAR_INFO
-        
+
         # Get translated name from metadata
         calendar_name = self._translate('name', 'Japanese Era Calendar')
-        
+
         # Set sensor attributes
         self._attr_name = f"{base_name} {calendar_name}"
         self._attr_unique_id = f"{base_name}_japanese_era"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:torii")
-        
+
         # Configuration options with defaults from CALENDAR_INFO
         config_defaults = CALENDAR_INFO.get("config_options", {})
         self._timezone = config_defaults.get("timezone", {}).get("default", "Asia/Tokyo")
@@ -415,30 +416,30 @@ class JapaneseEraCalendarSensor(AlternativeTimeSensorBase):
         self._show_weekday = config_defaults.get("show_weekday", {}).get("default", True)
         self._show_holidays = config_defaults.get("show_holidays", {}).get("default", True)
         self._show_rokuyou = config_defaults.get("show_rokuyou", {}).get("default", False)
-        
+
         # Era data
         self._era_data = CALENDAR_INFO["era_data"]
-        
+
         # Flag to track if options have been loaded
         self._options_loaded = False
-        
+
         # Initialize state
         self._state = None
         self._japanese_date = {}
-        
+
         _LOGGER.debug(f"Initialized Japanese Era Calendar sensor: {self._attr_name}")
-    
+
     def _load_options(self) -> None:
         """Load plugin options after IDs are set."""
         if self._options_loaded:
             return
-            
+
         # Get plugin options from config entry
         plugin_options = self.get_plugin_options()
-        
+
         if plugin_options:
             _LOGGER.debug(f"Loading Japanese Era options: {plugin_options}")
-            
+
             # Apply options using set_options method
             self.set_options(
                 timezone=plugin_options.get("timezone"),
@@ -449,20 +450,20 @@ class JapaneseEraCalendarSensor(AlternativeTimeSensorBase):
                 show_holidays=plugin_options.get("show_holidays"),
                 show_rokuyou=plugin_options.get("show_rokuyou")
             )
-        
+
         self._options_loaded = True
-    
+
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        
+
         # Load options after entity is registered
         self._load_options()
-        
+
         _LOGGER.debug(f"Japanese Era sensor added to hass with options: "
                      f"timezone={self._timezone}, format={self._display_format}, "
                      f"gregorian={self._show_gregorian}, time={self._show_time}")
-    
+
     def set_options(
         self,
         *,
@@ -478,31 +479,31 @@ class JapaneseEraCalendarSensor(AlternativeTimeSensorBase):
         if timezone is not None and timezone in ["Asia/Tokyo", "local", "UTC"]:
             self._timezone = timezone
             _LOGGER.debug(f"Set timezone to: {timezone}")
-        
+
         if display_format is not None and display_format in ["full", "kanji", "romaji", "numeric"]:
             self._display_format = display_format
             _LOGGER.debug(f"Set display_format to: {display_format}")
-        
+
         if show_gregorian is not None:
             self._show_gregorian = bool(show_gregorian)
             _LOGGER.debug(f"Set show_gregorian to: {show_gregorian}")
-        
+
         if show_time is not None:
             self._show_time = bool(show_time)
             _LOGGER.debug(f"Set show_time to: {show_time}")
-        
+
         if show_weekday is not None:
             self._show_weekday = bool(show_weekday)
             _LOGGER.debug(f"Set show_weekday to: {show_weekday}")
-        
+
         if show_holidays is not None:
             self._show_holidays = bool(show_holidays)
             _LOGGER.debug(f"Set show_holidays to: {show_holidays}")
-        
+
         if show_rokuyou is not None:
             self._show_rokuyou = bool(show_rokuyou)
             _LOGGER.debug(f"Set show_rokuyou to: {show_rokuyou}")
-    
+
     def _get_timezone(self) -> ZoneInfo:
         """Get the configured timezone."""
         if self._timezone == "Asia/Tokyo":
@@ -514,9 +515,9 @@ class JapaneseEraCalendarSensor(AlternativeTimeSensorBase):
             try:
                 import tzlocal
                 return tzlocal.get_localzone()
-            except:
+            except Exception:
                 return ZoneInfo("UTC")
-    
+
     def _get_current_era(self, current_date: date) -> Tuple[Dict, int]:
         """Get the current era and year within that era."""
         for era in self._era_data["eras"]:
@@ -527,10 +528,10 @@ class JapaneseEraCalendarSensor(AlternativeTimeSensorBase):
             elif era["start"] <= current_date <= era["end"]:
                 year_in_era = current_date.year - era["start"].year + 1
                 return era, year_in_era
-        
+
         # Default to Reiwa if no era found (shouldn't happen with correct data)
         return self._era_data["eras"][0], 1
-    
+
     def _get_weekday(self, current_date: date) -> Dict[str, str]:
         """Get weekday in different formats."""
         weekday_idx = current_date.weekday()
@@ -539,17 +540,17 @@ class JapaneseEraCalendarSensor(AlternativeTimeSensorBase):
             "ja": self._era_data["weekdays"]["ja"][weekday_idx],
             "ja_short": self._era_data["weekdays"]["ja_short"][weekday_idx]
         }
-    
+
     def _get_holiday(self, current_date: date) -> Optional[Dict[str, str]]:
         """Check if current date is a holiday."""
         date_key = f"{current_date.month}-{current_date.day}"
         if date_key in self._era_data["holidays"]:
             return self._era_data["holidays"][date_key]
-        
+
         # Check for movable holidays (2nd Monday, etc.)
         # This is a simplified implementation
         return None
-    
+
     def _get_rokuyou(self, current_date: date) -> Dict[str, str]:
         """Calculate Rokuyō for the given date."""
         # Simplified calculation - actual calculation is more complex
@@ -557,13 +558,13 @@ class JapaneseEraCalendarSensor(AlternativeTimeSensorBase):
         day_count = (current_date - date(2000, 1, 1)).days
         rokuyou_idx = day_count % 6
         return self._era_data["rokuyou"][rokuyou_idx]
-    
+
     def _format_japanese_date(self, era: Dict, year: int, japan_time: datetime) -> str:
         """Format the Japanese date according to display settings."""
         month = japan_time.month
         day = japan_time.day
         weekday = self._get_weekday(japan_time.date())
-        
+
         if self._display_format == "kanji":
             # Full kanji format: 令和六年十二月十五日
             result = f"{era['name']}{year}年{month}月{day}日"
@@ -579,31 +580,31 @@ class JapaneseEraCalendarSensor(AlternativeTimeSensorBase):
             result = f"{era['name']}{year}年{month}月{day}日"
             if self._show_weekday:
                 result += f"（{weekday['ja_short']}）"
-        
+
         # Add time if enabled
         if self._show_time:
             result += f" {japan_time.hour:02d}:{japan_time.minute:02d} JST"
-        
+
         # Add Gregorian date if enabled
         if self._show_gregorian:
             result += f" [{japan_time.year}/{month:02d}/{day:02d}]"
-        
+
         return result
-    
+
     def _calculate_japanese_date(self, now: datetime) -> Dict[str, Any]:
         """Calculate the Japanese era date."""
         # Convert to configured timezone
         tz = self._get_timezone()
         japan_time = now.astimezone(tz)
-        
+
         # If using JST, ensure we're getting Japan time
         if self._timezone == "Asia/Tokyo":
             japan_time = now.astimezone(ZoneInfo("Asia/Tokyo"))
-        
+
         current_date = japan_time.date()
         era, year_in_era = self._get_current_era(current_date)
         weekday = self._get_weekday(current_date)
-        
+
         result = {
             "era_name": era["name"],
             "era_romaji": era["romaji"],
@@ -617,44 +618,44 @@ class JapaneseEraCalendarSensor(AlternativeTimeSensorBase):
             "timezone": str(tz) if self._timezone != "Asia/Tokyo" else "JST",
             "formatted": self._format_japanese_date(era, year_in_era, japan_time)
         }
-        
+
         # Add holiday if applicable
         if self._show_holidays:
             holiday = self._get_holiday(current_date)
             if holiday:
                 result["holiday"] = holiday
-        
+
         # Add Rokuyō if enabled
         if self._show_rokuyou:
             result["rokuyou"] = self._get_rokuyou(current_date)
-        
+
         return result
-    
+
     def update(self) -> None:
         """Update the sensor."""
         # Ensure options are loaded (in case async_added_to_hass hasn't run yet)
         if not self._options_loaded:
             self._load_options()
-        
+
         now = datetime.now(timezone.utc)
         self._japanese_date = self._calculate_japanese_date(now)
-        
+
         # Set state to formatted Japanese date
         self._state = self._japanese_date["formatted"]
-        
+
         _LOGGER.debug(f"Updated Japanese Era Calendar to {self._state}")
-    
+
     @property
     def state(self) -> str:
         """Return the state of the sensor."""
         return self._state or "Unknown"
-    
+
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return additional attributes."""
         if not self._japanese_date:
             return {}
-        
+
         # Build attributes dictionary
         attrs = {
             "era_name": self._japanese_date.get("era_name"),
@@ -674,18 +675,18 @@ class JapaneseEraCalendarSensor(AlternativeTimeSensorBase):
             "reference": CALENDAR_INFO.get("reference_url"),
             "notes": self._translate("notes")
         }
-        
+
         # Add optional attributes
         if "holiday" in self._japanese_date:
             attrs["holiday_ja"] = self._japanese_date["holiday"].get("ja")
             attrs["holiday_en"] = self._japanese_date["holiday"].get("en")
-        
+
         if "rokuyou" in self._japanese_date:
             rokuyou = self._japanese_date["rokuyou"]
             attrs["rokuyou"] = rokuyou.get("name")
             attrs["rokuyou_romaji"] = rokuyou.get("romaji")
             attrs["rokuyou_meaning"] = rokuyou.get("meaning")
-        
+
         # Add configuration state
         attrs["config_timezone"] = self._timezone
         attrs["config_display_format"] = self._display_format
@@ -694,7 +695,7 @@ class JapaneseEraCalendarSensor(AlternativeTimeSensorBase):
         attrs["config_show_weekday"] = self._show_weekday
         attrs["config_show_holidays"] = self._show_holidays
         attrs["config_show_rokuyou"] = self._show_rokuyou
-        
+
         return attrs
 
 

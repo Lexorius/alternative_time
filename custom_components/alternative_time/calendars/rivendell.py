@@ -1,12 +1,12 @@
 """Rivendell Calendar (Elven/Imladris) implementation - Version 3.0."""
 from __future__ import annotations
 
-from datetime import datetime
 import logging
-import math
-from typing import Dict, Any, Optional
+from datetime import datetime
+from typing import Any, Dict
 
 from homeassistant.core import HomeAssistant
+
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ CALENDAR_INFO = {
     "category": "fantasy",
     "accuracy": "fictional",
     "update_interval": UPDATE_INTERVAL,
-    
+
     # Multi-language names
     "name": {
         "en": "Rivendell Calendar (LOTR)",
@@ -42,7 +42,7 @@ CALENDAR_INFO = {
         "zh": "瑞文戴尔历 (指环王)",
         "ko": "리븐델 달력 (반지의 제왕)"
     },
-    
+
     # Short descriptions for UI
     "description": {
         "en": "Elven calendar from Middle-earth with 6 seasons and yén cycles",
@@ -58,7 +58,7 @@ CALENDAR_INFO = {
         "zh": "中土世界精灵历法，包含6个季节和长年周期",
         "ko": "6계절과 옌 주기가 있는 중간계 엘프 달력"
     },
-    
+
     # Detailed information for documentation
     "detailed_info": {
         "en": {
@@ -82,7 +82,7 @@ CALENDAR_INFO = {
             "note": "Die Zeit in Bruchtal scheint anders zu fließen, bewahrt durch Vilya, Elronds Ring der Macht"
         }
     },
-    
+
     # Configuration options
     "config_options": {
         "language_mode": {
@@ -364,7 +364,7 @@ CALENDAR_INFO = {
             }
         }
     },
-    
+
     # Elven calendar data
     "elven_data": {
         "seasons": [
@@ -404,28 +404,28 @@ CALENDAR_INFO = {
             "night": {"quenya": "Lómë", "sindarin": "Fuin", "english": "Night"}
         }
     },
-    
+
     # Additional metadata
     "reference_url": "http://tolkiengateway.net/wiki/Calendar_of_Imladris",
     "documentation_url": "https://www.glyphweb.com/arda/c/calendarofimladris.html",
     "origin": "J.R.R. Tolkien's Middle-earth legendarium",
     "created_by": "J.R.R. Tolkien",
     "introduced": "The Lord of the Rings (1954-1955)",
-    
+
     # Example format
     "example": "F.A. 24, Tuilë 35 (Elenya)",
     "example_meaning": "Fourth Age year 24, 35th day of Spring, Stars-day",
-    
+
     # Related calendars
     "related": ["shire", "gregorian"],
-    
+
     # Tags for searching and filtering
     "tags": [
         "fantasy", "tolkien", "lotr", "middle_earth", "elven", "elvish",
         "rivendell", "imladris", "elrond", "quenya", "sindarin",
         "first_age", "second_age", "third_age", "fourth_age"
     ],
-    
+
     # Special features
     "features": {
         "supports_ages": True,
@@ -441,22 +441,22 @@ CALENDAR_INFO = {
 
 class RivendellCalendarSensor(AlternativeTimeSensorBase):
     """Sensor for displaying Rivendell/Elven Calendar from Middle-earth."""
-    
+
     # Class-level update interval
     UPDATE_INTERVAL = UPDATE_INTERVAL
-    
+
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the Rivendell calendar sensor."""
         super().__init__(base_name, hass)
-        
+
         # Get translated name from metadata
         calendar_name = self._translate('name', 'Rivendell Calendar')
-        
+
         # Set sensor attributes
         self._attr_name = f"{base_name} {calendar_name}"
         self._attr_unique_id = f"{base_name}_rivendell_calendar"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:forest")
-        
+
         # Configuration options with defaults
         config_defaults = CALENDAR_INFO.get("config_options", {})
         self._language_mode = config_defaults.get("language_mode", {}).get("default", "quenya")
@@ -464,16 +464,16 @@ class RivendellCalendarSensor(AlternativeTimeSensorBase):
         self._show_star_signs = config_defaults.get("show_star_signs", {}).get("default", True)
         self._show_moon_phases = config_defaults.get("show_moon_phases", {}).get("default", True)
         self._age_reckoning = config_defaults.get("age_reckoning", {}).get("default", "fourth")
-        
+
         # Elven data
         self._elven_data = CALENDAR_INFO["elven_data"]
-        
+
         # Initialize state
         self._state = None
         self._elven_date = {}
-        
+
         _LOGGER.debug(f"Initialized Rivendell Calendar sensor: {self._attr_name}")
-    
+
     def set_options(self, options: Dict[str, Any]) -> None:
         """Set options from config flow."""
         if options:
@@ -482,34 +482,34 @@ class RivendellCalendarSensor(AlternativeTimeSensorBase):
             self._show_star_signs = options.get("show_star_signs", self._show_star_signs)
             self._show_moon_phases = options.get("show_moon_phases", self._show_moon_phases)
             self._age_reckoning = options.get("age_reckoning", self._age_reckoning)
-            
+
             _LOGGER.debug(f"Rivendell sensor options updated: language_mode={self._language_mode}, "
                          f"show_yen={self._show_yen}, show_star_signs={self._show_star_signs}, "
                          f"show_moon_phases={self._show_moon_phases}, age_reckoning={self._age_reckoning}")
-    
+
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
-    
+
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes."""
         attrs = super().extra_state_attributes
-        
+
         # Add Rivendell-specific attributes
         if self._elven_date:
             attrs.update(self._elven_date)
-            
+
             # Add description in user's language
             attrs["description"] = self._translate('description')
-            
+
             # Add reference
             attrs["reference"] = CALENDAR_INFO.get('reference_url', '')
-            
+
             # Add special lore
             attrs["lore"] = self._get_daily_lore()
-            
+
             # Add configuration status
             attrs["config"] = {
                 "language_mode": self._language_mode,
@@ -518,14 +518,14 @@ class RivendellCalendarSensor(AlternativeTimeSensorBase):
                 "show_moon_phases": self._show_moon_phases,
                 "age_reckoning": self._age_reckoning
             }
-        
+
         return attrs
-    
+
     def _get_season(self, day_of_year: int) -> Dict[str, Any]:
         """Determine Elven season from day of year."""
         seasons = self._elven_data["seasons"]
         days_counted = 0
-        
+
         for season in seasons:
             days_counted += season["days"]
             if day_of_year <= days_counted:
@@ -534,17 +534,17 @@ class RivendellCalendarSensor(AlternativeTimeSensorBase):
                     **season,
                     "day_in_season": day_in_season
                 }
-        
+
         # Default to last season
         return {
             **seasons[-1],
             "day_in_season": day_of_year - (365 - seasons[-1]["days"])
         }
-    
+
     def _get_time_period(self, hour: int) -> Dict[str, Any]:
         """Get Elven time period for hour."""
         periods = self._elven_data["time_periods"]
-        
+
         if 5 <= hour < 7:
             period = periods["dawn"]
             emoji = "🌅"
@@ -563,9 +563,9 @@ class RivendellCalendarSensor(AlternativeTimeSensorBase):
         else:
             period = periods["night"]
             emoji = "🌙"
-        
+
         return {**period, "emoji": emoji}
-    
+
     def _get_special_day(self, date: datetime) -> str:
         """Check for special Elven days."""
         special_days = {
@@ -577,18 +577,18 @@ class RivendellCalendarSensor(AlternativeTimeSensorBase):
             (12, 21): "⭐ Mettarë - Last Day of the Year"
         }
         return special_days.get((date.month, date.day), "")
-    
+
     def _is_durins_day(self, date: datetime) -> bool:
         """Check if it's Durin's Day (first day of last moon of autumn)."""
         if date.month == 10 and 20 <= date.day <= 31:
             day_in_lunar = date.day % 29.5
             return day_in_lunar < 2
         return False
-    
+
     def _get_sindarin_moon_phase(self, date: datetime) -> str:
         """Get moon phase in Sindarin."""
         day_in_lunar = date.day % 29.5
-        
+
         if day_in_lunar < 2:
             return "🌑 Ithil Dû (Dark Moon)"
         elif day_in_lunar < 7:
@@ -605,7 +605,7 @@ class RivendellCalendarSensor(AlternativeTimeSensorBase):
             return "🌗 Ithil Harn (Wounded Moon)"
         else:
             return "🌘 Ithil Fuin (Shadow Moon)"
-    
+
     def _get_elven_greeting(self, hour: int) -> str:
         """Get appropriate Elven greeting for time of day."""
         greetings = {
@@ -615,12 +615,12 @@ class RivendellCalendarSensor(AlternativeTimeSensorBase):
             (17, 21): "Mae dû (Good evening)",
             (21, 5): "Mae fuin (Good night)"
         }
-        
+
         for (start, end), greeting in greetings.items():
             if start <= hour < end or (start > end and (hour >= start or hour < end)):
                 return greeting
         return "Mae govannen"
-    
+
     def _get_daily_lore(self) -> str:
         """Get a piece of Elven lore for the day."""
         day = datetime.now().day
@@ -636,23 +636,23 @@ class RivendellCalendarSensor(AlternativeTimeSensorBase):
             "The memory of Elendil is preserved in these archives",
             "Gil-galad's star once shone above these valleys"
         ]
-        
+
         # Use day as index (cycling through lore)
         return lore_pieces[day % len(lore_pieces)]
-    
+
     def _calculate_elven_date(self, earth_date: datetime) -> Dict[str, Any]:
         """Calculate Elven Calendar date from Earth date."""
         # Calculate years from reference point (year 2000 = start of Fourth Age)
         years_since_2000 = earth_date.year - 2000
         fourth_age_year = 1 + years_since_2000
-        
+
         # Calculate yén (144-year cycle)
         yen = (fourth_age_year - 1) // 144 + 1
         loa = (fourth_age_year - 1) % 144 + 1
-        
+
         # Calculate day of year
         day_of_year = earth_date.timetuple().tm_yday
-        
+
         # Adjust for calendar starting on March 20 (Spring Equinox)
         if earth_date.month < 3 or (earth_date.month == 3 and earth_date.day < 20):
             # Still in previous Elven year
@@ -661,29 +661,29 @@ class RivendellCalendarSensor(AlternativeTimeSensorBase):
             loa = (fourth_age_year - 1) % 144 + 1
         else:
             day_of_year = day_of_year - 79
-        
+
         if day_of_year <= 0:
             day_of_year += 365
-        
+
         # Determine season and day within season
         season_data = self._get_season(day_of_year)
-        
+
         # Get weekday (6-day Elven week)
         day_index = earth_date.toordinal() % 6
         weekday_data = self._elven_data["weekdays"][day_index]
-        
+
         # Get time of day
         time_period = self._get_time_period(earth_date.hour)
-        
+
         # Check for special days
         special_day = self._get_special_day(earth_date)
-        
+
         # Get star sign (monthly)
         star_sign = self._elven_data["star_signs"][earth_date.month - 1] if self._show_star_signs else ""
-        
+
         # Moon phases in Sindarin
         moon_phase = self._get_sindarin_moon_phase(earth_date) if self._show_moon_phases else ""
-        
+
         # Determine Age
         age_names = {
             "first": ("First Age", "F.A.", "Elain Einior"),
@@ -692,7 +692,7 @@ class RivendellCalendarSensor(AlternativeTimeSensorBase):
             "fourth": ("Fourth Age", "F.A.", "Elain Canthui")
         }
         age_name, age_abbr, age_sindarin = age_names[self._age_reckoning]
-        
+
         # Build display strings based on language mode
         if self._language_mode == "quenya":
             season_name = season_data["quenya"]
@@ -710,7 +710,7 @@ class RivendellCalendarSensor(AlternativeTimeSensorBase):
             season_name = f"{season_data['quenya']} ({season_data['english']})"
             weekday_name = f"{weekday_data['quenya']} ({weekday_data['english']})"
             time_name = f"{time_period['quenya']} ({time_period['english']})"
-        
+
         # Create result
         result = {
             "age": age_abbr,
@@ -727,36 +727,36 @@ class RivendellCalendarSensor(AlternativeTimeSensorBase):
             "time_period": f"{time_period['emoji']} {time_name}",
             "full_date": f"{age_abbr} {fourth_age_year}, {season_name} {season_data['day_in_season']}"
         }
-        
+
         # Add optional data
         if self._show_yen:
             result["yen"] = yen
             result["loa"] = loa
             result["yen_display"] = f"Yén {yen}, Loa {loa}"
-        
+
         if star_sign:
             result["star_sign"] = f"✨ {star_sign}"
-        
+
         if moon_phase:
             result["moon_phase"] = moon_phase
-        
+
         if special_day:
             result["special_day"] = special_day
-        
+
         # Add poetic elements
         result["elven_greeting"] = self._get_elven_greeting(earth_date.hour)
-        
+
         return result
-    
+
     def update(self) -> None:
         """Update the sensor."""
         now = datetime.now()
         self._elven_date = self._calculate_elven_date(now)
-        
+
         # Format state based on language mode
         if self._language_mode == "mixed":
             self._state = f"{self._elven_date['full_date']} ({self._elven_date['weekday']})"
         else:
             self._state = self._elven_date["full_date"]
-        
+
         _LOGGER.debug(f"Updated Rivendell calendar to {self._state}")

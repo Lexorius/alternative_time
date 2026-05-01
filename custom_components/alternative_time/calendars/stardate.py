@@ -1,11 +1,12 @@
 """Star Trek Stardate implementation - Version 3.0."""
 from __future__ import annotations
 
-from datetime import datetime
 import logging
-from typing import Dict, Any, Optional
+from datetime import datetime
+from typing import Any, Dict
 
 from homeassistant.core import HomeAssistant
+
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +26,7 @@ CALENDAR_INFO = {
     "category": "scifi",
     "accuracy": "fictional",
     "update_interval": UPDATE_INTERVAL,
-    
+
     # Multi-language names
     "name": {
         "en": "Star Trek Stardate",
@@ -41,7 +42,7 @@ CALENDAR_INFO = {
         "zh": "星际迷航星历",
         "ko": "스타트렉 우주력"
     },
-    
+
     # Short descriptions for UI
     "description": {
         "en": "Star Trek stardate system from various series (TNG, TOS, Discovery)",
@@ -57,7 +58,7 @@ CALENDAR_INFO = {
         "zh": "来自不同系列的星际迷航星历系统（TNG、TOS、发现号）",
         "ko": "다양한 시리즈의 스타트렉 우주력 (TNG, TOS, 디스커버리)"
     },
-    
+
     # Detailed information for documentation
     "detailed_info": {
         "en": {
@@ -81,7 +82,7 @@ CALENDAR_INFO = {
             "discovery": "DIS: 4-stelliges jahresbasiertes System"
         }
     },
-    
+
     # Configuration options
     "config_options": {
         "format": {
@@ -345,13 +346,13 @@ CALENDAR_INFO = {
             }
         }
     },
-    
+
     # Stardate-specific data
     "stardate_data": {
         "base_year": 2323,
         "units_per_year": 1000,
         "units_per_day": 2.73785,
-        
+
         # Notable stardates and events
         "notable_events": {
             41153.7: "📺 Encounter at Farpoint (TNG Pilot)",
@@ -368,7 +369,7 @@ CALENDAR_INFO = {
             57436.2: "🎬 Star Trek Into Darkness",
             59796.7: "🎬 Star Trek Beyond"
         },
-        
+
         # Starfleet ships
         "ships": [
             {"registry": "NCC-1701", "name": "USS Enterprise", "class": "Constitution", "era": "TOS"},
@@ -382,10 +383,10 @@ CALENDAR_INFO = {
             {"registry": "NX-01", "name": "Enterprise NX-01", "class": "NX", "era": "ENT"},
             {"registry": "NCC-1031", "name": "USS Discovery", "class": "Crossfield", "era": "DIS"}
         ],
-        
+
         # Quadrants
         "quadrants": ["Alpha", "Beta", "Gamma", "Delta"],
-        
+
         # Major powers
         "powers": [
             "United Federation of Planets",
@@ -396,27 +397,27 @@ CALENDAR_INFO = {
             "Borg Collective"
         ]
     },
-    
+
     # Additional metadata
     "reference_url": "https://memory-alpha.fandom.com/wiki/Stardate",
     "documentation_url": "https://www.startrek.com/database_article/stardate",
     "origin": "Star Trek (Gene Roddenberry)",
     "created_by": "Gene Roddenberry",
     "introduced": "Star Trek: The Original Series (1966)",
-    
+
     # Example format
     "example": "47634.44",
     "example_meaning": "Year 47 of the 24th century, day 634.44",
-    
+
     # Related calendars
     "related": ["gregorian", "julian", "scifi"],
-    
+
     # Tags for searching and filtering
     "tags": [
         "scifi", "star_trek", "stardate", "starfleet", "federation",
         "tng", "voyager", "ds9", "enterprise", "discovery", "space"
     ],
-    
+
     # Special features
     "features": {
         "decimal_time": True,
@@ -429,41 +430,41 @@ CALENDAR_INFO = {
 
 class StardateSensor(AlternativeTimeSensorBase):
     """Sensor for displaying Stardate (Star Trek style)."""
-    
+
     # Class-level update interval
     UPDATE_INTERVAL = UPDATE_INTERVAL
-    
+
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the stardate sensor."""
         super().__init__(base_name, hass)
-        
+
         # Get translated name from metadata
         calendar_name = self._translate('name', 'Star Trek Stardate')
-        
+
         # Set sensor attributes
         self._attr_name = f"{base_name} {calendar_name}"
         self._attr_unique_id = f"{base_name}_stardate"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:star-four-points")
-        
+
         # Configuration options with defaults
         config_defaults = CALENDAR_INFO.get("config_options", {})
         self._format = config_defaults.get("format", {}).get("default", "tng")
         self._show_event = config_defaults.get("show_event", {}).get("default", True)
         self._show_ship = config_defaults.get("show_ship", {}).get("default", True)
         self._precision = int(config_defaults.get("precision", {}).get("default", "2"))
-        
+
         # Stardate data
         self._stardate_data = CALENDAR_INFO["stardate_data"]
-        
+
         # Initialize state
         self._state = None
         self._stardate = {}
-        
+
         # Ship rotation index
         self._ship_index = 0
-        
+
         _LOGGER.debug(f"Initialized Stardate sensor: {self._attr_name}")
-    
+
     def set_options(self, options: Dict[str, Any]) -> None:
         """Set options from config flow."""
         if options:
@@ -471,31 +472,31 @@ class StardateSensor(AlternativeTimeSensorBase):
             self._show_event = options.get("show_event", self._show_event)
             self._show_ship = options.get("show_ship", self._show_ship)
             self._precision = int(options.get("precision", self._precision))
-            
+
             _LOGGER.debug(f"Stardate sensor options updated: format={self._format}, "
                          f"show_event={self._show_event}, show_ship={self._show_ship}, "
                          f"precision={self._precision}")
-    
+
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
-    
+
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes."""
         attrs = super().extra_state_attributes
-        
+
         # Add Stardate-specific attributes
         if self._stardate:
             attrs.update(self._stardate)
-            
+
             # Add description in user's language
             attrs["description"] = self._translate('description')
-            
+
             # Add reference
             attrs["reference"] = CALENDAR_INFO.get('reference_url', '')
-            
+
             # Add configuration status
             attrs["config"] = {
                 "format": self._format,
@@ -503,25 +504,25 @@ class StardateSensor(AlternativeTimeSensorBase):
                 "show_ship": self._show_ship,
                 "precision": self._precision
             }
-        
+
         return attrs
-    
+
     def _calculate_tng_stardate(self, earth_date: datetime) -> float:
         """Calculate TNG-style stardate."""
         base_year = self._stardate_data["base_year"]
         current_year = earth_date.year
         day_of_year = earth_date.timetuple().tm_yday
-        
+
         # Calculate stardate
         stardate = 1000 * (current_year - base_year)
         stardate += (1000 * day_of_year / 365.25)
-        
+
         # Add time of day as fraction
         time_fraction = (earth_date.hour * 60 + earth_date.minute) / 1440 * 10
         stardate += time_fraction
-        
+
         return stardate
-    
+
     def _calculate_tos_stardate(self, earth_date: datetime) -> float:
         """Calculate TOS-style stardate (simplified)."""
         # TOS stardates were somewhat arbitrary
@@ -529,7 +530,7 @@ class StardateSensor(AlternativeTimeSensorBase):
         base = 1312.4  # Starting point
         days_since_2000 = (earth_date - datetime(2000, 1, 1)).days
         return base + (days_since_2000 * 0.5)
-    
+
     def _calculate_discovery_stardate(self, earth_date: datetime) -> float:
         """Calculate Discovery-style stardate."""
         # Discovery uses year.day format
@@ -537,42 +538,42 @@ class StardateSensor(AlternativeTimeSensorBase):
         day_of_year = earth_date.timetuple().tm_yday
         hour_fraction = earth_date.hour / 24
         return year + (day_of_year + hour_fraction) / 365.25
-    
+
     def _calculate_kelvin_stardate(self, earth_date: datetime) -> float:
         """Calculate Kelvin Timeline stardate."""
         # Kelvin timeline uses a different system (YYYY.DD format)
         year = earth_date.year
         day_of_year = earth_date.timetuple().tm_yday
         return year + (day_of_year / 1000)
-    
+
     def _find_notable_event(self, stardate: float) -> str:
         """Find notable event near this stardate."""
         if not self._show_event or self._format != "tng":
             return ""
-        
+
         closest_event = None
         min_diff = float('inf')
-        
+
         for event_stardate, event in self._stardate_data["notable_events"].items():
             diff = abs(stardate - event_stardate)
             if diff < 100 and diff < min_diff:  # Within 100 units
                 min_diff = diff
                 closest_event = event
-        
+
         return closest_event or ""
-    
+
     def _get_current_ship(self) -> Dict[str, str]:
         """Get current ship from rotation."""
         if not self._show_ship:
             return {}
-        
+
         ship = self._stardate_data["ships"][self._ship_index]
         self._ship_index = (self._ship_index + 1) % len(self._stardate_data["ships"])
         return ship
-    
+
     def _calculate_stardate(self, earth_date: datetime) -> Dict[str, Any]:
         """Calculate Stardate from Earth date."""
-        
+
         # Calculate based on format
         if self._format == "tos":
             stardate = self._calculate_tos_stardate(earth_date)
@@ -590,10 +591,10 @@ class StardateSensor(AlternativeTimeSensorBase):
             stardate = self._calculate_tng_stardate(earth_date)
             era = "The Next Generation Era"
             series = "TNG"
-        
+
         # Format with precision
         formatted = f"{stardate:.{self._precision}f}"
-        
+
         # Determine century
         if stardate < 10000:
             century = "23rd Century"
@@ -601,17 +602,17 @@ class StardateSensor(AlternativeTimeSensorBase):
             century = "24th Century"
         else:
             century = "25th Century"
-        
+
         # Calculate quadrant (simplified - rotates every 6 hours)
         quadrant_index = int((earth_date.hour / 6)) % 4
         current_quadrant = self._stardate_data["quadrants"][quadrant_index]
-        
+
         # Get notable event
         event = self._find_notable_event(stardate) if self._format == "tng" else ""
-        
+
         # Get current ship
         ship_data = self._get_current_ship() if self._show_ship else {}
-        
+
         # Build result
         result = {
             "stardate": stardate,
@@ -624,25 +625,25 @@ class StardateSensor(AlternativeTimeSensorBase):
             "year_component": int(stardate // 1000) if self._format == "tng" else 0,
             "day_component": stardate % 1000 if self._format == "tng" else 0
         }
-        
+
         # Add optional data
         if event:
             result["notable_event"] = event
-        
+
         if ship_data:
             result["current_ship"] = f"🚀 {ship_data['name']}"
             result["ship_registry"] = ship_data['registry']
             result["ship_class"] = f"{ship_data['class']} class"
             result["ship_era"] = ship_data['era']
-        
+
         return result
-    
+
     def update(self) -> None:
         """Update the sensor."""
         now = datetime.now()
         self._stardate = self._calculate_stardate(now)
-        
+
         # Set state to formatted stardate
         self._state = self._stardate["formatted"]
-        
+
         _LOGGER.debug(f"Updated Stardate to {self._state}")

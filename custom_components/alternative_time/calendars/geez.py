@@ -1,12 +1,12 @@
 """Ge'ez (Ethiopian) Calendar implementation - Version 1.0."""
 from __future__ import annotations
 
-from datetime import datetime
 import logging
-import math
-from typing import Dict, Any
+from datetime import datetime
+from typing import Any, Dict
 
 from homeassistant.core import HomeAssistant
+
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ CALENDAR_INFO = {
     "category": "religious",
     "accuracy": "day",
     "update_interval": UPDATE_INTERVAL,
-    
+
     # Multi-language names
     "name": {
         "en": "Ge'ez (Ethiopian) Calendar",
@@ -44,7 +44,7 @@ CALENDAR_INFO = {
         "am": "የኢትዮጵያ ቀን መቁጠሪያ",
         "ti": "ናይ ኢትዮጵያ መቑጸሪ ዕለት"
     },
-    
+
     # Short descriptions for UI
     "description": {
         "en": "Traditional Ethiopian calendar with 13 months, used in Ethiopia and Eritrea",
@@ -62,7 +62,7 @@ CALENDAR_INFO = {
         "am": "በኢትዮጵያ እና በኤርትራ የሚጠቀሙት 13 ወሮች ያሉት ባህላዊ የኢትዮጵያ ቀን መቁጠሪያ",
         "ti": "ኣብ ኢትዮጵያን ኤርትራን ዝጥቀሙሉ 13 ኣዋርሕ ዘለዎ ባህላዊ መቑጸሪ ዕለት"
     },
-    
+
     # Detailed information for documentation
     "detailed_info": {
         "en": {
@@ -192,7 +192,7 @@ CALENDAR_INFO = {
             "note": "እዚ መቑጸሪ ዕለት ኣብ ኢትዮጵያ ንሃይማኖታውን ሲቪላውን ዕላማታት ይጥቀሙሉ ከምኡ'ውን ብናይ ኢትዮጵያ ኦርቶዶክስ ተዋህዶ ቤተ ክርስትያን ይጥቀሙሉ።"
         }
     },
-    
+
     # Ethiopian-specific data
     "ethiopian_data": {
         # Months with Ge'ez, Amharic, English names and typical days
@@ -211,7 +211,7 @@ CALENDAR_INFO = {
             {"num": 12, "geez": "ነሐሴ", "am": "ነሐሴ", "en": "Nähase", "days": 30},
             {"num": 13, "geez": "ጳጉሜ", "am": "ጳጉሜ", "en": "Ṗagume", "days": 5}  # 6 in leap years
         ],
-        
+
         # Weekdays (Sunday first to align with HA)
         "weekdays": [
             {"en": "Sunday", "am": "እሑድ", "geez": "እሑድ"},
@@ -222,7 +222,7 @@ CALENDAR_INFO = {
             {"en": "Friday", "am": "ዓርብ", "geez": "ዓርብ"},
             {"en": "Saturday", "am": "ቅዳሜ", "geez": "ቀዳሚት"}
         ],
-        
+
         # Major Ethiopian holidays and observances
         "events": {
             "(1,1)": {
@@ -266,31 +266,31 @@ CALENDAR_INFO = {
                 "am": "ፍልሰታ"
             }
         },
-        
+
         # Julian Day Number of Ethiopian epoch (1 Mäskäräm, Year 1)
         # = August 29, 8 CE Julian = JDN 1724221
         "epoch_jdn": 1724221
     },
-    
+
     # Additional metadata
     "reference_url": "https://en.wikipedia.org/wiki/Ethiopian_calendar",
     "documentation_url": "https://www.ethiocal.com/",
     "origin": "Ancient Ethiopia, derived from Coptic calendar",
     "created_by": "Ethiopian Orthodox Tewahedo Church and Ethiopian civilization",
-    
+
     # Example format
     "example": "15 Mäskäräm 2017 (Ehud)",
     "example_meaning": "15th of Mäskäräm, year 2017, Sunday",
-    
+
     # Related calendars
     "related": ["coptic", "julian", "gregorian"],
-    
+
     # Tags for searching and filtering
     "tags": [
-        "religion", "ethiopian", "geez", "orthodox", "christian", "coptic", 
+        "religion", "ethiopian", "geez", "orthodox", "christian", "coptic",
         "africa", "calendar", "solar", "enkutatash", "cultural"
     ],
-    
+
     # Special features
     "features": {
         "solar": True,
@@ -298,7 +298,7 @@ CALENDAR_INFO = {
         "offset_from_gregorian": True,
         "precision": "day"
     },
-    
+
     # Configuration options for this calendar
     "config_options": {
         "show_geez_names": {
@@ -424,60 +424,60 @@ CALENDAR_INFO = {
 
 class GeezCalendarSensor(AlternativeTimeSensorBase):
     """Sensor for displaying the Ge'ez (Ethiopian) calendar."""
-    
+
     # Class-level update interval
     UPDATE_INTERVAL = UPDATE_INTERVAL
-    
+
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the Ge'ez calendar sensor."""
         super().__init__(base_name, hass)
-        
+
         # Get translated name from metadata
         calendar_name = self._translate('name', "Ge'ez (Ethiopian) Calendar")
-        
+
         # Set sensor attributes
         self._attr_name = f"{base_name} {calendar_name}"
         self._attr_unique_id = f"{base_name}_geez_calendar"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:cross-outline")
-        
+
         # Configuration options (defaults)
         self._show_geez_names = True
         self._date_format = "full"
-        
+
         # Ethiopian data
         self._ethiopian_data = CALENDAR_INFO["ethiopian_data"]
-        
+
         _LOGGER.debug(f"Initialized Ge'ez Calendar sensor: {self._attr_name}")
-    
+
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
-    
+
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes."""
         attrs = super().extra_state_attributes
-        
+
         # Add Ethiopian-specific attributes
         if hasattr(self, '_ethiopian_date'):
             attrs.update(self._ethiopian_date)
-            
+
             # Add description in user's language
             attrs["description"] = self._translate('description')
-            
+
             # Add reference
             attrs["reference"] = CALENDAR_INFO.get('reference_url', '')
-            
+
             # Add epoch info
             attrs["epoch_jdn"] = self._ethiopian_data["epoch_jdn"]
-        
+
         return attrs
-    
+
     # ===============================
     # Helpers: Ethiopian calculations
     # ===============================
-    
+
     @staticmethod
     def _gregorian_to_jdn(y: int, m: int, d: int) -> int:
         """Convert Gregorian date to Julian Day Number (at 00:00)."""
@@ -486,46 +486,45 @@ class GeezCalendarSensor(AlternativeTimeSensorBase):
         m2 = m + 12 * a - 3
         jdn = d + ((153 * m2 + 2) // 5) + 365 * y2 + y2 // 4 - y2 // 100 + y2 // 400 - 32045
         return jdn
-    
+
     @staticmethod
     def _is_ethiopian_leap_year(year: int) -> bool:
         """Return True if Ethiopian year is a leap year.
-        
+
         Ethiopian leap years follow a simple 4-year cycle:
         Years 3, 7, 11, 15... (i.e., year % 4 == 3) are leap years.
         """
         return (year % 4) == 3
-    
+
     def _days_in_ethiopian_month(self, year: int, month: int) -> int:
         """Return number of days in the given Ethiopian month."""
         if month < 13:
             return 30
         # Month 13 (Pagume): 5 days normally, 6 in leap years
         return 6 if self._is_ethiopian_leap_year(year) else 5
-    
+
     def _ethiopian_to_jdn(self, year: int, month: int, day: int) -> int:
         """Convert Ethiopian date to Julian Day Number."""
         # Days before this year
-        days_in_year = 365
         leap_days = (year - 1) // 4  # One extra day every 4 years
         days_before_year = (year - 1) * 365 + leap_days
-        
+
         # Days before this month (each month has 30 days except Pagume)
         days_before_month = (month - 1) * 30
-        
+
         # Add the day
         return self._ethiopian_data["epoch_jdn"] + days_before_year + days_before_month + day - 1
-    
+
     def _jdn_to_ethiopian(self, jdn: int) -> Dict[str, int]:
         """Convert Julian Day Number to Ethiopian date."""
         # Days since epoch
         days = jdn - self._ethiopian_data["epoch_jdn"]
-        
+
         # Ethiopian year calculation
         # Every 4 years there are 1461 days (3*365 + 366)
         four_year_cycles = days // 1461
         remaining_days = days % 1461
-        
+
         # Years within the 4-year cycle
         if remaining_days < 365:
             year_in_cycle = 0
@@ -538,9 +537,9 @@ class GeezCalendarSensor(AlternativeTimeSensorBase):
         else:
             year_in_cycle = 3
             remaining_days -= 1095
-        
+
         year = four_year_cycles * 4 + year_in_cycle + 1
-        
+
         # Month and day calculation
         if remaining_days < 360:
             # In months 1-12 (30 days each)
@@ -550,99 +549,99 @@ class GeezCalendarSensor(AlternativeTimeSensorBase):
             # In Pagume (month 13)
             month = 13
             day = remaining_days - 360 + 1
-        
+
         return {"year": int(year), "month": int(month), "day": int(day)}
-    
+
     def _weekday_from_jdn(self, jdn: int) -> int:
         """Get weekday index from JDN (0 = Sunday, 6 = Saturday)."""
         # JDN 0 was Monday
         # We need 0 = Sunday
         return (jdn + 1) % 7
-    
+
     def _to_geez_numerals(self, num: int) -> str:
         """Convert a number to Ge'ez (Ethiopian) numerals."""
         if num <= 0:
             return str(num)
-        
+
         # Ge'ez numerals
         ones = ['', '፩', '፪', '፫', '፬', '፭', '፮', '፯', '፰', '፱']
         tens = ['', '፲', '፳', '፴', '፵', '፶', '፷', '፸', '፹', '፺']
-        
+
         result = ''
-        
+
         # Handle thousands (simplified for typical year ranges)
         if num >= 10000:
             result += ones[num // 10000] + '፼'  # ፼ = 10000
             num %= 10000
-        
+
         if num >= 1000:
             result += ones[num // 1000] + '፻'  # ፻ = 100, combined for thousands
             num %= 1000
-        
+
         if num >= 100:
             hundreds = num // 100
             if hundreds > 1:
                 result += ones[hundreds]
             result += '፻'
             num %= 100
-        
+
         if num >= 10:
             result += tens[num // 10]
             num %= 10
-        
+
         if num > 0:
             result += ones[num]
-        
+
         return result if result else '፩'
-    
+
     # ===============================
     # Core calculation
     # ===============================
-    
+
     def _calculate_ethiopian_date(self, earth_date: datetime) -> Dict[str, Any]:
         """Calculate Ethiopian date from Gregorian date."""
         # Load plugin options
         options = self.get_plugin_options()
         self._show_geez_names = options.get("show_geez_names", True)
         self._date_format = options.get("date_format", "full")
-        
+
         # Convert to JDN
         jdn = self._gregorian_to_jdn(earth_date.year, earth_date.month, earth_date.day)
-        
+
         # Convert to Ethiopian
         ethiopian = self._jdn_to_ethiopian(jdn)
         year, month, day = ethiopian["year"], ethiopian["month"], ethiopian["day"]
-        
+
         # Get month info
         months = self._ethiopian_data["months"]
         month_info = months[month - 1]
         month_name_en = month_info["en"]
         month_name_geez = month_info["geez"]
         month_name_am = month_info["am"]
-        
+
         # Get weekday info
         weekday_index = self._weekday_from_jdn(jdn)
         weekday_info = self._ethiopian_data["weekdays"][weekday_index]
         weekday_en = weekday_info["en"]
         weekday_am = weekday_info["am"]
         weekday_geez = weekday_info["geez"]
-        
+
         # Check for leap year and days in month
         is_leap = self._is_ethiopian_leap_year(year)
         dim = self._days_in_ethiopian_month(year, month)
-        
+
         # Check for events/holidays
         events = self._ethiopian_data["events"]
         event_key = f"({month},{day})"
         event_data = events.get(event_key, {})
-        
+
         # Get event name in user's language
         lang = getattr(self._hass.config, "language", "en")
         if isinstance(event_data, dict):
             event_name = event_data.get(lang, event_data.get("en", ""))
         else:
             event_name = str(event_data) if event_data else ""
-        
+
         # Build state text based on format
         if self._date_format == "short":
             state_text = f"{day:02d}/{month:02d}/{year}"
@@ -655,7 +654,7 @@ class GeezCalendarSensor(AlternativeTimeSensorBase):
                 state_text = f"{day} {month_name_geez} {year}"
             else:
                 state_text = f"{day} {month_name_en} {year}"
-        
+
         # Return attributes
         return {
             "ethiopian_year": year,
@@ -681,11 +680,11 @@ class GeezCalendarSensor(AlternativeTimeSensorBase):
             "era": "ዓ.ም.",  # Amharic era marker (Amate Mihret = Year of Mercy)
             "era_en": "E.C."  # Ethiopian Calendar
         }
-    
+
     # ===============================
     # Update loop hook
     # ===============================
-    
+
     def update(self) -> None:
         """Update the sensor state and attributes."""
         try:
@@ -696,11 +695,11 @@ class GeezCalendarSensor(AlternativeTimeSensorBase):
         except Exception as exc:
             _LOGGER.exception("Failed to calculate Ethiopian date: %s", exc)
             self._state = "error"
-    
+
     # ===============================
     # Config handling (optional hooks)
     # ===============================
-    
+
     def set_options(self, *, show_geez_names: bool | None = None,
                     date_format: str | None = None) -> None:
         """Allow runtime configuration from integration options."""

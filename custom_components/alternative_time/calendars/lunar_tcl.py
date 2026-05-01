@@ -11,12 +11,13 @@ GitHub: https://github.com/xlucn/LTE440
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone, timedelta
 import logging
 import math
-from typing import Dict, Any, Optional
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, Optional
 
 from homeassistant.core import HomeAssistant
+
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,7 +38,7 @@ CALENDAR_INFO = {
     "category": "space",
     "accuracy": "scientific",
     "update_interval": UPDATE_INTERVAL,
-    
+
     # Multi-language names
     "name": {
         "en": "Lunar Coordinate Time (TCL)",
@@ -53,7 +54,7 @@ CALENDAR_INFO = {
         "zh": "月球坐标时 (TCL)",
         "ko": "달 좌표시 (TCL)"
     },
-    
+
     # Short descriptions for UI
     "description": {
         "en": "Relativistic lunar timescale for cislunar space operations",
@@ -69,7 +70,7 @@ CALENDAR_INFO = {
         "zh": "用于地月空间作业的相对论月球时标",
         "ko": "지구-달 공간 작전을 위한 상대론적 달 시간 척도"
     },
-    
+
     # Translations for compatibility
     "translations": {
         "en": {
@@ -121,20 +122,20 @@ CALENDAR_INFO = {
             "description": "LTE440 천체력에 기반한 지구와 달 사이의 상대론적 시간 지연. 달의 시계는 지구보다 약 56.7µs/일 빠르게 작동합니다."
         }
     },
-    
+
     # LTE440-specific constants from the paper
     "lte440_data": {
         # Defining constants from IAU 2006 Resolution B3
         "L_B": 1.550519768e-8,  # Defining constant for TDB
         "TDB_0": -6.55e-5,      # seconds, offset constant
-        
+
         # Secular drift rates from LTE440 paper (Equations 18, 19)
         "L_C_M": 1.4825362167e-8,  # TCL/TCB secular drift: ⟨dTCL/dTCB⟩ = 1 - L_C^M
         "L_D_M": 6.79835524e-10,   # TCL/TDB secular drift: ⟨dTCL/dTDB⟩ = 1 + L_D^M
-        
+
         # Calibrated value from LTE441 comparison (Equation 22)
         "L_C_M_calibrated": 1.4825362217e-8,
-        
+
         # Periodic variations (Table 3 from paper)
         # Format: (amplitude_seconds, period_days, phase_radians, source)
         "periodic_terms": [
@@ -152,27 +153,27 @@ CALENDAR_INFO = {
             (1.46e-6, 584.00, 2.69896, "Venus synodic"),
             (1.35e-6, 27.2122, -2.47067, "Tropical lunar month"),
         ],
-        
+
         # Epoch: 1977 January 1, 0h0m32.184s TT (when TT, TCG, TCB, TCL coincide)
         # Expressed as Julian Date (TDB)
         "epoch_jd_tdb": 2443144.5003725,  # 1977-01-01 00:00:32.184 TT
-        
+
         # J2000.0 epoch for periodic calculations
         "j2000_jd": 2451545.0,  # 2000-01-01 12:00:00 TT
-        
+
         # Physical constants
         "seconds_per_day": 86400.0,
         "days_per_julian_year": 365.25,
-        
+
         # Accuracy estimates from paper
         "accuracy_ns_2050": 0.15,  # nanoseconds
         "precision_ps": 1.0,       # picoseconds
-        
+
         # Daily drift (derived): L_D^M * seconds_per_day
         # ≈ 6.79835524e-10 * 86400 ≈ 58.738 µs/day (TCL runs faster)
         "daily_drift_microseconds": 58.738,
     },
-    
+
     # Configuration options for the sensor
     "config_options": {
         "display_format": {
@@ -392,14 +393,14 @@ CALENDAR_INFO = {
             }
         }
     },
-    
+
     # Additional metadata
     "reference_url": "https://doi.org/10.1051/0004-6361/202557345",
     "documentation_url": "https://github.com/xlucn/LTE440",
     "origin": "Purple Mountain Observatory, Chinese Academy of Sciences",
     "created_by": "Lu, Yang & Xie (2025)",
     "based_on": "JPL DE440 Ephemeris",
-    
+
     # IAU Resolution references
     "iau_resolutions": [
         "IAU 2000 Resolution B1.5 (TCG-TCB transformation)",
@@ -407,17 +408,17 @@ CALENDAR_INFO = {
         "IAU 2024 Resolution II (LCRS and TCL establishment)",
         "IAU 2024 Resolution III (Coordinated lunar time standard)"
     ],
-    
+
     # Related calendars
     "related": ["tai", "ut1", "julian", "mars"],
-    
+
     # Tags for searching and filtering
     "tags": [
         "lunar", "moon", "tcl", "tdb", "tcb", "relativistic", "time-dilation",
         "ephemeris", "lte440", "de440", "cislunar", "space", "scientific",
         "astronomical", "iau", "coordinate-time", "selenocenter"
     ],
-    
+
     # Extended notes
     "notes": {
         "en": (
@@ -580,7 +581,7 @@ class LunarTCLSensor(AlternativeTimeSensorBase):
                 attrs["tcl_time"] = self._tcl_datetime.strftime('%H:%M:%S')
                 attrs["tcl_datetime"] = self._tcl_datetime.strftime('%Y-%m-%d %H:%M:%S')
                 attrs["tcl_iso"] = self._tcl_datetime.isoformat()
-            
+
             # Add current UTC for comparison
             now_utc = datetime.now(timezone.utc)
             attrs["utc_time"] = now_utc.strftime('%H:%M:%S')
@@ -622,7 +623,7 @@ class LunarTCLSensor(AlternativeTimeSensorBase):
 
     def _calculate_periodic_variation(self, jd: float) -> float:
         """Calculate the sum of periodic variations at given Julian Date.
-        
+
         Based on Table 3 from the LTE440 paper.
         """
         if not self._show_periodic_terms:
@@ -643,70 +644,69 @@ class LunarTCLSensor(AlternativeTimeSensorBase):
 
     def _calculate_tcl_tdb_difference(self, dt: datetime) -> Dict[str, Any]:
         """Calculate TCL - TDB difference and related quantities.
-        
+
         Based on equations from the LTE440 paper:
         - Secular drift: ⟨dTCL/dTDB⟩ = 1 + L_D^M
         - TCL - TDB ≈ (L_B/(1-L_B)) * (TDB - t0) + periodic terms
         """
         jd = self._datetime_to_jd(dt)
-        
+
         # Get constants
         L_B = self._lte_data["L_B"]
-        TDB_0 = self._lte_data["TDB_0"]
-        
+
         # Select drift rate (calibrated or standard)
         if self._use_calibrated_drift:
             L_C_M = self._lte_data["L_C_M_calibrated"]
         else:
             L_C_M = self._lte_data["L_C_M"]
-        
+
         L_D_M = self._lte_data["L_D_M"]
-        
+
         # Calculate days since epoch (1977-01-01)
         epoch_jd = self._lte_data["epoch_jd_tdb"]
         days_since_epoch = jd - epoch_jd
         seconds_since_epoch = days_since_epoch * self._lte_data["seconds_per_day"]
-        
+
         # Calculate secular drift contribution to TCL - TDB
         # From Eq. (11): LDTE(TDB) = (L_B/(1-L_B))*(TDB-t0) - TDB0/(1-L_B) + LTE(TDB)
         secular_term = (L_B / (1 - L_B)) * seconds_since_epoch
-        
+
         # Add periodic variations
         periodic_variation = self._calculate_periodic_variation(jd)
-        
+
         # Total TCL - TDB difference
         tcl_minus_tdb = secular_term + periodic_variation
-        
+
         # Calculate instantaneous drift rate (with periodic contribution)
         # Base secular drift
         secular_drift_rate = L_D_M
-        
+
         # Add derivative of periodic terms for instantaneous rate
         j2000_jd = self._lte_data["j2000_jd"]
         days_since_j2000 = jd - j2000_jd
         periodic_drift_rate = 0.0
-        
+
         if self._show_periodic_terms:
             for amplitude, period, phase, source in self._lte_data["periodic_terms"]:
                 angular_frequency = 2.0 * math.pi / period
                 # Derivative: dA*sin(ωt+φ)/dt = A*ω*cos(ωt+φ)
                 # Convert from per-day to dimensionless
-                term_rate = (amplitude * angular_frequency * 
-                            math.cos(angular_frequency * days_since_j2000 + phase) / 
+                term_rate = (amplitude * angular_frequency *
+                            math.cos(angular_frequency * days_since_j2000 + phase) /
                             self._lte_data["seconds_per_day"])
                 periodic_drift_rate += term_rate
-        
+
         total_drift_rate = secular_drift_rate + periodic_drift_rate
-        
+
         # Clock ratio: dTCL/dTDB = 1 + L_D^M + periodic
         clock_ratio = 1.0 + total_drift_rate
-        
+
         # Daily drift in microseconds
         daily_drift_us = total_drift_rate * self._lte_data["seconds_per_day"] * 1e6
-        
+
         # Daily drift in nanoseconds
         daily_drift_ns = daily_drift_us * 1000
-        
+
         # Calculate current periodic contributions from major terms
         annual_term = 0.0
         monthly_term = 0.0
@@ -714,43 +714,43 @@ class LunarTCLSensor(AlternativeTimeSensorBase):
             # Annual term (first in list)
             amp1, per1, ph1, _ = self._lte_data["periodic_terms"][0]
             annual_term = amp1 * math.sin(2.0 * math.pi / per1 * days_since_j2000 + ph1)
-            
+
             # Monthly term (second in list)
             amp2, per2, ph2, _ = self._lte_data["periodic_terms"][1]
             monthly_term = amp2 * math.sin(2.0 * math.pi / per2 * days_since_j2000 + ph2)
-        
+
         return {
             "julian_date": round(jd, 6),
             "days_since_epoch": round(days_since_epoch, 4),
             "seconds_since_epoch": round(seconds_since_epoch, 2),
-            
+
             # TCL - TDB difference
             "tcl_minus_tdb_seconds": round(tcl_minus_tdb, 9),
             "tcl_minus_tdb_milliseconds": round(tcl_minus_tdb * 1e3, 6),
             "tcl_minus_tdb_microseconds": round(tcl_minus_tdb * 1e6, 3),
-            
+
             # Drift rates
             "drift_rate_dimensionless": f"{total_drift_rate:.12e}",
             "daily_drift_microseconds": round(daily_drift_us, 3),
             "daily_drift_nanoseconds": round(daily_drift_ns, 3),
             "clock_ratio_tcl_tdb": f"{clock_ratio:.15f}",
-            
+
             # Secular constants from LTE440
             "L_C_M": f"{L_C_M:.10e}",
             "L_D_M": f"{L_D_M:.10e}",
             "using_calibrated_rate": self._use_calibrated_drift,
-            
+
             # Periodic variation details
             "periodic_variation_seconds": round(periodic_variation, 9) if self._show_periodic_terms else 0.0,
             "periodic_variation_microseconds": round(periodic_variation * 1e6, 3) if self._show_periodic_terms else 0.0,
             "annual_term_milliseconds": round(annual_term * 1e3, 4) if self._show_periodic_terms else 0.0,
             "monthly_term_microseconds": round(monthly_term * 1e6, 3) if self._show_periodic_terms else 0.0,
-            
+
             # Metadata
             "reference": "LTE440 (Lu, Yang & Xie, 2025)",
             "accuracy_estimate": f"<{self._lte_data['accuracy_ns_2050']} ns until 2050",
             "ephemeris_basis": "JPL DE440",
-            
+
             # Explanation
             "explanation_en": "A clock on the Moon runs faster than on Earth due to lower gravity (general relativity) and orbital motion (special relativity)",
             "calendar_type": "Lunar Coordinate Time",
@@ -760,44 +760,44 @@ class LunarTCLSensor(AlternativeTimeSensorBase):
     def _format_state(self, tcl_info: Dict[str, Any]) -> str:
         """Format the sensor state based on display format setting."""
         precision = self._precision_digits
-        
+
         # Get accumulated difference in seconds
         tcl_minus_tdb_seconds = tcl_info.get("tcl_minus_tdb_seconds", 0)
-        
+
         # Calculate TCL time by adding the difference to current UTC
         now_utc = datetime.now(timezone.utc)
         tcl_datetime = now_utc + timedelta(seconds=tcl_minus_tdb_seconds)
-        
+
         # Store for attributes
         self._tcl_datetime = tcl_datetime
-        
+
         if self._display_format == "tcl_time":
             # Just the time: HH:MM:SS.mmm TCL
             return f"{tcl_datetime.strftime('%H:%M:%S')} TCL"
-        
+
         elif self._display_format == "tcl_datetime":
             # Full date and time: YYYY-MM-DD HH:MM:SS TCL
             return f"{tcl_datetime.strftime('%Y-%m-%d %H:%M:%S')} TCL"
-        
+
         elif self._display_format == "tcl_with_drift":
             # Time plus drift info: HH:MM:SS TCL (+X.XXX ms)
             diff_ms = tcl_info.get("tcl_minus_tdb_milliseconds", 0)
             sign = "+" if diff_ms >= 0 else ""
             return f"{tcl_datetime.strftime('%H:%M:%S')} TCL ({sign}{diff_ms:.{precision}f} ms)"
-        
+
         elif self._display_format == "drift_microseconds":
             value = tcl_info["daily_drift_microseconds"]
             return f"{value:.{precision}f} µs/day"
-        
+
         elif self._display_format == "drift_nanoseconds":
             value = tcl_info["daily_drift_nanoseconds"]
             return f"{value:.{precision}f} ns/day"
-        
+
         elif self._display_format == "accumulated_ms":
             value = tcl_info["tcl_minus_tdb_milliseconds"]
             sign = "+" if value >= 0 else ""
             return f"{sign}{value:.{precision}f} ms"
-        
+
         else:
             # Default to TCL time
             return f"{tcl_datetime.strftime('%H:%M:%S')} TCL"
@@ -833,15 +833,15 @@ class LunarTCLSensor(AlternativeTimeSensorBase):
         """Update the sensor."""
         try:
             now = datetime.now(timezone.utc)
-            
+
             # Calculate TCL information
             self._tcl_info = self._calculate_tcl_tdb_difference(now)
-            
+
             # Format state
             self._state = self._format_state(self._tcl_info)
-            
+
             _LOGGER.debug(f"Lunar TCL updated: {self._state}")
-            
+
         except Exception as e:
             _LOGGER.error(f"Error updating Lunar TCL sensor: {e}")
             self._state = "Error"

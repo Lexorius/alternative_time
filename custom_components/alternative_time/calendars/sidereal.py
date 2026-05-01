@@ -9,12 +9,13 @@ Reference: https://aa.usno.navy.mil/faq/GAST
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone
-import math
 import logging
-from typing import Dict, Any
+import math
+from datetime import datetime, timezone
+from typing import Any, Dict
 
 from homeassistant.core import HomeAssistant
+
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,7 +38,7 @@ CALENDAR_INFO = {
     "category": "technical",
     "accuracy": "subsecond",
     "update_interval": UPDATE_INTERVAL,
-    
+
     # Multi-language names
     "name": {
         "en": "Sidereal Time",
@@ -53,7 +54,7 @@ CALENDAR_INFO = {
         "zh": "恒星时",
         "ko": "항성시"
     },
-    
+
     # Translations for compatibility
     "translations": {
         "en": {
@@ -105,7 +106,7 @@ CALENDAR_INFO = {
             "description": "먼 별들에 대한 지구 자전을 기반으로 한 천문 시간. GMST, GAST, LMST, LAST 및 ERA 포함."
         }
     },
-    
+
     # Short descriptions for UI
     "description": {
         "en": "Astronomical time based on Earth's rotation relative to distant stars. Includes GMST, GAST, LMST, LAST, and ERA.",
@@ -121,7 +122,7 @@ CALENDAR_INFO = {
         "zh": "基于地球相对于遥远恒星自转的天文时间。包括GMST、GAST、LMST、LAST和ERA。",
         "ko": "먼 별들에 대한 지구 자전을 기반으로 한 천문 시간. GMST, GAST, LMST, LAST 및 ERA 포함."
     },
-    
+
     # Detailed information for documentation
     "detailed_info": {
         "en": {
@@ -147,13 +148,13 @@ CALENDAR_INFO = {
             "formula_source": "USNO Circular Nr. 179 (2005) und IAU 2000 Resolutionen"
         }
     },
-    
+
     # Sidereal time specific data
     "sidereal_data": {
         # Sidereal day length
         "sidereal_day_seconds": 86164.0905,  # 23h 56m 4.0905s
         "solar_to_sidereal_ratio": 1.00273781191135448,
-        
+
         # Time system explanations
         "time_systems": {
             "GMST": "Greenwich Mean Sidereal Time",
@@ -162,7 +163,7 @@ CALENDAR_INFO = {
             "LAST": "Local Apparent Sidereal Time",
             "ERA": "Earth Rotation Angle"
         },
-        
+
         # Relationships
         "relationships": {
             "gast_gmst": "GAST = GMST + equation_of_equinoxes",
@@ -171,27 +172,27 @@ CALENDAR_INFO = {
             "era_to_gast": "ERA ≈ GAST (for most practical purposes)"
         }
     },
-    
+
     # Additional metadata
     "reference_url": "https://en.wikipedia.org/wiki/Sidereal_time",
     "documentation_url": "https://aa.usno.navy.mil/faq/GAST",
     "origin": "International Astronomical Union (IAU)",
     "created_by": "IAU / USNO",
     "introduced": "Ancient (formalized by IAU)",
-    
+
     # Example format
     "example": "14:23:45.67 LMST",
     "example_meaning": "Local Mean Sidereal Time at observer's location",
-    
+
     # Related calendars
     "related": ["ut1", "tai", "julian"],
-    
+
     # Tags for searching and filtering
     "tags": [
         "technical", "astronomy", "stars", "telescope", "navigation",
         "equinox", "rotation", "celestial", "observatory", "scientific"
     ],
-    
+
     # Special features
     "features": {
         "earth_rotation_based": True,
@@ -200,7 +201,7 @@ CALENDAR_INFO = {
         "nutation_correction": True,
         "astronomical_standard": True
     },
-    
+
     # Configuration options for this calendar
     "config_options": {
         "primary_display": {
@@ -470,25 +471,25 @@ CALENDAR_INFO = {
 
 class SiderealTimeSensor(AlternativeTimeSensorBase):
     """Sensor for displaying Sidereal Time (GMST, GAST, LMST, LAST, ERA)."""
-    
+
     # Class-level update interval
     UPDATE_INTERVAL = UPDATE_INTERVAL
-    
+
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the Sidereal Time sensor."""
         super().__init__(base_name, hass)
-        
+
         # Store CALENDAR_INFO as instance variable
         self._calendar_info = CALENDAR_INFO
-        
+
         # Get translated name from metadata
         calendar_name = self._translate('name', 'Sidereal Time')
-        
+
         # Set sensor attributes
         self._attr_name = f"{base_name} {calendar_name}"
         self._attr_unique_id = f"{base_name}_sidereal"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:star-shooting")
-        
+
         # Configuration options with defaults from CALENDAR_INFO
         config_defaults = CALENDAR_INFO.get("config_options", {})
         self._primary_display = config_defaults.get("primary_display", {}).get("default", "lmst")
@@ -499,21 +500,21 @@ class SiderealTimeSensor(AlternativeTimeSensorBase):
         self._show_equation_of_equinoxes = config_defaults.get("show_equation_of_equinoxes", {}).get("default", True)
         self._show_julian_date = config_defaults.get("show_julian_date", {}).get("default", False)
         self._precision = config_defaults.get("precision", {}).get("default", "centisecond")
-        
+
         # Initialize state
         self._state = None
         self._sidereal_data = {}
-        
+
         # Flag to track if options have been loaded
         self._options_loaded = False
-        
+
         _LOGGER.debug(f"Initialized Sidereal Time sensor: {self._attr_name}")
-    
+
     def _load_options(self) -> None:
         """Load plugin options after IDs are set."""
         if self._options_loaded:
             return
-            
+
         try:
             options = self.get_plugin_options()
             if options:
@@ -526,51 +527,51 @@ class SiderealTimeSensor(AlternativeTimeSensorBase):
                 self._show_equation_of_equinoxes = options.get("show_equation_of_equinoxes", self._show_equation_of_equinoxes)
                 self._show_julian_date = options.get("show_julian_date", self._show_julian_date)
                 self._precision = options.get("precision", self._precision)
-                
+
                 _LOGGER.debug(f"Sidereal sensor loaded options: primary={self._primary_display}, "
                             f"ha_location={self._use_ha_location}, format={self._display_format}")
             else:
                 _LOGGER.debug("Sidereal sensor using default options - no custom options found")
-                
+
             self._options_loaded = True
         except Exception as e:
             _LOGGER.debug(f"Sidereal sensor could not load options yet: {e}")
-    
+
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
-        
+
         # Try to load options now that IDs should be set
         self._load_options()
-        
+
         # Perform initial update
         self.update()
-    
+
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
-    
+
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes."""
         attrs = super().extra_state_attributes or {}
-        
+
         # Add sidereal-specific attributes
         if self._sidereal_data:
             attrs.update(self._sidereal_data)
-            
+
             # Add description in user's language
             attrs["description"] = self._translate('description')
-            
+
             # Add reference
             attrs["reference"] = CALENDAR_INFO.get('documentation_url', '')
-        
+
         return attrs
-    
+
     def _get_longitude(self) -> float:
         """Get the longitude to use for local sidereal time calculation.
-        
+
         Returns longitude in degrees (East positive).
         """
         if self._use_ha_location and self.hass:
@@ -582,16 +583,16 @@ class SiderealTimeSensor(AlternativeTimeSensorBase):
             # Use custom longitude
             _LOGGER.debug(f"Using custom longitude: {self._custom_longitude}°")
             return self._custom_longitude
-    
+
     def _get_latitude(self) -> float:
         """Get the latitude from Home Assistant (for display purposes)."""
         if self._use_ha_location and self.hass:
             return self.hass.config.latitude
         return 0.0
-    
+
     def _datetime_to_jd(self, dt: datetime) -> float:
         """Convert datetime to Julian Date.
-        
+
         Algorithm from Meeus, Astronomical Algorithms, Chapter 7.
         """
         # Ensure UTC
@@ -599,172 +600,172 @@ class SiderealTimeSensor(AlternativeTimeSensorBase):
             dt = dt.replace(tzinfo=timezone.utc)
         else:
             dt = dt.astimezone(timezone.utc)
-        
+
         year = dt.year
         month = dt.month
-        day = dt.day + (dt.hour + dt.minute / 60.0 + dt.second / 3600.0 + 
+        day = dt.day + (dt.hour + dt.minute / 60.0 + dt.second / 3600.0 +
                         dt.microsecond / 3600000000.0) / 24.0
-        
+
         if month <= 2:
             year -= 1
             month += 12
-        
+
         a = int(year / 100)
         b = 2 - a + int(a / 4)
-        
+
         jd = int(365.25 * (year + 4716)) + int(30.6001 * (month + 1)) + day + b - 1524.5
-        
+
         return jd
-    
+
     def _calculate_gmst(self, jd_ut1: float) -> float:
         """Calculate Greenwich Mean Sidereal Time (GMST).
-        
+
         Based on USNO Circular No. 179, Section 2.6.2.
-        
+
         Args:
             jd_ut1: Julian Date in UT1
-            
+
         Returns:
             GMST in hours (0-24)
         """
         # Calculate JD at 0h UT
         jd0 = math.floor(jd_ut1 - 0.5) + 0.5
-        
+
         # Hours elapsed since 0h UT
         h = (jd_ut1 - jd0) * 24.0
-        
+
         # Days since J2000.0 at 0h UT
         d_ut = jd0 - J2000_JD
-        
+
         # Centuries since J2000.0 (for T² term)
         t = (jd_ut1 - J2000_JD) / 36525.0
-        
+
         # GMST formula from USNO Circular No. 179
         # GMST = 6.697375 + 0.065709824279 * D_UT + 1.0027379 * H + 0.0000258 * T²
         gmst = 6.697375 + 0.065709824279 * d_ut + 1.0027379 * h + 0.0000258 * t * t
-        
+
         # Normalize to 0-24 hours
         gmst = gmst % 24.0
         if gmst < 0:
             gmst += 24.0
-        
+
         return gmst
-    
+
     def _calculate_equation_of_equinoxes(self, jd_tt: float) -> float:
         """Calculate the equation of equinoxes (nutation in right ascension).
-        
+
         Based on USNO Circular No. 179.
-        
+
         Args:
             jd_tt: Julian Date in TT (Terrestrial Time)
-            
+
         Returns:
             Equation of equinoxes in hours
         """
         # Days since J2000.0 in TT
         d_tt = jd_tt - J2000_JD
-        
+
         # Longitude of ascending node of the Moon (degrees)
         omega = 125.04 - 0.052954 * d_tt
-        
+
         # Mean longitude of the Sun (degrees)
         l_sun = 280.47 + 0.98565 * d_tt
-        
+
         # Obliquity of the ecliptic (degrees)
         epsilon = 23.4393 - 0.0000004 * d_tt
-        
+
         # Convert to radians for trig functions
         omega_rad = math.radians(omega)
         l_sun_rad = math.radians(l_sun)
         epsilon_rad = math.radians(epsilon)
-        
+
         # Nutation in longitude (approximate, in hours)
         delta_psi = -0.000319 * math.sin(omega_rad) - 0.000024 * math.sin(2 * l_sun_rad)
-        
+
         # Equation of equinoxes
         eq_eq = delta_psi * math.cos(epsilon_rad)
-        
+
         return eq_eq
-    
+
     def _calculate_gast(self, gmst: float, eq_eq: float) -> float:
         """Calculate Greenwich Apparent Sidereal Time (GAST).
-        
+
         GAST = GMST + equation_of_equinoxes
-        
+
         Args:
             gmst: Greenwich Mean Sidereal Time in hours
             eq_eq: Equation of equinoxes in hours
-            
+
         Returns:
             GAST in hours (0-24)
         """
         gast = gmst + eq_eq
-        
+
         # Normalize to 0-24 hours
         gast = gast % 24.0
         if gast < 0:
             gast += 24.0
-        
+
         return gast
-    
+
     def _calculate_local_sidereal_time(self, greenwich_st: float, longitude: float) -> float:
         """Calculate local sidereal time from Greenwich sidereal time.
-        
+
         LST = GST + longitude/15
-        
+
         Args:
             greenwich_st: Greenwich sidereal time in hours
             longitude: Observer's longitude in degrees (East positive)
-            
+
         Returns:
             Local sidereal time in hours (0-24)
         """
         # Convert longitude from degrees to hours (15° = 1 hour)
         longitude_hours = longitude / 15.0
-        
+
         lst = greenwich_st + longitude_hours
-        
+
         # Normalize to 0-24 hours
         lst = lst % 24.0
         if lst < 0:
             lst += 24.0
-        
+
         return lst
-    
+
     def _calculate_era(self, jd_ut1: float) -> float:
         """Calculate Earth Rotation Angle (ERA).
-        
+
         Based on IAU 2000 resolution.
         ERA = 2π(0.7790572732640 + 1.00273781191135448 × Tu) radians
         where Tu = JD(UT1) - 2451545.0
-        
+
         Args:
             jd_ut1: Julian Date in UT1
-            
+
         Returns:
             ERA in degrees (0-360)
         """
         tu = jd_ut1 - J2000_JD
-        
+
         # ERA in radians (full rotations)
         era_radians = 2.0 * math.pi * (0.7790572732640 + 1.00273781191135448 * tu)
-        
+
         # Normalize to 0-2π
         era_radians = era_radians % (2.0 * math.pi)
         if era_radians < 0:
             era_radians += 2.0 * math.pi
-        
+
         # Convert to degrees
         era_degrees = math.degrees(era_radians)
-        
+
         return era_degrees
-    
+
     def _hours_to_hms(self, hours: float) -> tuple:
         """Convert decimal hours to hours, minutes, seconds.
-        
+
         Args:
             hours: Time in decimal hours
-            
+
         Returns:
             Tuple of (hours, minutes, seconds)
         """
@@ -772,16 +773,16 @@ class SiderealTimeSensor(AlternativeTimeSensorBase):
         minutes_decimal = (hours - h) * 60.0
         m = int(minutes_decimal)
         s = (minutes_decimal - m) * 60.0
-        
+
         return h, m, s
-    
+
     def _format_time(self, hours: float, suffix: str = "") -> str:
         """Format time value according to display_format setting.
-        
+
         Args:
             hours: Time in decimal hours
             suffix: Optional suffix (e.g., "LMST", "GMST")
-            
+
         Returns:
             Formatted time string
         """
@@ -792,20 +793,20 @@ class SiderealTimeSensor(AlternativeTimeSensorBase):
             return f"{degrees:.6f}° {suffix}".strip()
         else:  # hms (default)
             h, m, s = self._hours_to_hms(hours)
-            
+
             if self._precision == "millisecond":
                 return f"{h:02d}:{m:02d}:{s:06.3f} {suffix}".strip()
             elif self._precision == "centisecond":
                 return f"{h:02d}:{m:02d}:{s:05.2f} {suffix}".strip()
             else:  # second
                 return f"{h:02d}:{m:02d}:{int(s):02d} {suffix}".strip()
-    
+
     def _calculate_sidereal_time(self, utc_time: datetime) -> Dict[str, Any]:
         """Calculate all sidereal time values.
-        
+
         Args:
             utc_time: Current UTC time
-            
+
         Returns:
             Dictionary with all sidereal time values
         """
@@ -814,89 +815,89 @@ class SiderealTimeSensor(AlternativeTimeSensorBase):
             utc_time = utc_time.replace(tzinfo=timezone.utc)
         else:
             utc_time = utc_time.astimezone(timezone.utc)
-        
+
         # Get Julian Date
         jd = self._datetime_to_jd(utc_time)
-        
+
         # For high precision, we should use UT1 and TT separately
         # For this implementation, we'll use UTC ≈ UT1 ≈ TT (error < 1 second)
         jd_ut1 = jd
         jd_tt = jd  # TT ≈ UTC + 69.184s, but for ~1s accuracy this is fine
-        
+
         # Calculate GMST
         gmst = self._calculate_gmst(jd_ut1)
-        
+
         # Calculate equation of equinoxes
         eq_eq = self._calculate_equation_of_equinoxes(jd_tt)
-        
+
         # Calculate GAST
         gast = self._calculate_gast(gmst, eq_eq)
-        
+
         # Get longitude for local calculations
         longitude = self._get_longitude()
         latitude = self._get_latitude()
-        
+
         # Calculate local sidereal times
         lmst = self._calculate_local_sidereal_time(gmst, longitude)
         last = self._calculate_local_sidereal_time(gast, longitude)
-        
+
         # Calculate ERA
         era_degrees = self._calculate_era(jd_ut1)
         era_hours = era_degrees / 15.0  # Convert to hours for display
-        
+
         # Build result dictionary
         result = {
             # Greenwich sidereal times
             "gmst": self._format_time(gmst, "GMST"),
             "gmst_hours": round(gmst, 8),
             "gmst_degrees": round(gmst * 15.0, 6),
-            
+
             "gast": self._format_time(gast, "GAST"),
             "gast_hours": round(gast, 8),
             "gast_degrees": round(gast * 15.0, 6),
-            
+
             # Local sidereal times
             "lmst": self._format_time(lmst, "LMST"),
             "lmst_hours": round(lmst, 8),
             "lmst_degrees": round(lmst * 15.0, 6),
-            
+
             "last": self._format_time(last, "LAST"),
             "last_hours": round(last, 8),
             "last_degrees": round(last * 15.0, 6),
-            
+
             # Location info
             "longitude": round(longitude, 6),
             "latitude": round(latitude, 6),
             "location_source": "Home Assistant" if self._use_ha_location else "Custom",
-            
+
             # UTC reference
             "utc_datetime": utc_time.strftime("%Y-%m-%d %H:%M:%S UTC")
         }
-        
+
         # Add ERA if enabled
         if self._show_era:
             result["era_degrees"] = round(era_degrees, 6)
             result["era_radians"] = round(math.radians(era_degrees), 8)
             result["era"] = self._format_time(era_hours, "ERA")
             result["era_hours"] = round(era_hours, 8)
-        
+
         # Add equation of equinoxes if enabled
         if self._show_equation_of_equinoxes:
             eq_eq_seconds = eq_eq * 3600.0  # Convert to seconds
             result["equation_of_equinoxes_seconds"] = round(eq_eq_seconds, 4)
             result["equation_of_equinoxes"] = f"{eq_eq_seconds:+.4f}s"
             result["gast_minus_gmst"] = result["equation_of_equinoxes"]
-        
+
         # Add Julian Date if enabled
         if self._show_julian_date:
             result["julian_date"] = round(jd, 8)
             result["modified_julian_date"] = round(jd - 2400000.5, 8)
             result["days_since_j2000"] = round(jd - J2000_JD, 8)
-        
+
         # Add sidereal day progress
         sidereal_day_progress = (lmst / 24.0) * 100.0
         result["sidereal_day_progress"] = f"{sidereal_day_progress:.2f}%"
-        
+
         # Set the primary display value based on configuration
         primary_values = {
             "gmst": result["gmst"],
@@ -907,27 +908,27 @@ class SiderealTimeSensor(AlternativeTimeSensorBase):
         }
         result["primary_display"] = primary_values.get(self._primary_display, result["lmst"])
         result["primary_display_type"] = self._primary_display.upper()
-        
+
         return result
-    
+
     def update(self) -> None:
         """Update the sensor."""
         # Ensure options are loaded
         if not self._options_loaded:
             self._load_options()
-        
+
         try:
             now = datetime.now(timezone.utc)
             self._sidereal_data = self._calculate_sidereal_time(now)
-            
+
             # Set state to primary display value
             self._state = self._sidereal_data.get("primary_display", "Sidereal ERROR")
-            
+
             _LOGGER.debug(f"Updated Sidereal Time: {self._state}")
         except Exception as e:
             _LOGGER.error(f"Error updating Sidereal Time: {e}", exc_info=True)
             self._state = "Sidereal ERROR"
-    
+
     async def async_update(self) -> None:
         """Update sensor asynchronously."""
         # Run synchronous update in executor

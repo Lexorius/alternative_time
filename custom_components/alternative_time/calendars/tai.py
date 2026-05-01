@@ -1,11 +1,12 @@
 """TAI (International Atomic Time) Calendar implementation - Version 1.0.0."""
 from __future__ import annotations
 
-from datetime import datetime, timezone, timedelta
 import logging
-from typing import Dict, Any
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict
 
 from homeassistant.core import HomeAssistant
+
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,7 +31,7 @@ CALENDAR_INFO = {
     "category": "technical",
     "accuracy": "nanosecond",
     "update_interval": UPDATE_INTERVAL,
-    
+
     # Multi-language names
     "name": {
         "en": "International Atomic Time (TAI)",
@@ -46,7 +47,7 @@ CALENDAR_INFO = {
         "zh": "国际原子时 (TAI)",
         "ko": "국제원자시 (TAI)"
     },
-    
+
     # Translations for compatibility
     "translations": {
         "en": {
@@ -98,7 +99,7 @@ CALENDAR_INFO = {
             "description": "고정밀 원자 시간 척도. TAI = UTC + 37초 (윤초 없음)"
         }
     },
-    
+
     # Short descriptions for UI
     "description": {
         "en": "High-precision atomic time scale. TAI = UTC + 37 seconds (no leap seconds)",
@@ -114,7 +115,7 @@ CALENDAR_INFO = {
         "zh": "高精度原子时间尺度。TAI = UTC + 37秒（无闰秒）",
         "ko": "고정밀 원자 시간 척도. TAI = UTC + 37초 (윤초 없음)"
     },
-    
+
     # Detailed information for documentation
     "detailed_info": {
         "en": {
@@ -138,17 +139,17 @@ CALENDAR_INFO = {
             "note": "TAI läuft ununterbrochen weiter, während UTC für die unregelmäßige Erdrotation angepasst wird"
         }
     },
-    
+
     # TAI-specific data
     "tai_data": {
         "epoch": {
             "date": "1958-01-01 00:00:00 UT2",
             "description": "TAI Epoch - Beginning of International Atomic Time"
         },
-        
+
         # Current TAI-UTC offset
         "current_offset": TAI_UTC_OFFSET,
-        
+
         # Leap second history (when leap seconds were introduced)
         "leap_second_history": {
             "1972-01-01": 10,  # Initial offset when UTC started
@@ -180,7 +181,7 @@ CALENDAR_INFO = {
             "2015-07-01": 36,
             "2017-01-01": 37
         },
-        
+
         # Related time systems
         "related_systems": {
             "UTC": "Coordinated Universal Time (UTC = TAI - leap seconds)",
@@ -189,7 +190,7 @@ CALENDAR_INFO = {
             "TCG": "Geocentric Coordinate Time",
             "TCB": "Barycentric Coordinate Time"
         },
-        
+
         # Precision info
         "precision": {
             "clocks": "450+ atomic clocks worldwide",
@@ -197,27 +198,27 @@ CALENDAR_INFO = {
             "definition": "Based on cesium-133 hyperfine transition"
         }
     },
-    
+
     # Additional metadata
     "reference_url": "https://en.wikipedia.org/wiki/International_Atomic_Time",
     "documentation_url": "https://www.bipm.org/en/time-metrology",
     "origin": "Bureau International des Poids et Mesures (BIPM)",
     "created_by": "BIPM",
     "introduced": "January 1, 1958",
-    
+
     # Example format
     "example": "2024-12-31 12:00:37 TAI",
     "example_meaning": "37 seconds ahead of UTC (due to accumulated leap seconds)",
-    
+
     # Related calendars
     "related": ["unix", "julian", "swatch"],
-    
+
     # Tags for searching and filtering
     "tags": [
         "technical", "atomic", "precision", "scientific", "gps",
         "timekeeping", "metrology", "physics", "bipm", "cesium"
     ],
-    
+
     # Special features
     "features": {
         "continuous_count": True,
@@ -226,7 +227,7 @@ CALENDAR_INFO = {
         "gps_compatible": True,
         "scientific_standard": True
     },
-    
+
     # Configuration options for this calendar
     "config_options": {
         "show_utc_offset": {
@@ -482,53 +483,53 @@ CALENDAR_INFO = {
 
 class TaiTimeSensor(AlternativeTimeSensorBase):
     """Sensor for displaying International Atomic Time (TAI)."""
-    
+
     # Class-level update interval
     UPDATE_INTERVAL = UPDATE_INTERVAL
-    
+
     # GPS Time offset from TAI (GPS time started on 1980-01-06 with TAI-GPS = 19 seconds)
     GPS_TAI_OFFSET = 19  # seconds
-    
+
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the TAI time sensor."""
         super().__init__(base_name, hass)
-        
+
         # Store CALENDAR_INFO as instance variable
         self._calendar_info = CALENDAR_INFO
-        
+
         # Get translated name from metadata
         calendar_name = self._translate('name', 'International Atomic Time (TAI)')
-        
+
         # Set sensor attributes
         self._attr_name = f"{base_name} {calendar_name}"
         self._attr_unique_id = f"{base_name}_tai"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:atom")
-        
+
         # Configuration options with defaults from CALENDAR_INFO
         config_defaults = CALENDAR_INFO.get("config_options", {})
         self._show_utc_offset = config_defaults.get("show_utc_offset", {}).get("default", True)
         self._show_gps_time = config_defaults.get("show_gps_time", {}).get("default", False)
         self._time_format = config_defaults.get("time_format", {}).get("default", "iso")
-        
+
         # TAI data
         self._tai_data = CALENDAR_INFO["tai_data"]
         self._tai_utc_offset = self._tai_data.get("current_offset", TAI_UTC_OFFSET)
-        
+
         # Initialize state
         self._state = None
         self._tai_time = {}
-        
+
         # Flag to track if options have been loaded
         self._options_loaded = False
-        
+
         _LOGGER.debug(f"Initialized TAI sensor: {self._attr_name}")
         _LOGGER.debug(f"  TAI-UTC offset: {self._tai_utc_offset} seconds")
-    
+
     def _load_options(self) -> None:
         """Load plugin options after IDs are set."""
         if self._options_loaded:
             return
-            
+
         try:
             options = self.get_plugin_options()
             if options:
@@ -536,73 +537,73 @@ class TaiTimeSensor(AlternativeTimeSensorBase):
                 self._show_utc_offset = options.get("show_utc_offset", self._show_utc_offset)
                 self._show_gps_time = options.get("show_gps_time", self._show_gps_time)
                 self._time_format = options.get("time_format", self._time_format)
-                
+
                 _LOGGER.debug(f"TAI sensor loaded options: utc_offset={self._show_utc_offset}, "
                             f"gps_time={self._show_gps_time}, format={self._time_format}")
             else:
                 _LOGGER.debug("TAI sensor using default options - no custom options found")
-                
+
             self._options_loaded = True
         except Exception as e:
             _LOGGER.debug(f"TAI sensor could not load options yet: {e}")
-    
+
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
-        
+
         # Try to load options now that IDs should be set
         self._load_options()
-        
+
         # Perform initial update
         self.update()
-    
+
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
-    
+
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes."""
         attrs = super().extra_state_attributes or {}
-        
+
         # Add TAI-specific attributes
         if self._tai_time:
             attrs.update(self._tai_time)
-            
+
             # Add description in user's language
             attrs["description"] = self._translate('description')
-            
+
             # Add reference
             attrs["reference"] = CALENDAR_INFO.get('reference_url', '')
-            
+
             # Add epoch information
             attrs["epoch"] = self._tai_data["epoch"]["date"]
-            
+
             # Add current configuration
             attrs["format_setting"] = self._time_format
-        
+
         return attrs
-    
+
     def _calculate_tai_time(self, utc_time: datetime) -> Dict[str, Any]:
         """Calculate TAI from UTC time."""
-        
+
         # Ensure we're working with UTC
         if utc_time.tzinfo is None:
             utc_time = utc_time.replace(tzinfo=timezone.utc)
         else:
             utc_time = utc_time.astimezone(timezone.utc)
-        
+
         # Calculate TAI by adding the leap second offset
         tai_time = utc_time + timedelta(seconds=self._tai_utc_offset)
-        
+
         # Calculate GPS time (TAI - 19 seconds)
         gps_time = tai_time - timedelta(seconds=self.GPS_TAI_OFFSET)
-        
+
         # Calculate Terrestrial Time (TT = TAI + 32.184 seconds)
         tt_offset = 32.184
         tt_time = tai_time + timedelta(seconds=tt_offset)
-        
+
         # Format based on user preference
         if self._time_format == "time_only":
             formatted = tai_time.strftime("%H:%M:%S TAI")
@@ -610,7 +611,7 @@ class TaiTimeSensor(AlternativeTimeSensorBase):
             formatted = tai_time.strftime("%d %b %Y, %H:%M:%S TAI")
         else:  # iso (default)
             formatted = tai_time.strftime("%Y-%m-%dT%H:%M:%S TAI")
-        
+
         # Calculate Modified Julian Date (MJD)
         # MJD = JD - 2400000.5
         # JD for J2000.0 = 2451545.0 (2000-01-01 12:00:00 TT)
@@ -618,7 +619,7 @@ class TaiTimeSensor(AlternativeTimeSensorBase):
         days_since_j2000 = (tai_time - j2000).total_seconds() / 86400.0
         jd = 2451545.0 + days_since_j2000
         mjd = jd - 2400000.5
-        
+
         result = {
             "tai_datetime": tai_time.strftime("%Y-%m-%d %H:%M:%S TAI"),
             "tai_iso": tai_time.isoformat(),
@@ -629,51 +630,51 @@ class TaiTimeSensor(AlternativeTimeSensorBase):
             "modified_julian_date": round(mjd, 6),
             "julian_date": round(jd, 6)
         }
-        
+
         # Add UTC offset display if enabled
         if self._show_utc_offset:
             result["offset_display"] = f"TAI = UTC + {self._tai_utc_offset}s"
-        
+
         # Add GPS time if enabled
         if self._show_gps_time:
             result["gps_datetime"] = gps_time.strftime("%Y-%m-%d %H:%M:%S GPS")
             result["gps_tai_offset"] = f"GPS = TAI - {self.GPS_TAI_OFFSET}s"
             result["gps_utc_offset"] = self._tai_utc_offset - self.GPS_TAI_OFFSET
-        
+
         # Add Terrestrial Time
         result["tt_datetime"] = tt_time.strftime("%Y-%m-%d %H:%M:%S.%f TT")[:26] + " TT"
         result["tt_offset"] = f"TT = TAI + {tt_offset}s"
-        
+
         # Calculate time since TAI epoch (1958-01-01)
         tai_epoch = datetime(1958, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
         seconds_since_epoch = (tai_time - tai_epoch).total_seconds()
         days_since_epoch = int(seconds_since_epoch / 86400)
         years_since_epoch = seconds_since_epoch / (365.25 * 86400)
-        
+
         result["seconds_since_epoch"] = int(seconds_since_epoch)
         result["days_since_epoch"] = days_since_epoch
         result["years_since_epoch"] = round(years_since_epoch, 4)
-        
+
         return result
-    
+
     def update(self) -> None:
         """Update the sensor."""
         # Ensure options are loaded (in case async_added_to_hass hasn't run yet)
         if not self._options_loaded:
             self._load_options()
-        
+
         try:
             now = datetime.now(timezone.utc)
             self._tai_time = self._calculate_tai_time(now)
-            
+
             # Set state to formatted TAI time
             self._state = self._tai_time.get("formatted", "TAI ERROR")
-            
+
             _LOGGER.debug(f"Updated TAI to {self._state}")
         except Exception as e:
             _LOGGER.error(f"Error updating TAI: {e}", exc_info=True)
             self._state = "TAI ERROR"
-    
+
     async def async_update(self) -> None:
         """Update sensor asynchronously."""
         # Run synchronous update in executor

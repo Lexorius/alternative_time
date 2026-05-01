@@ -1,11 +1,12 @@
 """Suriyakati Calendar (Thai Buddhist Calendar) implementation - Version 2.5."""
 from __future__ import annotations
 
-from datetime import datetime
 import logging
-from typing import Dict, Any
+from datetime import datetime
+from typing import Any, Dict
 
 from homeassistant.core import HomeAssistant
+
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +26,7 @@ CALENDAR_INFO = {
     "category": "cultural",
     "accuracy": "official",
     "update_interval": UPDATE_INTERVAL,
-    
+
     # Multi-language names (English primary)
     "name": {
         "en": "Thai Buddhist Calendar",
@@ -41,7 +42,7 @@ CALENDAR_INFO = {
         "ko": "태국 불교 달력",
         "th": "ปฏิทินสุริยคติไทย"
     },
-    
+
     # Short descriptions for UI (English primary)
     "description": {
         "en": "Thai solar calendar with Buddhist Era year (BE = CE + 543)",
@@ -57,7 +58,7 @@ CALENDAR_INFO = {
         "ko": "불기 연도의 태국 태양력 (BE = CE + 543)",
         "th": "ปฏิทินสุริยคติไทย พุทธศักราช (พ.ศ. = ค.ศ. + 543)"
     },
-    
+
     # Detailed information for documentation
     "detailed_info": {
         "en": {
@@ -97,7 +98,7 @@ CALENDAR_INFO = {
             "usage": "ใช้อย่างเป็นทางการในประเทศไทย"
         }
     },
-    
+
     # Thai-specific data
     "thai_data": {
         # Thai months (solar calendar)
@@ -115,7 +116,7 @@ CALENDAR_INFO = {
             {"name": "พฤศจิกายน", "roman": "Phruetsachikayon", "english": "November", "abbr": "พ.ย."},
             {"name": "ธันวาคม", "roman": "Thanwakhom", "english": "December", "abbr": "ธ.ค."}
         ],
-        
+
         # Thai weekdays
         "weekdays": [
             {"name": "อาทิตย์", "roman": "Wan Athit", "english": "Sunday", "planet": "Sun", "color": "Red"},
@@ -126,7 +127,7 @@ CALENDAR_INFO = {
             {"name": "ศุกร์", "roman": "Wan Suk", "english": "Friday", "planet": "Venus", "color": "Blue"},
             {"name": "เสาร์", "roman": "Wan Sao", "english": "Saturday", "planet": "Saturn", "color": "Purple"}
         ],
-        
+
         # Thai zodiac animals (similar to Chinese)
         "zodiac": [
             {"thai": "ชวด", "roman": "Chuat", "english": "Rat", "emoji": "🐀"},
@@ -142,10 +143,10 @@ CALENDAR_INFO = {
             {"thai": "จอ", "roman": "Cho", "english": "Dog", "emoji": "🐕"},
             {"thai": "กุน", "roman": "Kun", "english": "Pig", "emoji": "🐖"}
         ],
-        
+
         # Thai numerals
         "thai_digits": ["๐", "๑", "๒", "๓", "๔", "๕", "๖", "๗", "๘", "๙"],
-        
+
         # Major Thai holidays
         "holidays": {
             (1, 1): {"thai": "วันขึ้นปีใหม่", "english": "New Year's Day"},
@@ -163,27 +164,27 @@ CALENDAR_INFO = {
             (12, 31): {"thai": "วันสิ้นปี", "english": "New Year's Eve"}
         }
     },
-    
+
     # Additional metadata
     "reference_url": "https://en.wikipedia.org/wiki/Thai_solar_calendar",
     "documentation_url": "https://www.thaicalendar.com",
     "origin": "Thailand",
     "created_by": "King Chulalongkorn (Rama V)",
     "official_since": "1888 CE (2431 BE)",
-    
+
     # Example format
     "example": "25 December 2568 BE | ๒๕ ธันวาคม ๒๕๖๘",
     "example_meaning": "25th December 2568 Buddhist Era (2025 CE)",
-    
+
     # Related calendars
     "related": ["gregorian", "buddhist", "lunar"],
-    
+
     # Tags for searching and filtering
     "tags": [
         "cultural", "buddhist", "thai", "thailand", "solar",
         "official", "asian", "southeast_asia", "be", "songkran"
     ],
-    
+
     # Special features
     "features": {
         "buddhist_era": True,
@@ -193,7 +194,7 @@ CALENDAR_INFO = {
         "lunar_holy_days": True,
         "precision": "day"
     },
-    
+
     # Configuration options for this calendar
     "config_options": {
         "display_language": {
@@ -342,22 +343,22 @@ CALENDAR_INFO = {
 
 class SuriyakatiCalendarSensor(AlternativeTimeSensorBase):
     """Sensor for displaying Thai Buddhist Calendar (Suriyakati)."""
-    
+
     # Class-level update interval
     UPDATE_INTERVAL = UPDATE_INTERVAL
-    
+
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the Suriyakati calendar sensor."""
         super().__init__(base_name, hass)
-        
+
         # Get translated name from metadata
         calendar_name = self._translate('name', 'Thai Buddhist Calendar')
-        
+
         # Set sensor attributes
         self._attr_name = f"{base_name} {calendar_name}"
         self._attr_unique_id = f"{base_name}_suriyakati_thai"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:buddhism")
-        
+
         # Default configuration options
         self._display_language = "english"
         self._use_thai_numerals = True
@@ -365,20 +366,20 @@ class SuriyakatiCalendarSensor(AlternativeTimeSensorBase):
         self._show_day_color = True
         self._show_buddhist_days = False
         self._format = "full"
-        
+
         # Thai data
         self._thai_data = CALENDAR_INFO["thai_data"]
-        
+
         # Track if options have been loaded
         self._options_loaded = False
-        
+
         _LOGGER.debug(f"Initialized Thai Buddhist Calendar sensor: {self._attr_name}")
-    
+
     def _load_options(self) -> None:
         """Load configuration options from config entry."""
         if self._options_loaded:
             return
-            
+
         try:
             options = self.get_plugin_options()
             if options:
@@ -389,45 +390,45 @@ class SuriyakatiCalendarSensor(AlternativeTimeSensorBase):
                 self._show_day_color = options.get("show_day_color", self._show_day_color)
                 self._show_buddhist_days = options.get("show_buddhist_days", self._show_buddhist_days)
                 self._format = options.get("format", self._format)
-                
+
                 _LOGGER.debug(f"Thai calendar loaded options: language={self._display_language}, "
                             f"numerals={self._use_thai_numerals}, zodiac={self._show_zodiac}, "
                             f"color={self._show_day_color}, buddhist={self._show_buddhist_days}, "
                             f"format={self._format}")
             else:
                 _LOGGER.debug("Thai calendar using default options - no custom options found")
-                
+
             self._options_loaded = True
         except Exception as e:
             _LOGGER.debug(f"Thai calendar could not load options yet: {e}")
-    
+
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
-        
+
         # Try to load options now that IDs should be set
         self._load_options()
-    
+
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
-    
+
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes."""
         attrs = super().extra_state_attributes
-        
+
         # Add Thai-specific attributes
         if hasattr(self, '_thai_date'):
             attrs.update(self._thai_date)
-            
+
             # Add description in user's language
             attrs["description"] = self._translate('description')
-            
+
             # Add reference
             attrs["reference"] = CALENDAR_INFO.get('reference_url', '')
-            
+
             # Add configuration status
             attrs["config"] = {
                 "display_language": self._display_language,
@@ -437,23 +438,23 @@ class SuriyakatiCalendarSensor(AlternativeTimeSensorBase):
                 "show_buddhist_days": self._show_buddhist_days,
                 "format": self._format
             }
-        
+
         return attrs
-    
+
     def _to_thai_number(self, n: int) -> str:
         """Convert number to Thai numerals."""
         if not self._use_thai_numerals:
             return str(n)
-        
+
         thai_digits = self._thai_data["thai_digits"]
         return ''.join(thai_digits[int(d)] for d in str(n))
-    
+
     def _get_buddhist_day(self, day: int, month: int) -> str:
         """Calculate Buddhist holy day (simplified)."""
         # Simplified calculation - actual dates follow lunar calendar
         # This approximates uposatha days (Buddhist sabbath)
         lunar_approximation = (day + month * 2) % 30
-        
+
         if lunar_approximation == 8:
             return "🌓 Uposatha (First Quarter)"
         elif lunar_approximation == 15:
@@ -462,36 +463,36 @@ class SuriyakatiCalendarSensor(AlternativeTimeSensorBase):
             return "🌗 Uposatha (Last Quarter)"
         elif lunar_approximation in [29, 30, 0, 1]:
             return "🌑 Uposatha (New Moon)"
-        
+
         return ""
-    
+
     def _calculate_thai_date(self, earth_date: datetime) -> Dict[str, Any]:
         """Calculate Thai Buddhist Calendar date from standard date."""
-        
+
         # Load options if not loaded yet
         self._load_options()
-        
+
         # Calculate Buddhist Era year
         buddhist_year = earth_date.year + 543
-        
+
         # Get month data
         month_data = self._thai_data["months"][earth_date.month - 1]
-        
+
         # Get weekday (Thai week starts on Sunday)
         weekday_index = (earth_date.weekday() + 1) % 7
         weekday_data = self._thai_data["weekdays"][weekday_index]
-        
+
         # Calculate zodiac animal
         # Thai zodiac aligned so 2024 CE (2567 BE) = Year of the Dragon (index 4)
         zodiac_index = (buddhist_year - 3) % 12
         zodiac_data = self._thai_data["zodiac"][zodiac_index]
-        
+
         # Check for holidays
         holiday_data = self._thai_data["holidays"].get((earth_date.month, earth_date.day))
-        
+
         # Get Buddhist holy day if enabled
         buddhist_day = self._get_buddhist_day(earth_date.day, earth_date.month) if self._show_buddhist_days else ""
-        
+
         # Format date based on display language and format
         if self._format == "numeric":
             # Numeric format
@@ -523,7 +524,7 @@ class SuriyakatiCalendarSensor(AlternativeTimeSensorBase):
                 formatted = f"{earth_date.day} {month_data['english']} {buddhist_year} BE | {self._to_thai_number(earth_date.day)} {month_data['name']} {self._to_thai_number(buddhist_year)}"
             else:  # english
                 formatted = f"{weekday_data['english']}, {earth_date.day} {month_data['english']} {buddhist_year} BE"
-        
+
         result = {
             "buddhist_year": buddhist_year,
             "gregorian_year": earth_date.year,
@@ -538,40 +539,40 @@ class SuriyakatiCalendarSensor(AlternativeTimeSensorBase):
             "formatted": formatted,
             "gregorian_date": earth_date.strftime("%Y-%m-%d")
         }
-        
+
         # Add Thai numerals if enabled
         if self._use_thai_numerals:
             result["day_thai"] = self._to_thai_number(earth_date.day)
             result["year_thai"] = self._to_thai_number(buddhist_year)
-        
+
         # Add zodiac if enabled
         if self._show_zodiac:
             result["zodiac_thai"] = zodiac_data["thai"]
             result["zodiac_english"] = zodiac_data["english"]
             result["zodiac_emoji"] = zodiac_data["emoji"]
-        
+
         # Add day color if enabled
         if self._show_day_color:
             result["day_color"] = weekday_data["color"]
             result["day_planet"] = weekday_data["planet"]
-        
+
         # Add Buddhist holy day if applicable
         if buddhist_day:
             result["buddhist_day"] = buddhist_day
-        
+
         # Add holiday if applicable
         if holiday_data:
             result["holiday_thai"] = holiday_data["thai"]
             result["holiday_english"] = holiday_data["english"]
-        
+
         return result
-    
+
     def update(self) -> None:
         """Update the sensor."""
         now = datetime.now()
         self._thai_date = self._calculate_thai_date(now)
-        
+
         # Set state to formatted date
         self._state = self._thai_date["formatted"]
-        
+
         _LOGGER.debug(f"Updated Thai Buddhist Calendar to {self._state}")

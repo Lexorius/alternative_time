@@ -1,11 +1,12 @@
 """Hexadecimal Time implementation - Version 2.5.1."""
 from __future__ import annotations
 
-from datetime import datetime
 import logging
-from typing import Dict, Any
+from datetime import datetime
+from typing import Any, Dict
 
 from homeassistant.core import HomeAssistant
+
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +26,7 @@ CALENDAR_INFO = {
     "category": "technical",
     "accuracy": "mathematical",
     "update_interval": UPDATE_INTERVAL,
-    
+
     # Multi-language names
     "name": {
         "en": "Hexadecimal Time",
@@ -41,7 +42,7 @@ CALENDAR_INFO = {
         "zh": "十六进制时间",
         "ko": "16진 시간"
     },
-    
+
     # Translations for compatibility
     "translations": {
         "en": {
@@ -93,7 +94,7 @@ CALENDAR_INFO = {
             "description": "하루를 65536부분으로 나누어 16진수로 표시 (예: .8000 = 정오)"
         }
     },
-    
+
     # Short descriptions for UI
     "description": {
         "en": "Day divided into 65536 parts, displayed in hex (e.g. .8000 = noon)",
@@ -109,12 +110,12 @@ CALENDAR_INFO = {
         "zh": "一天分为65536部分，以十六进制显示（例：.8000 = 正午）",
         "ko": "하루를 65536부분으로 나누어 16진수로 표시 (예: .8000 = 정오)"
     },
-    
+
     # Hexadecimal time specific data
     "hex_data": {
         "units_per_day": 65536,  # 2^16
         "seconds_per_unit": 1.318359375,  # 86400 / 65536
-        
+
         # Notable times in hex
         "notable_times": {
             ".0000": {"time": "00:00", "description": "Midnight"},
@@ -127,7 +128,7 @@ CALENDAR_INFO = {
             ".E000": {"time": "21:00", "description": "Night"},
             ".FFFF": {"time": "23:59:59", "description": "End of Day"}
         },
-        
+
         # Conversion factors
         "conversions": {
             "hex_to_seconds": 1.318359375,
@@ -136,7 +137,7 @@ CALENDAR_INFO = {
             "minutes_to_hex": 45.51111111
         }
     },
-    
+
     # Configuration options for this calendar
     "config_options": {
         "show_decimal": {
@@ -256,49 +257,49 @@ CALENDAR_INFO = {
 
 class HexadecimalTimeSensor(AlternativeTimeSensorBase):
     """Sensor for displaying Hexadecimal Time."""
-    
+
     # Class-level update interval
     UPDATE_INTERVAL = UPDATE_INTERVAL
-    
+
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the hexadecimal time sensor."""
         super().__init__(base_name, hass)
-        
+
         # Store CALENDAR_INFO as instance variable
         self._calendar_info = CALENDAR_INFO
-        
+
         # Get translated name from metadata
         calendar_name = self._translate('name', 'Hexadecimal Time')
-        
+
         # Set sensor attributes
         self._attr_name = f"{base_name} {calendar_name}"
         self._attr_unique_id = f"{base_name}_hexadecimal"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:hexadecimal")
-        
+
         # Configuration options with defaults
         config_defaults = CALENDAR_INFO.get("config_options", {})
         self._show_decimal = config_defaults.get("show_decimal", {}).get("default", False)
         self._show_binary = config_defaults.get("show_binary", {}).get("default", False)
         self._uppercase = config_defaults.get("uppercase", {}).get("default", True)
-        
+
         # Hex data
         self._hex_data = CALENDAR_INFO["hex_data"]
-        
+
         # Initialize state
         self._state = ".0000"
         self._hex_time = {}
-        
+
         # Flag to track if options have been loaded
         self._options_loaded = False
-        
+
         _LOGGER.debug(f"Initialized Hexadecimal Time sensor: {self._attr_name}")
         _LOGGER.debug(f"  Default settings: uppercase={self._uppercase}, decimal={self._show_decimal}, binary={self._show_binary}")
-    
+
     def _load_options(self) -> None:
         """Load plugin options after IDs are set."""
         if self._options_loaded:
             return
-            
+
         try:
             options = self.get_plugin_options()
             if options:
@@ -306,78 +307,78 @@ class HexadecimalTimeSensor(AlternativeTimeSensorBase):
                 self._show_decimal = options.get("show_decimal", self._show_decimal)
                 self._show_binary = options.get("show_binary", self._show_binary)
                 self._uppercase = options.get("uppercase", self._uppercase)
-                
+
                 _LOGGER.debug(f"Hexadecimal sensor loaded options: uppercase={self._uppercase}, decimal={self._show_decimal}, binary={self._show_binary}")
             else:
                 _LOGGER.debug("Hexadecimal sensor using default options - no custom options found")
-                
+
             self._options_loaded = True
         except Exception as e:
             _LOGGER.debug(f"Hexadecimal sensor could not load options yet: {e}")
-    
+
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
-        
+
         # Try to load options now that IDs should be set
         self._load_options()
-        
+
         # Perform initial update
         self.update()
-    
+
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
-    
+
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes."""
         attrs = super().extra_state_attributes or {}
-        
+
         # Add Hexadecimal-specific attributes
         if self._hex_time:
             attrs.update(self._hex_time)
-            
+
             # Add description in user's language
             attrs["description"] = self._translate('description')
-            
+
             # Add conversion info
             attrs["units_per_day"] = self._hex_data["units_per_day"]
             attrs["seconds_per_unit"] = self._hex_data["seconds_per_unit"]
-            
+
             # Add current configuration
             attrs["uppercase_setting"] = self._uppercase
             attrs["show_decimal_setting"] = self._show_decimal
             attrs["show_binary_setting"] = self._show_binary
-        
+
         return attrs
-    
+
     def _calculate_hex_time(self, earth_time: datetime) -> Dict[str, Any]:
         """Calculate Hexadecimal Time from standard time."""
-        
+
         # Calculate seconds since midnight local time
         local_time = earth_time.astimezone()
         midnight = local_time.replace(hour=0, minute=0, second=0, microsecond=0)
         seconds_since_midnight = (local_time - midnight).total_seconds()
-        
+
         # Convert to hexadecimal units (65536 units per day)
         hex_value = int(seconds_since_midnight * self._hex_data["units_per_day"] / 86400)
-        
+
         # Ensure value is within range
         hex_value = max(0, min(65535, hex_value))
-        
+
         # Format as hexadecimal
         if self._uppercase:
             hex_string = f"{hex_value:04X}"
         else:
             hex_string = f"{hex_value:04x}"
-        
+
         formatted = f".{hex_string}"
-        
+
         # Calculate percentage through day
         day_progress = (hex_value / self._hex_data["units_per_day"]) * 100
-        
+
         # Find closest notable time
         closest_notable = None
         min_diff = float('inf')
@@ -387,7 +388,7 @@ class HexadecimalTimeSensor(AlternativeTimeSensorBase):
             if diff < min_diff:
                 min_diff = diff
                 closest_notable = f"{data['description']} ({notable_hex})"
-        
+
         result = {
             "hex_value": hex_value,
             "hex_string": hex_string,
@@ -397,12 +398,12 @@ class HexadecimalTimeSensor(AlternativeTimeSensorBase):
             "closest_notable": closest_notable,
             "full_display": formatted
         }
-        
+
         # Add decimal if enabled
         if self._show_decimal:
             result["decimal_value"] = hex_value
             result["full_display"] += f" ({hex_value})"
-        
+
         # Add binary if enabled
         if self._show_binary:
             binary = f"{hex_value:016b}"
@@ -410,30 +411,30 @@ class HexadecimalTimeSensor(AlternativeTimeSensorBase):
             result["binary_formatted"] = f"{binary[:4]} {binary[4:8]} {binary[8:12]} {binary[12:]}"
             if self._show_binary and not self._show_decimal:
                 result["full_display"] += f" [b{binary}]"
-        
+
         return result
-    
+
     def update(self) -> None:
         """Update the sensor."""
         # Ensure options are loaded (in case async_added_to_hass hasn't run yet)
         if not self._options_loaded:
             self._load_options()
-        
+
         try:
             now = datetime.now()
             self._hex_time = self._calculate_hex_time(now)
-            
+
             # Set state to formatted hex time or full display if options are enabled
             if self._show_decimal or self._show_binary:
                 self._state = self._hex_time.get("full_display", ".0000")
             else:
                 self._state = self._hex_time.get("formatted", ".0000")
-            
+
             _LOGGER.debug(f"Updated Hexadecimal Time to {self._state}")
         except Exception as e:
             _LOGGER.error(f"Error updating Hexadecimal time: {e}", exc_info=True)
             self._state = ".ERROR"
-    
+
     async def async_update(self) -> None:
         """Update sensor asynchronously."""
         # Run synchronous update in executor

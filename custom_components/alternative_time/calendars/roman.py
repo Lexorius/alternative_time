@@ -1,11 +1,12 @@
 """Roman Calendar implementation - Version 2.5."""
 from __future__ import annotations
 
-from datetime import datetime
 import logging
-from typing import Dict, Any
+from datetime import datetime
+from typing import Any, Dict
 
 from homeassistant.core import HomeAssistant
+
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +26,7 @@ CALENDAR_INFO = {
     "category": "historical",
     "accuracy": "historical",
     "update_interval": UPDATE_INTERVAL,
-    
+
     # Multi-language names
     "name": {
         "en": "Roman Calendar",
@@ -41,7 +42,7 @@ CALENDAR_INFO = {
         "ko": "로마 달력",
         "la": "Calendarium Romanum"
     },
-    
+
     # Short descriptions for UI
     "description": {
         "en": "Ancient Roman calendar with Kalends, Nones, and Ides (e.g. AUC 2777, ante diem III Kalendas)",
@@ -51,7 +52,7 @@ CALENDAR_INFO = {
         "it": "Calendario romano antico con Calende, None e Idi",
         "la": "Calendarium antiquum cum Kalendis, Nonis et Idibus"
     },
-    
+
     # Detailed information for documentation
     "detailed_info": {
         "en": {
@@ -73,7 +74,7 @@ CALENDAR_INFO = {
             "fasti": "Kalender der glücklichen (fastus) und unglücklichen (nefastus) Tage"
         }
     },
-    
+
     # Roman-specific data
     "roman_data": {
         # Roman months
@@ -91,7 +92,7 @@ CALENDAR_INFO = {
             {"latin": "November", "english": "November", "days": 30, "nones": 5, "ides": 13},
             {"latin": "December", "english": "December", "days": 31, "nones": 5, "ides": 13}
         ],
-        
+
         # Month cases for Latin grammar
         "ablatives": {
             "Ianuarius": "Ianuariis", "Februarius": "Februariis", "Martius": "Martiis",
@@ -99,27 +100,27 @@ CALENDAR_INFO = {
             "Iulius": "Iuliis", "Augustus": "Augustis", "September": "Septembribus",
             "October": "Octobribus", "November": "Novembribus", "December": "Decembribus"
         },
-        
+
         "accusatives": {
             "Ianuarius": "Ianuarias", "Februarius": "Februarias", "Martius": "Martias",
             "Aprilis": "Apriles", "Maius": "Maias", "Iunius": "Iunias",
             "Iulius": "Iulias", "Augustus": "Augustas", "September": "Septembres",
             "October": "Octobres", "November": "Novembres", "December": "Decembres"
         },
-        
+
         # Nundinal letters (8-day market week)
         "nundinal_letters": ["A", "B", "C", "D", "E", "F", "G", "H"],
-        
+
         # Roman hours
         "day_hours": [
             "Prima", "Secunda", "Tertia", "Quarta", "Quinta", "Sexta",
             "Septima", "Octava", "Nona", "Decima", "Undecima", "Duodecima"
         ],
-        
+
         "night_watches": [
             "Prima Vigilia", "Secunda Vigilia", "Tertia Vigilia", "Quarta Vigilia"
         ],
-        
+
         # Major festivals
         "festivals": {
             (1, 1): "🎊 Kalendae Ianuariae - New Year",
@@ -140,31 +141,31 @@ CALENDAR_INFO = {
             (12, 17): "🎉 Saturnalia",
             (12, 25): "☀️ Dies Natalis Solis Invicti"
         },
-        
+
         # Founding of Rome
         "founding_year": 753  # BCE
     },
-    
+
     # Additional metadata
     "reference_url": "https://en.wikipedia.org/wiki/Roman_calendar",
     "documentation_url": "https://www.britannica.com/science/Roman-calendar",
     "origin": "Ancient Rome",
     "created_by": "Roman civilization",
     "period": "753 BCE - 1582 CE",
-    
+
     # Example format
     "example": "AUC 2777, ante diem III Kalendas Ianuarias",
     "example_meaning": "Year 2777 from founding of Rome, 3 days before January Kalends (Dec 30)",
-    
+
     # Related calendars
     "related": ["julian", "gregorian", "attic"],
-    
+
     # Tags for searching and filtering
     "tags": [
         "historical", "ancient", "roman", "latin", "kalends",
         "nones", "ides", "auc", "classical", "imperial"
     ],
-    
+
     # Special features
     "features": {
         "backward_counting": True,
@@ -174,7 +175,7 @@ CALENDAR_INFO = {
         "fasti": True,
         "precision": "day"
     },
-    
+
     # Configuration options
     "config_options": {
         "show_latin": {
@@ -335,22 +336,22 @@ CALENDAR_INFO = {
 
 class RomanCalendarSensor(AlternativeTimeSensorBase):
     """Sensor for displaying Roman Calendar."""
-    
+
     # Class-level update interval
     UPDATE_INTERVAL = UPDATE_INTERVAL
-    
+
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the Roman calendar sensor."""
         super().__init__(base_name, hass)
-        
+
         # Get translated name from metadata
         calendar_name = self._translate('name', 'Roman Calendar')
-        
+
         # Set sensor attributes
         self._attr_name = f"{base_name} {calendar_name}"
         self._attr_unique_id = f"{base_name}_roman_calendar"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:pillar")
-        
+
         # Default configuration options
         self._show_latin = True
         self._show_festivals = True
@@ -358,20 +359,20 @@ class RomanCalendarSensor(AlternativeTimeSensorBase):
         self._show_nundinae = True
         self._format = "full"
         self._year_system = "auc"
-        
+
         # Roman data
         self._roman_data = CALENDAR_INFO["roman_data"]
-        
+
         # Track if options have been loaded
         self._options_loaded = False
-        
+
         _LOGGER.debug(f"Initialized Roman Calendar sensor: {self._attr_name}")
-    
+
     def _load_options(self) -> None:
         """Load configuration options from config entry."""
         if self._options_loaded:
             return
-            
+
         try:
             options = self.get_plugin_options()
             if options:
@@ -382,45 +383,45 @@ class RomanCalendarSensor(AlternativeTimeSensorBase):
                 self._show_nundinae = options.get("show_nundinae", self._show_nundinae)
                 self._format = options.get("format", self._format)
                 self._year_system = options.get("year_system", self._year_system)
-                
+
                 _LOGGER.debug(f"Roman sensor loaded options: latin={self._show_latin}, "
                             f"festivals={self._show_festivals}, hours={self._show_hours}, "
                             f"nundinae={self._show_nundinae}, format={self._format}, "
                             f"year_system={self._year_system}")
             else:
                 _LOGGER.debug("Roman sensor using default options - no custom options found")
-                
+
             self._options_loaded = True
         except Exception as e:
             _LOGGER.debug(f"Roman sensor could not load options yet: {e}")
-    
+
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
-        
+
         # Try to load options now that IDs should be set
         self._load_options()
-    
+
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
-    
+
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes."""
         attrs = super().extra_state_attributes
-        
+
         # Add Roman-specific attributes
         if hasattr(self, '_roman_date'):
             attrs.update(self._roman_date)
-            
+
             # Add description in user's language
             attrs["description"] = self._translate('description')
-            
+
             # Add reference
             attrs["reference"] = CALENDAR_INFO.get('reference_url', '')
-            
+
             # Add configuration status
             attrs["config"] = {
                 "show_latin": self._show_latin,
@@ -430,9 +431,9 @@ class RomanCalendarSensor(AlternativeTimeSensorBase):
                 "format": self._format,
                 "year_system": self._year_system
             }
-        
+
         return attrs
-    
+
     def _to_roman_numeral(self, num: int) -> str:
         """Convert number to Roman numeral."""
         val = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1]
@@ -445,17 +446,17 @@ class RomanCalendarSensor(AlternativeTimeSensorBase):
                 num -= val[i]
             i += 1
         return roman_num
-    
+
     def _calculate_roman_date(self, earth_date: datetime) -> Dict[str, Any]:
         """Calculate Roman date from modern date."""
-        
+
         # Load options if not loaded yet
         self._load_options()
-        
+
         # Calculate year based on system
         year_auc = earth_date.year + self._roman_data["founding_year"]
         year_display = ""
-        
+
         if self._year_system == "auc":
             year_display = f"AUC {year_auc}"
         elif self._year_system == "ad":
@@ -466,16 +467,16 @@ class RomanCalendarSensor(AlternativeTimeSensorBase):
                 year_display = f"Imp. Caesar Augustus, Year {earth_date.year + 27}"
             else:
                 year_display = f"Anno Domini {earth_date.year}"
-        
+
         # Get month info
         month_data = self._roman_data["months"][earth_date.month - 1]
         month_latin = month_data["latin"]
-        
+
         # Calculate Roman day notation
         day = earth_date.day
         nones_day = month_data["nones"]
         ides_day = month_data["ides"]
-        
+
         # Determine day type and Latin notation
         if day == 1:
             day_latin = f"Kalendis {self._roman_data['ablatives'][month_latin]}"
@@ -512,13 +513,13 @@ class RomanCalendarSensor(AlternativeTimeSensorBase):
             else:
                 next_month = self._roman_data["months"][0]["latin"]
                 next_month_english = self._roman_data["months"][0]["english"]
-            
+
             days_before = month_data["days"] - day + 2
             day_latin = f"ante diem {self._to_roman_numeral(days_before)} Kalendas {self._roman_data['accusatives'][next_month]}"
             day_english = f"{days_before} days before Kalends of {next_month_english}"
             day_type = "Before Kalends"
             phase = "Waning"
-        
+
         # Nundinal cycle if configured
         week_letter = ""
         market_day = ""
@@ -527,7 +528,7 @@ class RomanCalendarSensor(AlternativeTimeSensorBase):
             days_since = (earth_date - reference_date).days
             week_letter = self._roman_data["nundinal_letters"][days_since % 8]
             market_day = "🛒 Market Day" if week_letter == 'A' else ""
-        
+
         # Roman hours if configured
         hora = ""
         hora_type = ""
@@ -545,12 +546,12 @@ class RomanCalendarSensor(AlternativeTimeSensorBase):
                 watch = self._roman_data["night_watches"][min(hora_number // 3, 3)]
                 hora = watch
                 hora_type = "Nox (Night)"
-        
+
         # Festival if configured
         festival = ""
         if self._show_festivals:
             festival = self._roman_data["festivals"].get((earth_date.month, earth_date.day), "")
-        
+
         # Lucky/Unlucky
         if day_type in ["Kalends", "Nones", "Ides"]:
             lucky = "Dies Nefastus"
@@ -560,7 +561,7 @@ class RomanCalendarSensor(AlternativeTimeSensorBase):
             lucky = "Dies Nundinae"
         else:
             lucky = "Dies Fastus"
-        
+
         # Format the display based on format setting
         if self._format == "minimal":
             full_date = f"{year_display}, {earth_date.day} {month_data['english']}"
@@ -573,7 +574,7 @@ class RomanCalendarSensor(AlternativeTimeSensorBase):
                 full_date = f"{year_display}, {day_latin}"
             else:
                 full_date = f"{year_display}, {day_english}"
-        
+
         result = {
             "year_auc": year_auc,
             "year_ad": earth_date.year,
@@ -589,26 +590,26 @@ class RomanCalendarSensor(AlternativeTimeSensorBase):
             "gregorian_date": earth_date.strftime("%Y-%m-%d"),
             "full_date": full_date
         }
-        
+
         if self._show_nundinae:
             result["week_letter"] = week_letter
             result["market_day"] = market_day
-        
+
         if self._show_hours and hora:
             result["hora"] = hora
             result["hora_type"] = hora_type
-        
+
         if festival:
             result["festival"] = festival
-        
+
         return result
-    
+
     def update(self) -> None:
         """Update the sensor."""
         now = datetime.now()
         self._roman_date = self._calculate_roman_date(now)
-        
+
         # Set state to formatted Roman date
         self._state = self._roman_date["full_date"]
-        
+
         _LOGGER.debug(f"Updated Roman Calendar to {self._state}")

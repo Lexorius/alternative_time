@@ -3,9 +3,9 @@ Version 1.2 – reads options via get_plugin_options() (no get_config() calls).
 """
 from __future__ import annotations
 
-from datetime import datetime, timedelta
 import logging
-from typing import Dict, Any, List
+from datetime import datetime, timedelta
+from typing import Any, Dict, List
 
 try:
     from zoneinfo import ZoneInfo  # Python 3.9+
@@ -18,6 +18,7 @@ except ImportError:
         pytz = None
 
 from homeassistant.core import HomeAssistant
+
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -157,7 +158,7 @@ class TrackmaniaEventsSensor(AlternativeTimeSensorBase):
                     return ZoneInfo("Europe/Berlin")
                 except Exception:
                     return None
-        
+
         # Fallback to pytz if available
         if 'pytz' in globals() and pytz is not None:
             try:
@@ -167,7 +168,7 @@ class TrackmaniaEventsSensor(AlternativeTimeSensorBase):
                     return pytz.timezone("Europe/Berlin")
                 except Exception:
                     pass
-        
+
         return None
 
     def _make_event(self, when: datetime, title: str, tag: str) -> Dict[str, Any]:
@@ -234,7 +235,7 @@ class TrackmaniaEventsSensor(AlternativeTimeSensorBase):
             self._enable_cotd = bool(opts.get("enable_cotd", True))
             self._enable_weekly_shorts = bool(opts.get("enable_weekly_shorts", True))
             self._enable_bonk = bool(opts.get("enable_bonk_cup", True))
-            
+
             try:
                 self._horizon_days = int(opts.get("horizon_days", 14))
                 self._horizon_days = max(1, min(365, self._horizon_days))  # Clamp between 1-365
@@ -246,7 +247,7 @@ class TrackmaniaEventsSensor(AlternativeTimeSensorBase):
                 self._state = "Timezone error"
                 self._tm_events = {"error": "Could not initialize timezone"}
                 return
-                
+
             now = datetime.now(tz)
             upcoming = self._generate_upcoming(now)
 
@@ -257,10 +258,10 @@ class TrackmaniaEventsSensor(AlternativeTimeSensorBase):
                     if e["when_iso"] >= now.isoformat():
                         next_ev = e
                         break
-                
+
                 if next_ev is None and upcoming:
                     next_ev = upcoming[0]  # Fallback to first event
-                
+
                 self._tm_events = {
                     "timezone": self._tz_name,
                     "now_local": now.strftime("%Y-%m-%d %H:%M:%S %Z"),
@@ -276,7 +277,7 @@ class TrackmaniaEventsSensor(AlternativeTimeSensorBase):
                     "message": "No events scheduled"
                 }
                 self._state = "No events"
-                
+
         except Exception as exc:
             _LOGGER.exception("Failed to update Trackmania events: %s", exc)
             self._state = "Error"

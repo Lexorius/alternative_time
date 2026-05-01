@@ -1,11 +1,12 @@
 """EVE Online Time (New Eden Standard Time) implementation - Version 3.0."""
 from __future__ import annotations
 
-from datetime import datetime
 import logging
-from typing import Dict, Any, Optional
+from datetime import datetime
+from typing import Any, Dict
 
 from homeassistant.core import HomeAssistant
+
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +26,7 @@ CALENDAR_INFO = {
     "category": "scifi",
     "accuracy": "fictional",
     "update_interval": UPDATE_INTERVAL,
-    
+
     # Multi-language names
     "name": {
         "en": "EVE Online Time",
@@ -41,7 +42,7 @@ CALENDAR_INFO = {
         "zh": "EVE Online时间",
         "ko": "EVE 온라인 시간"
     },
-    
+
     # Short descriptions for UI
     "description": {
         "en": "New Eden Standard Time (NEST) from EVE Online universe with YC calendar",
@@ -57,7 +58,7 @@ CALENDAR_INFO = {
         "zh": "EVE Online宇宙的新伊甸标准时间（NEST）和YC历法",
         "ko": "EVE 온라인 우주의 뉴 에덴 표준시 (NEST)와 YC 달력"
     },
-    
+
     # Detailed information for documentation
     "detailed_info": {
         "en": {
@@ -81,7 +82,7 @@ CALENDAR_INFO = {
             "format": "Standardformat: YC XXX.MM.DD HH:MM:SS"
         }
     },
-    
+
     # Configuration options
     "config_options": {
         "show_nest": {
@@ -304,13 +305,13 @@ CALENDAR_INFO = {
             }
         }
     },
-    
+
     # EVE-specific data
     "eve_data": {
         "yc_epoch_year": 2003,  # Real year when YC 105 started
         "yc_epoch_value": 105,  # YC year in 2003
         "eve_gate_collapse": "YC 0",
-        
+
         # Major empires
         "empires": {
             "amarr": {"name": "Amarr Empire", "capital": "Amarr Prime", "emoji": "⚜️"},
@@ -318,7 +319,7 @@ CALENDAR_INFO = {
             "gallente": {"name": "Gallente Federation", "capital": "Villore", "emoji": "🗽"},
             "minmatar": {"name": "Minmatar Republic", "capital": "Pator", "emoji": "⚙️"}
         },
-        
+
         # Notable events in YC timeline
         "events": {
             105: "Capsuleer program begins",
@@ -338,7 +339,7 @@ CALENDAR_INFO = {
             126: "Viridian",
             127: "Havoc"
         },
-        
+
         # Notable systems (trade hubs)
         "systems": [
             {"name": "Jita", "region": "The Forge", "type": "Major trade hub", "emoji": "💰"},
@@ -347,7 +348,7 @@ CALENDAR_INFO = {
             {"name": "Rens", "region": "Heimatar", "type": "Minmatar trade hub", "emoji": "⚙️"},
             {"name": "Hek", "region": "Metropolis", "type": "Regional trade center", "emoji": "🏪"}
         ],
-        
+
         # Time zones (all use UTC but with lore names)
         "time_references": {
             "NEST": "New Eden Standard Time (UTC)",
@@ -355,27 +356,27 @@ CALENDAR_INFO = {
             "Capsuleer": "Capsuleer Standard Time"
         }
     },
-    
+
     # Additional metadata
     "reference_url": "https://wiki.eveuniversity.org/Lore",
     "documentation_url": "https://www.eveonline.com",
     "origin": "CCP Games, Iceland",
     "created_by": "CCP Games",
     "introduced": "May 6, 2003",
-    
+
     # Example format
     "example": "YC 127.01.15 14:30:00 NEST",
     "example_meaning": "Yoiul Conference year 127, January 15th, 14:30:00 New Eden Standard Time",
-    
+
     # Related calendars
     "related": ["gregorian", "stardate", "scifi"],
-    
+
     # Tags for searching and filtering
     "tags": [
         "scifi", "eve", "online", "gaming", "mmorpg", "space",
         "new_eden", "capsuleer", "yoiul", "concord", "nest", "ccp"
     ],
-    
+
     # Special features
     "features": {
         "real_time": True,
@@ -389,22 +390,22 @@ CALENDAR_INFO = {
 
 class EveOnlineTimeSensor(AlternativeTimeSensorBase):
     """Sensor for displaying EVE Online Time (New Eden Standard Time)."""
-    
+
     # Class-level update interval
     UPDATE_INTERVAL = UPDATE_INTERVAL
-    
+
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the EVE Online time sensor."""
         super().__init__(base_name, hass)
-        
+
         # Get translated name from metadata
         calendar_name = self._translate('name', 'EVE Online Time')
-        
+
         # Set sensor attributes
         self._attr_name = f"{base_name} {calendar_name}"
         self._attr_unique_id = f"{base_name}_eve_online"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:space-station")
-        
+
         # Configuration options with defaults
         config_defaults = CALENDAR_INFO.get("config_options", {})
         self._show_nest = config_defaults.get("show_nest", {}).get("default", True)
@@ -412,20 +413,20 @@ class EveOnlineTimeSensor(AlternativeTimeSensorBase):
         self._show_empire = config_defaults.get("show_empire", {}).get("default", True)
         self._show_system = config_defaults.get("show_system", {}).get("default", True)
         self._format = config_defaults.get("format", {}).get("default", "full")
-        
+
         # EVE data
         self._eve_data = CALENDAR_INFO["eve_data"]
-        
+
         # Initialize state
         self._state = None
         self._eve_time = {}
-        
+
         # Current empire and system (rotating)
         self._current_empire_index = 0
         self._current_system_index = 0
-        
+
         _LOGGER.debug(f"Initialized EVE Online Time sensor: {self._attr_name}")
-    
+
     def set_options(self, options: Dict[str, Any]) -> None:
         """Set options from config flow."""
         if options:
@@ -434,31 +435,31 @@ class EveOnlineTimeSensor(AlternativeTimeSensorBase):
             self._show_empire = options.get("show_empire", self._show_empire)
             self._show_system = options.get("show_system", self._show_system)
             self._format = options.get("format", self._format)
-            
+
             _LOGGER.debug(f"EVE sensor options updated: show_nest={self._show_nest}, "
                          f"show_event={self._show_event}, show_empire={self._show_empire}, "
                          f"show_system={self._show_system}, format={self._format}")
-    
+
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
-    
+
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes."""
         attrs = super().extra_state_attributes
-        
+
         # Add EVE-specific attributes
         if self._eve_time:
             attrs.update(self._eve_time)
-            
+
             # Add description in user's language
             attrs["description"] = self._translate('description')
-            
+
             # Add reference
             attrs["reference"] = CALENDAR_INFO.get('reference_url', '')
-            
+
             # Add configuration status
             attrs["config"] = {
                 "show_nest": self._show_nest,
@@ -467,34 +468,34 @@ class EveOnlineTimeSensor(AlternativeTimeSensorBase):
                 "show_system": self._show_system,
                 "format": self._format
             }
-        
+
         return attrs
-    
+
     def _calculate_eve_time(self, earth_time: datetime) -> Dict[str, Any]:
         """Calculate EVE Online Time from standard time."""
-        
+
         # EVE uses UTC
         utc_time = datetime.utcnow()
-        
+
         # Calculate YC year
         years_since_launch = utc_time.year - self._eve_data["yc_epoch_year"]
         yc_year = self._eve_data["yc_epoch_value"] + years_since_launch
-        
+
         # Check for notable events
         event = self._eve_data["events"].get(yc_year, "")
-        
+
         # Rotate through empires (changes daily)
         days_since_epoch = (utc_time - datetime(2000, 1, 1)).days
         empire_keys = list(self._eve_data["empires"].keys())
         empire_index = days_since_epoch % len(empire_keys)
         current_empire_key = empire_keys[empire_index]
         current_empire = self._eve_data["empires"][current_empire_key]
-        
+
         # Rotate through trade hubs (changes hourly)
         hours_since_epoch = days_since_epoch * 24 + utc_time.hour
         system_index = hours_since_epoch % len(self._eve_data["systems"])
         current_system = self._eve_data["systems"][system_index]
-        
+
         # Format time based on configuration
         if self._format == "date":
             formatted = f"YC {yc_year}.{utc_time.month:02d}.{utc_time.day:02d}"
@@ -504,10 +505,10 @@ class EveOnlineTimeSensor(AlternativeTimeSensorBase):
             formatted = f"YC{yc_year}.{utc_time.month:02d}.{utc_time.day:02d} {utc_time.hour:02d}:{utc_time.minute:02d}"
         else:  # full
             formatted = f"YC {yc_year}.{utc_time.month:02d}.{utc_time.day:02d} {utc_time.hour:02d}:{utc_time.minute:02d}:{utc_time.second:02d}"
-        
+
         if self._show_nest and self._format != "time":
             formatted += " NEST"
-        
+
         # Build result
         result = {
             "yc_year": yc_year,
@@ -521,32 +522,32 @@ class EveOnlineTimeSensor(AlternativeTimeSensorBase):
             "utc_time": utc_time.strftime("%Y-%m-%d %H:%M:%S UTC"),
             "formatted": formatted
         }
-        
+
         # Add optional data
         if self._show_event and event:
             result["notable_event"] = f"📅 {event}"
-        
+
         if self._show_empire:
             result["empire_focus"] = f"{current_empire['emoji']} {current_empire['name']}"
             result["empire_capital"] = current_empire['capital']
-        
+
         if self._show_system:
             result["trade_hub"] = f"{current_system['emoji']} {current_system['name']}"
             result["hub_region"] = current_system['region']
             result["hub_type"] = current_system['type']
-        
+
         # Add CONCORD status (changes based on time)
         concord_status = self._get_concord_status(utc_time.hour)
         result["concord_status"] = concord_status
-        
+
         # Add downtime warning (daily at 11:00 UTC)
         if utc_time.hour == 10 and utc_time.minute >= 30:
             result["downtime_warning"] = "⚠️ Daily downtime in 30 minutes!"
         elif utc_time.hour == 11 and utc_time.minute < 15:
             result["downtime_active"] = "🔧 Daily downtime in progress"
-        
+
         return result
-    
+
     def _get_concord_status(self, hour: int) -> str:
         """Get CONCORD status based on time."""
         if 0 <= hour < 6:
@@ -559,13 +560,13 @@ class EveOnlineTimeSensor(AlternativeTimeSensorBase):
             return "🌆 CONCORD: Evening patrols"
         else:
             return "⭐ CONCORD: Late shift active"
-    
+
     def update(self) -> None:
         """Update the sensor."""
         now = datetime.now()
         self._eve_time = self._calculate_eve_time(now)
-        
+
         # Set state to formatted EVE time
         self._state = self._eve_time["formatted"]
-        
+
         _LOGGER.debug(f"Updated EVE Online Time to {self._state}")

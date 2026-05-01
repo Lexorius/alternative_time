@@ -7,11 +7,12 @@ Used by German emergency services, fire departments, and rescue organizations.
 """
 from __future__ import annotations
 
-from datetime import datetime, timedelta
 import logging
-from typing import Dict, Any, Optional
+from datetime import datetime, timedelta
+from typing import Any, Dict
 
 from homeassistant.core import HomeAssistant
+
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,7 +39,7 @@ CALENDAR_INFO = {
     "category": "military",
     "accuracy": "precise",
     "update_interval": UPDATE_INTERVAL,
-    
+
     # Multi-language names
     "name": {
         "en": "German Rescue DTG",
@@ -54,7 +55,7 @@ CALENDAR_INFO = {
         "zh": "德国救援DTG",
         "ko": "독일 구조 DTG"
     },
-    
+
     # Short descriptions for UI
     "description": {
         "en": "German emergency services date-time group format",
@@ -70,7 +71,7 @@ CALENDAR_INFO = {
         "zh": "德国紧急服务日期时间组格式",
         "ko": "독일 응급 서비스 날짜-시간 그룹 형식"
     },
-    
+
     # German Rescue DTG specific data
     "rescue_dtg_data": {
         # German month abbreviations (3 letters)
@@ -79,7 +80,7 @@ CALENDAR_INFO = {
             "05": "MAI", "06": "JUN", "07": "JUL", "08": "AUG",
             "09": "SEP", "10": "OKT", "11": "NOV", "12": "DEZ"
         },
-        
+
         # International month abbreviations for other languages
         "months_international": {
             "en": {
@@ -138,7 +139,7 @@ CALENDAR_INFO = {
                 "09": "9월", "10": "10월", "11": "11월", "12": "12월"
             }
         },
-        
+
         # Common German timezones
         "timezones": {
             "Europe/Berlin": {
@@ -228,10 +229,10 @@ CALENDAR_INFO = {
             }
         }
     },
-    
+
     # Reference URL
     "reference_url": "https://de.wikipedia.org/wiki/Zeitangabe",
-    
+
     # Plugin configuration options
     "plugin_options": {
         "timezone": {
@@ -451,28 +452,28 @@ CALENDAR_INFO = {
 
 class GermanRescueDTGSensor(AlternativeTimeSensorBase):
     """Sensor for displaying German Rescue Date Time Group format."""
-    
+
     # Class-level update interval
     UPDATE_INTERVAL = 1  # Update every second
-    
+
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the German Rescue DTG sensor with standard 2-parameter signature."""
         super().__init__(base_name, hass)
-        
+
         # Get calendar info
         calendar_name = self._translate('name', 'German Rescue DTG')
         self._attr_name = f"{base_name} {calendar_name}"
         self._attr_unique_id = f"german_rescue_dtg_{base_name.lower().replace(' ', '_')}"
-        
+
         # Set update interval
         self._update_interval = timedelta(seconds=UPDATE_INTERVAL)
-        
+
         # DTG-specific data
         self._rescue_dtg_data = CALENDAR_INFO.get("rescue_dtg_data", {})
         self._months = self._rescue_dtg_data.get("months", {})
         self._months_international = self._rescue_dtg_data.get("months_international", {})
         self._timezones = self._rescue_dtg_data.get("timezones", {})
-        
+
         # Initialize with defaults
         self._timezone_str = "Europe/Berlin"
         self._month_language = "de"
@@ -480,7 +481,7 @@ class GermanRescueDTGSensor(AlternativeTimeSensorBase):
         self._show_seconds = False
         self._timezone = None
         self._timezone_initialized = False
-        
+
         # Try to initialize pytz timezone
         if HAS_PYTZ:
             try:
@@ -488,40 +489,40 @@ class GermanRescueDTGSensor(AlternativeTimeSensorBase):
                 self._timezone_initialized = True
             except Exception as e:
                 _LOGGER.error(f"Failed to initialize default timezone: {e}")
-        
+
         # DTG data storage
         self._dtg_info = {}
         self._state = "Initializing..."
-        
+
         # Debug flag
         self._first_update = True
-        
+
         # Get user's language - will be set properly after HA is initialized
         self._user_language = 'en'  # Default, will be updated in update()
-    
+
     @property
     def state(self) -> str:
         """Return the state of the sensor."""
         return self._state
-    
+
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes."""
         attrs = super().extra_state_attributes
-        
+
         # Add DTG-specific attributes
         if self._dtg_info:
             attrs.update(self._dtg_info)
-            
+
             # Add description
             attrs["description"] = self._translate('description')
-            
+
             # Add reference
             attrs["reference"] = CALENDAR_INFO.get('reference_url', '')
-            
+
             # Add timezone info
             attrs["timezone"] = self._timezone_str
-            
+
             # Add config info
             attrs["config"] = {
                 "timezone": self._timezone_str,
@@ -529,19 +530,19 @@ class GermanRescueDTGSensor(AlternativeTimeSensorBase):
                 "uppercase": self._uppercase,
                 "show_seconds": self._show_seconds
             }
-        
+
         return attrs
-    
+
     def _get_month_abbreviation(self, month_num: int) -> str:
         """Get month abbreviation based on configured language."""
         month_key = f"{month_num:02d}"
-        
+
         if self._month_language == "local":
             # Use user's language
             language = self._user_language
         else:
             language = self._month_language
-        
+
         # Get months for language
         if language == "de":
             months = self._months
@@ -550,36 +551,36 @@ class GermanRescueDTGSensor(AlternativeTimeSensorBase):
         else:
             # Fallback to English
             months = self._months_international.get("en", self._months)
-        
+
         return months.get(month_key, "UNK")
-    
+
     def _format_rescue_dtg(self, dt: datetime) -> str:
         """Format datetime as German Rescue DTG."""
         # Format: DD HHMM MON YYYY or DD HHMMSS MON YYYY
         day = f"{dt.day:02d}"
         hour = f"{dt.hour:02d}"
         minute = f"{dt.minute:02d}"
-        
+
         if self._show_seconds:
             second = f"{dt.second:02d}"
             time_part = f"{hour}{minute}{second}"
         else:
             time_part = f"{hour}{minute}"
-        
+
         month = self._get_month_abbreviation(dt.month)
         year = f"{dt.year:04d}"
-        
+
         # Build DTG string - NO TIMEZONE
         dtg = f"{day} {time_part} {month} {year}"
-        
+
         # Apply uppercase setting
         if self._uppercase:
             dtg = dtg.upper()
         else:
             dtg = dtg.lower()
-        
+
         return dtg
-    
+
     def _calculate_dtg_info(self, dt: datetime) -> Dict[str, Any]:
         """Calculate DTG information."""
         # Get components
@@ -589,27 +590,27 @@ class GermanRescueDTGSensor(AlternativeTimeSensorBase):
         second = dt.second
         month_num = dt.month
         year = dt.year
-        
+
         # Get month abbreviation
         month_abbr = self._get_month_abbreviation(month_num)
-        
+
         # Format full DTG
         dtg_display = self._format_rescue_dtg(dt)
-        
+
         # Calculate Julian day
         julian_day = dt.timetuple().tm_yday
-        
+
         # Calculate week number
         week_num = dt.isocalendar()[1]
-        
+
         # Determine if DST is active
         is_dst = False
         if HAS_PYTZ and self._timezone and self._timezone_initialized:
             try:
                 is_dst = bool(dt.dst())
-            except:
+            except Exception:
                 is_dst = False
-        
+
         result = {
             "dtg": dtg_display,
             "components": {
@@ -632,18 +633,18 @@ class GermanRescueDTGSensor(AlternativeTimeSensorBase):
                 "offset": dt.strftime("%z") if HAS_PYTZ and self._timezone else "+0000"
             }
         }
-        
+
         return result
-    
+
     def update(self) -> None:
         """Update the sensor."""
         # Update user language if not set properly
         if self._user_language == 'en' and self.hass and hasattr(self.hass, 'config'):
             self._user_language = self.hass.config.language if hasattr(self.hass.config, 'language') else 'en'
-        
+
         # Load options on every update
         options = self.get_plugin_options()
-        
+
         # Debug on first update
         if self._first_update:
             if options:
@@ -651,14 +652,14 @@ class GermanRescueDTGSensor(AlternativeTimeSensorBase):
             else:
                 _LOGGER.debug("German Rescue DTG sensor using defaults (no options configured)")
             self._first_update = False
-        
+
         # Update configuration
         if options:
             new_timezone = options.get("timezone", "Europe/Berlin")
             self._month_language = options.get("month_language", "de")
             self._uppercase = bool(options.get("uppercase", True))
             self._show_seconds = bool(options.get("show_seconds", False))
-            
+
             # Check if timezone changed
             if new_timezone != self._timezone_str and HAS_PYTZ:
                 _LOGGER.info(f"Timezone changed from {self._timezone_str} to {new_timezone}")
@@ -666,7 +667,7 @@ class GermanRescueDTGSensor(AlternativeTimeSensorBase):
                 try:
                     self._timezone = pytz.timezone(self._timezone_str)
                     self._timezone_initialized = True
-                    
+
                     # Update name
                     calendar_name = self._translate('name', 'German Rescue DTG')
                     tz_short = self._timezone_str.split('/')[-1]
@@ -676,7 +677,7 @@ class GermanRescueDTGSensor(AlternativeTimeSensorBase):
                     # Fallback to Berlin
                     self._timezone = pytz.timezone("Europe/Berlin")
                     self._timezone_str = "Europe/Berlin"
-        
+
         # Calculate time based on configuration
         try:
             if HAS_PYTZ and self._timezone and self._timezone_initialized:
@@ -685,16 +686,16 @@ class GermanRescueDTGSensor(AlternativeTimeSensorBase):
             else:
                 # Fallback to system time
                 now = datetime.now()
-            
+
             # Calculate DTG info
             self._dtg_info = self._calculate_dtg_info(now)
             self._state = self._dtg_info["dtg"]
-            
+
         except Exception as e:
             _LOGGER.error(f"Error calculating German Rescue DTG: {e}")
             self._state = "Error"
             self._dtg_info = {"error": str(e)}
-        
+
         _LOGGER.debug(f"Updated German Rescue DTG to {self._state}")
 
 

@@ -6,12 +6,12 @@ Includes mission sol counters for rover landing sites.
 """
 from __future__ import annotations
 
-from datetime import datetime
-import math
 import logging
-from typing import Dict, Any, Optional
+from datetime import datetime
+from typing import Any, Dict, Optional
 
 from homeassistant.core import HomeAssistant
+
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -85,7 +85,7 @@ CALENDAR_INFO = {
                     "fr": "MTC - Temps Coordonné Martien (Méridien Principal 0°)",
                 }
             },
-            
+
             # Geographic Locations
             "AMT": {
                 "abbr": "AMT",
@@ -183,7 +183,7 @@ CALENDAR_INFO = {
                     "fr": "HEL - Heure d'Hellas (Bassin Hellas ~70°E)",
                 }
             },
-            
+
             # Mission Landing Sites
             "VIK": {
                 "abbr": "VIK",
@@ -446,17 +446,17 @@ CALENDAR_INFO = {
     "documentation_url": "https://www.giss.nasa.gov/tools/mars24/",
     "origin": "NASA/JPL",
     "created_by": "Various Mars missions",
-    
+
     # Related calendars
     "related": ["darian", "julian", "gregorian"],
-    
+
     # Tags for searching and filtering
     "tags": [
         "mars", "space", "planetary", "sol", "msd", "nasa", "jpl",
         "scientific", "astronomical", "mission", "exploration", "rover",
         "perseverance", "curiosity", "mtc"
     ],
-    
+
     # Extended notes
     "notes": {
         "en": (
@@ -517,18 +517,18 @@ class MarsTimeSensor(AlternativeTimeSensorBase):
         self._mars_time_info: Dict[str, Any] = {}
 
         _LOGGER.debug(f"Initialized Mars Time sensor: {self._attr_name}")
-    
+
     def _load_options(self) -> None:
         """Load plugin options after IDs are set."""
         if self._options_loaded:
             return
-            
+
         # Get plugin options from config entry
         plugin_options = self._get_plugin_options()
-        
+
         if plugin_options:
             _LOGGER.debug(f"Loading Mars options: {plugin_options}")
-            
+
             # Apply options using set_options method
             self.set_options(
                 timezone=plugin_options.get("timezone"),
@@ -537,20 +537,20 @@ class MarsTimeSensor(AlternativeTimeSensorBase):
                 show_mission_sol=plugin_options.get("show_mission_sol"),
                 show_earth_time=plugin_options.get("show_earth_time")
             )
-        
+
         self._options_loaded = True
-    
+
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        
+
         # Load options after entity is registered
         self._load_options()
-        
+
         _LOGGER.debug(f"Mars sensor added to hass with options: "
                      f"timezone={self._mars_timezone}, format={self._display_format}, "
                      f"season={self._show_season}, mission_sol={self._show_mission_sol}")
-    
+
     def set_options(
         self,
         *,
@@ -567,19 +567,19 @@ class MarsTimeSensor(AlternativeTimeSensorBase):
                 _LOGGER.debug(f"Set timezone to: {timezone}")
             else:
                 _LOGGER.warning(f"Invalid timezone: {timezone}, keeping {self._mars_timezone}")
-        
+
         if display_format is not None and display_format in ["time_only", "time_with_sol", "full_date"]:
             self._display_format = display_format
             _LOGGER.debug(f"Set display_format to: {display_format}")
-        
+
         if show_season is not None:
             self._show_season = bool(show_season)
             _LOGGER.debug(f"Set show_season to: {show_season}")
-        
+
         if show_mission_sol is not None:
             self._show_mission_sol = bool(show_mission_sol)
             _LOGGER.debug(f"Set show_mission_sol to: {show_mission_sol}")
-        
+
         if show_earth_time is not None:
             self._show_earth_time = bool(show_earth_time)
             _LOGGER.debug(f"Set show_earth_time to: {show_earth_time}")
@@ -595,23 +595,23 @@ class MarsTimeSensor(AlternativeTimeSensorBase):
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes."""
         attrs = super().extra_state_attributes
-        
+
         if self._mars_time_info:
             attrs.update(self._mars_time_info)
-            
+
             # Add metadata
             attrs["calendar_type"] = "Mars Sol Time"
             attrs["accuracy"] = CALENDAR_INFO.get("accuracy", "scientific")
             attrs["reference"] = CALENDAR_INFO.get("reference_url")
             attrs["notes"] = self._translate("notes")
-            
+
             # Add configuration state
             attrs["config_timezone"] = self._mars_timezone
             attrs["config_display_format"] = self._display_format
             attrs["config_show_season"] = self._show_season
             attrs["config_show_mission_sol"] = self._show_mission_sol
             attrs["config_show_earth_time"] = self._show_earth_time
-        
+
         return attrs
 
     # ---------- Calculation methods ----------
@@ -621,29 +621,29 @@ class MarsTimeSensor(AlternativeTimeSensorBase):
         # Get timezone data
         tz_data = self._mars_data["timezones"].get(self._mars_timezone, self._mars_data["timezones"]["MTC"])
         timezone_offset = tz_data["longitude"] / 15.0  # Convert degrees to hours
-        
+
         # Calculate MSD (Mars Sol Date)
         unix_timestamp = earth_utc.timestamp()
         seconds_since_j2000 = unix_timestamp - self._mars_data["j2000_epoch"]
         sols_since_j2000 = seconds_since_j2000 / self._mars_data["sol_duration_seconds"]
         msd = self._mars_data["mars_epoch_msd"] + sols_since_j2000
-        
+
         # Calculate MTC (Mars Coordinated Time)
         sol_fraction = msd % 1.0
         mtc_hours = int(sol_fraction * 24)
         mtc_minutes = int((sol_fraction * 24 * 60) % 60)
         mtc_seconds = int((sol_fraction * 24 * 60 * 60) % 60)
         mtc_time = f"{mtc_hours:02d}:{mtc_minutes:02d}:{mtc_seconds:02d}"
-        
+
         # Calculate local Mars time
         local_hours = int((sol_fraction * 24 + timezone_offset) % 24)
         local_time = f"{local_hours:02d}:{mtc_minutes:02d}:{mtc_seconds:02d}"
-        
+
         # Calculate solar longitude (Ls) for seasons
         # Simplified calculation
         mars_year_fraction = (msd / self._mars_data["tropical_year_sols"]) % 1.0
         ls = mars_year_fraction * 360.0
-        
+
         # Determine season
         season = None
         if self._show_season:
@@ -651,7 +651,7 @@ class MarsTimeSensor(AlternativeTimeSensorBase):
                 if season_data["ls_start"] <= ls < season_data["ls_end"]:
                     season = self._translate_dict(season_data["name"], "Northern Spring")
                     break
-        
+
         # Calculate mission sol if applicable
         mission_sol = None
         mission_name = None
@@ -660,7 +660,7 @@ class MarsTimeSensor(AlternativeTimeSensorBase):
             if mission_name and mission_name in self._mars_data["missions"]:
                 landing_msd = self._mars_data["missions"][mission_name]
                 mission_sol = int(msd - landing_msd)
-        
+
         # Build result
         result: Dict[str, Any] = {
             "msd": round(msd, 4),
@@ -672,26 +672,26 @@ class MarsTimeSensor(AlternativeTimeSensorBase):
             "timezone_offset": round(timezone_offset, 2),
             "solar_longitude": round(ls, 1),
         }
-        
+
         if season and self._show_season:
             result["season"] = season
-        
+
         if mission_sol is not None and mission_name and self._show_mission_sol:
             result["mission_sol"] = mission_sol
             result["mission_name"] = mission_name
-        
+
         if self._show_earth_time:
             result["earth_time_utc"] = earth_utc.strftime("%Y-%m-%d %H:%M:%S UTC")
-        
+
         return result
-    
+
     def _translate_dict(self, data: Dict[str, str], default: str) -> str:
         """Translate from a dictionary based on current language."""
         if isinstance(data, dict):
             lang = self._get_language()
             return data.get(lang, data.get("en", default))
         return str(data or default)
-    
+
     def _get_language(self) -> str:
         """Get current language setting."""
         try:
@@ -701,7 +701,7 @@ class MarsTimeSensor(AlternativeTimeSensorBase):
             if "_" in lang:
                 lang = lang.split("_")[0]
             return lang
-        except:
+        except Exception:
             return "en"
 
     # ---------- Update method ----------
@@ -711,10 +711,10 @@ class MarsTimeSensor(AlternativeTimeSensorBase):
         # Ensure options are loaded
         if not self._options_loaded:
             self._load_options()
-        
+
         now = datetime.utcnow()
         self._mars_time_info = self._calculate_mars_time(now)
-        
+
         # Format state based on display_format
         if self._display_format == "time_only":
             # Just the time and timezone
@@ -730,7 +730,7 @@ class MarsTimeSensor(AlternativeTimeSensorBase):
             if "mission_sol" in self._mars_time_info:
                 mission_info = f" (Sol {self._mars_time_info['mission_sol']})"
             self._state = f"MSD {sol}, {self._mars_time_info['local_time']} {self._mars_timezone}{mission_info}"
-        
+
         _LOGGER.debug(f"Updated Mars Time to {self._state}")
 
 

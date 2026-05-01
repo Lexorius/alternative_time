@@ -1,11 +1,12 @@
 """World of Warcraft Calendar implementation - Version 2.7."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
 import logging
-from typing import Dict, Any, Optional
+from datetime import datetime
+from typing import Any, Dict, Optional
 
 from homeassistant.core import HomeAssistant
+
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +26,7 @@ CALENDAR_INFO = {
     "category": "gaming",
     "accuracy": "fictional",
     "update_interval": UPDATE_INTERVAL,
-    
+
     # Multi-language names
     "name": {
         "en": "World of Warcraft Calendar",
@@ -40,7 +41,7 @@ CALENDAR_INFO = {
         "zh": "魔兽世界日历",
         "ko": "월드 오브 워크래프트 달력"
     },
-    
+
     # Short descriptions for UI
     "description": {
         "en": "Azeroth calendar with seasonal events and moon phases",
@@ -55,7 +56,7 @@ CALENDAR_INFO = {
         "zh": "包含季节活动和月相的艾泽拉斯日历",
         "ko": "계절 이벤트와 달의 위상이 포함된 아제로스 달력"
     },
-    
+
     # Configuration options for config_flow
     "config_options": {
         "faction": {
@@ -211,7 +212,7 @@ CALENDAR_INFO = {
             }
         }
     },
-    
+
     # Warcraft-specific calendar data
     "warcraft_data": {
         # Months in Azeroth
@@ -229,18 +230,18 @@ CALENDAR_INFO = {
             {"name": "November", "days": 30, "season": "Fall"},
             {"name": "December", "days": 31, "season": "Winter"}
         ],
-        
+
         # Days of the week in Azeroth
         "weekdays": [
             "Day of the Sun",
-            "Day of the Moon", 
+            "Day of the Moon",
             "Day of the Earth",
             "Day of the Storm",
             "Day of the Sky",
             "Day of the Stars",
             "Day of the Wisp"
         ],
-        
+
         # Special annual events
         "events": {
             "1-1": "New Year",
@@ -257,7 +258,7 @@ CALENDAR_INFO = {
             "11-7": "Pilgrim's Bounty Start",
             "12-15": "Winter Veil Start"
         },
-        
+
         # Faction-specific events
         "faction_events": {
             "Alliance": {
@@ -269,13 +270,13 @@ CALENDAR_INFO = {
                 "8-15": "Remembrance of Vol'jin"
             }
         },
-        
+
         # Moons of Azeroth
         "moons": {
             "white_lady": {
                 "name": "The White Lady",
                 "cycle_days": 28,
-                "phases": ["New", "Waxing Crescent", "First Quarter", "Waxing Gibbous", 
+                "phases": ["New", "Waxing Crescent", "First Quarter", "Waxing Gibbous",
                           "Full", "Waning Gibbous", "Last Quarter", "Waning Crescent"]
             },
             "blue_child": {
@@ -284,11 +285,11 @@ CALENDAR_INFO = {
                 "phases": ["Hidden", "Visible"]
             }
         },
-        
+
         # Timeline reference (Years since the Dark Portal opened)
         "epoch_event": "Opening of the Dark Portal",
         "current_year": 35,  # Year 35 after the Dark Portal
-        
+
         # Dragon Aspects and their domains
         "dragon_aspects": {
             "Alexstrasza": "Life",
@@ -298,23 +299,23 @@ CALENDAR_INFO = {
             "Wrathion": "Earth"
         }
     },
-    
+
     # Additional metadata
     "reference_url": "https://wowpedia.fandom.com/wiki/Calendar",
     "documentation_url": "https://worldofwarcraft.com/",
     "origin": "Blizzard Entertainment",
     "created_by": "World of Warcraft Team",
     "introduced": "2004",
-    
+
     # Related calendars
     "related": ["elder_scrolls", "star_wars"],
-    
+
     # Tags for searching and filtering
     "tags": [
         "gaming", "fantasy", "warcraft", "azeroth", "blizzard",
         "mmorpg", "seasonal", "events", "moons", "dragon"
     ],
-    
+
     # Extended description
     "notes": {
         "en": "The World of Warcraft calendar follows Earth months but includes Azeroth-specific events, dual moon phases, and Dragon Aspect influences. Years are counted from the opening of the Dark Portal.",
@@ -329,25 +330,25 @@ CALENDAR_INFO = {
 
 class WarcraftCalendarSensor(AlternativeTimeSensorBase):
     """Sensor for displaying World of Warcraft calendar dates."""
-    
+
     # Class-level update interval
     UPDATE_INTERVAL = UPDATE_INTERVAL
-    
+
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the Warcraft calendar sensor."""
         super().__init__(base_name, hass)
-        
+
         # Store CALENDAR_INFO as instance variable for _translate method
         self._calendar_info = CALENDAR_INFO
-        
+
         # Get translated name from metadata
         calendar_name = self._translate('name', 'World of Warcraft Calendar')
-        
+
         # Set sensor attributes
         self._attr_name = f"{base_name} {calendar_name}"
         self._attr_unique_id = f"{base_name}_warcraft"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:sword")
-        
+
         # Configuration options with defaults from CALENDAR_INFO
         config_defaults = CALENDAR_INFO.get("config_options", {})
         self._faction = config_defaults.get("faction", {}).get("default", "Neutral")
@@ -355,30 +356,30 @@ class WarcraftCalendarSensor(AlternativeTimeSensorBase):
         self._show_events = config_defaults.get("show_events", {}).get("default", True)
         self._show_moons = config_defaults.get("show_moons", {}).get("default", True)
         self._show_dragon_aspect = config_defaults.get("show_dragon_aspect", {}).get("default", True)
-        
+
         # Warcraft data
         self._warcraft_data = CALENDAR_INFO["warcraft_data"]
-        
+
         # Flag to track if options have been loaded
         self._options_loaded = False
-        
+
         # Initialize state
         self._state = None
         self._warcraft_date = {}
-        
+
         _LOGGER.debug(f"Initialized Warcraft Calendar sensor: {self._attr_name}")
-    
+
     def _load_options(self) -> None:
         """Load plugin options after IDs are set."""
         if self._options_loaded:
             return
-            
+
         # Get plugin options from config entry
         plugin_options = self._get_plugin_options()
-        
+
         if plugin_options:
             _LOGGER.debug(f"Loading Warcraft options: {plugin_options}")
-            
+
             # Apply options using set_options method
             self.set_options(
                 faction=plugin_options.get("faction"),
@@ -387,21 +388,21 @@ class WarcraftCalendarSensor(AlternativeTimeSensorBase):
                 show_moons=plugin_options.get("show_moons"),
                 show_dragon_aspect=plugin_options.get("show_dragon_aspect")
             )
-        
+
         self._options_loaded = True
-    
+
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        
+
         # Load options after entity is registered
         self._load_options()
-        
+
         _LOGGER.debug(f"Warcraft Calendar sensor added to hass with options: "
                      f"faction={self._faction}, region={self._region}, "
                      f"show_events={self._show_events}, show_moons={self._show_moons}, "
                      f"show_dragon_aspect={self._show_dragon_aspect}")
-    
+
     def set_options(
         self,
         *,
@@ -415,24 +416,24 @@ class WarcraftCalendarSensor(AlternativeTimeSensorBase):
         if faction is not None and faction in ["Alliance", "Horde", "Neutral"]:
             self._faction = faction
             _LOGGER.debug(f"Set faction to: {faction}")
-        
-        if region is not None and region in ["Eastern Kingdoms", "Kalimdor", "Northrend", 
+
+        if region is not None and region in ["Eastern Kingdoms", "Kalimdor", "Northrend",
                                               "Pandaria", "Broken Isles", "Shadowlands", "Dragon Isles"]:
             self._region = region
             _LOGGER.debug(f"Set region to: {region}")
-        
+
         if show_events is not None:
             self._show_events = bool(show_events)
             _LOGGER.debug(f"Set show_events to: {show_events}")
-        
+
         if show_moons is not None:
             self._show_moons = bool(show_moons)
             _LOGGER.debug(f"Set show_moons to: {show_moons}")
-        
+
         if show_dragon_aspect is not None:
             self._show_dragon_aspect = bool(show_dragon_aspect)
             _LOGGER.debug(f"Set show_dragon_aspect to: {show_dragon_aspect}")
-    
+
     def _calculate_warcraft_date(self, dt: datetime) -> Dict[str, Any]:
         """Calculate the Warcraft date from a datetime."""
         # Get current date parts
@@ -443,22 +444,22 @@ class WarcraftCalendarSensor(AlternativeTimeSensorBase):
         day = dt.day
         weekday_idx = dt.weekday()
         weekday = self._warcraft_data["weekdays"][weekday_idx]
-        
+
         # Format main date
         formatted = f"{weekday}, {month_name} {day}, Year {year}"
-        
+
         # Calculate current event
         event = None
         if self._show_events:
             date_key = f"{dt.month}-{dt.day}"
             event = self._warcraft_data["events"].get(date_key)
-            
+
             # Check faction-specific events
             if self._faction in self._warcraft_data["faction_events"]:
                 faction_event = self._warcraft_data["faction_events"][self._faction].get(date_key)
                 if faction_event:
                     event = faction_event
-        
+
         # Calculate moon phases
         moon_phases = {}
         if self._show_moons:
@@ -467,12 +468,12 @@ class WarcraftCalendarSensor(AlternativeTimeSensorBase):
             days_since_epoch = (dt - datetime(2024, 1, 1)).days
             white_lady_phase_idx = (days_since_epoch % white_lady["cycle_days"]) // (white_lady["cycle_days"] // 8)
             moon_phases["White Lady"] = white_lady["phases"][white_lady_phase_idx]
-            
+
             # Blue Child (35-day cycle, visible/hidden)
             blue_child = self._warcraft_data["moons"]["blue_child"]
             blue_child_visible = (days_since_epoch % blue_child["cycle_days"]) < (blue_child["cycle_days"] // 2)
             moon_phases["Blue Child"] = "Visible" if blue_child_visible else "Hidden"
-        
+
         # Get Dragon Aspect of the day
         dragon_aspect = None
         if self._show_dragon_aspect:
@@ -480,7 +481,7 @@ class WarcraftCalendarSensor(AlternativeTimeSensorBase):
             aspect_idx = dt.day % len(aspects)
             dragon_aspect = aspects[aspect_idx]
             dragon_domain = self._warcraft_data["dragon_aspects"][dragon_aspect]
-        
+
         # Build result
         result = {
             "formatted": formatted,
@@ -493,16 +494,16 @@ class WarcraftCalendarSensor(AlternativeTimeSensorBase):
             "faction": self._faction,
             "epoch_event": self._warcraft_data["epoch_event"]
         }
-        
+
         if event and self._show_events:
             result["event"] = event
-        
+
         if moon_phases and self._show_moons:
             result["moon_phases"] = moon_phases
-        
+
         if dragon_aspect and self._show_dragon_aspect:
             result["dragon_aspect"] = f"{dragon_aspect} ({dragon_domain})"
-        
+
         # Add faction-specific greeting
         faction_greetings = {
             "Alliance": "For the Alliance!",
@@ -510,34 +511,34 @@ class WarcraftCalendarSensor(AlternativeTimeSensorBase):
             "Neutral": "Safe travels, adventurer"
         }
         result["greeting"] = faction_greetings.get(self._faction, "Safe travels")
-        
+
         return result
-    
+
     def update(self) -> None:
         """Update the sensor."""
         # Ensure options are loaded (in case async_added_to_hass hasn't run yet)
         if not self._options_loaded:
             self._load_options()
-        
+
         now = datetime.now()
         self._warcraft_date = self._calculate_warcraft_date(now)
-        
+
         # Set state to formatted Warcraft date
         self._state = self._warcraft_date["formatted"]
-        
+
         _LOGGER.debug(f"Updated Warcraft Calendar to {self._state}")
-    
+
     @property
     def state(self) -> str:
         """Return the state of the sensor."""
         return self._state or "Unknown"
-    
+
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return additional attributes."""
         if not self._warcraft_date:
             return {}
-        
+
         # Build attributes dictionary
         attrs = {
             "year": self._warcraft_date.get("year"),
@@ -555,24 +556,24 @@ class WarcraftCalendarSensor(AlternativeTimeSensorBase):
             "reference": CALENDAR_INFO.get("reference_url"),
             "notes": self._translate("notes")
         }
-        
+
         # Add optional attributes
         if "event" in self._warcraft_date:
             attrs["current_event"] = self._warcraft_date["event"]
-        
+
         if "moon_phases" in self._warcraft_date:
             attrs["moon_phases"] = self._warcraft_date["moon_phases"]
-        
+
         if "dragon_aspect" in self._warcraft_date:
             attrs["dragon_aspect"] = self._warcraft_date["dragon_aspect"]
-        
+
         # Add configuration state
         attrs["config_faction"] = self._faction
         attrs["config_region"] = self._region
         attrs["config_show_events"] = self._show_events
         attrs["config_show_moons"] = self._show_moons
         attrs["config_show_dragon_aspect"] = self._show_dragon_aspect
-        
+
         return attrs
 
 

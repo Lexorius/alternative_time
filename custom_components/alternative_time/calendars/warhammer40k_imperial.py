@@ -22,12 +22,13 @@ would require a local rift epoch anchor and is not included to keep the sensor l
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import datetime, timezone, timedelta
 import logging
+from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, Dict, Optional
 
 from homeassistant.core import HomeAssistant
+
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,7 +46,7 @@ CALENDAR_INFO: Dict[str, Any] = {
     "category": "scifi",
     "accuracy": "lore-accurate (Old Style)",
     "update_interval": UPDATE_INTERVAL,
-    
+
     # Multi-language names
     "name": {
         "en": "Warhammer 40,000 - Imperial Date (Old Style)",
@@ -60,7 +61,7 @@ CALENDAR_INFO: Dict[str, Any] = {
         "zh": "战锤40,000 - 帝国历法（旧式）",
         "ko": "워해머 40,000 - 제국력 (구식)"
     },
-    
+
     # Descriptions
     "description": {
         "en": "Formats current Terran time into the Imperial Dating System (C.FFF.YYY.M##).",
@@ -75,7 +76,7 @@ CALENDAR_INFO: Dict[str, Any] = {
         "zh": "将当前地球时间格式化为帝国历法系统 (C.FFF.YYY.M##).",
         "ko": "현재 지구 시간을 제국 날짜 체계로 변환합니다 (C.FFF.YYY.M##)."
     },
-    
+
     # Configuration options for config_flow
     "config_options": {
         "check_number": {
@@ -204,29 +205,29 @@ CALENDAR_INFO: Dict[str, Any] = {
             }
         }
     },
-    
+
     # Constants from the lore
     "imperial": {
         "makr_constant": 0.11407955,  # per Lexicanum; 1 fraction ≈ 8h 45m 36s
         "fractions_per_year": 1000
     },
-    
+
     # Additional metadata
     "reference_url": "https://wh40k.lexicanum.com/wiki/Imperial_Dating_System",
     "documentation_url": "https://warhammer40k.fandom.com/wiki/Imperial_Dating_System",
     "origin": "Games Workshop",
     "created_by": "Warhammer 40,000 Universe",
     "introduced": "1987",
-    
+
     # Related calendars
     "related": ["stardate", "star_wars", "eve"],
-    
+
     # Tags for searching and filtering
     "tags": [
         "scifi", "warhammer", "40k", "imperial", "grimdark",
         "millennium", "games_workshop", "fictional"
     ],
-    
+
     # Extended notes
     "notes": {
         "en": (
@@ -276,10 +277,10 @@ class WarhammerImperialCalendarSensor(AlternativeTimeSensorBase):
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the Warhammer Imperial Calendar sensor."""
         super().__init__(base_name, hass)
-        
+
         # Store CALENDAR_INFO as instance variable for _translate method
         self._calendar_info = CALENDAR_INFO
-        
+
         calendar_name = self._translate('name', 'Warhammer 40,000 - Imperial Date (Old Style)')
         self._attr_name = f"{base_name} {calendar_name}"
         self._attr_unique_id = f"{base_name}_warhammer40k_imperial_date"
@@ -291,29 +292,29 @@ class WarhammerImperialCalendarSensor(AlternativeTimeSensorBase):
         self._year_offset: int = config_defaults.get("year_offset", {}).get("default", 0)
         self._system_designator: str | None = config_defaults.get("system_designator", {}).get("default", "SOL")
         self._fraction_method: str = config_defaults.get("fraction_method", {}).get("default", "precise")
-        
+
         # State variables
         self._imperial: Optional[ImperialDate] = None
         self._terran_year: int = 0
         self._leap_year: bool = False
         self._state: Optional[str] = None
-        
+
         # Flag to track if options have been loaded
         self._options_loaded = False
 
         _LOGGER.debug("Initialized %s", self._attr_name)
-    
+
     def _load_options(self) -> None:
         """Load plugin options after IDs are set."""
         if self._options_loaded:
             return
-            
+
         # Get plugin options from config entry
         plugin_options = self._get_plugin_options()
-        
+
         if plugin_options:
             _LOGGER.debug(f"Loading Warhammer Imperial options: {plugin_options}")
-            
+
             # Apply options using set_options method
             self.set_options(
                 check_number=plugin_options.get("check_number"),
@@ -321,16 +322,16 @@ class WarhammerImperialCalendarSensor(AlternativeTimeSensorBase):
                 system_designator=plugin_options.get("system_designator"),
                 fraction_method=plugin_options.get("fraction_method")
             )
-        
+
         self._options_loaded = True
-    
+
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        
+
         # Load options after entity is registered
         self._load_options()
-        
+
         _LOGGER.debug(f"Warhammer Imperial sensor added to hass with options: "
                      f"check={self._check_number}, offset={self._year_offset}, "
                      f"system={self._system_designator}, method={self._fraction_method}")
@@ -384,18 +385,18 @@ class WarhammerImperialCalendarSensor(AlternativeTimeSensorBase):
                 _LOGGER.debug(f"Set check_number to: {check_number}")
             else:
                 _LOGGER.warning(f"Invalid check_number: {check_number}, keeping {self._check_number}")
-        
+
         if year_offset is not None:
             if 0 <= year_offset <= 50000:
                 self._year_offset = int(year_offset)
                 _LOGGER.debug(f"Set year_offset to: {year_offset}")
             else:
                 _LOGGER.warning(f"Invalid year_offset: {year_offset}, keeping {self._year_offset}")
-        
+
         if system_designator is not None:
             self._system_designator = str(system_designator) if system_designator else None
             _LOGGER.debug(f"Set system_designator to: {system_designator}")
-        
+
         if fraction_method is not None and fraction_method in ["precise", "lexicanum"]:
             self._fraction_method = fraction_method
             _LOGGER.debug(f"Set fraction_method to: {fraction_method}")
@@ -419,11 +420,11 @@ class WarhammerImperialCalendarSensor(AlternativeTimeSensorBase):
         """Calculate year fraction using precise method (elapsed seconds / total seconds)."""
         year_start = datetime(dt.year, 1, 1, tzinfo=dt.tzinfo)
         elapsed = dt - year_start
-        
+
         # Total seconds in the year
         days_in_year = 366 if self._is_leap_year(dt.year) else 365
         total_seconds = days_in_year * 86400
-        
+
         # Calculate fraction (0-999)
         fraction = int((elapsed.total_seconds() / total_seconds) * 1000)
         return min(999, max(0, fraction))
@@ -432,11 +433,11 @@ class WarhammerImperialCalendarSensor(AlternativeTimeSensorBase):
         """Calculate year fraction using Lexicanum method (Makr constant)."""
         # Day of year (1-based)
         day_of_year = dt.timetuple().tm_yday
-        
+
         # Apply Makr constant
         makr = CALENDAR_INFO["imperial"]["makr_constant"]
         fraction = int((day_of_year - 1 + makr) * (1000 / 365))
-        
+
         return min(999, max(0, fraction))
 
     def _to_imperial(self, dt: datetime) -> ImperialDate:
@@ -463,7 +464,7 @@ class WarhammerImperialCalendarSensor(AlternativeTimeSensorBase):
             millennium=millennium,
             system=self._system_designator
         )
-    
+
     def _get_thought_of_the_day(self) -> str:
         """Get a random Thought of the Day."""
         thoughts = [
@@ -488,7 +489,7 @@ class WarhammerImperialCalendarSensor(AlternativeTimeSensorBase):
             "Suffer not the witch to live.",
             "Even a man who has nothing can still offer his life."
         ]
-        
+
         # Use day of year as seed for consistent daily thought
         import hashlib
         dt = datetime.now()
@@ -504,7 +505,7 @@ class WarhammerImperialCalendarSensor(AlternativeTimeSensorBase):
         # Ensure options are loaded (in case async_added_to_hass hasn't run yet)
         if not self._options_loaded:
             self._load_options()
-        
+
         try:
             now = datetime.now()
             self._imperial = self._to_imperial(now)

@@ -1,12 +1,12 @@
 """Discworld Calendar (Terry Pratchett) implementation - Version 3.0."""
 from __future__ import annotations
 
-from datetime import datetime
 import logging
-from typing import Dict, Any, Optional
-import random
+from datetime import datetime
+from typing import Any, Dict
 
 from homeassistant.core import HomeAssistant
+
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ CALENDAR_INFO = {
     "category": "fantasy",
     "accuracy": "fictional",
     "update_interval": UPDATE_INTERVAL,
-    
+
     # Multi-language names
     "name": {
         "en": "Discworld Calendar",
@@ -42,7 +42,7 @@ CALENDAR_INFO = {
         "zh": "碟形世界历",
         "ko": "디스크월드 달력"
     },
-    
+
     # Short descriptions for UI
     "description": {
         "en": "Terry Pratchett's Discworld calendar with 8-day weeks, guild influences, and Death appearances",
@@ -58,7 +58,7 @@ CALENDAR_INFO = {
         "zh": "特里·普拉切特的碟形世界历，8天周、公会影响和死神出现",
         "ko": "테리 프래쳇의 디스크월드 달력, 8일 주, 길드 영향 및 죽음의 출현"
     },
-    
+
     # Detailed information for documentation
     "detailed_info": {
         "en": {
@@ -82,7 +82,7 @@ CALENDAR_INFO = {
             "death": "Tod (DIE ANTHROPOMORPHE PERSONIFIKATION) erscheint regelmäßig"
         }
     },
-    
+
     # Configuration options
     "config_options": {
         "show_death_quotes": {
@@ -305,7 +305,7 @@ CALENDAR_INFO = {
             }
         }
     },
-    
+
     # Discworld-specific data
     "discworld_data": {
         # Discworld months
@@ -324,13 +324,13 @@ CALENDAR_INFO = {
             {"name": "Ember", "emoji": "🔥", "season": "Autumn"},
             {"name": "December", "emoji": "⭐", "season": "Winter"}
         ],
-        
+
         # 8-day week
         "weekdays": [
             "Sunday", "Monday", "Tuesday", "Wednesday",
             "Thursday", "Friday", "Saturday", "Octeday"
         ],
-        
+
         # Guilds of Ankh-Morpork
         "guilds": [
             "Assassins' Guild", "Thieves' Guild", "Seamstresses' Guild",
@@ -339,7 +339,7 @@ CALENDAR_INFO = {
             "Fools' Guild", "Musicians' Guild", "Bakers' Guild",
             "Butchers' Guild", "Candlemakers' Guild"
         ],
-        
+
         # Special events
         "events": {
             (1, 1): "🎅 Hogswatchday",
@@ -357,7 +357,7 @@ CALENDAR_INFO = {
             (11, 11): "☕ Elevenses Day",
             (12, 32): "🎄 Hogswatch Eve"
         },
-        
+
         # Death quotes
         "death_quotes": [
             "THERE IS NO JUSTICE. THERE IS JUST ME.",
@@ -373,7 +373,7 @@ CALENDAR_INFO = {
             "THERE'S NO POINT IN BELIEVING IN THINGS THAT EXIST.",
             "I REMEMBER WHEN ALL THIS WILL BE AGAIN."
         ],
-        
+
         # City areas
         "city_areas": [
             "The Shades", "Patrician's Palace", "Unseen University",
@@ -381,7 +381,7 @@ CALENDAR_INFO = {
             "The Hippo", "Isle of Gods", "Pseudopolis Yard",
             "Sator Square", "The Maul", "Dolly Sisters"
         ],
-        
+
         # Time periods
         "time_periods": {
             (0, 3): {"name": "Dead of Night", "description": "Graveyard Shift", "emoji": "🌙"},
@@ -394,7 +394,7 @@ CALENDAR_INFO = {
             (19, 21): {"name": "Dusk", "description": "Theatre Time", "emoji": "🌆"},
             (21, 24): {"name": "Night", "description": "Watch Patrol", "emoji": "🌃"}
         },
-        
+
         # Century names
         "centuries": {
             "anchovy": "Century of the Anchovy",
@@ -403,27 +403,27 @@ CALENDAR_INFO = {
             "three_lice": "Century of the Three Lice"
         }
     },
-    
+
     # Additional metadata
     "reference_url": "https://wiki.lspace.org/Discworld_calendar",
     "documentation_url": "https://www.terrypratchettbooks.com/",
     "origin": "Terry Pratchett's Discworld series",
     "created_by": "Terry Pratchett",
     "introduced": "The Colour of Magic (1983)",
-    
+
     # Example format
     "example": "Century of the Anchovy, UC 25, 15 Grune (Octeday)",
     "example_meaning": "Century of the Anchovy, UC (University Calendar) year 25, 15th of Grune, Octeday",
-    
+
     # Related calendars
     "related": ["gregorian", "fictional"],
-    
+
     # Tags for searching and filtering
     "tags": [
         "fantasy", "discworld", "pratchett", "ankh-morpork", "fictional",
         "humor", "death", "guilds", "octeday", "turtle", "atuin", "rincewind"
     ],
-    
+
     # Special features
     "features": {
         "eight_day_week": True,
@@ -438,22 +438,22 @@ CALENDAR_INFO = {
 
 class DiscworldCalendarSensor(AlternativeTimeSensorBase):
     """Sensor for displaying Discworld Calendar (Terry Pratchett)."""
-    
+
     # Class-level update interval
     UPDATE_INTERVAL = UPDATE_INTERVAL
-    
+
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the Discworld calendar sensor."""
         super().__init__(base_name, hass)
-        
+
         # Get translated name from metadata
         calendar_name = self._translate('name', 'Discworld Calendar')
-        
+
         # Set sensor attributes
         self._attr_name = f"{base_name} {calendar_name}"
         self._attr_unique_id = f"{base_name}_discworld_calendar"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:turtle")
-        
+
         # Configuration options with defaults
         config_defaults = CALENDAR_INFO.get("config_options", {})
         self._show_death_quotes = config_defaults.get("show_death_quotes", {}).get("default", True)
@@ -461,16 +461,16 @@ class DiscworldCalendarSensor(AlternativeTimeSensorBase):
         self._show_location = config_defaults.get("show_location", {}).get("default", True)
         self._detect_l_space = config_defaults.get("detect_l_space", {}).get("default", True)
         self._century = config_defaults.get("century", {}).get("default", "anchovy")
-        
+
         # Discworld data
         self._discworld_data = CALENDAR_INFO["discworld_data"]
-        
+
         # Initialize state
         self._state = None
         self._discworld_date = {}
-        
+
         _LOGGER.debug(f"Initialized Discworld Calendar sensor: {self._attr_name}")
-    
+
     def set_options(self, options: Dict[str, Any]) -> None:
         """Set options from config flow."""
         if options:
@@ -479,35 +479,35 @@ class DiscworldCalendarSensor(AlternativeTimeSensorBase):
             self._show_location = options.get("show_location", self._show_location)
             self._detect_l_space = options.get("detect_l_space", self._detect_l_space)
             self._century = options.get("century", self._century)
-            
+
             _LOGGER.debug(f"Discworld sensor options updated: show_death_quotes={self._show_death_quotes}, "
                          f"show_guild={self._show_guild}, show_location={self._show_location}, "
                          f"detect_l_space={self._detect_l_space}, century={self._century}")
-    
+
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
-    
+
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes."""
         attrs = super().extra_state_attributes
-        
+
         # Add Discworld-specific attributes
         if self._discworld_date:
             attrs.update(self._discworld_date)
-            
+
             # Add description in user's language
             attrs["description"] = self._translate('description')
-            
+
             # Add reference
             attrs["reference"] = CALENDAR_INFO.get('reference_url', '')
-            
+
             # Add Great A'Tuin status
             attrs["great_atuin"] = "Swimming through space 🐢"
             attrs["elephants"] = "Berilia, Tubul, Great T'Phon, and Jerakeen"
-            
+
             # Add configuration status
             attrs["config"] = {
                 "show_death_quotes": self._show_death_quotes,
@@ -516,67 +516,67 @@ class DiscworldCalendarSensor(AlternativeTimeSensorBase):
                 "detect_l_space": self._detect_l_space,
                 "century": self._century
             }
-        
+
         return attrs
-    
+
     def _get_time_period(self, hour: int) -> Dict[str, str]:
         """Get the Discworld time period for the hour."""
         for (start, end), period in self._discworld_data["time_periods"].items():
             if start <= hour < end:
                 return period
         return {"name": "Temporal Anomaly", "description": "Time is broken", "emoji": "⏰"}
-    
+
     def _calculate_discworld_date(self, earth_date: datetime) -> Dict[str, Any]:
         """Calculate Discworld Calendar date from standard date."""
-        
+
         # Discworld year
         year_since_2000 = earth_date.year - 2000
         discworld_year = 1 + year_since_2000
-        
+
         # Get century name
         century_name = self._discworld_data["centuries"][self._century]
-        
+
         # Get month and day
         month_index = min(earth_date.month - 1, 12)
         day = earth_date.day
-        
+
         # Handle special 32nd days (Discworld has them!)
         if day == 31 and earth_date.month in [4, 12]:
             day = 32  # Discworld logic!
-        
+
         # Get month data
         if month_index < len(self._discworld_data["months"]):
             month_data = self._discworld_data["months"][month_index]
         else:
             month_data = {"name": "Backspindlemonth", "emoji": "🌀", "season": "Temporal"}
-        
+
         # Calculate weekday (8-day week)
         days_since_epoch = (earth_date - datetime(2000, 1, 1)).days
         weekday_index = days_since_epoch % 8
         weekday = self._discworld_data["weekdays"][weekday_index]
         is_octeday = weekday_index == 7
-        
+
         # Check for events
         event = self._discworld_data["events"].get((earth_date.month, day), "")
-        
+
         # Guild influence (rotates daily)
         guild_index = days_since_epoch % len(self._discworld_data["guilds"])
         guild = self._discworld_data["guilds"][guild_index] if self._show_guild else ""
-        
+
         # Death quote (changes daily)
         death_index = days_since_epoch % len(self._discworld_data["death_quotes"])
         death_quote = self._discworld_data["death_quotes"][death_index]
-        
+
         # City location (changes hourly)
         location_index = (days_since_epoch + earth_date.hour) % len(self._discworld_data["city_areas"])
         location = self._discworld_data["city_areas"][location_index] if self._show_location else ""
-        
+
         # Time period
         time_period = self._get_time_period(earth_date.hour)
-        
+
         # L-Space detection
         l_space_detected = (earth_date.hour == 3 and earth_date.minute == 33) if self._detect_l_space else False
-        
+
         # Build result
         result = {
             "year": discworld_year,
@@ -593,44 +593,44 @@ class DiscworldCalendarSensor(AlternativeTimeSensorBase):
             "gregorian_date": earth_date.strftime("%Y-%m-%d"),
             "full_date": f"{century_name}, UC {discworld_year}, {day} {month_data['name']}"
         }
-        
+
         # Add optional data
         if guild:
             result["guild_influence"] = f"⚔️ {guild}"
-        
+
         if location:
             result["location"] = f"📍 {location}"
-        
+
         if event:
             result["event"] = event
-        
+
         if self._show_death_quotes and earth_date.hour == 0:
             result["death_says"] = f"💀 {death_quote}"
-        
+
         if l_space_detected:
             result["l_space_anomaly"] = "📚 L-Space portal detected! All libraries are one!"
-        
+
         if is_octeday:
             result["octeday_special"] = "🎉 It's Octeday! Extra day off work!"
-        
+
         return result
-    
+
     def update(self) -> None:
         """Update the sensor."""
         now = datetime.now()
         self._discworld_date = self._calculate_discworld_date(now)
-        
+
         # Build state string
         state_parts = [
             f"UC {self._discworld_date['year']}",
             f"{self._discworld_date['day']} {self._discworld_date['month']}"
         ]
-        
+
         if self._discworld_date['is_octeday']:
             state_parts.append("(Octeday!)")
         else:
             state_parts.append(f"({self._discworld_date['weekday']})")
-        
+
         self._state = " ".join(state_parts)
-        
+
         _LOGGER.debug(f"Updated Discworld Calendar to {self._state}")

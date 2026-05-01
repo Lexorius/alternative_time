@@ -1,11 +1,12 @@
 """Ancient Egyptian Calendar implementation - Version 2.5."""
 from __future__ import annotations
 
-from datetime import datetime
 import logging
-from typing import Dict, Any
+from datetime import datetime
+from typing import Any, Dict
 
 from homeassistant.core import HomeAssistant
+
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +26,7 @@ CALENDAR_INFO = {
     "category": "historical",
     "accuracy": "approximate",
     "update_interval": UPDATE_INTERVAL,
-    
+
     # Multi-language names
     "name": {
         "en": "Egyptian Calendar",
@@ -41,7 +42,7 @@ CALENDAR_INFO = {
         "ko": "이집트 달력",
         "ar": "التقويم المصري"
     },
-    
+
     # Short descriptions for UI
     "description": {
         "en": "Ancient Egyptian civil calendar with 365 days (e.g. Dynasty 1 Year 25, 15 Thoth)",
@@ -57,7 +58,7 @@ CALENDAR_INFO = {
         "ko": "365일의 고대 이집트 민간 달력 (예: 1왕조 25년, 토트 15일)",
         "ar": "التقويم المدني المصري القديم بـ 365 يومًا"
     },
-    
+
     # Detailed information for documentation
     "detailed_info": {
         "en": {
@@ -91,7 +92,7 @@ CALENDAR_INFO = {
             "epagomenal": "5 أيام إضافية كانت أعياد ميلاد الآلهة: أوزوريس، حورس، ست، إيزيس، نفتيس"
         }
     },
-    
+
     # Egyptian-specific data
     "egyptian_data": {
         # Egyptian months with seasons
@@ -112,24 +113,24 @@ CALENDAR_INFO = {
             {"name": "Epiphi", "hieroglyph": "☀️", "season": "Shemu", "season_emoji": "🌾", "god": "Isis"},
             {"name": "Mesore", "hieroglyph": "☀️", "season": "Shemu", "season_emoji": "🌾", "god": "Ra"}
         ],
-        
+
         # Decan names (10-day weeks)
         "decans": [
             {"name": "First Decan", "symbol": "𓇳"},
             {"name": "Second Decan", "symbol": "𓇴"},
             {"name": "Third Decan", "symbol": "𓇵"}
         ],
-        
+
         # Epagomenal days (birthdays of gods)
         "epagomenal_gods": ["Osiris", "Horus", "Set", "Isis", "Nephthys"],
-        
+
         # Hieroglyphic numbers
         "hieroglyphs": {
             1: "𓏤", 2: "𓏥", 3: "𓏦", 4: "𓏧", 5: "𓏨",
             6: "𓏩", 7: "𓏪", 8: "𓏫", 9: "𓏬",
             10: "𓎆", 20: "𓎇", 30: "𓎈"
         },
-        
+
         # Egyptian hours
         "day_hours": [
             "First Hour of Day", "Second Hour of Day", "Third Hour of Day",
@@ -143,14 +144,14 @@ CALENDAR_INFO = {
             "Seventh Hour of Night", "Eighth Hour of Night", "Ninth Hour of Night",
             "Tenth Hour of Night", "Eleventh Hour of Night", "Twelfth Hour of Night"
         ],
-        
+
         # Nile status
         "nile_status": {
             "Akhet": {"status": "Nile Flooding", "emoji": "🌊"},
             "Peret": {"status": "Fields Emerging", "emoji": "🌱"},
             "Shemu": {"status": "Harvest Time", "emoji": "🌾"}
         },
-        
+
         # New year
         "new_year": {
             "month": 7,
@@ -158,27 +159,27 @@ CALENDAR_INFO = {
             "description": "Heliacal rising of Sirius"
         }
     },
-    
+
     # Additional metadata
     "reference_url": "https://en.wikipedia.org/wiki/Egyptian_calendar",
     "documentation_url": "https://www.britannica.com/science/Egyptian-calendar",
     "origin": "Ancient Egypt",
     "created_by": "Ancient Egyptians",
     "period": "3000 BCE - 641 CE",
-    
+
     # Example format
     "example": "Dynasty 1 Year 25, 𓏤𓏨 15 Thoth (Akhet)",
     "example_meaning": "Dynasty 1, Year 25, 15th day of Thoth month, Inundation season",
-    
+
     # Related calendars
     "related": ["coptic", "julian", "sothic"],
-    
+
     # Tags for searching and filtering
     "tags": [
         "historical", "ancient", "egyptian", "solar", "civil",
         "nile", "pharaoh", "hieroglyphic", "decan", "sothic"
     ],
-    
+
     # Special features
     "features": {
         "solar_calendar": True,
@@ -189,7 +190,7 @@ CALENDAR_INFO = {
         "hieroglyphic_numbers": True,
         "precision": "day"
     },
-    
+
     # Configuration options for this calendar
     "config_options": {
         "show_hieroglyphs": {
@@ -326,42 +327,42 @@ CALENDAR_INFO = {
 
 class EgyptianCalendarSensor(AlternativeTimeSensorBase):
     """Sensor for displaying Ancient Egyptian Calendar."""
-    
+
     # Class-level update interval
     UPDATE_INTERVAL = UPDATE_INTERVAL
-    
+
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the Egyptian calendar sensor."""
         super().__init__(base_name, hass)
-        
+
         # Get translated name from metadata
         calendar_name = self._translate('name', 'Egyptian Calendar')
-        
+
         # Set sensor attributes
         self._attr_name = f"{base_name} {calendar_name}"
         self._attr_unique_id = f"{base_name}_egyptian"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:pyramid")
-        
+
         # Default configuration options
         self._show_hieroglyphs = True
         self._show_dynasty = True
         self._show_nile_status = True
         self._format = "full"
         self._dynasty_offset = 0
-        
+
         # Egyptian data
         self._egyptian_data = CALENDAR_INFO["egyptian_data"]
-        
+
         # Track if options have been loaded
         self._options_loaded = False
-        
+
         _LOGGER.debug(f"Initialized Egyptian Calendar sensor: {self._attr_name}")
-    
+
     def _load_options(self) -> None:
         """Load configuration options from config entry."""
         if self._options_loaded:
             return
-            
+
         try:
             options = self.get_plugin_options()
             if options:
@@ -371,44 +372,44 @@ class EgyptianCalendarSensor(AlternativeTimeSensorBase):
                 self._show_nile_status = options.get("show_nile_status", self._show_nile_status)
                 self._format = options.get("format", self._format)
                 self._dynasty_offset = options.get("dynasty_offset", self._dynasty_offset)
-                
+
                 _LOGGER.debug(f"Egyptian sensor loaded options: hieroglyphs={self._show_hieroglyphs}, "
                             f"dynasty={self._show_dynasty}, nile={self._show_nile_status}, "
                             f"format={self._format}, dynasty_offset={self._dynasty_offset}")
             else:
                 _LOGGER.debug("Egyptian sensor using default options - no custom options found")
-                
+
             self._options_loaded = True
         except Exception as e:
             _LOGGER.debug(f"Egyptian sensor could not load options yet: {e}")
-    
+
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
-        
+
         # Try to load options now that IDs should be set
         self._load_options()
-    
+
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
-    
+
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes."""
         attrs = super().extra_state_attributes
-        
+
         # Add Egyptian-specific attributes
         if hasattr(self, '_egyptian_date'):
             attrs.update(self._egyptian_date)
-            
+
             # Add description in user's language
             attrs["description"] = self._translate('description')
-            
+
             # Add reference
             attrs["reference"] = CALENDAR_INFO.get('reference_url', '')
-            
+
             # Add configuration status
             attrs["config"] = {
                 "show_hieroglyphs": self._show_hieroglyphs,
@@ -417,17 +418,17 @@ class EgyptianCalendarSensor(AlternativeTimeSensorBase):
                 "format": self._format,
                 "dynasty_offset": self._dynasty_offset
             }
-        
+
         return attrs
-    
+
     def _get_hieroglyphic_number(self, num: int) -> str:
         """Convert number to hieroglyphic representation."""
         if not self._show_hieroglyphs:
             return str(num)
-        
+
         hieroglyphs = self._egyptian_data["hieroglyphs"]
         result = ""
-        
+
         if num <= 9:
             result = hieroglyphs.get(num, str(num))
         elif num <= 19:
@@ -436,33 +437,33 @@ class EgyptianCalendarSensor(AlternativeTimeSensorBase):
             result = hieroglyphs[20] + hieroglyphs.get(num - 20, "")
         else:
             result = hieroglyphs[30]
-        
+
         return result
-    
+
     def _calculate_egyptian_date(self, earth_date: datetime) -> Dict[str, Any]:
         """Calculate Ancient Egyptian Calendar date from standard date."""
-        
+
         # Load options if not loaded yet
         self._load_options()
-        
+
         # Egyptian new year around July 19 (Sirius rising)
         new_year_data = self._egyptian_data["new_year"]
         egyptian_new_year = datetime(earth_date.year, new_year_data["month"], new_year_data["day"])
         if earth_date < egyptian_new_year:
             egyptian_new_year = datetime(earth_date.year - 1, new_year_data["month"], new_year_data["day"])
-        
+
         days_since_new_year = (earth_date - egyptian_new_year).days
-        
+
         # Simulate dynasty and regnal year with offset
         dynasty = (earth_date.year - 2000) // 30 + 1 + self._dynasty_offset
         regnal_year = ((earth_date.year - 2000) % 30) + 1
-        
+
         # Check for epagomenal days (last 5 days of year)
         if days_since_new_year >= 360:
             epagomenal_day = days_since_new_year - 359
             if epagomenal_day <= 5 and epagomenal_day > 0:
                 god_birthday = self._egyptian_data["epagomenal_gods"][epagomenal_day - 1]
-                
+
                 # Format based on display setting
                 if self._format == "short":
                     full_date = f"Epagomenal {epagomenal_day} - {god_birthday}"
@@ -470,7 +471,7 @@ class EgyptianCalendarSensor(AlternativeTimeSensorBase):
                     full_date = f"Year {regnal_year} | Epagomenal Day {epagomenal_day} - {god_birthday}"
                 else:  # full
                     full_date = f"Dynasty {dynasty}, Year {regnal_year} | Epagomenal Day {epagomenal_day} - Birthday of {god_birthday} 🎉"
-                
+
                 result = {
                     "epagomenal": True,
                     "epagomenal_day": epagomenal_day,
@@ -481,27 +482,27 @@ class EgyptianCalendarSensor(AlternativeTimeSensorBase):
                     "full_date": full_date
                 }
                 return result
-            
+
             days_since_new_year = days_since_new_year % 365
-        
+
         # Calculate month and day
         month_index = min(days_since_new_year // 30, 11)
         day_of_month = (days_since_new_year % 30) + 1
-        
+
         month_data = self._egyptian_data["months"][month_index]
-        
+
         # Calculate decan (10-day week)
         decan_index = min((day_of_month - 1) // 10, 2)
         decan_data = self._egyptian_data["decans"][decan_index]
         day_in_decan = ((day_of_month - 1) % 10) + 1
-        
+
         # Get hieroglyphic day
         hieroglyph_day = self._get_hieroglyphic_number(day_of_month)
-        
+
         # Determine Egyptian hour
         hour = earth_date.hour
         is_night = hour < 6 or hour >= 18
-        
+
         if is_night:
             if hour >= 18:
                 egyptian_hour_index = hour - 18
@@ -515,13 +516,13 @@ class EgyptianCalendarSensor(AlternativeTimeSensorBase):
             egyptian_hour = self._egyptian_data["day_hours"][min(egyptian_hour_index, 11)]
             time_symbol = "☀️"
             time_period = "Day"
-        
+
         # Get Nile status
         nile_data = self._egyptian_data["nile_status"][month_data["season"]]
-        
+
         # Format the date based on format setting
         date_parts = []
-        
+
         if self._format == "short":
             # Short format: just day and month
             date_parts.append(f"{day_of_month} {month_data['name']}")
@@ -539,17 +540,17 @@ class EgyptianCalendarSensor(AlternativeTimeSensorBase):
             # Full format: all details
             if self._show_dynasty:
                 date_parts.append(f"Dynasty {dynasty} Year {regnal_year}")
-            
+
             date_parts.append(f"{hieroglyph_day if self._show_hieroglyphs else ''} {day_of_month} {month_data['name']} ({month_data['season']})")
             date_parts.append(f"{decan_data['name']} Day {day_in_decan}")
             date_parts.append(f"{time_symbol} {egyptian_hour}")
             date_parts.append(month_data['god'])
-            
+
             if self._show_nile_status:
                 date_parts.append(f"{nile_data['emoji']} {nile_data['status']}")
-        
+
         full_date = " | ".join(date_parts)
-        
+
         result = {
             "dynasty": dynasty,
             "regnal_year": regnal_year,
@@ -572,15 +573,15 @@ class EgyptianCalendarSensor(AlternativeTimeSensorBase):
             "epagomenal": False,
             "full_date": full_date
         }
-        
+
         return result
-    
+
     def update(self) -> None:
         """Update the sensor."""
         now = datetime.now()
         self._egyptian_date = self._calculate_egyptian_date(now)
-        
+
         # Set state to full Egyptian date
         self._state = self._egyptian_date["full_date"]
-        
+
         _LOGGER.debug(f"Updated Egyptian Calendar to {self._state}")

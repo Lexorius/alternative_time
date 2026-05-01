@@ -1,13 +1,13 @@
 """Japanese Traditional Lunar Calendar (旧暦, Kyūreki) implementation - Version 2.5."""
 from __future__ import annotations
 
-from datetime import datetime, date, timezone, timedelta
 import logging
-from typing import Dict, Any, Optional, Tuple
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, Optional, Tuple
 from zoneinfo import ZoneInfo
-import math
 
 from homeassistant.core import HomeAssistant
+
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ CALENDAR_INFO = {
     "category": "cultural",
     "accuracy": "traditional",
     "update_interval": UPDATE_INTERVAL,
-    
+
     # Multi-language names
     "name": {
         "en": "Japanese Lunar Calendar",
@@ -43,7 +43,7 @@ CALENDAR_INFO = {
         "zh": "日本阴历",
         "ko": "일본 음력"
     },
-    
+
     # Short descriptions for UI
     "description": {
         "en": "Traditional Japanese lunisolar calendar (Kyūreki) used for festivals and agricultural timing",
@@ -59,7 +59,7 @@ CALENDAR_INFO = {
         "zh": "用于节日和农业时令的日本传统阴阳历（旧历）",
         "ko": "축제와 농업 시기에 사용되는 일본 전통 태음태양력 (구력)"
     },
-    
+
     # Extended information for tooltips
     "notes": {
         "en": "The Kyūreki (旧暦) is Japan's traditional lunisolar calendar, still used for determining traditional festivals, agricultural activities, and auspicious dates. Each month begins with the new moon. Time is displayed in Japan Standard Time (JST).",
@@ -75,7 +75,7 @@ CALENDAR_INFO = {
         "zh": "旧历是日本的传统阴阳历，仍用于确定传统节日、农业活动和吉日。每月从新月开始。时间以日本标准时间（JST）显示。",
         "ko": "구력(旧暦)은 일본의 전통 태음태양력으로, 여전히 전통 축제, 농업 활동, 길일 결정에 사용됩니다. 매달 초승달부터 시작됩니다. 시간은 일본 표준시(JST)로 표시됩니다."
     },
-    
+
     # Configuration options
     "config_options": {
         "timezone": {
@@ -306,7 +306,7 @@ CALENDAR_INFO = {
             }
         }
     },
-    
+
     # Lunar calendar data
     "lunar_data": {
         "months": {
@@ -368,26 +368,26 @@ CALENDAR_INFO = {
             "9-9": {"ja": "重陽の節句", "en": "Chrysanthemum Festival"}
         }
     },
-    
+
     # Additional metadata
     "reference_url": "https://eco.mtk.nao.ac.jp/koyomi/",
     "documentation_url": "https://en.wikipedia.org/wiki/Japanese_calendar#Lunar_calendar",
     "created_by": "Traditional Japanese System",
     "introduced": "6th century (from China)",
-    
+
     # Example format
     "example": "旧暦 睦月十五日（満月）子年",
     "example_meaning": "Lunar Calendar: 15th day of Mutsuki (Full Moon), Year of the Rat",
-    
+
     # Related calendars
     "related": ["japanese_era", "chinese_lunar", "korean_lunar"],
-    
+
     # Tags for searching and filtering
     "tags": [
         "japanese", "lunar", "traditional", "kyureki", "agriculture",
         "moon", "festivals", "zodiac", "cultural", "asia", "japan"
     ],
-    
+
     # Special features
     "features": {
         "supports_lunar_months": True,
@@ -402,25 +402,25 @@ CALENDAR_INFO = {
 
 class JapaneseLunarCalendarSensor(AlternativeTimeSensorBase):
     """Sensor for displaying Japanese Traditional Lunar Calendar (Kyūreki)."""
-    
+
     # Class-level update interval
     UPDATE_INTERVAL = UPDATE_INTERVAL
-    
+
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the Japanese Lunar calendar sensor."""
         super().__init__(base_name, hass)
-        
+
         # Store CALENDAR_INFO as instance variable for _translate method
         self._calendar_info = CALENDAR_INFO
-        
+
         # Get translated name from metadata
         calendar_name = self._translate('name', 'Japanese Lunar Calendar')
-        
+
         # Set sensor attributes
         self._attr_name = f"{base_name} {calendar_name}"
         self._attr_unique_id = f"{base_name}_japanese_lunar"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:moon-waning-crescent")
-        
+
         # Configuration options with defaults from CALENDAR_INFO
         config_defaults = CALENDAR_INFO.get("config_options", {})
         self._timezone = config_defaults.get("timezone", {}).get("default", "Asia/Tokyo")
@@ -430,30 +430,30 @@ class JapaneseLunarCalendarSensor(AlternativeTimeSensorBase):
         self._show_solar_terms = config_defaults.get("show_solar_terms", {}).get("default", True)
         self._show_traditional_events = config_defaults.get("show_traditional_events", {}).get("default", True)
         self._show_zodiac = config_defaults.get("show_zodiac", {}).get("default", True)
-        
+
         # Lunar data
         self._lunar_data = CALENDAR_INFO["lunar_data"]
-        
+
         # Flag to track if options have been loaded
         self._options_loaded = False
-        
+
         # Initialize state
         self._state = None
         self._lunar_date = {}
-        
+
         _LOGGER.debug(f"Initialized Japanese Lunar Calendar sensor: {self._attr_name}")
-    
+
     def _load_options(self) -> None:
         """Load plugin options after IDs are set."""
         if self._options_loaded:
             return
-            
+
         # Get plugin options from config entry
         plugin_options = self.get_plugin_options()
-        
+
         if plugin_options:
             _LOGGER.debug(f"Loading Japanese Lunar options: {plugin_options}")
-            
+
             # Apply options using set_options method
             self.set_options(
                 timezone=plugin_options.get("timezone"),
@@ -464,20 +464,20 @@ class JapaneseLunarCalendarSensor(AlternativeTimeSensorBase):
                 show_zodiac=plugin_options.get("show_zodiac"),
                 display_format=plugin_options.get("display_format")
             )
-        
+
         self._options_loaded = True
-    
+
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        
+
         # Load options after entity is registered
         self._load_options()
-        
+
         _LOGGER.debug(f"Japanese Lunar sensor added to hass with options: "
                      f"timezone={self._timezone}, moon_phase={self._show_moon_phase}, "
                      f"solar_terms={self._show_solar_terms}, events={self._show_traditional_events}")
-    
+
     def set_options(
         self,
         *,
@@ -493,31 +493,31 @@ class JapaneseLunarCalendarSensor(AlternativeTimeSensorBase):
         if timezone is not None and timezone in ["Asia/Tokyo", "local", "UTC"]:
             self._timezone = timezone
             _LOGGER.debug(f"Set timezone to: {timezone}")
-        
+
         if display_language is not None and display_language in ["auto", "japanese", "english"]:
             self._display_language = display_language
             _LOGGER.debug(f"Set display_language to: {display_language}")
-        
+
         if show_moon_phase is not None:
             self._show_moon_phase = bool(show_moon_phase)
             _LOGGER.debug(f"Set show_moon_phase to: {show_moon_phase}")
-        
+
         if show_solar_terms is not None:
             self._show_solar_terms = bool(show_solar_terms)
             _LOGGER.debug(f"Set show_solar_terms to: {show_solar_terms}")
-        
+
         if show_traditional_events is not None:
             self._show_traditional_events = bool(show_traditional_events)
             _LOGGER.debug(f"Set show_traditional_events to: {show_traditional_events}")
-        
+
         if show_zodiac is not None:
             self._show_zodiac = bool(show_zodiac)
             _LOGGER.debug(f"Set show_zodiac to: {show_zodiac}")
-        
+
         if display_format is not None and display_format in ["traditional", "modern", "numeric"]:
             self._display_format = display_format
             _LOGGER.debug(f"Set display_format to: {display_format}")
-    
+
     def _get_timezone(self) -> ZoneInfo:
         """Get the configured timezone."""
         if self._timezone == "Asia/Tokyo":
@@ -529,58 +529,57 @@ class JapaneseLunarCalendarSensor(AlternativeTimeSensorBase):
             try:
                 import tzlocal
                 return tzlocal.get_localzone()
-            except:
+            except Exception:
                 return ZoneInfo("UTC")
-    
+
     def _calculate_moon_phase(self, japan_date: datetime) -> Tuple[float, str, str]:
         """Calculate moon phase for given date."""
         # Simplified moon phase calculation
         # Based on lunar synodic month of 29.53 days
-        
+
         # Reference new moon (January 6, 2000, 18:14 UTC)
         ref_new_moon = datetime(2000, 1, 6, 18, 14, tzinfo=timezone.utc)
-        
+
         # Calculate days since reference
         delta = japan_date.astimezone(timezone.utc) - ref_new_moon
         days_since = delta.total_seconds() / 86400
-        
+
         # Calculate moon age (0-29.53)
         synodic_month = 29.530588
         moon_age = days_since % synodic_month
-        
+
         # Determine phase name
         phase_index = int(moon_age / 2.1)
         if phase_index >= len(self._lunar_data["moon_phases"]["names"]["ja"]):
             phase_index = 0
-        
+
         phase_ja = self._lunar_data["moon_phases"]["names"]["ja"][phase_index]
         phase_en = self._lunar_data["moon_phases"]["names"]["en"][phase_index]
-        
+
         return moon_age, phase_ja, phase_en
-    
+
     def _calculate_lunar_month_day(self, japan_date: datetime) -> Tuple[int, int, bool]:
         """Calculate lunar month and day for given date."""
         # Simplified lunar calendar calculation
         # This is a basic approximation - actual calculation is complex
-        
+
         year = japan_date.year
         month = japan_date.month
-        day = japan_date.day
-        
+
         # Basic conversion (simplified)
         # Lunar calendar is approximately 11 days behind solar
         days_diff = 11
         lunar_date = japan_date - timedelta(days=days_diff)
-        
+
         # Adjust for lunar month (29.5 days average)
         lunar_month = lunar_date.month
         lunar_day = lunar_date.day
-        
+
         # Check for leap month (simplified - occurs roughly every 3 years)
         is_leap = (year % 3 == 0 and month == 6)
-        
+
         return lunar_month, lunar_day, is_leap
-    
+
     def _get_zodiac_animal(self, year: int) -> Dict[str, str]:
         """Get zodiac animal for given year."""
         zodiac_index = (year - 4) % 12
@@ -589,12 +588,12 @@ class JapaneseLunarCalendarSensor(AlternativeTimeSensorBase):
             "en": self._lunar_data["zodiac_animals"]["en"][zodiac_index],
             "emoji": self._lunar_data["zodiac_animals"]["emoji"][zodiac_index]
         }
-    
+
     def _get_solar_term(self, japan_date: datetime) -> Optional[Dict[str, str]]:
         """Get current or nearest solar term."""
         month = japan_date.month
         day = japan_date.day
-        
+
         # Find matching or nearest solar term
         for term in self._lunar_data["solar_terms"]:
             # Parse approximate date from term
@@ -603,20 +602,20 @@ class JapaneseLunarCalendarSensor(AlternativeTimeSensorBase):
                 term_month = {"Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6,
                              "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12}.get(term_month_day[0], 0)
                 term_day = int(term_month_day[1])
-                
+
                 # Check if within 3 days of solar term
                 if month == term_month and abs(day - term_day) <= 3:
                     return {"ja": term["ja"], "en": term["en"]}
-        
+
         return None
-    
+
     def _get_traditional_event(self, lunar_month: int, lunar_day: int) -> Optional[Dict[str, str]]:
         """Get traditional event for lunar date."""
         date_key = f"{lunar_month}-{lunar_day}"
         if date_key in self._lunar_data["traditional_events"]:
             return self._lunar_data["traditional_events"][date_key]
         return None
-    
+
     def _format_lunar_date(self, lunar_month: int, lunar_day: int, moon_phase_ja: str, moon_phase_en: str,
                           zodiac: Dict, japan_date: datetime, is_leap: bool) -> str:
         """Format the lunar date according to display settings and language."""
@@ -628,7 +627,7 @@ class JapaneseLunarCalendarSensor(AlternativeTimeSensorBase):
         else:  # auto
             lang = getattr(self._hass.config, "language", "en")
             use_english = lang not in ["ja", "zh", "ko"]  # Use English for non-Asian languages
-        
+
         if self._display_format == "traditional":
             # Traditional format with old month names
             if use_english:
@@ -652,7 +651,7 @@ class JapaneseLunarCalendarSensor(AlternativeTimeSensorBase):
                     result += f"（{moon_phase_ja}）"
                 if self._show_zodiac:
                     result += f" {zodiac['ja']}年"
-                    
+
         elif self._display_format == "modern":
             # Modern format
             if use_english:
@@ -668,7 +667,7 @@ class JapaneseLunarCalendarSensor(AlternativeTimeSensorBase):
                 result += f"{lunar_day}日"
                 if self._show_zodiac:
                     result += f" {zodiac['emoji']}"
-                    
+
         else:  # numeric
             # Numeric format (same for all languages)
             if use_english:
@@ -679,34 +678,34 @@ class JapaneseLunarCalendarSensor(AlternativeTimeSensorBase):
                 result = f"旧{lunar_month:02d}/{lunar_day:02d}"
                 if is_leap:
                     result += "閏"
-        
+
         return result
-    
+
     def _calculate_japanese_lunar_date(self, now: datetime) -> Dict[str, Any]:
         """Calculate the Japanese lunar date."""
         # Convert to configured timezone
         tz = self._get_timezone()
         japan_time = now.astimezone(tz)
-        
+
         # If using JST, ensure we're getting Japan time
         if self._timezone == "Asia/Tokyo":
             japan_time = now.astimezone(ZoneInfo("Asia/Tokyo"))
-        
+
         # Calculate lunar month and day
         lunar_month, lunar_day, is_leap = self._calculate_lunar_month_day(japan_time)
-        
+
         # Calculate moon phase
         moon_age, moon_phase_ja, moon_phase_en = self._calculate_moon_phase(japan_time)
-        
+
         # Get zodiac animal
         zodiac = self._get_zodiac_animal(japan_time.year)
-        
+
         # Format the date
         formatted = self._format_lunar_date(
-            lunar_month, lunar_day, moon_phase_ja, moon_phase_en, 
+            lunar_month, lunar_day, moon_phase_ja, moon_phase_en,
             zodiac, japan_time, is_leap
         )
-        
+
         result = {
             "lunar_month": lunar_month,
             "lunar_day": lunar_day,
@@ -722,48 +721,48 @@ class JapaneseLunarCalendarSensor(AlternativeTimeSensorBase):
             "gregorian_date": f"{japan_time.year}/{japan_time.month:02d}/{japan_time.day:02d}",
             "formatted": formatted
         }
-        
+
         # Add solar term if applicable
         if self._show_solar_terms:
             solar_term = self._get_solar_term(japan_time)
             if solar_term:
                 result["solar_term_ja"] = solar_term["ja"]
                 result["solar_term_en"] = solar_term["en"]
-        
+
         # Add traditional event if applicable
         if self._show_traditional_events:
             event = self._get_traditional_event(lunar_month, lunar_day)
             if event:
                 result["event_ja"] = event["ja"]
                 result["event_en"] = event["en"]
-        
+
         return result
-    
+
     def update(self) -> None:
         """Update the sensor."""
         # Ensure options are loaded (in case async_added_to_hass hasn't run yet)
         if not self._options_loaded:
             self._load_options()
-        
+
         now = datetime.now(timezone.utc)
         self._lunar_date = self._calculate_japanese_lunar_date(now)
-        
+
         # Set state to formatted lunar date
         self._state = self._lunar_date["formatted"]
-        
+
         _LOGGER.debug(f"Updated Japanese Lunar Calendar to {self._state}")
-    
+
     @property
     def state(self) -> str:
         """Return the state of the sensor."""
         return self._state or "Unknown"
-    
+
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return additional attributes."""
         if not self._lunar_date:
             return {}
-        
+
         # Build attributes dictionary
         attrs = {
             "lunar_month": self._lunar_date.get("lunar_month"),
@@ -784,16 +783,16 @@ class JapaneseLunarCalendarSensor(AlternativeTimeSensorBase):
             "reference": CALENDAR_INFO.get("reference_url"),
             "notes": self._translate("notes")
         }
-        
+
         # Add optional attributes
         if "solar_term_ja" in self._lunar_date:
             attrs["solar_term_ja"] = self._lunar_date["solar_term_ja"]
             attrs["solar_term_en"] = self._lunar_date["solar_term_en"]
-        
+
         if "event_ja" in self._lunar_date:
             attrs["traditional_event_ja"] = self._lunar_date["event_ja"]
             attrs["traditional_event_en"] = self._lunar_date["event_en"]
-        
+
         # Add configuration state
         attrs["config_timezone"] = self._timezone
         attrs["config_display_language"] = self._display_language
@@ -802,7 +801,7 @@ class JapaneseLunarCalendarSensor(AlternativeTimeSensorBase):
         attrs["config_show_solar_terms"] = self._show_solar_terms
         attrs["config_show_traditional_events"] = self._show_traditional_events
         attrs["config_show_zodiac"] = self._show_zodiac
-        
+
         return attrs
 
 

@@ -1,11 +1,12 @@
 """Minguo Calendar (Republic of China/Taiwan) implementation - Version 2.5."""
 from __future__ import annotations
 
-from datetime import datetime
 import logging
-from typing import Dict, Any
+from datetime import datetime
+from typing import Any, Dict
 
 from homeassistant.core import HomeAssistant
+
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +26,7 @@ CALENDAR_INFO = {
     "category": "cultural",
     "accuracy": "official",
     "update_interval": UPDATE_INTERVAL,
-    
+
     # Multi-language names (English primary)
     "name": {
         "en": "Minguo Calendar (Taiwan)",
@@ -41,7 +42,7 @@ CALENDAR_INFO = {
         "zh-tw": "中華民國曆",
         "ko": "민국 달력 (대만)"
     },
-    
+
     # Short descriptions for UI (English primary)
     "description": {
         "en": "Taiwan/ROC calendar, Year 1 = 1912 CE (founding of Republic of China)",
@@ -57,7 +58,7 @@ CALENDAR_INFO = {
         "zh-tw": "中華民國曆法，民國元年 = 西元1912年（中華民國成立）",
         "ko": "대만/중화민국 달력, 1년 = 서기 1912년 (중화민국 건국)"
     },
-    
+
     # Detailed information for documentation
     "detailed_info": {
         "en": {
@@ -88,7 +89,7 @@ CALENDAR_INFO = {
             "holidays": "包含傳統中國節日和中華民國國定假日"
         }
     },
-    
+
     # Minguo-specific data
     "minguo_data": {
         # Chinese months (traditional names)
@@ -106,7 +107,7 @@ CALENDAR_INFO = {
             {"chinese": "十一月", "formal": "十一月", "english": "November"},
             {"chinese": "十二月", "formal": "十二月", "english": "December"}
         ],
-        
+
         # Chinese weekdays
         "weekdays": [
             {"chinese": "星期日", "short": "日", "english": "Sunday"},
@@ -117,7 +118,7 @@ CALENDAR_INFO = {
             {"chinese": "星期五", "short": "五", "english": "Friday"},
             {"chinese": "星期六", "short": "六", "english": "Saturday"}
         ],
-        
+
         # ROC National Holidays
         "holidays": {
             (1, 1): {"chinese": "元旦", "english": "New Year's Day"},
@@ -131,14 +132,14 @@ CALENDAR_INFO = {
             (11, 12): {"chinese": "國父誕辰", "english": "Sun Yat-sen's Birthday"},
             (12, 25): {"chinese": "行憲紀念日", "english": "Constitution Day"}
         },
-        
+
         # Chinese number system
         "chinese_numbers": {
             0: "零", 1: "一", 2: "二", 3: "三", 4: "四",
             5: "五", 6: "六", 7: "七", 8: "八", 9: "九",
             10: "十", 100: "百", 1000: "千"
         },
-        
+
         # Era information
         "era": {
             "chinese": "民國",
@@ -147,27 +148,27 @@ CALENDAR_INFO = {
             "founding_year": 1912
         }
     },
-    
+
     # Additional metadata
     "reference_url": "https://en.wikipedia.org/wiki/Minguo_calendar",
     "documentation_url": "https://www.taiwan.gov.tw",
     "origin": "Republic of China (Taiwan)",
     "created_by": "Republic of China government",
     "official_since": "1912 CE",
-    
+
     # Example format
     "example": "Republic Year 114, December 25 | 民國114年12月25日",
     "example_meaning": "December 25, 2025 CE in Minguo calendar",
-    
+
     # Related calendars
     "related": ["gregorian", "chinese", "lunar"],
-    
+
     # Tags for searching and filtering
     "tags": [
         "cultural", "taiwan", "roc", "minguo", "chinese",
         "official", "asian", "republic", "formosa"
     ],
-    
+
     # Special features
     "features": {
         "era_based": True,
@@ -175,7 +176,7 @@ CALENDAR_INFO = {
         "dual_numbering": True,
         "precision": "day"
     },
-    
+
     # Configuration options for this calendar
     "config_options": {
         "display_language": {
@@ -301,42 +302,42 @@ CALENDAR_INFO = {
 
 class MinguoCalendarSensor(AlternativeTimeSensorBase):
     """Sensor for displaying Minguo Calendar (Taiwan/ROC)."""
-    
+
     # Class-level update interval
     UPDATE_INTERVAL = UPDATE_INTERVAL
-    
+
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the Minguo calendar sensor."""
         super().__init__(base_name, hass)
-        
+
         # Get translated name from metadata
         calendar_name = self._translate('name', 'Minguo Calendar (Taiwan)')
-        
+
         # Set sensor attributes
         self._attr_name = f"{base_name} {calendar_name}"
         self._attr_unique_id = f"{base_name}_minguo_taiwan"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:calendar-text")
-        
+
         # Default configuration options
         self._display_language = "english"
         self._use_chinese_numbers = False
         self._show_holidays = True
         self._format = "full"
         self._show_before_epoch = False
-        
+
         # Minguo data
         self._minguo_data = CALENDAR_INFO["minguo_data"]
-        
+
         # Track if options have been loaded
         self._options_loaded = False
-        
+
         _LOGGER.debug(f"Initialized Minguo Calendar sensor: {self._attr_name}")
-    
+
     def _load_options(self) -> None:
         """Load configuration options from config entry."""
         if self._options_loaded:
             return
-            
+
         try:
             options = self.get_plugin_options()
             if options:
@@ -346,44 +347,44 @@ class MinguoCalendarSensor(AlternativeTimeSensorBase):
                 self._show_holidays = options.get("show_holidays", self._show_holidays)
                 self._format = options.get("format", self._format)
                 self._show_before_epoch = options.get("show_before_epoch", self._show_before_epoch)
-                
+
                 _LOGGER.debug(f"Minguo calendar loaded options: language={self._display_language}, "
                             f"chinese_numbers={self._use_chinese_numbers}, holidays={self._show_holidays}, "
                             f"format={self._format}, before_epoch={self._show_before_epoch}")
             else:
                 _LOGGER.debug("Minguo calendar using default options - no custom options found")
-                
+
             self._options_loaded = True
         except Exception as e:
             _LOGGER.debug(f"Minguo calendar could not load options yet: {e}")
-    
+
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
-        
+
         # Try to load options now that IDs should be set
         self._load_options()
-    
+
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
-    
+
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes."""
         attrs = super().extra_state_attributes
-        
+
         # Add Minguo-specific attributes
         if hasattr(self, '_minguo_date'):
             attrs.update(self._minguo_date)
-            
+
             # Add description in user's language
             attrs["description"] = self._translate('description')
-            
+
             # Add reference
             attrs["reference"] = CALENDAR_INFO.get('reference_url', '')
-            
+
             # Add configuration status
             attrs["config"] = {
                 "display_language": self._display_language,
@@ -392,21 +393,21 @@ class MinguoCalendarSensor(AlternativeTimeSensorBase):
                 "format": self._format,
                 "show_before_epoch": self._show_before_epoch
             }
-        
+
         return attrs
-    
+
     def _to_chinese_number(self, n: int) -> str:
         """Convert number to Chinese characters."""
         if not self._use_chinese_numbers:
             return str(n)
-        
+
         chinese_nums = self._minguo_data["chinese_numbers"]
-        
+
         if n == 0:
             return chinese_nums[0]
-        
+
         result = ""
-        
+
         # Handle thousands
         if n >= 1000:
             thousands = n // 1000
@@ -414,7 +415,7 @@ class MinguoCalendarSensor(AlternativeTimeSensorBase):
                 result += self._to_chinese_number(thousands)
             result += chinese_nums[1000]
             n %= 1000
-        
+
         # Handle hundreds
         if n >= 100:
             hundreds = n // 100
@@ -422,7 +423,7 @@ class MinguoCalendarSensor(AlternativeTimeSensorBase):
                 result += chinese_nums[hundreds]
             result += chinese_nums[100]
             n %= 100
-        
+
         # Handle tens
         if n >= 10:
             tens = n // 10
@@ -430,36 +431,36 @@ class MinguoCalendarSensor(AlternativeTimeSensorBase):
                 result += chinese_nums[tens]
             result += chinese_nums[10]
             n %= 10
-        
+
         # Handle ones
         if n > 0:
             result += chinese_nums[n]
-        
+
         return result
-    
+
     def _calculate_minguo_date(self, earth_date: datetime) -> Dict[str, Any]:
         """Calculate Minguo Calendar date from standard date."""
-        
+
         # Load options if not loaded yet
         self._load_options()
-        
+
         # Calculate Minguo year
         founding_year = self._minguo_data["era"]["founding_year"]
         minguo_year = earth_date.year - founding_year + 1
-        
+
         # Handle years before the Republic
         is_before_epoch = minguo_year < 1
         if is_before_epoch:
             minguo_year = abs(minguo_year - 1)  # Convert to positive years before
-        
+
         # Get month and weekday data
         month_data = self._minguo_data["months"][earth_date.month - 1]
         weekday_index = (earth_date.weekday() + 1) % 7  # Adjust for Sunday = 0
         weekday_data = self._minguo_data["weekdays"][weekday_index]
-        
+
         # Check for holidays
         holiday_data = self._minguo_data["holidays"].get((earth_date.month, earth_date.day))
-        
+
         # Format date based on display language and format
         if self._format == "short":
             # Short format
@@ -514,12 +515,12 @@ class MinguoCalendarSensor(AlternativeTimeSensorBase):
                     formatted = f"Before Republic Year {minguo_year}, {weekday_data['english']}, {month_data['english']} {earth_date.day}"
                 else:
                     formatted = f"Republic Year {minguo_year}, {weekday_data['english']}, {month_data['english']} {earth_date.day}"
-        
+
         # Handle years not in Minguo era for display
         if is_before_epoch and not self._show_before_epoch:
             # Fallback to showing Gregorian year
             formatted = f"{earth_date.year} CE (Pre-ROC)"
-        
+
         result = {
             "minguo_year": minguo_year if not is_before_epoch else f"-{minguo_year}",
             "gregorian_year": earth_date.year,
@@ -534,30 +535,30 @@ class MinguoCalendarSensor(AlternativeTimeSensorBase):
             "formatted": formatted,
             "gregorian_date": earth_date.strftime("%Y-%m-%d")
         }
-        
+
         # Add Chinese numbers if enabled
         if self._use_chinese_numbers:
             result["day_chinese"] = self._to_chinese_number(earth_date.day)
             result["year_chinese"] = self._to_chinese_number(minguo_year)
-        
+
         # Add holiday if applicable and enabled
         if self._show_holidays and holiday_data:
             result["holiday_chinese"] = holiday_data["chinese"]
             result["holiday_english"] = holiday_data["english"]
-        
+
         # Add era information
         result["era_chinese"] = self._minguo_data["era"]["chinese"]
         result["era_english"] = self._minguo_data["era"]["english"]
         result["era_abbreviation"] = self._minguo_data["era"]["abbreviation"]
-        
+
         return result
-    
+
     def update(self) -> None:
         """Update the sensor."""
         now = datetime.now()
         self._minguo_date = self._calculate_minguo_date(now)
-        
+
         # Set state to formatted date
         self._state = self._minguo_date["formatted"]
-        
+
         _LOGGER.debug(f"Updated Minguo Calendar to {self._state}")

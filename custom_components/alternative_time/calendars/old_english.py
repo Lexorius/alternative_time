@@ -5,11 +5,12 @@ Used in England from 1155 to 1752 before the Gregorian calendar reform.
 """
 from __future__ import annotations
 
-from datetime import datetime, date
 import logging
-from typing import Dict, Any, Optional, Tuple
+from datetime import date, datetime
+from typing import Any, Dict, Optional
 
 from homeassistant.core import HomeAssistant
+
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,7 +30,7 @@ CALENDAR_INFO = {
     "category": "historical",
     "accuracy": "historical",
     "update_interval": UPDATE_INTERVAL,
-    
+
     # Multi-language names
     "name": {
         "en": "Old English Calendar",
@@ -45,7 +46,7 @@ CALENDAR_INFO = {
         "zh": "古英语历法",
         "ko": "고대 영어 달력"
     },
-    
+
     # Short descriptions for UI
     "description": {
         "en": "Historical English calendar with year starting on Lady Day (March 25), used 1155-1752",
@@ -61,7 +62,7 @@ CALENDAR_INFO = {
         "zh": "历史英语日历，年从圣母领报节（3月25日）开始，使用于1155-1752年",
         "ko": "레이디 데이(3월 25일)에 연도가 시작되는 역사적 영어 달력, 1155-1752년 사용"
     },
-    
+
     # Detailed information for documentation
     "detailed_info": {
         "en": {
@@ -81,7 +82,7 @@ CALENDAR_INFO = {
             "tax_year": "Das britische Steuerjahr endet immer noch am 5. April (Old Lady Day), ein Überbleibsel dieses Kalenders"
         }
     },
-    
+
     # Old English Calendar specific data
     "old_english_data": {
         # Quarter Days (key dates in the English calendar year)
@@ -163,14 +164,14 @@ CALENDAR_INFO = {
                 "emoji": "🎄"
             }
         },
-        
+
         # Old Lady Day (after 1752 calendar reform)
         "old_lady_day": {
             "date": (4, 5),
             "name": "Old Lady Day",
             "meaning": "Lady Day adjusted for the 11 lost days of 1752 calendar reform"
         },
-        
+
         # English months
         "months": [
             {"english": "January", "latin": "Januarius"},
@@ -186,7 +187,7 @@ CALENDAR_INFO = {
             {"english": "November", "latin": "November"},
             {"english": "December", "latin": "December"}
         ],
-        
+
         # Historical events by date (month, day)
         "historical_events": {
             (1, 30): "👑 Execution of King Charles I (1649)",
@@ -207,7 +208,7 @@ CALENDAR_INFO = {
             (11, 5): "🎆 Guy Fawkes Night (Gunpowder Plot 1605)",
             (12, 25): "🎄 Christmas Day"
         },
-        
+
         # English monarchs for regnal years (simplified list)
         "monarchs": [
             {"name": "William I", "start": 1066, "end": 1087, "house": "Norman"},
@@ -249,7 +250,7 @@ CALENDAR_INFO = {
             {"name": "Elizabeth II", "start": 1952, "end": 2022, "house": "Windsor"},
             {"name": "Charles III", "start": 2022, "end": None, "house": "Windsor"}
         ],
-        
+
         # Days until next quarter day labels
         "countdown_labels": {
             "en": "days until",
@@ -266,27 +267,27 @@ CALENDAR_INFO = {
             "ko": "일까지"
         }
     },
-    
+
     # Additional metadata
     "reference_url": "https://en.wikipedia.org/wiki/Lady_Day",
     "documentation_url": "https://en.wikipedia.org/wiki/Old_Style_and_New_Style_dates",
     "origin": "Kingdom of England",
     "created_by": "English legal tradition",
     "period": "1155-1752 CE",
-    
+
     # Example format
     "example": "15 January 1660/61 (Old Style)",
     "example_meaning": "15th of January, year 1660 (Old Style) or 1661 (New Style)",
-    
+
     # Related calendars
     "related": ["julian", "roman", "gregorian"],
-    
+
     # Tags for searching and filtering
     "tags": [
         "historical", "english", "british", "lady_day", "quarter_day",
         "tudor", "stuart", "medieval", "julian", "old_style", "tax_year"
     ],
-    
+
     # Special features
     "features": {
         "dual_dating": True,
@@ -296,7 +297,7 @@ CALENDAR_INFO = {
         "tax_year_calculation": True,
         "precision": "day"
     },
-    
+
     # Configuration options
     "config_options": {
         "show_dual_date": {
@@ -420,85 +421,85 @@ CALENDAR_INFO = {
 
 class OldEnglishCalendarSensor(AlternativeTimeSensorBase):
     """Sensor for displaying Old English Calendar (Lady Day) dates."""
-    
+
     # Class-level update interval
     UPDATE_INTERVAL = UPDATE_INTERVAL
-    
+
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the Old English calendar sensor."""
         super().__init__(base_name, hass)
-        
+
         # Set sensor-specific attributes
         calendar_name = self._translate('name') or "Old English Calendar"
         self._attr_name = f"{base_name} {calendar_name}"
         self._attr_unique_id = f"{base_name}_old_english_calendar"
         self._attr_icon = CALENDAR_INFO["icon"]
-        
+
         # State data
         self._old_english_date = {}
-        
+
         # Configuration options (defaults)
         self._show_dual_date = True
         self._show_regnal_year = True
         self._show_quarter_days = True
         self._show_events = True
         self._year_style = "old_style"
-        
+
         # Calendar data reference
         self._old_english_data = CALENDAR_INFO.get("old_english_data", {})
-        
+
         # Options loaded flag
         self._options_loaded = False
-    
+
     def _load_options(self) -> None:
         """Load configuration options from config entry."""
         if self._options_loaded:
             return
-        
+
         try:
             options = self.get_plugin_options()
-            
+
             if options:
                 self._show_dual_date = options.get("show_dual_date", self._show_dual_date)
                 self._show_regnal_year = options.get("show_regnal_year", self._show_regnal_year)
                 self._show_quarter_days = options.get("show_quarter_days", self._show_quarter_days)
                 self._show_events = options.get("show_events", self._show_events)
                 self._year_style = options.get("year_style", self._year_style)
-                
+
                 _LOGGER.debug(f"Old English sensor loaded options: dual={self._show_dual_date}, "
                             f"regnal={self._show_regnal_year}, quarter={self._show_quarter_days}, "
                             f"events={self._show_events}, style={self._year_style}")
             else:
                 _LOGGER.debug("Old English sensor using default options")
-            
+
             self._options_loaded = True
         except Exception as e:
             _LOGGER.debug(f"Old English sensor could not load options: {e}")
-    
+
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
         self._load_options()
-    
+
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
-    
+
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes."""
         attrs = super().extra_state_attributes
-        
+
         if self._old_english_date:
             attrs.update(self._old_english_date)
-            
+
             # Add description in user's language
             attrs["description"] = self._translate('description')
-            
+
             # Add reference
             attrs["reference"] = CALENDAR_INFO.get('reference_url', '')
-            
+
             # Add configuration status
             attrs["config"] = {
                 "show_dual_date": self._show_dual_date,
@@ -507,12 +508,12 @@ class OldEnglishCalendarSensor(AlternativeTimeSensorBase):
                 "show_events": self._show_events,
                 "year_style": self._year_style
             }
-        
+
         return attrs
-    
+
     def _get_old_style_year(self, dt: datetime) -> int:
         """Calculate the Old Style year (year starts March 25).
-        
+
         In Old Style:
         - March 25 to December 31 = same as modern year
         - January 1 to March 24 = modern year - 1
@@ -520,11 +521,11 @@ class OldEnglishCalendarSensor(AlternativeTimeSensorBase):
         if dt.month < 3 or (dt.month == 3 and dt.day < 25):
             return dt.year - 1
         return dt.year
-    
+
     def _is_dual_date_period(self, dt: datetime) -> bool:
         """Check if the date falls in the dual dating period (Jan 1 - Mar 24)."""
         return dt.month < 3 or (dt.month == 3 and dt.day < 25)
-    
+
     def _format_dual_date(self, dt: datetime) -> str:
         """Format the year with dual dating (e.g., 1660/61)."""
         if self._is_dual_date_period(dt):
@@ -533,44 +534,44 @@ class OldEnglishCalendarSensor(AlternativeTimeSensorBase):
             # Format: 1660/61
             return f"{old_year}/{str(new_year)[-2:]}"
         return str(dt.year)
-    
+
     def _get_current_monarch(self, year: int) -> Optional[Dict[str, Any]]:
         """Get the monarch for the given year."""
         monarchs = self._old_english_data.get("monarchs", [])
-        
+
         for monarch in monarchs:
             start = monarch["start"]
             end = monarch["end"]
-            
+
             if end is None:  # Current monarch
                 if year >= start:
                     return monarch
             elif start <= year <= end:
                 return monarch
-        
+
         return None
-    
+
     def _calculate_regnal_year(self, dt: datetime) -> Optional[Dict[str, Any]]:
         """Calculate the regnal year for the current date."""
         monarch = self._get_current_monarch(dt.year)
-        
+
         if not monarch:
             return None
-        
+
         regnal_year = dt.year - monarch["start"] + 1
-        
+
         return {
             "monarch": monarch["name"],
             "house": monarch["house"],
             "regnal_year": regnal_year,
             "formatted": f"{regnal_year} {monarch['name']}"
         }
-    
+
     def _get_quarter_day_info(self, dt: datetime, lang: str = "en") -> Dict[str, Any]:
         """Get information about quarter days."""
         quarter_days = self._old_english_data.get("quarter_days", {})
         current_date = (dt.month, dt.day)
-        
+
         # Check if today is a quarter day
         current_quarter = None
         for key, qd in quarter_days.items():
@@ -582,7 +583,7 @@ class OldEnglishCalendarSensor(AlternativeTimeSensorBase):
                     "emoji": qd["emoji"]
                 }
                 break
-        
+
         # Calculate days until next quarter day
         quarter_dates = [
             ((3, 25), "lady_day"),
@@ -590,11 +591,11 @@ class OldEnglishCalendarSensor(AlternativeTimeSensorBase):
             ((9, 29), "michaelmas"),
             ((12, 25), "christmas")
         ]
-        
+
         today = date(dt.year, dt.month, dt.day)
         next_quarter = None
         days_until = None
-        
+
         for qd_date, qd_key in quarter_dates:
             qd_this_year = date(dt.year, qd_date[0], qd_date[1])
             if qd_this_year > today:
@@ -602,34 +603,34 @@ class OldEnglishCalendarSensor(AlternativeTimeSensorBase):
                 next_quarter = quarter_days[qd_key]
                 days_until = delta
                 break
-        
+
         # If no quarter day found this year, get first one next year
         if next_quarter is None:
             qd_next_year = date(dt.year + 1, 3, 25)  # Lady Day next year
             delta = (qd_next_year - today).days
             next_quarter = quarter_days["lady_day"]
             days_until = delta
-        
+
         next_name = next_quarter["name"].get(lang, next_quarter["name"].get("en", ""))
         countdown_label = self._old_english_data.get("countdown_labels", {}).get(lang, "days until")
-        
+
         return {
             "current_quarter_day": current_quarter,
             "next_quarter_day": next_name,
             "days_until_next": days_until,
             "countdown": f"{days_until} {countdown_label} {next_name}"
         }
-    
+
     def _get_historical_event(self, dt: datetime) -> Optional[str]:
         """Get historical event for the current date."""
         events = self._old_english_data.get("historical_events", {})
         return events.get((dt.month, dt.day))
-    
+
     def _get_season_info(self, dt: datetime) -> Dict[str, Any]:
         """Get season information based on quarter days."""
         month = dt.month
         day = dt.day
-        
+
         # Seasons based on quarter days
         if (month == 3 and day >= 25) or month in [4, 5] or (month == 6 and day < 24):
             season = "Spring"
@@ -643,9 +644,9 @@ class OldEnglishCalendarSensor(AlternativeTimeSensorBase):
         else:
             season = "Winter"
             emoji = "❄️"
-        
+
         return {"season": season, "emoji": emoji}
-    
+
     def _is_tax_year_relevant(self, dt: datetime) -> Optional[Dict[str, Any]]:
         """Check if the date is relevant to the UK tax year."""
         if dt.month == 4 and dt.day == 5:
@@ -661,7 +662,7 @@ class OldEnglishCalendarSensor(AlternativeTimeSensorBase):
                 "emoji": "📋"
             }
         return None
-    
+
     def _ordinal(self, n: int) -> str:
         """Convert number to ordinal (1st, 2nd, 3rd, etc.)."""
         if 11 <= (n % 100) <= 13:
@@ -669,27 +670,27 @@ class OldEnglishCalendarSensor(AlternativeTimeSensorBase):
         else:
             suffix = ['th', 'st', 'nd', 'rd', 'th'][min(n % 10, 4)]
         return f"{n}{suffix}"
-    
+
     def _calculate_old_english_date(self, earth_date: datetime) -> Dict[str, Any]:
         """Calculate Old English calendar date."""
-        
+
         # Load options if not already loaded
         self._load_options()
-        
+
         # Get language
         lang = getattr(self._hass.config, "language", "en")
         if "-" in lang:
             lang = lang.split("-")[0]
         elif "_" in lang:
             lang = lang.split("_")[0]
-        
+
         # Calculate years
         new_style_year = earth_date.year
         old_style_year = self._get_old_style_year(earth_date)
-        
+
         # Determine which year to display
         is_dual_period = self._is_dual_date_period(earth_date)
-        
+
         if self._year_style == "old_style":
             display_year = str(old_style_year)
         elif self._year_style == "new_style":
@@ -699,20 +700,20 @@ class OldEnglishCalendarSensor(AlternativeTimeSensorBase):
                 display_year = self._format_dual_date(earth_date)
             else:
                 display_year = str(new_style_year)
-        
+
         # Get month name
         month_data = self._old_english_data["months"][earth_date.month - 1]
         month_name = month_data["english"]
-        
+
         # Get day ordinal
         day_ordinal = self._ordinal(earth_date.day)
-        
+
         # Format the date
         if is_dual_period and self._show_dual_date:
             formatted_date = f"{day_ordinal} {month_name} {display_year} (Old Style)"
         else:
             formatted_date = f"{day_ordinal} {month_name} {display_year}"
-        
+
         result = {
             "formatted": formatted_date,
             "day": earth_date.day,
@@ -725,12 +726,12 @@ class OldEnglishCalendarSensor(AlternativeTimeSensorBase):
             "is_dual_date_period": is_dual_period,
             "gregorian_date": earth_date.strftime("%Y-%m-%d")
         }
-        
+
         # Add season info
         season_info = self._get_season_info(earth_date)
         result["season"] = season_info["season"]
         result["season_emoji"] = season_info["emoji"]
-        
+
         # Add regnal year if configured
         if self._show_regnal_year:
             regnal = self._calculate_regnal_year(earth_date)
@@ -739,7 +740,7 @@ class OldEnglishCalendarSensor(AlternativeTimeSensorBase):
                 result["monarch"] = regnal["monarch"]
                 result["royal_house"] = regnal["house"]
                 result["regnal_formatted"] = regnal["formatted"]
-        
+
         # Add quarter day info if configured
         if self._show_quarter_days:
             quarter_info = self._get_quarter_day_info(earth_date, lang)
@@ -750,33 +751,33 @@ class OldEnglishCalendarSensor(AlternativeTimeSensorBase):
                 result["quarter_day_emoji"] = quarter_info["current_quarter_day"]["emoji"]
             else:
                 result["is_quarter_day"] = False
-            
+
             result["next_quarter_day"] = quarter_info["next_quarter_day"]
             result["days_until_quarter_day"] = quarter_info["days_until_next"]
             result["quarter_day_countdown"] = quarter_info["countdown"]
-        
+
         # Add historical event if configured
         if self._show_events:
             event = self._get_historical_event(earth_date)
             if event:
                 result["historical_event"] = event
-            
+
             # Check for tax year relevance
             tax_info = self._is_tax_year_relevant(earth_date)
             if tax_info:
                 result["tax_year_event"] = tax_info["event"]
                 result["tax_year_meaning"] = tax_info["meaning"]
-        
+
         # Add information about Lady Day
         if earth_date.month == 3 and earth_date.day == 25:
             result["special_day"] = "Lady Day"
             result["special_meaning"] = "New Year's Day (Old Style)"
             result["lady_day_info"] = "The Feast of the Annunciation - New Year began on this day from 1155 to 1752"
-        
+
         # Calculate days until/since Lady Day (New Year)
         this_year_lady_day = date(earth_date.year, 3, 25)
         today = date(earth_date.year, earth_date.month, earth_date.day)
-        
+
         if today < this_year_lady_day:
             days_to_new_year = (this_year_lady_day - today).days
             result["days_until_old_new_year"] = days_to_new_year
@@ -784,15 +785,15 @@ class OldEnglishCalendarSensor(AlternativeTimeSensorBase):
             days_since_new_year = (today - this_year_lady_day).days
             result["days_since_old_new_year"] = days_since_new_year
             result["old_style_day_of_year"] = days_since_new_year + 1
-        
+
         return result
-    
+
     def update(self) -> None:
         """Update the sensor."""
         now = datetime.now()
         self._old_english_date = self._calculate_old_english_date(now)
-        
+
         # Set state to formatted date
         self._state = self._old_english_date["formatted"]
-        
+
         _LOGGER.debug(f"Updated Old English Calendar to {self._state}")
