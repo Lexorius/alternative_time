@@ -1,11 +1,10 @@
 """Config flow for Alternative Time Systems integration."""
 from __future__ import annotations
 
-import os
 import logging
-from typing import Any, Dict, List, Optional
+import os
 from importlib import import_module
-import asyncio
+from typing import Any, Dict, List
 
 import voluptuous as vol
 from homeassistant import config_entries
@@ -13,16 +12,16 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
-    SelectSelector,
-    SelectSelectorConfig,
-    SelectSelectorMode,
+    BooleanSelector,
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
-    BooleanSelector
 )
 
 from .const import DOMAIN
@@ -144,10 +143,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
-        errors = {}
-
         try:
-            info = await validate_input(self.hass, user_input)
+            _ = await validate_input(self.hass, user_input)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             return self.async_show_form(
