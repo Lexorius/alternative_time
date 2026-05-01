@@ -52,7 +52,10 @@ jobs:
         run: bash scripts/check-manifest.sh
 
       - name: Ruff
-        run: ruff check custom_components/ --select E,F,W,I --line-length 100
+        # E501 (line-too-long) wird bewusst ignoriert: das Plugin enthält
+        # mehrsprachige Beschreibungs-Strings in 12 Sprachen, die nicht
+        # sinnvoll umgebrochen werden können.
+        run: ruff check custom_components/ --select E,F,W,I --ignore E501
 
       - name: JSON lint
         run: |
