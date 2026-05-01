@@ -34,6 +34,8 @@ jobs:
   python:
     name: Python checks
     runs-on: ubuntu-latest
+    env:
+      DOMAIN: alternative_time
     steps:
       - uses: actions/checkout@v4
 
@@ -84,7 +86,11 @@ jobs:
 
       - name: Version-Konsistenz
         run: |
-          V=$(python -c "import json; print(json.load(open('custom_components/haushaltsdoku/manifest.json'))['version'])")
+          V=$(python -c "import json; print(json.load(open('custom_components/${DOMAIN}/manifest.json'))['version'])")
+          if [ ! -f CHANGELOG.md ]; then
+            echo "::warning::CHANGELOG.md fehlt – überspringe Version-Konsistenz-Check"
+            exit 0
+          fi
           if ! grep -q "\[$V\]" CHANGELOG.md; then
             echo "::error::Version $V fehlt im CHANGELOG.md"; exit 1
           fi

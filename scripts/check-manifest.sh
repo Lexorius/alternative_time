@@ -4,7 +4,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-MANIFEST="custom_components/haushaltsdoku/manifest.json"
+DOMAIN="alternative_time"
+MANIFEST="custom_components/${DOMAIN}/manifest.json"
 
 python3 - "$MANIFEST" <<'PY'
 import json, sys

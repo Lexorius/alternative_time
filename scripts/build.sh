@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # Baut lokal das Release-ZIP genauso wie der GitHub-Release-Workflow.
-# Output: dist/haushaltsdoku.zip
+# Output: dist/alternative_time.zip
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-DOMAIN="haushaltsdoku"
+DOMAIN="alternative_time"
 SRC="custom_components/${DOMAIN}"
 DIST="dist"
 ZIP="${DIST}/${DOMAIN}.zip"

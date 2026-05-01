@@ -12,7 +12,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-MANIFEST="custom_components/haushaltsdoku/manifest.json"
+DOMAIN="alternative_time"
+MANIFEST="custom_components/${DOMAIN}/manifest.json"
 CHANGELOG="CHANGELOG.md"
 
 if [ $# -lt 1 ]; then
@@ -83,9 +84,8 @@ PY
 # CHANGELOG
 TODAY=$(date +%Y-%m-%d)
 python3 - "$CHANGELOG" "$NEW" "$TODAY" <<'PY'
-import sys, re
+import sys, re, os
 path, ver, today = sys.argv[1], sys.argv[2], sys.argv[3]
-text = open(path).read()
 section = f"""## [{ver}] — {today}
 
 ### Hinzugefügt
@@ -98,10 +98,15 @@ section = f"""## [{ver}] — {today}
 - _todo_
 
 """
-m = re.search(r"^## \[", text, re.M)
-out = (text[:m.start()] + section + text[m.start():]) if m else (text + "\n" + section)
-open(path, "w").write(out)
-print(f"✓ {path} um Sektion [{ver}] erweitert")
+if not os.path.exists(path):
+    open(path, "w").write("# Changelog\n\n" + section)
+    print(f"✓ {path} neu angelegt mit Sektion [{ver}]")
+else:
+    text = open(path).read()
+    m = re.search(r"^## \[", text, re.M)
+    out = (text[:m.start()] + section + text[m.start():]) if m else (text + "\n" + section)
+    open(path, "w").write(out)
+    print(f"✓ {path} um Sektion [{ver}] erweitert")
 PY
 
 if [ "$DO_RELEASE" = "1" ]; then
@@ -116,7 +121,7 @@ if [ "$DO_RELEASE" = "1" ]; then
   git push --tags
   echo
   echo "✓ v${NEW} gepusht. release.yml sollte jetzt laufen:"
-  echo "  https://github.com/Lexorius/hacs-budget-book/actions"
+  echo "  https://github.com/Lexorius/alternative_time/actions"
 else
   echo
   echo "→ Trage die Änderungen unter '## [$NEW]' im CHANGELOG nach."
