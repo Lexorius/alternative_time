@@ -2,10 +2,16 @@
 # Bump die Version und legt einen CHANGELOG-Eintrag an.
 #
 # Usage:
-#   ./scripts/bump-version.sh patch              # 0.2.4 → 0.2.5
-#   ./scripts/bump-version.sh minor              # 0.2.4 → 0.3.0
-#   ./scripts/bump-version.sh major              # 0.2.4 → 1.0.0
-#   ./scripts/bump-version.sh 0.5.7              # explizite Version
+#   ./scripts/bump-version.sh patch              # 0.2.4    → 0.2.5
+#   ./scripts/bump-version.sh minor              # 0.2.4    → 0.3.0
+#   ./scripts/bump-version.sh major              # 0.2.4    → 1.0.0
+#   ./scripts/bump-version.sh build              # 2.6.0.1  → 2.6.0.2  (4. Komponente, legt sie an wenn nötig)
+#   ./scripts/bump-version.sh 0.5.7              # explizite Version (3- oder 4-teilig)
+#   ./scripts/bump-version.sh 2.6.0.1            # explizite 4-teilige Version
+#
+# Hinweise zu 4-teiligen Versionen:
+#   - patch/minor/major liefern immer eine 3-teilige Version (verwerfen die 4. Komponente).
+#     Für inkrementelle Builds desselben x.y.z statt dessen `build` benutzen.
 #
 #   Mit --release am Ende: macht zusätzlich Commit, Tag und Push.
 #   ./scripts/bump-version.sh patch --release
@@ -17,7 +23,7 @@ MANIFEST="custom_components/${DOMAIN}/manifest.json"
 CHANGELOG="CHANGELOG.md"
 
 if [ $# -lt 1 ]; then
-  echo "Usage: $0 {patch|minor|major|<x.y.z>} [--release]" >&2
+  echo "Usage: $0 {patch|minor|major|build|<x.y.z[.b]>} [--release]" >&2
   exit 1
 fi
 
@@ -30,25 +36,30 @@ CURRENT=$(python3 -c "import json; print(json.load(open('${MANIFEST}'))['version
 echo "Aktuelle Version: $CURRENT"
 
 case "$1" in
-  patch|minor|major)
+  patch|minor|major|build)
     NEW=$(python3 - "$CURRENT" "$1" <<'PY'
 import sys
 cur, kind = sys.argv[1], sys.argv[2]
-parts = [int(p) for p in cur.split(".")] + [0, 0]
-major, minor, patch = parts[:3]
+parts = [int(p) for p in cur.split(".")] + [0, 0, 0]
+major, minor, patch, build = parts[:4]
 if kind == "patch":
     patch += 1
+    print(f"{major}.{minor}.{patch}")
 elif kind == "minor":
     minor += 1; patch = 0
+    print(f"{major}.{minor}.{patch}")
 elif kind == "major":
     major += 1; minor = 0; patch = 0
-print(f"{major}.{minor}.{patch}")
+    print(f"{major}.{minor}.{patch}")
+elif kind == "build":
+    build += 1
+    print(f"{major}.{minor}.{patch}.{build}")
 PY
 )
     ;;
   *)
-    if [[ ! "$1" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?$ ]]; then
-      echo "✗ Ungültige Version: $1" >&2
+    if [[ ! "$1" =~ ^[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?(-[A-Za-z0-9.]+)?$ ]]; then
+      echo "✗ Ungültige Version: $1 (erwartet: x.y.z oder x.y.z.b, optional -prerelease)" >&2
       exit 1
     fi
     NEW="$1"

@@ -4,7 +4,7 @@
 [![GitHub Release](https://img.shields.io/github/release/Lexorius/alternative_time.svg)](https://github.com/Lexorius/alternative_time/releases)
 [![GitHub Activity](https://img.shields.io/github/commit-activity/y/Lexorius/alternative_time.svg)](https://github.com/Lexorius/alternative_time/commits/main)
 [![License](https://img.shields.io/github/license/Lexorius/alternative_time.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.5.2.175-blue)](https://github.com/Lexorius/alternative_time)
+[![Version](https://img.shields.io/badge/version-2.6.0.1-blue)](https://github.com/Lexorius/alternative_time)
 
 A comprehensive Home Assistant integration providing **30+ alternative time systems** from science, science fiction, fantasy, history, religion, and various cultures.
 
@@ -348,7 +348,16 @@ Each calendar follows the unified `CALENDAR_INFO` structure:
 
 ## 📈 Version History
 
-### v2.5.2.180 (Current)
+### v2.6.0.1 (Current)
+- 🧹 **Code cleanup**: all calendar plugin files are now ruff-clean (E, F, W, I — `--ignore E501`)
+- 🐛 **Bare excepts** in `dtg.py`, `german_rescue_dtg.py`, `mars.py`, `hindu_panchang.py`, `japanese_era.py`, `japanese_lunar.py`, `stellar_distances.py` replaced with `except Exception:`
+- 🗑️ **Dead variables** removed in `geez.py`, `japanese_lunar.py`, `lunar_tcl.py`, `maya.py`, `solar_system.py`, `star_wars.py`
+- 🔑 **Duplicate dict key** `"holidays"` in `star_wars.py` resolved
+- 📦 **Unused import** `Lunar` removed from `chinese_lunar.py`
+- ✂️ **One-line if/else statements** in `stellar_distances.py` split into multi-line form
+- 🔧 **`scripts/bump-version.sh`**: now supports 4-component versions (`x.y.z.b`) and a new `build` subcommand that increments only the 4th component
+
+### v2.5.2.180
 - 🌙 **Lunar Coordinate Time (TCL)**: New plugin `lunar_tcl.py` showing actual lunar clock time
 - 🕐 **TCL Time Display**: Shows what time it would be on the Moon (`14:30:45 TCL`)
 - ⏱️ **LTE440 Ephemeris**: Based on JPL DE440, scientific accuracy <0.15 ns until 2050
@@ -471,4 +480,4 @@ MIT License - See [LICENSE](LICENSE) file for details.
 
 ---
 
-**Version 2.5.2.180**
+**Version 2.6.0.1**
