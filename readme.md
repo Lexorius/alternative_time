@@ -114,6 +114,14 @@ Real-time distances to notable stars and pulsars with measurement accuracy.
 #### **Solar System Tracker**
 - **Features**: Real-time planetary positions, visual orbit maps
 - **Update**: Hourly
+- **Map image**: The plugin writes the rendered orbit map to `config/www/alternative_time/` as both `solar_system_map.svg` and `solar_system_map.png`. To embed it in a dashboard, use the `/local/` URL with a cache-busting query parameter so updates are picked up by the browser:
+
+  ```yaml
+  type: picture
+  image: /local/alternative_time/solar_system_map.svg?v={{ now().timestamp() | int }}
+  ```
+
+  The `?v=...` suffix is required — without it Home Assistant's aggressive `/local/` caching will keep showing the old image. Use `solar_system_map.png` instead if you prefer the raster version. After the `www/` folder is created for the first time, Home Assistant must be restarted once before `/local/` URLs become available.
 
 ### 🚀 Science Fiction
 
