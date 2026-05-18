@@ -190,6 +190,11 @@ Create themed time displays:
 - **Features**: Buddhist Era (BE = CE + 543), Thai numerals
 - **Update**: Hourly
 
+#### **Sri Lankan Buddhist**
+- **Format**: `🌕 Today is Vesak Poya! · Monday, 12 May 2568 BE`
+- **Features**: Buddhist Era, Sinhala/Tamil Poya (full-moon) days with Meeus astronomy + moonrise rule, Sinhala/Tamil New Year countdown, Sinhala weekday names
+- **Update**: Hourly
+
 #### **Minguo (Taiwan/ROC)**
 - **Format**: `民國114年 十二月 二十五日`
 - **Features**: Republic Era (Year 1 = 1912 CE)
