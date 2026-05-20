@@ -604,26 +604,216 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle options flow for Alternative Time Systems.
+    """Edit per-calendar options of an existing Alternative Time entry.
 
-    Note: no __init__ — HA's OptionsFlow base class provides
+    Two-step flow: ``init`` picks one of the configured calendars,
+    ``configure_calendar`` renders the same schema the wizard used to set up
+    that calendar and writes the new values back into ``config_entry.data``.
+
+    Note: no ``__init__`` — HA's ``OptionsFlow`` base class provides
     ``self.config_entry`` automatically since 2024.12.
     """
+
+    _selected_calendar: str | None = None
+    _discovered: Dict[str, Dict[str, Any]] | None = None
+    _key_mapping: Dict[str, str] | None = None
+
+    def _lcal(self, info: dict, key: str, default: str = "") -> str:
+        """Localized value lookup, mirrors ConfigFlow._lcal."""
+        lang = self.hass.config.language if self.hass else "en"
+        if isinstance(info, dict):
+            translations = info.get("translations", {})
+            if translations and lang in translations:
+                trans = translations[lang]
+                if isinstance(trans, dict) and key in trans:
+                    return trans[key]
+            if key in info:
+                val = info[key]
+                if isinstance(val, str):
+                    return val
+                if isinstance(val, dict):
+                    if lang in val:
+                        return str(val[lang])
+                    if "en" in val:
+                        return str(val["en"])
+        return default
+
+    async def _ensure_discovered(self) -> None:
+        """Discover calendar modules once per flow instance."""
+        if self._discovered:
+            return
+        try:
+            from .sensor import export_discovered_calendars
+            self._discovered = await self.hass.async_add_executor_job(
+                export_discovered_calendars
+            )
+        except Exception as e:
+            _LOGGER.warning(f"Options flow: discovery via sensor failed: {e}")
+            self._discovered = {}
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Manage the options."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+        """Step 1: let the user pick which configured calendar to reconfigure."""
+        await self._ensure_discovered()
 
-        # For now, just show the current configuration
+        configured: List[str] = list(self.config_entry.data.get("calendars", []))
+        # Only offer calendars that actually expose options
+        options_capable = [
+            cid for cid in configured
+            if (self._discovered.get(cid, {}) or {}).get("config_options")
+        ]
+
+        if not options_capable:
+            return self.async_abort(
+                reason="no_options",
+                description_placeholders={
+                    "message": "None of the configured calendars exposes options."
+                },
+            )
+
+        if user_input is not None:
+            self._selected_calendar = user_input["calendar"]
+            return await self.async_step_configure_calendar()
+
+        select_options = [
+            {
+                "value": cid,
+                "label": self._lcal(self._discovered.get(cid, {}), "name", cid),
+            }
+            for cid in options_capable
+        ]
+        schema = vol.Schema({
+            vol.Required("calendar"): SelectSelector(
+                SelectSelectorConfig(
+                    options=select_options,
+                    mode=SelectSelectorMode.DROPDOWN,
+                )
+            ),
+        })
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema({
-                vol.Optional(
-                    "show_info",
-                    default=self.config_entry.options.get("show_info", True),
-                ): bool,
-            })
+            data_schema=schema,
+            description_placeholders={"title": self.config_entry.title},
+        )
+
+    async def async_step_configure_calendar(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Step 2: show schema for the selected calendar; save on submit."""
+        cid = self._selected_calendar
+        if cid is None:
+            return await self.async_step_init()
+
+        info = (self._discovered or {}).get(cid, {})
+        opts = info.get("config_options", {}) or {}
+
+        if user_input is not None:
+            # Map localized labels back to actual config keys
+            mapping = self._key_mapping or {}
+            normalized: Dict[str, Any] = {}
+            for label, value in user_input.items():
+                actual_key = mapping.get(label, label)
+                normalized[actual_key] = value
+
+            # Persist into entry.data["calendar_options"][cid] without dropping
+            # the other top-level data fields (calendars, groups, name, ...).
+            current_data = dict(self.config_entry.data)
+            current_cal_opts = dict(current_data.get("calendar_options", {}))
+            existing = dict(current_cal_opts.get(cid, {}))
+            existing.update(normalized)
+            current_cal_opts[cid] = existing
+            current_data["calendar_options"] = current_cal_opts
+
+            self.hass.config_entries.async_update_entry(
+                self.config_entry, data=current_data
+            )
+            _LOGGER.info(f"OptionsFlow saved new options for {cid}: {normalized}")
+
+            # async_create_entry on an OptionsFlow must return — we use a
+            # blank options dict because the actual data lives in entry.data.
+            return self.async_create_entry(title="", data={})
+
+        # Build schema (duplicated from ConfigFlow.async_step_plugin_options
+        # to keep this fix self-contained)
+        schema_dict: Dict[Any, Any] = {}
+        current_mapping: Dict[str, str] = {}
+        existing_opts = (
+            self.config_entry.data.get("calendar_options", {}).get(cid, {}) or {}
+        )
+
+        for key, meta in opts.items():
+            try:
+                typ = meta.get("type", "string")
+                default = existing_opts.get(key, meta.get("default"))
+                label = self._lcal(meta, "label", key)
+                option_desc = self._lcal(meta, "description", "")
+                current_mapping[label] = key
+
+                if typ == "select":
+                    sel_options = meta.get("options", [])
+                    formatted = []
+                    for opt in sel_options:
+                        if isinstance(opt, dict):
+                            opt_label = self._lcal(opt, "label", str(opt.get("value", opt)))
+                            opt_value = opt.get("value", opt_label)
+                        else:
+                            opt_label = str(opt)
+                            opt_value = opt
+                        formatted.append({"label": opt_label, "value": opt_value})
+                    if formatted:
+                        schema_dict[
+                            vol.Optional(label, default=default, description=option_desc)
+                        ] = SelectSelector(
+                            SelectSelectorConfig(
+                                options=formatted, mode=SelectSelectorMode.DROPDOWN
+                            )
+                        )
+                    else:
+                        schema_dict[
+                            vol.Optional(label, default=str(default) if default is not None else "", description=option_desc)
+                        ] = TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT))
+                elif typ == "boolean":
+                    schema_dict[
+                        vol.Optional(label, default=bool(default) if default is not None else False, description=option_desc)
+                    ] = BooleanSelector()
+                elif typ in ("number", "integer", "float"):
+                    if typ == "integer":
+                        default_num: Any = int(default) if default is not None else 0
+                    else:
+                        default_num = float(default) if default is not None else 0.0
+                    config = NumberSelectorConfig(mode=NumberSelectorMode.BOX)
+                    min_val = meta.get("min")
+                    max_val = meta.get("max")
+                    if min_val is not None:
+                        config["min"] = float(min_val)
+                    if max_val is not None:
+                        config["max"] = float(max_val)
+                    schema_dict[
+                        vol.Optional(label, default=default_num, description=option_desc)
+                    ] = NumberSelector(config)
+                else:
+                    schema_dict[
+                        vol.Optional(label, default=str(default) if default is not None else "", description=option_desc)
+                    ] = TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT))
+            except Exception as e:
+                _LOGGER.error(f"OptionsFlow schema build error for {key} in {cid}: {e}", exc_info=True)
+
+        self._key_mapping = current_mapping
+
+        if not schema_dict:
+            return self.async_abort(
+                reason="no_options",
+                description_placeholders={
+                    "message": f"{self._lcal(info, 'name', cid)} has no editable options."
+                },
+            )
+
+        return self.async_show_form(
+            step_id="configure_calendar",
+            data_schema=vol.Schema(schema_dict),
+            description_placeholders={
+                "calendar_name": self._lcal(info, "name", cid),
+                "calendar_description": self._lcal(info, "description", ""),
+            },
         )

@@ -41,8 +41,12 @@ async def async_setup_entry(
     selected_calendars = config_entry.data.get("calendars", [])
     name = config_entry.data.get("name", "Alternative Time")
 
-    # Debug logging für plugin_options
-    plugin_options = config_entry.data.get("plugin_options", {})
+    # Plugin options are stored by the config flow under "calendar_options"
+    # (the older key "plugin_options" is kept as a fallback for legacy entries).
+    plugin_options = (
+        config_entry.data.get("calendar_options")
+        or config_entry.data.get("plugin_options", {})
+    )
     _LOGGER.info(f"=== Setting up Alternative Time '{name}' ===")
     _LOGGER.debug(f"Config Entry ID: {entry_id[:8]}...")
     _LOGGER.debug(f"Selected calendars: {selected_calendars}")
@@ -405,7 +409,10 @@ class AlternativeTimeSensorBase(SensorEntity):
             _LOGGER.debug(f"Available entries: {list(_CONFIG_ENTRIES.keys())}")
             return {}
 
-        plugin_options = config_entry.data.get("plugin_options", {})
+        plugin_options = (
+            config_entry.data.get("calendar_options")
+            or config_entry.data.get("plugin_options", {})
+        )
         calendar_options = plugin_options.get(self._calendar_id, {})
 
         # Nur loggen wenn tatsächlich Optionen vorhanden sind

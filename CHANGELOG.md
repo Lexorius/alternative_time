@@ -5,6 +5,31 @@ Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1
 die Versionsnummerierung folgt grob [Semantic Versioning](https://semver.org/lang/de/)
 mit optionaler vierter Build-Komponente.
 
+## [2.6.0.6] — 2026-05-21
+
+### Behoben
+- **`formatjs MISSING_VALUE` im Options-Dialog**: die Übersetzung der Options-Seite
+  („Kalenderoptionen konfigurieren") enthielt einen `{title}`-Platzhalter, der
+  vom bisherigen Stub nie befüllt wurde. Der `description_placeholders`-Wert
+  wird jetzt aus dem Instanznamen übergeben.
+- **Options-Dialog war ein Platzhalter**: zeigte nur einen ungenutzten
+  `show_info`-Schalter. Stattdessen läuft jetzt ein zweistufiger Flow:
+  1. Kalender aus den konfigurierten Einträgen wählen
+  2. Dessen `config_options`-Schema mit den aktuellen Werten als Default
+     bearbeiten und speichern
+- **Schlüssel-Mismatch beim Lesen der Optionen**: `sensor.py` las Optionen aus
+  `data["plugin_options"]`, der Config-Flow schrieb sie aber als
+  `data["calendar_options"]`. Damit hatten alle bisher im Einrichtungs-Assistenten
+  gesetzten Plugin-Optionen *keinerlei Wirkung* — die Plugins liefen mit ihren
+  Code-Defaults. `sensor.py` liest jetzt primär `calendar_options` und fällt nur
+  bei Alt-Einträgen auf `plugin_options` zurück.
+
+### Hinweis
+- **Nach dem Update können sich angezeigte Werte ändern**, wenn du im Wizard
+  Plugin-Optionen abweichend vom Default eingestellt hattest: bisher wurden
+  sie ignoriert, ab v2.6.0.6 greifen sie korrekt. Über *Konfigurieren* am
+  Integrations-Eintrag kannst du sie jetzt jederzeit nachjustieren.
+
 ## [2.6.0.5] — 2026-05-21
 
 ### Behoben
