@@ -319,6 +319,30 @@ Real-time distances to notable stars and pulsars with measurement accuracy.
    - **Step 3**: Choose calendars from each category
    - **Step 4**: Configure calendar-specific options
 
+### Excluding from Recorder / History
+
+All sensors created by this integration use a stable `entity_id` prefix of `sensor.alternative_time_<calendar_id>` (e.g. `sensor.alternative_time_solar_system`, `sensor.alternative_time_sri_lanka_buddhist`). The instance name you choose in the wizard becomes the **friendly name** only — the entity_id stays predictable.
+
+This lets you exclude every plugin from the HA recorder with a single glob, regardless of how you named the integration:
+
+```yaml
+recorder:
+  exclude:
+    entity_globs:
+      - sensor.alternative_time_*
+```
+
+To also drop existing history for these sensors after enabling the exclusion, call the service `recorder.purge_entities` once:
+
+```yaml
+service: recorder.purge_entities
+data:
+  entity_globs:
+    - sensor.alternative_time_*
+```
+
+> **Upgrade note:** the stable-prefix behavior only applies to entities created **after** this feature landed. Existing entities keep the `entity_id` they were originally assigned. To benefit from the glob, either remove and re-add the integration (loses history), or rename each entity manually under *Settings → Devices & Services → Entities → ⚙ → Entity ID* so it starts with `alternative_time_`.
+
 ---
 
 ## 🎨 Architecture
