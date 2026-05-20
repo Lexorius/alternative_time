@@ -598,15 +598,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         config_entry: config_entries.ConfigEntry,
     ) -> config_entries.OptionsFlow:
         """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
+        # HA >= 2024.12: config_entry is a read-only property on OptionsFlow
+        # that HA sets automatically. Do NOT pass it through the constructor.
+        return OptionsFlowHandler()
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle options flow for Alternative Time Systems."""
+    """Handle options flow for Alternative Time Systems.
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
+    Note: no __init__ — HA's OptionsFlow base class provides
+    ``self.config_entry`` automatically since 2024.12.
+    """
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

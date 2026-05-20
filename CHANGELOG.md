@@ -5,6 +5,17 @@ Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1
 die Versionsnummerierung folgt grob [Semantic Versioning](https://semver.org/lang/de/)
 mit optionaler vierter Build-Komponente.
 
+## [2.6.0.5] — 2026-05-21
+
+### Behoben
+- **500 Internal Server Error** beim Öffnen der Options des Integrations-Eintrags
+  unter Home Assistant ≥ 2024.12. Der `OptionsFlowHandler` wies dort `config_entry`
+  noch selbst zu — seit HA 2024.12 ist das aber eine read-only property der
+  `OptionsFlow`-Basisklasse, was zu
+  `AttributeError: property 'config_entry' of 'OptionsFlowHandler' object has no setter`
+  führte. Der Konstruktor entfällt komplett, HA versorgt die Klasse jetzt
+  automatisch mit `self.config_entry`.
+
 ## [2.6.0.4] — 2026-05-21
 
 ### Hinzugefügt
