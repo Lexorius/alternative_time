@@ -7,7 +7,7 @@
 [![GitHub Release](https://img.shields.io/github/release/Lexorius/alternative_time.svg)](https://github.com/Lexorius/alternative_time/releases)
 [![GitHub Activity](https://img.shields.io/github/commit-activity/y/Lexorius/alternative_time.svg)](https://github.com/Lexorius/alternative_time/commits/main)
 [![License](https://img.shields.io/github/license/Lexorius/alternative_time.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.6.0.2-blue)](https://github.com/Lexorius/alternative_time)
+[![Version](https://img.shields.io/badge/version-2.6.0.4-blue)](https://github.com/Lexorius/alternative_time)
 
 A comprehensive Home Assistant integration providing **30+ alternative time systems** from science, science fiction, fantasy, history, religion, and various cultures.
 
@@ -383,7 +383,12 @@ Each calendar follows the unified `CALENDAR_INFO` structure:
 
 ## 📈 Version History
 
-### v2.6.0.2 (Current)
+### v2.6.0.4 (Current)
+- 🇱🇰 **New plugin: Sri Lankan Buddhist Calendar** (`sri_lanka_buddhist.py`) — Buddhist Era year, the twelve Sinhala Poya (full-moon) days with religious significance, Sinhala/Tamil New Year countdown, and Sinhala weekday names. Poya dates use Meeus astronomy + the Sri Lankan moonrise rule and reproduce all 11 officially proclaimed Poya days 2023–2026 exactly.
+- 🎯 **Stable entity_id prefix for Recorder filtering**: every plugin sensor now gets `sensor.alternative_time_<calendar_id>` as suggested entity_id, regardless of the instance name picked in the config flow. A single glob `sensor.alternative_time_*` in `recorder.exclude` now matches all of them. (Existing entities keep their previous IDs.)
+- 📚 README: new section *Excluding from Recorder / History* under Configuration.
+
+### v2.6.0.2
 - 🚦 **CI workflows split**: the previous `validate.yml` was split into `hassfest.yml`, `hacs.yml`, and `python-checks.yml` so each check has its own status badge (visible at the top of this README)
 - 🏷️ **Status badges**: hassfest, HACS validation, and Python checks badges added to the README header
 
