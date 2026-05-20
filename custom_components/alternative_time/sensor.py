@@ -117,6 +117,12 @@ async def async_setup_entry(
             sensor._calendar_id = calendar_id  # Store for plugin options lookup
             sensor._config_entry_id = entry_id  # Store entry ID
 
+            # Stabile entity_id unabhängig vom vom User vergebenen Instanznamen,
+            # damit Recorder-Globs wie `sensor.alternative_time_*` immer greifen.
+            # Wird nur bei der Erst-Registrierung berücksichtigt — bestehende
+            # Entities behalten ihre vorhandene entity_id.
+            sensor._attr_suggested_object_id = f"alternative_time_{calendar_id}"
+
             # Debug: Verify the sensor can get its options
             _LOGGER.debug(f"Sensor {calendar_id} initialized:")
             _LOGGER.debug(f"  - _calendar_id: {sensor._calendar_id}")
