@@ -830,7 +830,15 @@ class DTGSensor(AlternativeTimeSensorBase):
         return dtg
 
     def _calculate_dtg_info(self, dt: datetime) -> Dict[str, Any]:
-        """Calculate DTG information."""
+        """Calculate DTG information.
+
+        A DTG has minute resolution. Everything derived here (components,
+        iso_format, unix_timestamp) is therefore computed from the minute-
+        truncated time as well, so attributes only change when the displayed
+        DTG changes. Previously they carried seconds and forced a recorder
+        state row every second for a value that changes once a minute.
+        """
+        dt = dt.replace(second=0, microsecond=0)
         # Get components
         day = dt.day
         hour = dt.hour

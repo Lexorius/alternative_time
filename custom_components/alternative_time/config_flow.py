@@ -48,6 +48,33 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     return {"title": data.get("name", "Alternative Time")}
 
 
+ENTITY_ID_PREFIX = "alternative_time_"
+
+
+def plan_entity_id_migration(pairs, generate):
+    """Plan renames to the stable ``sensor.alternative_time_<calendar_id>`` scheme.
+
+    ``pairs``: iterable of (current_entity_id, calendar_id).
+    ``generate(calendar_id, current_entity_id)``: returns a free target entity_id
+    (the caller wires this to entity_registry.async_generate_entity_id, which
+    appends _2/_3 on collisions and treats current_entity_id as available).
+
+    Returns [(old_entity_id, new_entity_id)] for entities whose object_id does
+    not already start with ENTITY_ID_PREFIX. Pure function, unit-tested.
+    """
+    plan = []
+    for current, cid in pairs:
+        if not current or not cid:
+            continue
+        object_id = current.split(".", 1)[1] if "." in current else current
+        if object_id.startswith(ENTITY_ID_PREFIX):
+            continue
+        target = generate(cid, current)
+        if target and target != current:
+            plan.append((current, target))
+    return plan
+
+
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Alternative Time Systems."""
 
@@ -654,7 +681,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Step 1: let the user pick which configured calendar to reconfigure."""
+        """Entry menu: reconfigure a calendar, or migrate entity IDs."""
+        return self.async_show_menu(
+            step_id="init",
+            menu_options=["select_calendar", "migrate_entity_ids"],
+        )
+
+    async def async_step_select_calendar(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Let the user pick which configured calendar to reconfigure."""
         await self._ensure_discovered()
 
         configured: List[str] = list(self.config_entry.data.get("calendars", []))
@@ -692,9 +728,77 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             ),
         })
         return self.async_show_form(
-            step_id="init",
+            step_id="select_calendar",
             data_schema=schema,
             description_placeholders={"title": self.config_entry.title},
+        )
+
+    async def async_step_migrate_entity_ids(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Rename this entry's sensors to sensor.alternative_time_<calendar_id>.
+
+        Opt-in and one-shot: the stable prefix is what the documented recorder
+        glob ``sensor.alternative_time_*`` matches. Entities created before
+        v2.6.0.7 kept their old ids; this step brings them onto the scheme.
+        Dashboards and automations referencing the old ids must be updated by
+        the user — a persistent notification lists every old -> new pair.
+        """
+        from homeassistant.components import persistent_notification
+        from homeassistant.helpers import entity_registry as er
+
+        from .sensor import entities_for_entry
+
+        registry = er.async_get(self.hass)
+
+        def _generate(cid: str, current: str) -> str:
+            return er.async_generate_entity_id(
+                registry, "sensor", f"{ENTITY_ID_PREFIX}{cid}", current_entity_id=current
+            )
+
+        plan = plan_entity_id_migration(entities_for_entry(self.config_entry.entry_id), _generate)
+
+        if not plan:
+            return self.async_abort(reason="nothing_to_migrate")
+
+        if user_input is None:
+            preview = "\n".join(f"- `{old}` \u2192 `{new}`" for old, new in plan)
+            return self.async_show_form(
+                step_id="migrate_entity_ids",
+                data_schema=vol.Schema({}),
+                description_placeholders={"count": str(len(plan)), "preview": preview},
+            )
+
+        done: List[tuple[str, str]] = []
+        for old, new in plan:
+            try:
+                registry.async_update_entity(old, new_entity_id=new)
+                done.append((old, new))
+                _LOGGER.info(f"Migrated entity_id {old} -> {new}")
+            except ValueError as e:
+                _LOGGER.warning(f"Could not migrate {old} -> {new}: {e}")
+
+        if done:
+            lines = "\n".join(f"- `{old}` \u2192 `{new}`" for old, new in done)
+            yaml_hint = (
+                "```yaml\nrecorder:\n  exclude:\n    entity_globs:\n"
+                f"      - sensor.{ENTITY_ID_PREFIX}*\n```"
+            )
+            persistent_notification.async_create(
+                self.hass,
+                (
+                    f"{len(done)} entity ID(s) of **{self.config_entry.title}** were renamed "
+                    f"to the `sensor.{ENTITY_ID_PREFIX}*` scheme. Update dashboards and "
+                    f"automations that reference the old IDs:\n\n{lines}\n\n"
+                    f"Recorder exclusion for all of them:\n{yaml_hint}"
+                ),
+                title="Alternative Time: entity IDs migrated",
+                notification_id=f"{DOMAIN}_entity_id_migration_{self.config_entry.entry_id}",
+            )
+
+        return self.async_abort(
+            reason="migration_done",
+            description_placeholders={"count": str(len(done))},
         )
 
     async def async_step_configure_calendar(

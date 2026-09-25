@@ -42,19 +42,33 @@
   "options": {
     "step": {
       "init": {
+        "title": "Alternative Time のオプション",
+        "description": "何をしますか？",
+        "menu_options": {
+          "select_calendar": "カレンダーを設定",
+          "migrate_entity_ids": "エンティティIDを sensor.alternative_time_* に移行"
+        }
+      },
+      "configure_calendar": {
+        "title": "{calendar_name}を設定",
+        "description": "**{calendar_name}**\n\n{calendar_description}\n\n以下の設定を調整："
+      },
+      "select_calendar": {
         "title": "カレンダーオプションを設定",
         "description": "オプションを設定するカレンダーを選択：\n\n{title}",
         "data": {
           "calendar": "設定するカレンダー"
         }
       },
-      "configure_calendar": {
-        "title": "{calendar_name}を設定",
-        "description": "**{calendar_name}**\n\n{calendar_description}\n\n以下の設定を調整："
+      "migrate_entity_ids": {
+        "title": "エンティティIDの移行",
+        "description": "{count} 件のエンティティIDを安定した形式 `sensor.alternative_time_<カレンダー>` に変更し、レコーダーのパターン `sensor.alternative_time_*` で対象にします:\n\n{preview}\n\n**旧IDを使うダッシュボードや自動化はご自身で更新してください。** 完了後に全リストの通知が作成されます。"
       }
     },
     "abort": {
-      "no_options": "{message}"
+      "no_options": "{message}",
+      "nothing_to_migrate": "このエントリのエンティティIDはすべて sensor.alternative_time_* 形式です。",
+      "migration_done": "{count} 件のエンティティIDを移行しました。旧 → 新の一覧は通知を参照してください。"
     }
   }
 }

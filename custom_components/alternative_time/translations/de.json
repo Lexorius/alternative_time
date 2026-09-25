@@ -42,19 +42,33 @@
   "options": {
     "step": {
       "init": {
+        "title": "Alternative Zeitsysteme – Optionen",
+        "description": "Was möchtest du tun?",
+        "menu_options": {
+          "select_calendar": "Einen Kalender konfigurieren",
+          "migrate_entity_ids": "Entity-IDs auf sensor.alternative_time_* migrieren"
+        }
+      },
+      "configure_calendar": {
+        "title": "{calendar_name} konfigurieren",
+        "description": "**{calendar_name}**\n\n{calendar_description}\n\nPassen Sie die Einstellungen unten an:"
+      },
+      "select_calendar": {
         "title": "Kalenderoptionen konfigurieren",
         "description": "Wählen Sie einen Kalender aus, um dessen Optionen zu konfigurieren:\n\n{title}",
         "data": {
           "calendar": "Zu konfigurierender Kalender"
         }
       },
-      "configure_calendar": {
-        "title": "{calendar_name} konfigurieren",
-        "description": "**{calendar_name}**\n\n{calendar_description}\n\nPassen Sie die Einstellungen unten an:"
+      "migrate_entity_ids": {
+        "title": "Entity-IDs migrieren",
+        "description": "{count} Entity-ID(s) werden auf das stabile Schema `sensor.alternative_time_<kalender>` umbenannt, damit der Recorder-Glob `sensor.alternative_time_*` sie erfasst:\n\n{preview}\n\n**Dashboards und Automationen, die die alten IDs verwenden, musst du selbst anpassen.** Eine Benachrichtigung mit der vollständigen Liste wird danach erstellt."
       }
     },
     "abort": {
-      "no_options": "{message}"
+      "no_options": "{message}",
+      "nothing_to_migrate": "Alle Entity-IDs dieses Eintrags verwenden bereits das Schema sensor.alternative_time_*.",
+      "migration_done": "{count} Entity-ID(s) migriert. Die Liste alt → neu steht in der Benachrichtigung."
     }
   }
 }

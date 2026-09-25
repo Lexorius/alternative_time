@@ -5,6 +5,73 @@ Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1
 die Versionsnummerierung folgt grob [Semantic Versioning](https://semver.org/lang/de/)
 mit optionaler vierter Build-Komponente.
 
+## [2.6.2] — 2026-09-26
+
+Recorder-Release: so viel wie möglich aus der History heraushalten — ohne dass
+der Nutzer YAML anfassen muss, und mit einem Ein-Klick-Weg für den Rest.
+Dazu ein Hotfix für fünf seit langem stillschweigend kaputte Plugins.
+
+### Behoben
+- **Fünf Plugins warfen bei jedem Update `AttributeError`:** `chinese_lunar`,
+  `mars`, `mass_effect`, `warcraft` und `warhammer40k_imperial` riefen
+  `self._get_plugin_options()` auf — eine Methode, die nie existierte (die
+  Basisklasse hat `get_plugin_options()`). Bis 2.6.1 lief das auf DEBUG und
+  fiel niemandem auf; seit 2.6.1 wurden diese fünf als `unavailable` sichtbar.
+  Fix: Alias in der Basisklasse.
+- **Attribut-Churn in vier Plugins** erzeugte eine Recorder-Zeile pro Sekunde,
+  obwohl sich der *State* viel seltener ändert (nur eine Änderung von State
+  oder Attributen erzeugt eine Zeile — verifiziert in `StateMachine.async_set`):
+  - `dtg`, `german_rescue_dtg`: State hat Minutenauflösung, aber
+    `unix_timestamp`, `iso_format`, `components.second` liefen sekündlich →
+    jetzt aus der minutengenau gekürzten Zeit berechnet. **60× weniger Zeilen.**
+  - `swatch`: State `@015` wechselt alle 86,4 s, aber `bmt_time`, `local_time`,
+    `utc_time`, `seconds_since_midnight_bmt`, `centibeats`, `fractional` liefen
+    sekündlich → alle Attribute auf die eingestellte Präzision quantisiert.
+    **86× weniger Zeilen** bei Präzision „beat".
+  - `stardate`: das „aktuelle Schiff" rotierte bei *jedem* Update (alle 10 s)
+    und `earth_date` trug Sekunden → Schiff wechselt jetzt deterministisch
+    stündlich, `earth_date` minutengenau. Von einer Zeile alle 10 s auf
+    etwa eine pro Minute.
+- `translations/ps.json` entfernt: enthielt polnischen Text unter dem
+  Sprachcode für Paschtu (`pl.json` existiert), es fehlten 5 Schlüssel und
+  eine harte GitHub-URL, die hassfest überall sonst verboten hat.
+- Toter Code entfernt: `register_recorder_exclusion()` und die
+  `entities_to_exclude`-Liste in `sensor.py` (auskommentierter Aufruf, die
+  Liste sammelte `None`, weil `entity_id` vor dem Hinzufügen nicht gesetzt ist).
+
+### Hinzugefügt
+- **Attribute werden nicht mehr aufgezeichnet.** `AlternativeTimeSensorBase`
+  setzt `_unrecorded_attributes = frozenset({MATCH_ALL})`; der Recorder
+  speichert nur noch den State-String. Attribute bleiben im State live
+  (Dashboards, Templates, More-Info unverändert), landen aber nicht mehr in
+  `state_attributes`. Allein `solar_system` schrieb **23 422 Byte pro Zeile**
+  (SVG, ohne PNG) alle 5 Minuten. HA behält `friendly_name`, `device_class`,
+  `unit_of_measurement` und `state_class` auch bei `MATCH_ALL`.
+- **Entity-ID-Migration im Options-Dialog.** *Konfigurieren* zeigt jetzt ein
+  Menü: „Einen Kalender konfigurieren" (wie bisher) oder „Entity-IDs auf
+  `sensor.alternative_time_*` migrieren". Letzteres listet jede geplante
+  Umbenennung, führt sie in der Entity-Registry aus
+  (`async_generate_entity_id` löst Kollisionen mit `_2`, `_3` auf) und legt
+  eine Persistent Notification mit der Liste alt → neu samt Recorder-Snippet
+  an. Opt-in, einmalig, nichts passiert ohne Bestätigung.
+- README-Abschnitt „Excluding from Recorder / History" neu geschrieben: der
+  Glob `sensor.alternative_time_*` ist die Standard-Empfehlung, die Migration
+  der Weg für Alt-Entities.
+
+### Hinweis
+- **Es gibt in Home Assistant keine Möglichkeit für eine Integration, den
+  *State* einer Entity vom Recorder auszuschließen** — das ist ausschließlich
+  Nutzer-Konfiguration. Die 10 echten Sekundenuhren (`decimal`, `eve`,
+  `hexadecimal`, `julian_date`, `mass_effect`, `sidereal`, `tai`, `timezone`,
+  `unix`, `ut1`) erzeugen daher weiterhin eine Zeile pro Änderung, bis der
+  Glob gesetzt ist. Der Weg, das *by design* zu vermeiden (Uhr tickt im
+  Browser, Entity hält nur Parameter), ist für 2.7 vorgemerkt.
+- Wer Automationen oder Templates auf *Attribut-History* dieser Sensoren
+  gebaut hat (nicht auf den aktuellen Wert), verliert diese Historie ab
+  diesem Release. Der aktuelle Attributwert ist weiterhin verfügbar.
+- Die Migration benennt Entity-IDs um; Dashboards und Automationen, die die
+  alten IDs referenzieren, schreibt HA **nicht** automatisch um.
+
 ## [2.6.1] — 2026-09-26
 
 Laufzeit-Korrekturen aus dem Code-Review. Anders als 2.6.0.7 ändert dieses

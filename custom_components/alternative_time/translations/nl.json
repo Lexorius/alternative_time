@@ -42,19 +42,33 @@
   "options": {
     "step": {
       "init": {
+        "title": "Alternative Time-opties",
+        "description": "Wat wil je doen?",
+        "menu_options": {
+          "select_calendar": "Een kalender configureren",
+          "migrate_entity_ids": "Entiteits-ID’s migreren naar sensor.alternative_time_*"
+        }
+      },
+      "configure_calendar": {
+        "title": "Configureer {calendar_name}",
+        "description": "**{calendar_name}**\n\n{calendar_description}\n\nPas de onderstaande instellingen aan:"
+      },
+      "select_calendar": {
         "title": "Configureer kalenderopties",
         "description": "Selecteer een kalender om de opties te configureren:\n\n{title}",
         "data": {
           "calendar": "Te configureren kalender"
         }
       },
-      "configure_calendar": {
-        "title": "Configureer {calendar_name}",
-        "description": "**{calendar_name}**\n\n{calendar_description}\n\nPas de onderstaande instellingen aan:"
+      "migrate_entity_ids": {
+        "title": "Entiteits-ID’s migreren",
+        "description": "{count} entiteits-ID(’s) worden hernoemd naar het stabiele schema `sensor.alternative_time_<kalender>`, zodat het recorder-patroon `sensor.alternative_time_*` ze dekt:\n\n{preview}\n\n**Dashboards en automatiseringen die de oude ID’s gebruiken moet je zelf bijwerken.** Daarna wordt een melding met de volledige lijst aangemaakt."
       }
     },
     "abort": {
-      "no_options": "{message}"
+      "no_options": "{message}",
+      "nothing_to_migrate": "Alle entiteits-ID’s van dit item gebruiken al het schema sensor.alternative_time_*.",
+      "migration_done": "{count} entiteits-ID(’s) gemigreerd. De lijst oud → nieuw staat in de melding."
     }
   }
 }

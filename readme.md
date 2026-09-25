@@ -7,7 +7,7 @@
 [![GitHub Release](https://img.shields.io/github/release/Lexorius/alternative_time.svg)](https://github.com/Lexorius/alternative_time/releases)
 [![GitHub Activity](https://img.shields.io/github/commit-activity/y/Lexorius/alternative_time.svg)](https://github.com/Lexorius/alternative_time/commits/main)
 [![License](https://img.shields.io/github/license/Lexorius/alternative_time.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.6.1-blue)](https://github.com/Lexorius/alternative_time)
+[![Version](https://img.shields.io/badge/version-2.6.2-blue)](https://github.com/Lexorius/alternative_time)
 
 A comprehensive Home Assistant integration providing **30+ alternative time systems** from science, science fiction, fantasy, history, religion, and various cultures.
 
@@ -321,9 +321,11 @@ Real-time distances to notable stars and pulsars with measurement accuracy.
 
 ### Excluding from Recorder / History
 
-All sensors created by this integration use a stable `entity_id` prefix of `sensor.alternative_time_<calendar_id>` (e.g. `sensor.alternative_time_solar_system`, `sensor.alternative_time_sri_lanka_buddhist`). The instance name you choose in the wizard becomes the **friendly name** only — the entity_id stays predictable.
+These sensors are clocks: their history is worthless and, for the second-resolution ones, expensive (a `states` row per change). Two things keep them out of your database:
 
-This lets you exclude every plugin from the HA recorder with a single glob, regardless of how you named the integration:
+**1. Attributes are never recorded (automatic since v2.6.2).** Every sensor declares `_unrecorded_attributes = MATCH_ALL`, so the recorder stores only the state string. Attributes stay live for dashboards and templates — they just don't accumulate in `state_attributes` (the Solar System map alone was ~23 KB per row).
+
+**2. Exclude the states with one glob (recommended).** All sensors use the stable entity_id `sensor.alternative_time_<calendar_id>` (e.g. `sensor.alternative_time_solar_system`), independent of the instance name you chose, so a single line covers everything:
 
 ```yaml
 recorder:
@@ -341,7 +343,9 @@ data:
     - sensor.alternative_time_*
 ```
 
-> **Upgrade note:** the stable-prefix behavior only applies to entities created **after** this feature landed. Existing entities keep the `entity_id` they were originally assigned. To benefit from the glob, either remove and re-add the integration (loses history), or rename each entity manually under *Settings → Devices & Services → Entities → ⚙ → Entity ID* so it starts with `alternative_time_`.
+> **Entities created before v2.6.0.7** kept the entity_id they were originally given (e.g. `sensor.beats_swatch_internet_time`) and are not matched by the glob. Open the integration entry → **Configure** → **Migrate entity IDs to sensor.alternative_time_\*** — it previews every rename, applies them in the entity registry and posts a notification with the old → new list. Dashboards and automations that reference the old IDs must be updated by you (HA does not rewrite them). Opt-in and one-shot; nothing changes unless you confirm.
+
+Home Assistant offers no way for an integration to exclude an entity's *state* from the recorder — that is user configuration only. Ten calendars are genuine second-resolution clocks (`unix`, `tai`, `eve`, `decimal`, `hexadecimal`, `sidereal`, `julian_date`, `timezone`, `ut1`, `mass_effect`) and will write a row per change until you set the glob above.
 
 ---
 
@@ -383,7 +387,14 @@ Each calendar follows the unified `CALENDAR_INFO` structure:
 
 ## 📈 Version History
 
-### v2.6.1 (Current)
+### v2.6.2 (Current)
+- 🗄️ **Attributes are no longer recorded** (`_unrecorded_attributes = MATCH_ALL` on the base class). Solar System alone wrote ~23 KB of SVG per state row; now only the state string is stored. Attributes stay live.
+- 🗄️ **Attribute churn fixed** in `dtg`, `german_rescue_dtg` (60× fewer recorder rows), `swatch` (86× fewer) and `stardate` (~6× fewer): attributes now change only when the displayed value changes.
+- ✨ **Entity-ID migration** under *Configure* → *Migrate entity IDs*: renames pre-2.6.0.7 entities to `sensor.alternative_time_<calendar>` so the single recorder glob covers them; previews, then posts an old → new notification.
+- 🐛 **Fix: five calendars raised `AttributeError` on every update** (`chinese_lunar`, `mars`, `mass_effect`, `warcraft`, `warhammer40k_imperial` called a never-defined `_get_plugin_options`). Invisible until 2.6.1 made failures visible.
+- 🧹 `translations/ps.json` removed (Polish text under the Pashto code); dead recorder-exclusion stub removed.
+
+### v2.6.1
 - 🐛 **Fix: every entity was updated twice** — `should_poll` returned `True`, so HA polled every sensor every 30 s on top of the plugin's own timer. Now `False`; the timer is the only scheduler, and a tick is skipped while the previous one is still running.
 - ✨ **Options changes apply immediately** — an `update_listener` now reloads the entry after saving under *Configure* (previously required a restart).
 - 👁️ **Failed updates are visible** — first failure of a streak logs a WARNING, entity becomes *unavailable* after 3 consecutive failures and recovers automatically.

@@ -42,19 +42,33 @@
   "options": {
     "step": {
       "init": {
+        "title": "Параметры Alternative Time",
+        "description": "Что вы хотите сделать?",
+        "menu_options": {
+          "select_calendar": "Настроить календарь",
+          "migrate_entity_ids": "Перенести ID сущностей на sensor.alternative_time_*"
+        }
+      },
+      "configure_calendar": {
+        "title": "Настройка {calendar_name}",
+        "description": "**{calendar_name}**\n\n{calendar_description}\n\nОтрегулируйте настройки ниже:"
+      },
+      "select_calendar": {
         "title": "Настройка параметров календаря",
         "description": "Выберите календарь для настройки его параметров:\n\n{title}",
         "data": {
           "calendar": "Календарь для настройки"
         }
       },
-      "configure_calendar": {
-        "title": "Настройка {calendar_name}",
-        "description": "**{calendar_name}**\n\n{calendar_description}\n\nОтрегулируйте настройки ниже:"
+      "migrate_entity_ids": {
+        "title": "Перенос ID сущностей",
+        "description": "{count} ID сущностей будут переименованы по стабильной схеме `sensor.alternative_time_<календарь>`, чтобы шаблон recorder `sensor.alternative_time_*` охватывал их:\n\n{preview}\n\n**Панели и автоматизации, использующие старые ID, нужно обновить вручную.** После этого будет создано уведомление с полным списком."
       }
     },
     "abort": {
-      "no_options": "{message}"
+      "no_options": "{message}",
+      "nothing_to_migrate": "Все ID сущностей этой записи уже используют схему sensor.alternative_time_*.",
+      "migration_done": "Перенесено ID сущностей: {count}. Список старый → новый — в уведомлении."
     }
   }
 }

@@ -42,19 +42,33 @@
   "options": {
     "step": {
       "init": {
+        "title": "Opcje Alternative Time",
+        "description": "Co chcesz zrobić?",
+        "menu_options": {
+          "select_calendar": "Skonfiguruj kalendarz",
+          "migrate_entity_ids": "Migruj ID encji do sensor.alternative_time_*"
+        }
+      },
+      "configure_calendar": {
+        "title": "Konfiguruj {calendar_name}",
+        "description": "**{calendar_name}**\n\n{calendar_description}\n\nDostosuj poniższe ustawienia:"
+      },
+      "select_calendar": {
         "title": "Konfiguruj opcje kalendarza",
         "description": "Wybierz kalendarz, aby skonfigurować jego opcje:\n\n{title}",
         "data": {
           "calendar": "Kalendarz do konfiguracji"
         }
       },
-      "configure_calendar": {
-        "title": "Konfiguruj {calendar_name}",
-        "description": "**{calendar_name}**\n\n{calendar_description}\n\nDostosuj poniższe ustawienia:"
+      "migrate_entity_ids": {
+        "title": "Migracja ID encji",
+        "description": "{count} ID encji zostanie zmienionych na stabilny schemat `sensor.alternative_time_<kalendarz>`, aby wzorzec recordera `sensor.alternative_time_*` je obejmował:\n\n{preview}\n\n**Pulpity i automatyzacje używające starych ID musisz zaktualizować samodzielnie.** Następnie zostanie utworzone powiadomienie z pełną listą."
       }
     },
     "abort": {
-      "no_options": "{message}"
+      "no_options": "{message}",
+      "nothing_to_migrate": "Wszystkie ID encji tego wpisu używają już schematu sensor.alternative_time_*.",
+      "migration_done": "Zmigrowano {count} ID encji. Lista stare → nowe znajduje się w powiadomieniu."
     }
   }
 }

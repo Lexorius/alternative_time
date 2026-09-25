@@ -42,19 +42,33 @@
   "options": {
     "step": {
       "init": {
+        "title": "Alternative Time options",
+        "description": "What would you like to do?",
+        "menu_options": {
+          "select_calendar": "Configure a calendar",
+          "migrate_entity_ids": "Migrate entity IDs to sensor.alternative_time_*"
+        }
+      },
+      "configure_calendar": {
+        "title": "Configure {calendar_name}",
+        "description": "**{calendar_name}**\n\n{calendar_description}\n\nAdjust the settings below:"
+      },
+      "select_calendar": {
         "title": "Configure Calendar Options",
         "description": "Select a calendar to configure its options:\n\n{title}",
         "data": {
           "calendar": "Calendar to configure"
         }
       },
-      "configure_calendar": {
-        "title": "Configure {calendar_name}",
-        "description": "**{calendar_name}**\n\n{calendar_description}\n\nAdjust the settings below:"
+      "migrate_entity_ids": {
+        "title": "Migrate entity IDs",
+        "description": "{count} entity ID(s) will be renamed to the stable scheme `sensor.alternative_time_<calendar>`, so the recorder glob `sensor.alternative_time_*` covers them:\n\n{preview}\n\n**Dashboards and automations that use the old IDs must be updated by you.** A notification with the full list is created afterwards."
       }
     },
     "abort": {
-      "no_options": "{message}"
+      "no_options": "{message}",
+      "nothing_to_migrate": "All entity IDs of this entry already use the sensor.alternative_time_* scheme.",
+      "migration_done": "{count} entity ID(s) migrated. See the notification for the old → new list."
     }
   }
 }

@@ -352,29 +352,44 @@ class SwatchTimeSensor(AlternativeTimeSensorBase):
         # Format based on precision setting
         if self._precision == "decibeat":
             formatted = f"@{beats:03d}.{decibeats:01d}"
+            quantum = 0.1
         elif self._precision == "centibeat":
             formatted = f"@{beats:03d}.{centibeats:02d}"
+            quantum = 0.01
         else:  # beat (default)
             formatted = f"@{beats:03d}"
+            quantum = 1.0
+
+        # Quantise every derived attribute to the configured precision so the
+        # attributes change exactly when the displayed value changes. With
+        # "beat" precision the state moves every 86.4 s, but the previous
+        # second-resolution attributes (bmt_time, local_time, utc_time,
+        # seconds_since_midnight_bmt, centibeats, fractional) forced a
+        # recorder state row every single second.
+        beats_q = round(int(beats_raw / quantum + 1e-9) * quantum, 2)
+        fractional_q = round(beats_q - beats, 2)
+        seconds_q = beats_q * self._swatch_data["seconds_per_beat"]
+        bmt_q = midnight_bmt + timedelta(seconds=seconds_q)
+        local_q = bmt_q.astimezone(earth_time.tzinfo) if earth_time.tzinfo else bmt_q
+        utc_q = bmt_q.astimezone(timezone.utc)
 
         # Calculate percentage of day
-        day_progress = (beats_raw / self._swatch_data["beats_per_day"]) * 100
+        day_progress = (beats_q / self._swatch_data["beats_per_day"]) * 100
 
         result = {
             "beats": beats,
-            "centibeats": centibeats,
-            "decibeats": decibeats,
-            "fractional": round(fractional_beat, 4),
+            "centibeats": int(fractional_q * 100 + 1e-9),
+            "decibeats": int(fractional_q * 10 + 1e-9),
+            "fractional": fractional_q,
             "formatted": formatted,
-            "bmt_time": bmt_time.strftime("%H:%M:%S BMT"),
-            "local_time": earth_time.strftime("%H:%M:%S %Z"),
-            "seconds_since_midnight_bmt": round(seconds_since_midnight, 2),
+            "bmt_time": bmt_q.strftime("%H:%M:%S BMT"),
+            "local_time": local_q.strftime("%H:%M:%S %Z"),
+            "seconds_since_midnight_bmt": round(seconds_q, 2),
             "day_progress": f"{day_progress:.1f}%"
         }
 
         # Add time conversions
-        utc_time = earth_time.astimezone(timezone.utc)
-        result["utc_time"] = utc_time.strftime("%H:%M:%S UTC")
+        result["utc_time"] = utc_q.strftime("%H:%M:%S UTC")
 
         return result
 

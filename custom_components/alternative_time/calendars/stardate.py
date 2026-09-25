@@ -562,14 +562,20 @@ class StardateSensor(AlternativeTimeSensorBase):
 
         return closest_event or ""
 
-    def _get_current_ship(self) -> Dict[str, str]:
-        """Get current ship from rotation."""
+    def _get_current_ship(self, earth_date: datetime) -> Dict[str, str]:
+        """Get the ship "on duty" for the current hour.
+
+        Deterministic rotation (one ship per hour of the year). The previous
+        implementation advanced an index on every update, i.e. every 10 s,
+        which changed the ship attributes on every tick and forced a recorder
+        state row each time.
+        """
         if not self._show_ship:
             return {}
 
-        ship = self._stardate_data["ships"][self._ship_index]
-        self._ship_index = (self._ship_index + 1) % len(self._stardate_data["ships"])
-        return ship
+        ships = self._stardate_data["ships"]
+        idx = (earth_date.timetuple().tm_yday * 24 + earth_date.hour) % len(ships)
+        return ships[idx]
 
     def _calculate_stardate(self, earth_date: datetime) -> Dict[str, Any]:
         """Calculate Stardate from Earth date."""
@@ -611,7 +617,7 @@ class StardateSensor(AlternativeTimeSensorBase):
         event = self._find_notable_event(stardate) if self._format == "tng" else ""
 
         # Get current ship
-        ship_data = self._get_current_ship() if self._show_ship else {}
+        ship_data = self._get_current_ship(earth_date) if self._show_ship else {}
 
         # Build result
         result = {
@@ -621,7 +627,7 @@ class StardateSensor(AlternativeTimeSensorBase):
             "series": series,
             "century": century,
             "quadrant": f"{current_quadrant} Quadrant",
-            "earth_date": earth_date.strftime("%Y-%m-%d %H:%M:%S"),
+            "earth_date": earth_date.strftime("%Y-%m-%d %H:%M"),
             "year_component": int(stardate // 1000) if self._format == "tng" else 0,
             "day_component": stardate % 1000 if self._format == "tng" else 0
         }

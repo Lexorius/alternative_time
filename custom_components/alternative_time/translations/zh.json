@@ -42,19 +42,33 @@
   "options": {
     "step": {
       "init": {
+        "title": "Alternative Time 选项",
+        "description": "您想做什么？",
+        "menu_options": {
+          "select_calendar": "配置日历",
+          "migrate_entity_ids": "将实体 ID 迁移到 sensor.alternative_time_*"
+        }
+      },
+      "configure_calendar": {
+        "title": "配置{calendar_name}",
+        "description": "**{calendar_name}**\n\n{calendar_description}\n\n调整以下设置："
+      },
+      "select_calendar": {
         "title": "配置日历选项",
         "description": "选择一个日历来配置其选项：\n\n{title}",
         "data": {
           "calendar": "要配置的日历"
         }
       },
-      "configure_calendar": {
-        "title": "配置{calendar_name}",
-        "description": "**{calendar_name}**\n\n{calendar_description}\n\n调整以下设置："
+      "migrate_entity_ids": {
+        "title": "迁移实体 ID",
+        "description": "{count} 个实体 ID 将重命名为稳定格式 `sensor.alternative_time_<日历>`，以便 recorder 模式 `sensor.alternative_time_*` 覆盖它们：\n\n{preview}\n\n**使用旧 ID 的仪表板和自动化需要您自行更新。** 之后会创建包含完整列表的通知。"
       }
     },
     "abort": {
-      "no_options": "{message}"
+      "no_options": "{message}",
+      "nothing_to_migrate": "此条目的所有实体 ID 已使用 sensor.alternative_time_* 格式。",
+      "migration_done": "已迁移 {count} 个实体 ID。旧 → 新列表见通知。"
     }
   }
 }

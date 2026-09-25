@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
@@ -26,6 +27,22 @@ _DISCOVERY_LOCK = asyncio.Lock()
 # suriyakati.py declares id "suriyakati_thai". Setup must import by file name.
 _CALENDAR_MODULE_NAMES: Dict[str, str] = {}
 
+# Live sensor objects per config entry, used by the options flow to offer an
+# entity_id migration (it needs entity_id -> calendar_id without parsing
+# unique_ids). Reset on every setup of the entry, dropped on unload.
+_ENTITIES_BY_ENTRY: Dict[str, List["AlternativeTimeSensorBase"]] = {}
+
+
+def entities_for_entry(entry_id: str) -> List[tuple[str, str]]:
+    """Return [(entity_id, calendar_id)] for the entry's currently added sensors."""
+    out: List[tuple[str, str]] = []
+    for sensor in _ENTITIES_BY_ENTRY.get(entry_id, []):
+        eid = getattr(sensor, "entity_id", None)
+        cid = getattr(sensor, "_calendar_id", None)
+        if eid and cid:
+            out.append((eid, cid))
+    return out
+
 # Store config entries globally for sensor access
 _CONFIG_ENTRIES: Dict[str, ConfigEntry] = {}
 
@@ -40,6 +57,7 @@ async def async_setup_entry(
     # Store config entry for sensor access
     entry_id = config_entry.entry_id
     _CONFIG_ENTRIES[entry_id] = config_entry
+    _ENTITIES_BY_ENTRY[entry_id] = []
 
     # Get selected calendars from config
     selected_calendars = config_entry.data.get("calendars", [])
@@ -77,7 +95,6 @@ async def async_setup_entry(
 
     # Create sensors for selected calendars
     sensors = []
-    entities_to_exclude = []  # Track entities for recorder exclusion
 
     for calendar_id in selected_calendars:
         _LOGGER.debug(f"Processing calendar: {calendar_id}")
@@ -86,8 +103,6 @@ async def async_setup_entry(
             _LOGGER.error(f"Calendar '{calendar_id}' is enabled but not found in registry")
             _LOGGER.debug(f"Available calendars: {list(discovered_calendars.keys())}")
             continue
-
-        calendar_info = discovered_calendars[calendar_id]
 
         # Debug: Check if we have options for this calendar
         calendar_plugin_options = plugin_options.get(calendar_id, {})
@@ -153,11 +168,7 @@ async def async_setup_entry(
                 _LOGGER.debug(f"Created unique_id for {calendar_id}: {sensor._attr_unique_id[:30]}...")
 
             sensors.append(sensor)
-
-            # Track entity for recorder exclusion if it updates frequently
-            update_interval = calendar_info.get('update_interval', 3600)
-            if update_interval < 60:  # Exclude sensors that update more than once per minute
-                entities_to_exclude.append(sensor.entity_id)
+            _ENTITIES_BY_ENTRY[entry_id].append(sensor)
 
             _LOGGER.info(f"✓ Created sensor for calendar: {calendar_id}")
 
@@ -170,11 +181,6 @@ async def async_setup_entry(
     if sensors:
         async_add_entities(sensors)
         _LOGGER.info(f"=== Successfully added {len(sensors)} sensors to Home Assistant ===")
-
-        # Register recorder exclusions if needed
-        # WICHTIG: Diese Zeile ist auskommentiert, um den Recorder-Fehler zu vermeiden
-        # if entities_to_exclude:
-        #     await register_recorder_exclusion(hass, entities_to_exclude)
     else:
         _LOGGER.warning("No sensors were created!")
 
@@ -351,24 +357,29 @@ def get_config_entry(entry_id: str) -> Optional[ConfigEntry]:
 
 
 def forget_config_entry(entry_id: str) -> None:
-    """Drop a config entry from the module-level registry (called on unload)."""
+    """Drop a config entry from the module-level registries (called on unload)."""
     _CONFIG_ENTRIES.pop(entry_id, None)
+    _ENTITIES_BY_ENTRY.pop(entry_id, None)
 
 
-# RECORDER EXCLUSION - Deaktiviert wegen Kompatibilitätsproblemen
-async def register_recorder_exclusion(hass: HomeAssistant, entities_to_exclude: List[str]) -> None:
-    """Register entities to be excluded from recorder.
-
-    Note: Diese Funktion ist in neueren Home Assistant Versionen nicht mehr nötig.
-    Die Recorder-Konfiguration erfolgt über configuration.yaml oder die UI.
-    """
-    _LOGGER.debug(f"Recorder exclusion requested for {len(entities_to_exclude)} entities")
-    # Funktion macht nichts mehr - nur für Rückwärtskompatibilität vorhanden
-    pass
+# NOTE on recorder exclusion: Home Assistant offers no API for an integration
+# to keep an entity's *state* out of the recorder — that is user configuration
+# only (recorder: exclude: entity_globs: [sensor.alternative_time_*]). What we
+# can do integration-side is (a) give every sensor a stable entity_id so that
+# one glob matches (suggested_object_id + the options-flow migration) and
+# (b) not record attributes at all (_unrecorded_attributes = MATCH_ALL below).
 
 
 class AlternativeTimeSensorBase(SensorEntity):
     """Base class for Alternative Time System sensors."""
+
+    # Record only the state string, never the attributes. Attributes stay
+    # live in the state machine (dashboards, templates, more-info dialog are
+    # unaffected) — they just don't get written to the recorder's
+    # state_attributes table. For time sensors attribute *history* is never
+    # used, while e.g. solar_system carried a 23 KB SVG per state row.
+    # HA keeps friendly_name/device_class/unit/state_class even with MATCH_ALL.
+    _unrecorded_attributes = frozenset({MATCH_ALL})
 
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
@@ -449,6 +460,12 @@ class AlternativeTimeSensorBase(SensorEntity):
             _LOGGER.debug(f"{self.__class__.__name__} ({self._calendar_id}) loaded options: {calendar_options}")
 
         return calendar_options
+
+    # Five plugins (chinese_lunar, mars, mass_effect, warcraft,
+    # warhammer40k_imperial) call self._get_plugin_options(); the method was
+    # never defined, so their update() raised AttributeError on every tick.
+    # Until 2.6.1 that failure was logged at DEBUG only and went unnoticed.
+    _get_plugin_options = get_plugin_options
 
     @property
     def update_interval(self) -> int:

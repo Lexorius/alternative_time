@@ -42,19 +42,33 @@
   "options": {
     "step": {
       "init": {
+        "title": "Opciones de Alternative Time",
+        "description": "¿Qué desea hacer?",
+        "menu_options": {
+          "select_calendar": "Configurar un calendario",
+          "migrate_entity_ids": "Migrar IDs de entidad a sensor.alternative_time_*"
+        }
+      },
+      "configure_calendar": {
+        "title": "Configurar {calendar_name}",
+        "description": "**{calendar_name}**\n\n{calendar_description}\n\nAjuste la configuración a continuación:"
+      },
+      "select_calendar": {
         "title": "Configurar opciones de calendario",
         "description": "Seleccione un calendario para configurar sus opciones:\n\n{title}",
         "data": {
           "calendar": "Calendario a configurar"
         }
       },
-      "configure_calendar": {
-        "title": "Configurar {calendar_name}",
-        "description": "**{calendar_name}**\n\n{calendar_description}\n\nAjuste la configuración a continuación:"
+      "migrate_entity_ids": {
+        "title": "Migrar IDs de entidad",
+        "description": "{count} ID(s) de entidad se renombrarán al esquema estable `sensor.alternative_time_<calendario>` para que el patrón del recorder `sensor.alternative_time_*` los cubra:\n\n{preview}\n\n**Debe actualizar usted mismo los paneles y automatizaciones que usen los IDs antiguos.** Después se crea una notificación con la lista completa."
       }
     },
     "abort": {
-      "no_options": "{message}"
+      "no_options": "{message}",
+      "nothing_to_migrate": "Todos los IDs de entidad de esta entrada ya usan el esquema sensor.alternative_time_*.",
+      "migration_done": "{count} ID(s) de entidad migrados. La lista antiguo → nuevo está en la notificación."
     }
   }
 }

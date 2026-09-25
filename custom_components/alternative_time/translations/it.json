@@ -42,19 +42,33 @@
   "options": {
     "step": {
       "init": {
+        "title": "Opzioni Alternative Time",
+        "description": "Cosa vuoi fare?",
+        "menu_options": {
+          "select_calendar": "Configura un calendario",
+          "migrate_entity_ids": "Migra gli ID entità a sensor.alternative_time_*"
+        }
+      },
+      "configure_calendar": {
+        "title": "Configura {calendar_name}",
+        "description": "**{calendar_name}**\n\n{calendar_description}\n\nRegola le impostazioni seguenti:"
+      },
+      "select_calendar": {
         "title": "Configura opzioni calendario",
         "description": "Seleziona un calendario per configurare le sue opzioni:\n\n{title}",
         "data": {
           "calendar": "Calendario da configurare"
         }
       },
-      "configure_calendar": {
-        "title": "Configura {calendar_name}",
-        "description": "**{calendar_name}**\n\n{calendar_description}\n\nRegola le impostazioni seguenti:"
+      "migrate_entity_ids": {
+        "title": "Migra gli ID entità",
+        "description": "{count} ID entità verranno rinominati secondo lo schema stabile `sensor.alternative_time_<calendario>`, così il pattern recorder `sensor.alternative_time_*` li copre:\n\n{preview}\n\n**Dashboard e automazioni che usano i vecchi ID vanno aggiornati manualmente.** Dopo viene creata una notifica con l’elenco completo."
       }
     },
     "abort": {
-      "no_options": "{message}"
+      "no_options": "{message}",
+      "nothing_to_migrate": "Tutti gli ID entità di questa voce usano già lo schema sensor.alternative_time_*.",
+      "migration_done": "{count} ID entità migrati. L’elenco vecchio → nuovo è nella notifica."
     }
   }
 }

@@ -42,19 +42,33 @@
   "options": {
     "step": {
       "init": {
+        "title": "Options Alternative Time",
+        "description": "Que souhaitez-vous faire ?",
+        "menu_options": {
+          "select_calendar": "Configurer un calendrier",
+          "migrate_entity_ids": "Migrer les ID d’entité vers sensor.alternative_time_*"
+        }
+      },
+      "configure_calendar": {
+        "title": "Configurer {calendar_name}",
+        "description": "**{calendar_name}**\n\n{calendar_description}\n\nAjustez les paramètres ci-dessous :"
+      },
+      "select_calendar": {
         "title": "Configurer les options du calendrier",
         "description": "Sélectionnez un calendrier pour configurer ses options :\n\n{title}",
         "data": {
           "calendar": "Calendrier à configurer"
         }
       },
-      "configure_calendar": {
-        "title": "Configurer {calendar_name}",
-        "description": "**{calendar_name}**\n\n{calendar_description}\n\nAjustez les paramètres ci-dessous :"
+      "migrate_entity_ids": {
+        "title": "Migrer les ID d’entité",
+        "description": "{count} ID d’entité seront renommés selon le schéma stable `sensor.alternative_time_<calendrier>`, afin que le motif recorder `sensor.alternative_time_*` les couvre :\n\n{preview}\n\n**Vous devez mettre à jour vous-même les tableaux de bord et automatisations utilisant les anciens ID.** Une notification avec la liste complète sera créée ensuite."
       }
     },
     "abort": {
-      "no_options": "{message}"
+      "no_options": "{message}",
+      "nothing_to_migrate": "Tous les ID d’entité de cette entrée utilisent déjà le schéma sensor.alternative_time_*.",
+      "migration_done": "{count} ID d’entité migrés. La liste ancien → nouveau se trouve dans la notification."
     }
   }
 }
