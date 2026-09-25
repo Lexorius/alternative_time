@@ -5,6 +5,46 @@ Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1
 die Versionsnummerierung folgt grob [Semantic Versioning](https://semver.org/lang/de/)
 mit optionaler vierter Build-Komponente.
 
+## [2.6.0.7] — 2026-09-26
+
+Hotfix-Release nach einem vollständigen Code-Review. Nur isolierte Korrekturen,
+kein geändertes Laufzeitverhalten außer den unten genannten Punkten.
+
+### Behoben
+- **Drei Kalender erzeugten nie einen Sensor:** `julian_date`, `minguo_taiwan`
+  und `suriyakati_thai` waren im Assistenten auswählbar, wurden beim Setup aber
+  kommentarlos übersprungen. Ursache: Discovery liest die `id` aus der Datei,
+  das Setup importierte anschließend *nach dieser id* (`.calendars.suriyakati_thai`),
+  die Datei heißt aber `suriyakati.py`. Discovery merkt sich jetzt den
+  Dateinamen je id (`_CALENDAR_MODULE_NAMES`), Setup importiert darüber.
+  **Wer einen der drei Kalender konfiguriert hatte, bekommt nach dem Update
+  erstmals den Sensor.**
+- **`sensor.alternative_time_*` funktionierte nicht** (eingeführt in 2.6.0.4):
+  `_attr_suggested_object_id` gibt es in Home Assistant nicht — `Entity` hat
+  nur eine berechnete Property. Die stabile entity_id kommt jetzt aus einer
+  überschriebenen `suggested_object_id`-Property in `AlternativeTimeSensorBase`.
+  Gilt weiterhin nur für *neu* registrierte Entities.
+- **Optionen von `dtg`, `german_rescue_dtg` und `julian_date` erschienen nie im
+  Assistenten:** die Plugins legten sie unter `plugin_options` statt
+  `config_options` ab. Umbenannt. Dabei zwei kaputte Selects repariert:
+  `dtg.iana_timezone` hatte statt einer Optionsliste den String
+  `"iana_timezone_options"` (wäre als 22 Einzelbuchstaben gerendert worden)
+  und ist jetzt ein Freitextfeld; `german_rescue_dtg.month_language` hatte
+  ein `{wert: {sprache: label}}`-Dict statt der `[{value, label}]`-Liste.
+- **`test_debug.py` wurde als echter Kalender ausgeliefert** (Kategorie
+  „technical", 30-s-Intervall, loggt jeden Event auf WARNING, zwei Listen
+  wachsen unbegrenzt). Discovery überspringt jetzt `test_*.py`; `build.sh`
+  und `release.yml` nehmen `test_*.py`, `template.py.example` und
+  `calendars/README.md` nicht mehr ins ZIP.
+- **`tzlocal` fehlte in `manifest.json`**, obwohl `hindu_panchang`,
+  `japanese_era` und `japanese_lunar` es für die Option „lokale Zeitzone"
+  importieren — ohne Paket fiel die Option still auf UTC zurück.
+
+### Geändert
+- `hacs.json`: `"homeassistant": "2024.12.0"` als Mindestversion. Der
+  OptionsFlow-Fix aus 2.6.0.5 setzt das voraus; ältere Installationen hätten
+  das Update angenommen und wären gebrochen.
+
 ## [2.6.0.6] — 2026-05-21
 
 ### Behoben

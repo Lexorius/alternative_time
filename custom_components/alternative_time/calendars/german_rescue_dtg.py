@@ -234,7 +234,7 @@ CALENDAR_INFO = {
     "reference_url": "https://de.wikipedia.org/wiki/Zeitangabe",
 
     # Plugin configuration options
-    "plugin_options": {
+    "config_options": {
         "timezone": {
             "type": "select",
             "default": "Europe/Berlin",
@@ -305,8 +305,8 @@ CALENDAR_INFO = {
                 "zh": "选择月份缩写的语言",
                 "ko": "월 약어 언어 선택"
             },
-            "options": {
-                "de": {
+            "options": [
+                {"value": "de", "label": {
                     "en": "German (JAN, FEB, MÄR, ...)",
                     "de": "Deutsch (JAN, FEB, MÄR, ...)",
                     "es": "Alemán (JAN, FEB, MÄR, ...)",
@@ -319,8 +319,8 @@ CALENDAR_INFO = {
                     "ja": "ドイツ語 (JAN, FEB, MÄR, ...)",
                     "zh": "德语 (JAN, FEB, MÄR, ...)",
                     "ko": "독일어 (JAN, FEB, MÄR, ...)"
-                },
-                "en": {
+                }},
+                {"value": "en", "label": {
                     "en": "English (JAN, FEB, MAR, ...)",
                     "de": "Englisch (JAN, FEB, MAR, ...)",
                     "es": "Inglés (JAN, FEB, MAR, ...)",
@@ -333,8 +333,8 @@ CALENDAR_INFO = {
                     "ja": "英語 (JAN, FEB, MAR, ...)",
                     "zh": "英语 (JAN, FEB, MAR, ...)",
                     "ko": "영어 (JAN, FEB, MAR, ...)"
-                },
-                "local": {
+                }},
+                {"value": "local", "label": {
                     "en": "Local Language",
                     "de": "Lokale Sprache",
                     "es": "Idioma Local",
@@ -347,8 +347,8 @@ CALENDAR_INFO = {
                     "ja": "現地語",
                     "zh": "本地语言",
                     "ko": "현지 언어"
-                }
-            }
+                }}
+            ]
         },
         "uppercase": {
             "type": "boolean",

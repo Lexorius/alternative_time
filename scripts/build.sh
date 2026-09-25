@@ -88,7 +88,8 @@ rm -f "$ZIP"
 (
   cd "$SRC"
   zip -rq "${OLDPWD}/${ZIP}" . \
-    -x "__pycache__/*" "*/__pycache__/*" "*.pyc" ".DS_Store"
+    -x "__pycache__/*" "*/__pycache__/*" "*.pyc" ".DS_Store" \
+       "calendars/test_*.py" "calendars/template.py.example" "calendars/README.md"
 )
 
 echo

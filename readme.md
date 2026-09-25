@@ -7,7 +7,7 @@
 [![GitHub Release](https://img.shields.io/github/release/Lexorius/alternative_time.svg)](https://github.com/Lexorius/alternative_time/releases)
 [![GitHub Activity](https://img.shields.io/github/commit-activity/y/Lexorius/alternative_time.svg)](https://github.com/Lexorius/alternative_time/commits/main)
 [![License](https://img.shields.io/github/license/Lexorius/alternative_time.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.6.0.6-blue)](https://github.com/Lexorius/alternative_time)
+[![Version](https://img.shields.io/badge/version-2.6.0.7-blue)](https://github.com/Lexorius/alternative_time)
 
 A comprehensive Home Assistant integration providing **30+ alternative time systems** from science, science fiction, fantasy, history, religion, and various cultures.
 
@@ -383,7 +383,14 @@ Each calendar follows the unified `CALENDAR_INFO` structure:
 
 ## 📈 Version History
 
-### v2.6.0.6 (Current)
+### v2.6.0.7 (Current)
+- 🐛 **Fix: three calendars never created a sensor** — `julian_date`, `minguo_taiwan`, `suriyakati_thai` were selectable but silently skipped at setup (id ≠ file name). Discovery now records the module name per id.
+- 🐛 **Fix: `sensor.alternative_time_*` entity_id prefix actually works now.** The 2.6.0.4 change used a non-existent `_attr_`; replaced by a proper `suggested_object_id` property override. Still applies to newly registered entities only.
+- 🐛 **Fix: options of `dtg`, `german_rescue_dtg`, `julian_date` now appear in the setup wizard** (wrong `CALENDAR_INFO` key). Two malformed selects in those plugins repaired.
+- 🧹 **`test_debug.py` no longer ships or shows up as a calendar.**
+- 📦 `tzlocal` declared as requirement; `hacs.json` now requires HA ≥ 2024.12.
+
+### v2.6.0.6
 - 🐛 **Fix: `formatjs MISSING_VALUE`** in the options dialog (`{title}` placeholder is now supplied from the instance name).
 - ✨ **Real options flow**: clicking *Configure* on the integration entry now lets you pick a configured calendar and edit its options (previously only showed a placeholder toggle).
 - 🐛 **Fix: plugin options had no effect**: sensors read options from `data["plugin_options"]` while the config flow stored them under `data["calendar_options"]`. Sensors now read the correct key (with legacy fallback). Plugin options set in the setup wizard now actually apply.

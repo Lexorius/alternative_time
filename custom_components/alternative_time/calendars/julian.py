@@ -111,7 +111,7 @@ CALENDAR_INFO = {
     "reference_url": "https://en.wikipedia.org/wiki/Julian_day",
 
     # Plugin configuration options
-    "plugin_options": {
+    "config_options": {
         "format": {
             "type": "select",
             "default": "jd",

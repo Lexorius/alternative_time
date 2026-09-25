@@ -564,7 +564,7 @@ CALENDAR_INFO = {
     "reference_url": "https://en.wikipedia.org/wiki/Date-time_group",
 
     # Plugin configuration options
-    "plugin_options": {
+    "config_options": {
         "timezone": {
             "type": "select",
             "default": "Z",
@@ -657,7 +657,8 @@ CALENDAR_INFO = {
             }
         },
         "iana_timezone": {
-            "type": "select",
+            # Free text: there are 400+ IANA zones; a select was never populated.
+            "type": "string",
             "default": "UTC",
             "label": {
                 "en": "IANA Timezone",
@@ -686,8 +687,7 @@ CALENDAR_INFO = {
                 "ja": "特定のIANAタイムゾーンを選択（上記で有効にした場合のみ）",
                 "zh": "选择特定的IANA时区（仅在上面启用时）",
                 "ko": "특정 IANA 시간대 선택 (위에서 활성화한 경우에만)"
-            },
-            "options": "iana_timezone_options"  # Will be populated dynamically
+            }
         },
         "uppercase": {
             "type": "boolean",

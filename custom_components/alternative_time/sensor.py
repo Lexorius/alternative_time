@@ -22,6 +22,10 @@ _LOGGER = logging.getLogger(__name__)
 _DISCOVERED_CALENDARS_CACHE: Optional[Dict[str, Dict[str, Any]]] = None
 _DISCOVERY_LOCK = asyncio.Lock()
 
+# Maps CALENDAR_INFO["id"] -> module (file) name. The two can differ, e.g.
+# suriyakati.py declares id "suriyakati_thai". Setup must import by file name.
+_CALENDAR_MODULE_NAMES: Dict[str, str] = {}
+
 # Store config entries globally for sensor access
 _CONFIG_ENTRIES: Dict[str, ConfigEntry] = {}
 
@@ -93,8 +97,9 @@ async def async_setup_entry(
             _LOGGER.debug(f"Calendar {calendar_id} has no custom options")
 
         try:
-            # Import the calendar module asynchronously
-            module = await async_import_calendar_module(hass, calendar_id)
+            # Import by module (file) name — it may differ from the calendar id
+            module_name = _CALENDAR_MODULE_NAMES.get(calendar_id, calendar_id)
+            module = await async_import_calendar_module(hass, module_name)
 
             if not module:
                 _LOGGER.error(f"Failed to import calendar module: {calendar_id}")
@@ -120,12 +125,8 @@ async def async_setup_entry(
             # WICHTIG: Setze die IDs SOFORT nach der Erstellung
             sensor._calendar_id = calendar_id  # Store for plugin options lookup
             sensor._config_entry_id = entry_id  # Store entry ID
-
-            # Stabile entity_id unabhängig vom vom User vergebenen Instanznamen,
-            # damit Recorder-Globs wie `sensor.alternative_time_*` immer greifen.
-            # Wird nur bei der Erst-Registrierung berücksichtigt — bestehende
-            # Entities behalten ihre vorhandene entity_id.
-            sensor._attr_suggested_object_id = f"alternative_time_{calendar_id}"
+            # NOTE: the stable entity_id (sensor.alternative_time_<id>) comes from
+            # AlternativeTimeSensorBase.suggested_object_id, which reads _calendar_id.
 
             # Debug: Verify the sensor can get its options
             _LOGGER.debug(f"Sensor {calendar_id} initialized:")
@@ -206,8 +207,10 @@ async def async_discover_all_calendars(hass: HomeAssistant) -> Dict[str, Dict[st
             if filename.endswith(".py") and not filename.startswith("__"):
                 module_name = filename[:-3]  # Remove .py extension
 
-                # Skip template and example files
-                if "template" in module_name.lower() or "example" in module_name.lower():
+                # Skip template/example files and debug tooling (test_*.py)
+                lowered = module_name.lower()
+                if (lowered.startswith("test_")
+                        or "template" in lowered or "example" in lowered):
                     continue
 
                 try:
@@ -218,6 +221,7 @@ async def async_discover_all_calendars(hass: HomeAssistant) -> Dict[str, Dict[st
                         cal_info = module.CALENDAR_INFO
                         cal_id = cal_info.get('id', module_name)
                         discovered[cal_id] = cal_info
+                        _CALENDAR_MODULE_NAMES[cal_id] = module_name
                         _LOGGER.debug(f"Discovered calendar: {cal_id}")
                     elif module:
                         _LOGGER.debug(f"Module {module_name} has no CALENDAR_INFO")
@@ -309,8 +313,10 @@ def export_discovered_calendars() -> Dict[str, Dict[str, Any]]:
         if filename.endswith(".py") and not filename.startswith("__"):
             module_name = filename[:-3]
 
-            # Skip template and example files
-            if "template" in module_name.lower() or "example" in module_name.lower():
+            # Skip template/example files and debug tooling (test_*.py)
+            lowered = module_name.lower()
+            if (lowered.startswith("test_")
+                    or "template" in lowered or "example" in lowered):
                 continue
 
             try:
@@ -321,6 +327,7 @@ def export_discovered_calendars() -> Dict[str, Dict[str, Any]]:
                     cal_info = module.CALENDAR_INFO
                     cal_id = cal_info.get('id', module_name)
                     discovered[cal_id] = cal_info
+                    _CALENDAR_MODULE_NAMES[cal_id] = module_name
                     _LOGGER.debug(f"Export discovered: {cal_id}")
                 else:
                     _LOGGER.debug(f"Export - no CALENDAR_INFO in {module_name}")
@@ -388,6 +395,20 @@ class AlternativeTimeSensorBase(SensorEntity):
             self._update_interval = self.__class__.UPDATE_INTERVAL
         else:
             self._update_interval = 3600  # Default 1 hour
+
+    @property
+    def suggested_object_id(self) -> str | None:
+        """Stable object_id ``alternative_time_<calendar_id>``.
+
+        Independent of the instance name chosen in the config flow, so a single
+        recorder glob ``sensor.alternative_time_*`` matches every plugin sensor.
+        HA only consults this at first registration; entities that already
+        exist in the entity registry keep their current entity_id.
+        """
+        cid = getattr(self, "_calendar_id", None)
+        if cid:
+            return f"alternative_time_{cid}"
+        return super().suggested_object_id
 
     def get_plugin_options(self) -> Dict[str, Any]:
         """Get plugin options for this sensor with detailed debugging."""
