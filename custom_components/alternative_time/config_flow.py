@@ -730,9 +730,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             )
             _LOGGER.info(f"OptionsFlow saved new options for {cid}: {normalized}")
 
-            # async_create_entry on an OptionsFlow must return — we use a
-            # blank options dict because the actual data lives in entry.data.
-            return self.async_create_entry(title="", data={})
+            # The real data lives in entry.data (written above, which fires the
+            # update listener -> reload). Pass entry.options through unchanged so
+            # HA sees no options diff and does not trigger a second reload.
+            return self.async_create_entry(title="", data=dict(self.config_entry.options))
 
         # Build schema (duplicated from ConfigFlow.async_step_plugin_options
         # to keep this fix self-contained)
