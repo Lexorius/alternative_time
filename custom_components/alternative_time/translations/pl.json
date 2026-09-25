@@ -62,7 +62,7 @@
       },
       "migrate_entity_ids": {
         "title": "Migracja ID encji",
-        "description": "{count} ID encji zostanie zmienionych na stabilny schemat `sensor.alternative_time_<kalendarz>`, aby wzorzec recordera `sensor.alternative_time_*` je obejmował:\n\n{preview}\n\n**Pulpity i automatyzacje używające starych ID musisz zaktualizować samodzielnie.** Następnie zostanie utworzone powiadomienie z pełną listą."
+        "description": "{count} ID encji zostanie zmienionych na stabilny schemat `sensor.alternative_time_[kalendarz]`, aby wzorzec recordera `sensor.alternative_time_*` je obejmował:\n\n{preview}\n\n**Pulpity i automatyzacje używające starych ID musisz zaktualizować samodzielnie.** Następnie zostanie utworzone powiadomienie z pełną listą."
       }
     },
     "abort": {

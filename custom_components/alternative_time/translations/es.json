@@ -62,7 +62,7 @@
       },
       "migrate_entity_ids": {
         "title": "Migrar IDs de entidad",
-        "description": "{count} ID(s) de entidad se renombrarán al esquema estable `sensor.alternative_time_<calendario>` para que el patrón del recorder `sensor.alternative_time_*` los cubra:\n\n{preview}\n\n**Debe actualizar usted mismo los paneles y automatizaciones que usen los IDs antiguos.** Después se crea una notificación con la lista completa."
+        "description": "{count} ID(s) de entidad se renombrarán al esquema estable `sensor.alternative_time_[calendario]` para que el patrón del recorder `sensor.alternative_time_*` los cubra:\n\n{preview}\n\n**Debe actualizar usted mismo los paneles y automatizaciones que usen los IDs antiguos.** Después se crea una notificación con la lista completa."
       }
     },
     "abort": {

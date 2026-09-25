@@ -62,7 +62,7 @@
       },
       "migrate_entity_ids": {
         "title": "Migrer les ID d’entité",
-        "description": "{count} ID d’entité seront renommés selon le schéma stable `sensor.alternative_time_<calendrier>`, afin que le motif recorder `sensor.alternative_time_*` les couvre :\n\n{preview}\n\n**Vous devez mettre à jour vous-même les tableaux de bord et automatisations utilisant les anciens ID.** Une notification avec la liste complète sera créée ensuite."
+        "description": "{count} ID d’entité seront renommés selon le schéma stable `sensor.alternative_time_[calendrier]`, afin que le motif recorder `sensor.alternative_time_*` les couvre :\n\n{preview}\n\n**Vous devez mettre à jour vous-même les tableaux de bord et automatisations utilisant les anciens ID.** Une notification avec la liste complète sera créée ensuite."
       }
     },
     "abort": {

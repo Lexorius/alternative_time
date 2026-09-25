@@ -62,7 +62,7 @@
       },
       "migrate_entity_ids": {
         "title": "エンティティIDの移行",
-        "description": "{count} 件のエンティティIDを安定した形式 `sensor.alternative_time_<カレンダー>` に変更し、レコーダーのパターン `sensor.alternative_time_*` で対象にします:\n\n{preview}\n\n**旧IDを使うダッシュボードや自動化はご自身で更新してください。** 完了後に全リストの通知が作成されます。"
+        "description": "{count} 件のエンティティIDを安定した形式 `sensor.alternative_time_[カレンダー]` に変更し、レコーダーのパターン `sensor.alternative_time_*` で対象にします:\n\n{preview}\n\n**旧IDを使うダッシュボードや自動化はご自身で更新してください。** 完了後に全リストの通知が作成されます。"
       }
     },
     "abort": {

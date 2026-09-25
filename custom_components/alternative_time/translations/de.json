@@ -62,7 +62,7 @@
       },
       "migrate_entity_ids": {
         "title": "Entity-IDs migrieren",
-        "description": "{count} Entity-ID(s) werden auf das stabile Schema `sensor.alternative_time_<kalender>` umbenannt, damit der Recorder-Glob `sensor.alternative_time_*` sie erfasst:\n\n{preview}\n\n**Dashboards und Automationen, die die alten IDs verwenden, musst du selbst anpassen.** Eine Benachrichtigung mit der vollständigen Liste wird danach erstellt."
+        "description": "{count} Entity-ID(s) werden auf das stabile Schema `sensor.alternative_time_[kalender]` umbenannt, damit der Recorder-Glob `sensor.alternative_time_*` sie erfasst:\n\n{preview}\n\n**Dashboards und Automationen, die die alten IDs verwenden, musst du selbst anpassen.** Eine Benachrichtigung mit der vollständigen Liste wird danach erstellt."
       }
     },
     "abort": {

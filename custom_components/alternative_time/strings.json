@@ -62,7 +62,7 @@
       },
       "migrate_entity_ids": {
         "title": "Migrate entity IDs",
-        "description": "{count} entity ID(s) will be renamed to the stable scheme `sensor.alternative_time_<calendar>`, so the recorder glob `sensor.alternative_time_*` covers them:\n\n{preview}\n\n**Dashboards and automations that use the old IDs must be updated by you.** A notification with the full list is created afterwards."
+        "description": "{count} entity ID(s) will be renamed to the stable scheme `sensor.alternative_time_[calendar]`, so the recorder glob `sensor.alternative_time_*` covers them:\n\n{preview}\n\n**Dashboards and automations that use the old IDs must be updated by you.** A notification with the full list is created afterwards."
       }
     },
     "abort": {

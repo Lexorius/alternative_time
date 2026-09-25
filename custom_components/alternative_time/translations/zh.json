@@ -62,7 +62,7 @@
       },
       "migrate_entity_ids": {
         "title": "迁移实体 ID",
-        "description": "{count} 个实体 ID 将重命名为稳定格式 `sensor.alternative_time_<日历>`，以便 recorder 模式 `sensor.alternative_time_*` 覆盖它们：\n\n{preview}\n\n**使用旧 ID 的仪表板和自动化需要您自行更新。** 之后会创建包含完整列表的通知。"
+        "description": "{count} 个实体 ID 将重命名为稳定格式 `sensor.alternative_time_[日历]`，以便 recorder 模式 `sensor.alternative_time_*` 覆盖它们：\n\n{preview}\n\n**使用旧 ID 的仪表板和自动化需要您自行更新。** 之后会创建包含完整列表的通知。"
       }
     },
     "abort": {

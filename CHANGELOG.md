@@ -5,6 +5,18 @@ Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1
 die Versionsnummerierung folgt grob [Semantic Versioning](https://semver.org/lang/de/)
 mit optionaler vierter Build-Komponente.
 
+## [2.6.2.1] — 2026-09-26
+
+### Behoben
+- **hassfest schlug auf `main` fehl:** die neue Beschreibung des
+  Migrations-Schritts enthielt `sensor.alternative_time_<calendar>`; hassfest
+  verbietet in Übersetzungs-Strings alles, was wie ein HTML-Tag aussieht
+  („the string should not contain HTML"), und das HA-Frontend hätte
+  `<calendar>` beim Markdown-Rendern vermutlich verschluckt. Jetzt
+  `sensor.alternative_time_[calendar]` — in `strings.json` und allen 12
+  Übersetzungen (hassfest prüft nur `strings.json` + `en.json`, die anderen
+  hatten dasselbe Muster). Kein Code geändert.
+
 ## [2.6.2] — 2026-09-26
 
 Recorder-Release: so viel wie möglich aus der History heraushalten — ohne dass

@@ -62,7 +62,7 @@
       },
       "migrate_entity_ids": {
         "title": "Entiteits-ID’s migreren",
-        "description": "{count} entiteits-ID(’s) worden hernoemd naar het stabiele schema `sensor.alternative_time_<kalender>`, zodat het recorder-patroon `sensor.alternative_time_*` ze dekt:\n\n{preview}\n\n**Dashboards en automatiseringen die de oude ID’s gebruiken moet je zelf bijwerken.** Daarna wordt een melding met de volledige lijst aangemaakt."
+        "description": "{count} entiteits-ID(’s) worden hernoemd naar het stabiele schema `sensor.alternative_time_[kalender]`, zodat het recorder-patroon `sensor.alternative_time_*` ze dekt:\n\n{preview}\n\n**Dashboards en automatiseringen die de oude ID’s gebruiken moet je zelf bijwerken.** Daarna wordt een melding met de volledige lijst aangemaakt."
       }
     },
     "abort": {

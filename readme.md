@@ -7,7 +7,7 @@
 [![GitHub Release](https://img.shields.io/github/release/Lexorius/alternative_time.svg)](https://github.com/Lexorius/alternative_time/releases)
 [![GitHub Activity](https://img.shields.io/github/commit-activity/y/Lexorius/alternative_time.svg)](https://github.com/Lexorius/alternative_time/commits/main)
 [![License](https://img.shields.io/github/license/Lexorius/alternative_time.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.6.2-blue)](https://github.com/Lexorius/alternative_time)
+[![Version](https://img.shields.io/badge/version-2.6.2.1-blue)](https://github.com/Lexorius/alternative_time)
 
 A comprehensive Home Assistant integration providing **30+ alternative time systems** from science, science fiction, fantasy, history, religion, and various cultures.
 
@@ -387,7 +387,10 @@ Each calendar follows the unified `CALENDAR_INFO` structure:
 
 ## 📈 Version History
 
-### v2.6.2 (Current)
+### v2.6.2.1 (Current)
+- 🐛 hassfest: the migration dialog text contained `<calendar>`, which the translation validator rejects as HTML (and the frontend may swallow). Now `[calendar]` in all 13 string files. No code changes.
+
+### v2.6.2
 - 🗄️ **Attributes are no longer recorded** (`_unrecorded_attributes = MATCH_ALL` on the base class). Solar System alone wrote ~23 KB of SVG per state row; now only the state string is stored. Attributes stay live.
 - 🗄️ **Attribute churn fixed** in `dtg`, `german_rescue_dtg` (60× fewer recorder rows), `swatch` (86× fewer) and `stardate` (~6× fewer): attributes now change only when the displayed value changes.
 - ✨ **Entity-ID migration** under *Configure* → *Migrate entity IDs*: renames pre-2.6.0.7 entities to `sensor.alternative_time_<calendar>` so the single recorder glob covers them; previews, then posts an old → new notification.
