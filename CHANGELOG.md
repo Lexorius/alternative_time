@@ -5,6 +5,61 @@ Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1
 die Versionsnummerierung folgt grob [Semantic Versioning](https://semver.org/lang/de/)
 mit optionaler vierter Build-Komponente.
 
+## [2.6.1] — 2026-09-26
+
+Laufzeit-Korrekturen aus dem Code-Review. Anders als 2.6.0.7 ändert dieses
+Release sichtbares Verhalten — siehe „Hinweis" unten.
+
+### Behoben
+- **Jede Entity wurde doppelt aktualisiert.** `should_poll` gab hart `True`
+  zurück; das spätere `_attr_should_poll = False` war dadurch wirkungslos.
+  HA pollte jede Entity zusätzlich alle 30 s (Sensor-Default) neben dem
+  eigenen Timer — Stundenkalender rechneten alle 30 s neu, und bei den
+  Plugins mit synchronem `update()` konnten beide Läufe gleichzeitig in zwei
+  Executor-Threads auf derselben Instanz laufen. `should_poll` ist jetzt
+  `False`; der Timer ist die einzige Quelle. Zusätzlich überspringt der Timer
+  einen Tick, solange der vorherige noch läuft (relevant bei `ut1`, dessen
+  10-s-Timeout länger ist als sein 1-s-Intervall).
+- **Optionsänderungen griffen erst nach Neustart.** Es war kein
+  `update_listener` registriert; der 2.6.0.6-Options-Dialog speicherte also
+  korrekt, ohne dass etwas passierte. Jetzt lädt HA den Eintrag nach dem
+  Speichern automatisch neu. Der Options-Flow reicht `entry.options`
+  unverändert durch, damit kein zweiter Reload ausgelöst wird.
+- **Fehlgeschlagene Updates waren unsichtbar.** Exceptions aus `update()`
+  wurden nur auf DEBUG geloggt; der State blieb stumm stehen. Jetzt: erster
+  Fehler einer Serie auf WARNING (Traceback auf DEBUG), Folgefehler auf DEBUG,
+  Erholung auf INFO. Nach 3 aufeinanderfolgenden Fehlern wird die Entity als
+  **nicht verfügbar** markiert, beim nächsten Erfolg wieder verfügbar.
+- **`ut1` konnte die IERS-API fluten.** Bei Ausfall der API versuchte das
+  Plugin jede Sekunde erneut (mit je 10 s Timeout, serialisiert über den
+  Lock) und schrieb jedes Mal eine WARNING. Jetzt: HA-weite geteilte
+  `aiohttp`-Session statt einer neuen Session pro Aufruf, exponentielles
+  Backoff 60 s → 120 s → … → 3600 s (Cap), WARNING nur beim ersten Fehler
+  einer Serie und einmal pro Stunde am Cap, INFO bei Erholung.
+- `_CONFIG_ENTRIES` in `sensor.py` wurde nie geleert — entfernte Einträge
+  blieben bis zum Prozessende referenziert. Wird beim Unload jetzt bereinigt.
+- `__init__.py` fing Fehler beim Platform-Setup mit einem breiten `except`
+  und gab `False` zurück — der Eintrag erschien als „geladen" ohne Entities,
+  die Ursache war nur im Log zu ahnen. Fehler propagieren jetzt an HA.
+
+### Entfernt
+- `async_reload_entry` in `__init__.py`: rief Unload und Setup direkt auf
+  (am HA-Zustandsautomaten vorbei) und hatte keinen Aufrufer.
+
+### Hinweis
+- **Entities können jetzt „nicht verfügbar" werden**, wenn ein Plugin
+  dreimal hintereinander scheitert — bisher zeigten sie stattdessen den
+  letzten alten Wert. Wer Automationen auf diese Sensoren hat, sollte das
+  wissen; die Ursache steht ab dem ersten Fehler als WARNING im Log.
+- **Nach dem Speichern von Optionen wird der Eintrag neu geladen** — die
+  Entities verschwinden dabei für einen Moment und kommen zurück.
+- Stundenkalender ändern `last_updated` jetzt tatsächlich nur stündlich,
+  nicht mehr alle 30 s.
+- Die sekündlichen `Updated …`-DEBUG-Zeilen der 1-s-Plugins sind unverändert;
+  sie erscheinen nur mit `logger: custom_components.alternative_time: debug`
+  in der `configuration.yaml`. Wer das aus einer früheren Fehlersuche noch
+  aktiv hat, sollte es auf `info` zurücksetzen.
+
 ## [2.6.0.7] — 2026-09-26
 
 Hotfix-Release nach einem vollständigen Code-Review. Nur isolierte Korrekturen,

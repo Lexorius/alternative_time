@@ -41,16 +41,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Store config entry data
     hass.data[DOMAIN][entry.entry_id] = entry.data
 
-    # Forward setup to sensor platform
-    # This will look for sensor.py in the same directory as __init__.py
-    try:
-        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-        _LOGGER.info(f"Successfully set up Alternative Time integration for {entry.title}")
-    except Exception as e:
-        _LOGGER.error(f"Error setting up platforms: {e}")
-        return False
+    # Reload the entry whenever its data/options change (options flow).
+    # Without this, edits made under "Configure" only took effect after a
+    # Home Assistant restart. The listener is unregistered on unload.
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+
+    # Forward setup to sensor platform. Let failures propagate: HA records
+    # the error and the entry state; swallowing it here (as older versions
+    # did) hid the real cause and showed a "loaded" entry with no entities.
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    _LOGGER.info(f"Successfully set up Alternative Time integration for {entry.title}")
 
     return True
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle config entry updates by reloading the entry."""
+    _LOGGER.debug(f"Config entry {entry.title} updated — reloading")
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -64,14 +72,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Remove config entry from hass.data
         hass.data[DOMAIN].pop(entry.entry_id, None)
 
+        # Drop it from the sensor platform's entry registry as well, otherwise
+        # removed entries stay referenced for the lifetime of the process.
+        from .sensor import forget_config_entry
+        forget_config_entry(entry.entry_id)
+
         # Clean up domain if no more entries
         if not hass.data[DOMAIN]:
             hass.data.pop(DOMAIN)
 
     return unload_ok
-
-
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Reload config entry."""
-    await async_unload_entry(hass, entry)
-    await async_setup_entry(hass, entry)

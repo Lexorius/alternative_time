@@ -350,6 +350,11 @@ def get_config_entry(entry_id: str) -> Optional[ConfigEntry]:
     return _CONFIG_ENTRIES.get(entry_id)
 
 
+def forget_config_entry(entry_id: str) -> None:
+    """Drop a config entry from the module-level registry (called on unload)."""
+    _CONFIG_ENTRIES.pop(entry_id, None)
+
+
 # RECORDER EXCLUSION - Deaktiviert wegen Kompatibilitätsproblemen
 async def register_recorder_exclusion(hass: HomeAssistant, entities_to_exclude: List[str]) -> None:
     """Register entities to be excluded from recorder.
@@ -386,7 +391,10 @@ class AlternativeTimeSensorBase(SensorEntity):
         self._base_name = base_name
         self._hass = hass
         self._state = None
-        self._attr_should_poll = True
+        # Scheduling is owned by our own timer (see async_added_to_hass);
+        # should_poll is False so HA's platform poller stays out of it.
+        self._tick_running = False
+        self._consecutive_failures = 0
         self._calendar_id = None  # Will be set by async_setup_entry
         self._config_entry_id = None  # Will be set by async_setup_entry
 
@@ -449,13 +457,17 @@ class AlternativeTimeSensorBase(SensorEntity):
 
     @property
     def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state."""
-        return True
+        """Never let the platform poll us.
 
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return True
+        Each entity runs its own timer at CALENDAR_INFO["update_interval"].
+        Returning True here (as older versions did) made HA additionally poll
+        every entity at the sensor default of 30 s, so every plugin updated
+        twice and sync update() could run concurrently in two executor threads.
+        """
+        return False
+
+    # `available` is inherited from HA's Entity and driven by _attr_available,
+    # which _async_timer_tick flips after repeated failures.
 
     def _translate(self, key: str, default: str = "") -> str:
         """Translate a CALENDAR_INFO text block for the user's language.
@@ -541,9 +553,6 @@ class AlternativeTimeSensorBase(SensorEntity):
 
         _LOGGER.debug(f"{self._attr_name} will update every {seconds} seconds")
 
-        # Avoid platform-wide polling
-        self._attr_should_poll = False
-
         # Start scheduler
         self._unsub_timer = async_track_time_interval(
             self._hass, self._async_timer_tick, timedelta(seconds=seconds)
@@ -564,18 +573,51 @@ class AlternativeTimeSensorBase(SensorEntity):
                 pass
             self._unsub_timer = None
 
+    # After this many consecutive failed updates the entity is marked
+    # unavailable instead of silently showing a stale state.
+    UNAVAILABLE_AFTER_FAILURES = 3
+
     async def _async_timer_tick(self, _now) -> None:
-        """Call plugin update without blocking the event loop."""
+        """Call plugin update without blocking the event loop.
+
+        - Skips the tick if the previous one is still running (a slow
+          update must not pile up on a short interval).
+        - Logs the first failure of a streak at WARNING (traceback at DEBUG),
+          further consecutive failures at DEBUG only, recovery at INFO.
+        - Flips ``_attr_available`` after UNAVAILABLE_AFTER_FAILURES.
+        """
+        if self._tick_running:
+            _LOGGER.debug(f"{self.entity_id or self.name}: previous update still running, skipping tick")
+            return
+        self._tick_running = True
+        label = self.entity_id or self.name
         try:
             # Prefer plugin's async_update if available
             if hasattr(self, "async_update") and callable(getattr(self, "async_update")):
                 await getattr(self, "async_update")()
             else:
                 await self._hass.async_add_executor_job(getattr(self, "update"))
-        except Exception as exc:
-            _LOGGER.debug(f"Scheduled update failed for {self.name}: {exc}")
+        except Exception as exc:  # noqa: BLE001 — plugin code, must never kill the timer
+            self._consecutive_failures += 1
+            n = self._consecutive_failures
+            if n == 1:
+                _LOGGER.warning(f"Update of {label} ({self._calendar_id}) failed: {exc!r}")
+                _LOGGER.debug("Traceback:", exc_info=True)
+            else:
+                _LOGGER.debug(f"Update of {label} failed again ({n}x): {exc!r}")
+            if n == self.UNAVAILABLE_AFTER_FAILURES:
+                self._attr_available = False
+                _LOGGER.warning(f"{label} marked unavailable after {n} consecutive failed updates")
+        else:
+            if self._consecutive_failures:
+                _LOGGER.info(f"{label} recovered after {self._consecutive_failures} failed update(s)")
+                self._consecutive_failures = 0
+            self._attr_available = True
         finally:
-            try:
-                self.async_write_ha_state()
-            except Exception:
-                pass
+            self._tick_running = False
+            # Entity may have been removed while the update was running
+            if self.hass is not None:
+                try:
+                    self.async_write_ha_state()
+                except Exception as exc:  # noqa: BLE001
+                    _LOGGER.debug(f"{label}: writing state failed: {exc!r}")

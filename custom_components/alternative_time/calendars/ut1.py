@@ -10,6 +10,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 try:
     import aiohttp
@@ -33,6 +34,12 @@ IERS_API_BASE = "https://datacenter.iers.org/webservice/REST/timescales/RestCont
 
 # Cache duration for IERS data (in seconds) - DUT1 changes slowly
 IERS_CACHE_DURATION = 3600  # 1 hour
+
+# Backoff after a failed IERS fetch: first retry after 60 s, doubling each
+# failure, capped at IERS_CACHE_DURATION. Without this the 1-second update
+# interval retried (and warned) every second for as long as the API was down.
+IERS_BACKOFF_INITIAL = 60
+IERS_BACKOFF_MAX = IERS_CACHE_DURATION
 
 # Fallback DUT1 value if API is unavailable (updated periodically)
 # As of July 2025, DUT1 is approximately +0.1s
@@ -450,6 +457,9 @@ class Ut1TimeSensor(AlternativeTimeSensorBase):
         self._dut1_last_fetch: Optional[datetime] = None
         self._dut1_source: str = "fallback"  # "iers_api", "fallback", "cached"
         self._iers_fetch_lock = asyncio.Lock()
+        # Exponential backoff state for failed IERS fetches
+        self._iers_failures: int = 0
+        self._iers_next_attempt: Optional[datetime] = None
 
         # Initialize state
         self._state = None
@@ -537,67 +547,99 @@ class Ut1TimeSensor(AlternativeTimeSensorBase):
             _LOGGER.warning("aiohttp not available, using fallback DUT1 value")
             return False
 
-        # Check if cache is still valid
+        now = datetime.now(timezone.utc)
+
+        # Cache still valid?
         if self._dut1_last_fetch:
-            cache_age = (datetime.now(timezone.utc) - self._dut1_last_fetch).total_seconds()
+            cache_age = (now - self._dut1_last_fetch).total_seconds()
             if cache_age < self._cache_duration:
-                _LOGGER.debug(f"Using cached DUT1 value (age: {cache_age:.0f}s)")
                 self._dut1_source = "cached"
                 return True
 
+        # In backoff after a failure? Stay quiet — this runs every second.
+        if self._iers_next_attempt and now < self._iers_next_attempt:
+            return False
+
         # Use lock to prevent multiple simultaneous fetches
         async with self._iers_fetch_lock:
-            # Double-check cache after acquiring lock
+            # Double-check both conditions after acquiring the lock
+            now = datetime.now(timezone.utc)
             if self._dut1_last_fetch:
-                cache_age = (datetime.now(timezone.utc) - self._dut1_last_fetch).total_seconds()
+                cache_age = (now - self._dut1_last_fetch).total_seconds()
                 if cache_age < self._cache_duration:
                     return True
+            if self._iers_next_attempt and now < self._iers_next_attempt:
+                return False
 
+            failure_reason: Optional[str] = None
             try:
                 # Build API URL with proper URL encoding
                 import urllib.parse
-                now = datetime.now(timezone.utc)
                 datetime_str = now.strftime("%Y-%m-%d %H:%M:%S")
                 datetime_encoded = urllib.parse.quote(datetime_str)
                 url = f"{IERS_API_BASE}?param=UT1-UTC&datetime={datetime_encoded}"
 
                 _LOGGER.debug(f"Fetching IERS data from: {url}")
 
-                # Create timeout
+                # HA's shared session — never create a ClientSession per call
+                session = async_get_clientsession(self.hass)
                 timeout = aiohttp.ClientTimeout(total=10)
 
-                async with aiohttp.ClientSession(timeout=timeout) as session:
-                    async with session.get(url, headers={"Accept": "application/json"}) as response:
-                        if response.status == 200:
-                            # Try to parse JSON response
-                            try:
-                                data = await response.json()
-                                # The IERS API returns value in seconds
-                                if "value" in data:
-                                    self._dut1_value = float(data["value"])
-                                    self._dut1_last_fetch = datetime.now(timezone.utc)
-                                    self._dut1_source = "iers_api"
+                async with session.get(
+                    url, headers={"Accept": "application/json"}, timeout=timeout
+                ) as response:
+                    if response.status == 200:
+                        try:
+                            data = await response.json()
+                            # The IERS API returns value in seconds
+                            if "value" in data:
+                                self._dut1_value = float(data["value"])
+                                self._dut1_last_fetch = datetime.now(timezone.utc)
+                                self._dut1_source = "iers_api"
+                                if self._iers_failures:
+                                    _LOGGER.info(
+                                        f"IERS API reachable again after {self._iers_failures} failed attempt(s); "
+                                        f"DUT1 = {self._dut1_value}s"
+                                    )
+                                else:
                                     _LOGGER.info(f"Successfully fetched DUT1 from IERS: {self._dut1_value}s")
-                                    return True
-                            except (ValueError, KeyError) as e:
-                                _LOGGER.warning(f"Failed to parse IERS JSON response: {e}")
-                                # Try text parsing as fallback
-                                text = await response.text()
-                                _LOGGER.debug(f"IERS response text: {text[:200]}")
-                        else:
-                            _LOGGER.warning(f"IERS API returned status {response.status}")
+                                self._iers_failures = 0
+                                self._iers_next_attempt = None
+                                return True
+                            failure_reason = f"no 'value' in response: {str(data)[:120]}"
+                        except (ValueError, KeyError) as e:
+                            text = await response.text()
+                            failure_reason = f"unparsable JSON ({e}): {text[:120]!r}"
+                    else:
+                        failure_reason = f"HTTP {response.status}"
 
             except asyncio.TimeoutError:
-                _LOGGER.warning("IERS API request timed out")
+                failure_reason = "request timed out"
             except aiohttp.ClientError as e:
-                _LOGGER.warning(f"IERS API request failed: {e}")
-            except Exception as e:
-                _LOGGER.error(f"Unexpected error fetching IERS data: {e}", exc_info=True)
+                failure_reason = f"request failed: {e}"
+            except Exception as e:  # noqa: BLE001
+                failure_reason = f"unexpected error: {e!r}"
+                _LOGGER.debug("Traceback:", exc_info=True)
 
-        # If we get here, fetch failed - use fallback
-        if self._dut1_source != "cached":
-            self._dut1_source = "fallback"
-            _LOGGER.info(f"Using fallback DUT1 value: {self._dut1_value}s")
+            # ---- failure: schedule backoff, log once per streak ----
+            self._iers_failures += 1
+            delay = min(IERS_BACKOFF_MAX, IERS_BACKOFF_INITIAL * 2 ** (self._iers_failures - 1))
+            self._iers_next_attempt = datetime.now(timezone.utc) + timedelta(seconds=delay)
+            if self._dut1_source != "cached":
+                self._dut1_source = "fallback"
+            if self._iers_failures == 1:
+                _LOGGER.warning(
+                    f"IERS API fetch failed ({failure_reason}); using DUT1 = {self._dut1_value}s, "
+                    f"next attempt in {delay}s"
+                )
+            elif delay >= IERS_BACKOFF_MAX:
+                # Reached the cap: remind once per hour, not every second
+                _LOGGER.warning(
+                    f"IERS API still unreachable after {self._iers_failures} attempts ({failure_reason}); "
+                    f"retrying every {delay}s"
+                )
+            else:
+                _LOGGER.debug(f"IERS fetch failed ({failure_reason}), attempt {self._iers_failures}, next in {delay}s")
 
         return False
 

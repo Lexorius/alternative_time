@@ -7,7 +7,7 @@
 [![GitHub Release](https://img.shields.io/github/release/Lexorius/alternative_time.svg)](https://github.com/Lexorius/alternative_time/releases)
 [![GitHub Activity](https://img.shields.io/github/commit-activity/y/Lexorius/alternative_time.svg)](https://github.com/Lexorius/alternative_time/commits/main)
 [![License](https://img.shields.io/github/license/Lexorius/alternative_time.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.6.0.7-blue)](https://github.com/Lexorius/alternative_time)
+[![Version](https://img.shields.io/badge/version-2.6.1-blue)](https://github.com/Lexorius/alternative_time)
 
 A comprehensive Home Assistant integration providing **30+ alternative time systems** from science, science fiction, fantasy, history, religion, and various cultures.
 
@@ -383,7 +383,14 @@ Each calendar follows the unified `CALENDAR_INFO` structure:
 
 ## 📈 Version History
 
-### v2.6.0.7 (Current)
+### v2.6.1 (Current)
+- 🐛 **Fix: every entity was updated twice** — `should_poll` returned `True`, so HA polled every sensor every 30 s on top of the plugin's own timer. Now `False`; the timer is the only scheduler, and a tick is skipped while the previous one is still running.
+- ✨ **Options changes apply immediately** — an `update_listener` now reloads the entry after saving under *Configure* (previously required a restart).
+- 👁️ **Failed updates are visible** — first failure of a streak logs a WARNING, entity becomes *unavailable* after 3 consecutive failures and recovers automatically.
+- 🌐 **`ut1`: shared aiohttp session + exponential backoff** (60 s → 1 h) instead of retrying the IERS API every second while it is down.
+- 🧹 `_CONFIG_ENTRIES` cleaned on unload; `__init__.py` no longer swallows platform setup errors; dead `async_reload_entry` removed.
+
+### v2.6.0.7
 - 🐛 **Fix: three calendars never created a sensor** — `julian_date`, `minguo_taiwan`, `suriyakati_thai` were selectable but silently skipped at setup (id ≠ file name). Discovery now records the module name per id.
 - 🐛 **Fix: `sensor.alternative_time_*` entity_id prefix actually works now.** The 2.6.0.4 change used a non-existent `_attr_`; replaced by a proper `suggested_object_id` property override. Still applies to newly registered entities only.
 - 🐛 **Fix: options of `dtg`, `german_rescue_dtg`, `julian_date` now appear in the setup wizard** (wrong `CALENDAR_INFO` key). Two malformed selects in those plugins repaired.
