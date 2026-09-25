@@ -6,6 +6,7 @@ on:
   pull_request:
     branches: [main, master]
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   python:
@@ -20,7 +21,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - run: pip install ruff pyyaml
+      - run: pip install ruff pyyaml pytest aiohttp
 
       - name: Compile-check
         run: python -m compileall -q custom_components/
@@ -33,6 +34,12 @@ jobs:
         # mehrsprachige Beschreibungs-Strings in 12 Sprachen, die nicht
         # sinnvoll umgebrochen werden können.
         run: ruff check custom_components/ --select E,F,W,I --ignore E501
+
+      - name: Tests
+        # tests/ läuft ohne Home-Assistant-Installation (HA wird in
+        # tests/conftest.py gestubbt): Discovery, Scheduler/Fehlerpfade,
+        # UT1-Backoff, Recorder-Churn, Übersetzungen (inkl. hassfest-HTML-Regel).
+        run: python -m pytest tests -q -p no:cacheprovider
 
       - name: JSON lint
         run: |

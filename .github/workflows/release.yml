@@ -14,12 +14,28 @@ permissions:
   contents: write
 
 jobs:
+  # Die drei Prüf-Workflows laufen auf dem getaggten Commit und müssen grün
+  # sein, bevor überhaupt ein Release gebaut wird. Vorher war release.yml
+  # nur an den Tag gebunden — ein roter hassfest konnte ein Release erzeugen
+  # (passiert bei v2.6.2).
+  hassfest:
+    uses: ./.github/workflows/hassfest.yml
+  hacs:
+    uses: ./.github/workflows/hacs.yml
+  python-checks:
+    uses: ./.github/workflows/python-checks.yml
+
   release:
+    needs: [hassfest, hacs, python-checks]
     runs-on: ubuntu-latest
     env:
       DOMAIN: alternative_time
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Bei workflow_dispatch den angegebenen Tag auschecken, nicht den
+          # Branch-HEAD — sonst wird das ZIP aus dem falschen Stand gebaut.
+          ref: ${{ github.event.inputs.tag || github.ref }}
 
       - name: Tag und Version ermitteln
         id: v

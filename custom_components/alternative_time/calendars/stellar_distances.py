@@ -625,7 +625,8 @@ class StellarDistancesSensor(AlternativeTimeSensorBase):
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         attrs = super().extra_state_attributes
-        attrs["last_calculated"] = datetime.utcnow().isoformat() + "Z"
+        # No "last_calculated" attribute: it duplicated HA's built-in
+        # last_updated and changed on every update (pure noise).
         attrs["data_sources"] = "Gaia DR3, VLBI, Pulsar Timing"
         attrs["measurement_epoch"] = "J2000.0 (2000-01-01T12:00:00Z)"
 

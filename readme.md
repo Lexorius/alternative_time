@@ -359,6 +359,17 @@ Each calendar follows the unified `CALENDAR_INFO` structure:
 - **Configuration Options**: Customizable per calendar
 - **Update Intervals**: Optimized for each calendar type
 
+### Tests
+
+`tests/` runs without a Home Assistant installation — `homeassistant.*` is stubbed in `tests/conftest.py`, so the suite exercises the integration's own logic (discovery, scheduling and error paths, UT1 backoff, recorder churn, translations incl. hassfest's no-HTML rule) in a few seconds:
+
+```bash
+pip install pytest aiohttp
+python -m pytest tests -q
+```
+
+CI runs the same suite in `python-checks.yml`; `release.yml` only builds a release when hassfest, HACS validation and the Python checks are green on the tagged commit.
+
 ### Supported Languages
 🇬🇧 English (en) | 🇩🇪 Deutsch (de) | 🇪🇸 Español (es) | 🇫🇷 Français (fr) | 🇮🇹 Italiano (it) | 🇳🇱 Nederlands (nl) | 🇵🇱 Polski (pl) | 🇵🇹 Português (pt) | 🇷🇺 Русский (ru) | 🇯🇵 日本語 (ja) | 🇨🇳 中文 (zh) | 🇰🇷 한국어 (ko)
 

@@ -5,6 +5,58 @@ Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1
 die Versionsnummerierung folgt grob [Semantic Versioning](https://semver.org/lang/de/)
 mit optionaler vierter Build-Komponente.
 
+## [Unreleased]
+
+CI und Tests, plus ein Attribut, das der neue Churn-Test sofort gefunden hat.
+Kein Versions-Bump.
+
+### Behoben
+- `stellar_distances`: Attribut `last_calculated` entfernt. Es war ein
+  `utcnow()`-Zeitstempel mit Mikrosekunden, änderte sich also bei jedem
+  Update und duplizierte HAs eingebautes `last_updated`. Bei einem
+  Stundenkalender kostet das nichts — aber `tests/test_recorder.py`
+  garantiert jetzt, dass Stundenkalender sich nicht im Sekundentakt ändern,
+  und diese Garantie soll ohne Ausnahme gelten. Wer das Attribut in einem
+  Template nutzt: `states.sensor.<id>.last_updated` liefert dasselbe.
+
+### Hinzugefügt
+- **`tests/`** — 5 Dateien, laufen ohne Home-Assistant-Installation
+  (`homeassistant.*` wird in `tests/conftest.py` gestubbt):
+  - `test_discovery.py`: jede discovered id ist importierbar und liefert eine
+    Sensor-Klasse; `test_debug` ausgeschlossen; id ≠ Dateiname korrekt
+    gemappt; `CALENDAR_INFO`-Pflichtfelder; Select-Optionen sind Listen;
+    kein `plugin_options`-Key mehr; `suggested_object_id`.
+  - `test_runtime.py`: `should_poll` False, Tick-Überlappung, Warn-once /
+    unavailable-after-3 / Recovery, kein State-Write nach Entfernen,
+    `_get_plugin_options`-Alias, UT1-Backoff (Verdopplung, Cap, kein
+    Re-Fetch, Recovery, HTTP-Fehler).
+  - `test_recorder.py` (mit **eingefrorener Zeit**, damit keine Minuten-
+    oder Beat-Grenze den Test zufällig kippt): jedes Plugin-`update()` läuft
+    ohne Exception; zwei Updates am selben Zeitpunkt sind identisch (fängt
+    Zähler, Zufallswerte und Wanduhr-Zeitstempel in Attributen — genau die
+    alte Schiffs-Rotation von `stardate`); die vier entchurnten Plugins
+    ändern sich zwischen T und T+1,1 s nicht; kein schnelles Plugin außer
+    den 10 Sekundenuhren erzeugt Zeilen pro Tick; Migrations-Planer;
+    Entity-Registry pro Entry.
+  - `test_translations.py`: gültiges JSON, Key-Parität aller Sprachen mit
+    `strings.json`, **kein HTML-artiges `<…>`** (die hassfest-Regel, die
+    2.6.2 gebrochen hat — für alle Dateien, nicht nur `en`), Platzhalter
+    identisch, `en.json` == `strings.json`, kein `ps.json`.
+- `python-checks.yml` führt `pytest tests` aus (installiert `pytest`,
+  `aiohttp`).
+- `.gitignore` (`__pycache__`, `.pytest_cache`, `.ruff_cache`, `dist/`,
+  `.claude/settings.local.json`, `.claude/worktrees/`).
+
+### Geändert
+- **`release.yml` baut nur noch, wenn hassfest, HACS und Python-Checks auf
+  dem getaggten Commit grün sind.** Die drei Workflows sind jetzt zusätzlich
+  per `workflow_call` aufrufbar; `release.yml` ruft sie als Jobs auf, der
+  Release-Job hat `needs: [hassfest, hacs, python-checks]`. Bisher hing der
+  Release nur am Tag — ein roter hassfest konnte ein Release erzeugen
+  (bei 2.6.2 passiert).
+- `release.yml` bei manuellem Start (`workflow_dispatch`): checkt jetzt den
+  angegebenen Tag aus statt des Branch-HEAD.
+
 ## [2.6.2.1] — 2026-09-26
 
 ### Behoben
