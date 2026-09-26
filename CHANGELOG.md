@@ -5,7 +5,7 @@ Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1
 die Versionsnummerierung folgt grob [Semantic Versioning](https://semver.org/lang/de/)
 mit optionaler vierter Build-Komponente.
 
-## [Unreleased]
+## [2.6.3] — 2026-09-26
 
 CI und Tests, plus ein Attribut, das der neue Churn-Test sofort gefunden hat.
 Kein Versions-Bump.

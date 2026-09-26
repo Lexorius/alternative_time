@@ -7,7 +7,7 @@
 [![GitHub Release](https://img.shields.io/github/release/Lexorius/alternative_time.svg)](https://github.com/Lexorius/alternative_time/releases)
 [![GitHub Activity](https://img.shields.io/github/commit-activity/y/Lexorius/alternative_time.svg)](https://github.com/Lexorius/alternative_time/commits/main)
 [![License](https://img.shields.io/github/license/Lexorius/alternative_time.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.6.2.1-blue)](https://github.com/Lexorius/alternative_time)
+[![Version](https://img.shields.io/badge/version-2.6.3-blue)](https://github.com/Lexorius/alternative_time)
 
 A comprehensive Home Assistant integration providing **30+ alternative time systems** from science, science fiction, fantasy, history, religion, and various cultures.
 
@@ -398,7 +398,12 @@ CI runs the same suite in `python-checks.yml`; `release.yml` only builds a relea
 
 ## 📈 Version History
 
-### v2.6.2.1 (Current)
+### v2.6.3 (Current)
+- 🧪 **Test suite** (`tests/`, 80 tests, no HA install needed) wired into CI; **releases are now gated** on hassfest, HACS validation and the Python checks passing on the tagged commit.
+- 🗄️ Two more recorder-row sources found by the new tests and removed: `stellar_distances.last_calculated` (a microsecond timestamp duplicating HA's `last_updated`) and `cosmic_speedometer.fun_fact` (was `random.choice` per update; now rotates hourly).
+- 🧹 `.gitignore` added.
+
+### v2.6.2.1
 - 🐛 hassfest: the migration dialog text contained `<calendar>`, which the translation validator rejects as HTML (and the frontend may swallow). Now `[calendar]` in all 13 string files. No code changes.
 
 ### v2.6.2
