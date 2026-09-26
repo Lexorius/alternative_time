@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import logging
 import math
+import time
 from typing import Any, Dict, Optional, Tuple
 
 from homeassistant.core import HomeAssistant
@@ -1443,13 +1444,15 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
 
         return speeds
 
-    def _get_random_fun_fact(self) -> str:
+    def _get_fun_fact(self) -> str:
         """Get a random fun fact in the user's language."""
-        import random
         facts = CALENDAR_INFO.get("fun_facts", {}).get(self._lang(),
                 CALENDAR_INFO.get("fun_facts", {}).get("en", []))
         if facts:
-            return random.choice(facts)
+            # Deterministic hourly rotation. random.choice() picked a new fact
+            # on every update, i.e. a changed attribute (= a recorder row) every
+            # 60 s even when nothing else moved. See tests/test_recorder.py.
+            return facts[int(time.time() // 3600) % len(facts)]
         return ""
 
     def _calculate_galactic_calendar(self) -> Dict[str, Any]:
@@ -1561,7 +1564,7 @@ class CosmicSpeedometerSensor(AlternativeTimeSensorBase):
                 attrs["speed_comparisons"] = comparisons
 
         # Add a fun fact
-        attrs["fun_fact"] = self._get_random_fun_fact()
+        attrs["fun_fact"] = self._get_fun_fact()
 
         # Add galactic calendar data
         if self._show_galactic_calendar:

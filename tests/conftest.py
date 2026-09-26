@@ -208,10 +208,31 @@ def make_sensor(sensor_module, module_names):
         entity = cls(base_name, FakeHass())
         entity.hass = entity._hass
         entity._calendar_id = calendar_id
-        entity._config_entry_id = "test-entry"
+        entity._config_entry_id = TEST_ENTRY_ID
         return entity
 
     return _make
+
+
+class FakeConfigEntry:
+    """Minimal stand-in for homeassistant.config_entries.ConfigEntry."""
+
+    def __init__(self, entry_id: str, data: dict | None = None):
+        self.entry_id = entry_id
+        self.title = "Alternative Time"
+        self.data = data or {"calendar_options": {}, "calendars": []}
+        self.options: dict = {}
+
+
+TEST_ENTRY_ID = "test-entry"
+
+
+@pytest.fixture(autouse=True, scope="session")
+def _register_test_entry(sensor_module):
+    """Make get_plugin_options() find the entry (else it logs an ERROR)."""
+    sensor_module._CONFIG_ENTRIES[TEST_ENTRY_ID] = FakeConfigEntry(TEST_ENTRY_ID)
+    yield
+    sensor_module._CONFIG_ENTRIES.pop(TEST_ENTRY_ID, None)
 
 
 class LogCapture(logging.Handler):

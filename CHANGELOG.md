@@ -11,6 +11,13 @@ CI und Tests, plus ein Attribut, das der neue Churn-Test sofort gefunden hat.
 Kein Versions-Bump.
 
 ### Behoben
+- `cosmic_speedometer`: das Attribut `fun_fact` wurde bei jedem Update per
+  `random.choice` neu gezogen — ein Zufallswert, der alle 60 s eine
+  Recorder-Zeile erzeugte, obwohl sich sonst nichts geändert hatte. Gefunden
+  vom neuen Test „zwei Updates am selben Zeitpunkt sind identisch" (lokal
+  hatte der Zufall zweimal dasselbe gezogen, auf CI nicht). Rotiert jetzt
+  deterministisch stündlich, wie die Schiffs-Rotation von `stardate` seit
+  2.6.2.
 - `stellar_distances`: Attribut `last_calculated` entfernt. Es war ein
   `utcnow()`-Zeitstempel mit Mikrosekunden, änderte sich also bei jedem
   Update und duplizierte HAs eingebautes `last_updated`. Bei einem

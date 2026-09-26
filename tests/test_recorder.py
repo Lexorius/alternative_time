@@ -24,7 +24,7 @@ import zoneinfo
 from datetime import datetime, timedelta, timezone
 
 import pytest
-from conftest import INTEGRATION, FakeHass
+from conftest import INTEGRATION, TEST_ENTRY_ID, FakeHass
 
 # Plugins whose state has minute/beat/10-s resolution: attributes must be
 # quantised to the same resolution (v2.6.2).
@@ -98,7 +98,7 @@ def entities():
         e = cls("Alternative Time", FakeHass())
         e.hass = e._hass
         e._calendar_id = cid
-        e._config_entry_id = "test-entry"
+        e._config_entry_id = TEST_ENTRY_ID
         out[cid] = (e, discovered[cid])
     return out
 
