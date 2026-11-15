@@ -75,6 +75,9 @@ erstmals gegen veröffentlichte Sollwerte getestet. Noch ohne Versionsnummer.
 - `manifest.json`: `tzlocal` und `pytz` entfernt. `dtg`, `german_rescue_dtg`,
   `timezone` und `trackmania` nutzen jetzt Pythons eingebautes `zoneinfo`;
   die „ohne pytz"-Ersatzzweige sind weg.
+- `manifest.json`: auch `Pillow` entfernt. hassfest lehnt es inzwischen ab,
+  weil Home Assistant Pillow selbst mitbringt; die PNG-Karte des
+  Sonnensystems funktioniert unverändert.
 - Build: die ZIP-Ausschlüsse für nicht mehr vorhandene Dateien entfernt;
   CI lintet jetzt auch `tests/`.
 
