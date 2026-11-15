@@ -279,9 +279,9 @@ class IslamicCalendarSensor(AlternativeTimeSensorBase):
         # JDN 0 was Monday; so (jdn + 1) % 7 gives 0=Tuesday; adjust:
         # Simpler: compute same as datetime by referencing known epoch: 1970-01-01 (JDN 2440588) was Thursday.
         # We'll map to 0=Sunday:
-        weekday_monday0 = (jdn + 1) % 7  # Monday=0
-        # Convert Monday=0 to Sunday=0
-        return (weekday_monday0 + 1) % 7
+        # Julian Day Number 0 was a Monday, so (jdn + 1) % 7 is 0 on Sundays.
+        # (The old code added 1 twice and showed every weekday one day ahead.)
+        return (jdn + 1) % 7
 
     # ===============================
     # Core calculation
@@ -360,10 +360,20 @@ class IslamicCalendarSensor(AlternativeTimeSensorBase):
     # Update loop hook
     # ===============================
 
+    async def async_added_to_hass(self) -> None:
+        """Load the options chosen in the config flow, then start the timer."""
+        opts = self.get_plugin_options()
+        self.set_options(
+            show_arabic_names=opts.get("show_arabic_names"),
+            calculation_method=opts.get("calculation_method"),
+            offset_days=opts.get("offset_days"),
+        )
+        await super().async_added_to_hass()
+
     def update(self) -> None:
         """Update the sensor state and attributes."""
         try:
-            now = datetime.now()
+            now = self._now()
             self._islamic_date = self._calculate_islamic_date(now)
             # State shown on the badge
             self._state = self._islamic_date.get("state_text")

@@ -790,7 +790,7 @@ class OldEnglishCalendarSensor(AlternativeTimeSensorBase):
 
     def update(self) -> None:
         """Update the sensor."""
-        now = datetime.now()
+        now = self._now()
         self._old_english_date = self._calculate_old_english_date(now)
 
         # Set state to formatted date

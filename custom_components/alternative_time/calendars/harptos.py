@@ -456,7 +456,7 @@ class HarptosCalendarSensor(AlternativeTimeSensorBase):
             self._load_options()
 
         try:
-            now = datetime.now()
+            now = self._now()
             self._harptos = self._calculate_harptos_date(now)
 
             # Set state to formatted Harptos date
@@ -466,8 +466,3 @@ class HarptosCalendarSensor(AlternativeTimeSensorBase):
         except Exception as e:
             _LOGGER.error(f"Error updating Harptos calendar: {e}", exc_info=True)
             self._state = "ERROR"
-
-    async def async_update(self) -> None:
-        """Update sensor asynchronously."""
-        # Run synchronous update in executor
-        await self.hass.async_add_executor_job(self.update)

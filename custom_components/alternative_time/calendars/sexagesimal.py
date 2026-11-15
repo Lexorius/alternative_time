@@ -7,6 +7,7 @@ from typing import Any, Dict
 
 from homeassistant.core import HomeAssistant
 
+from ..astro import lunisolar_date
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -349,8 +350,8 @@ class SexagesimalCycleSensor(AlternativeTimeSensorBase):
         result = {}
 
         if cycle_type == "year":
-            # Calculate year cycle (based on Chinese New Year, approximated here)
-            year = date.year
+            # The stem-branch year starts at Chinese New Year, not on 1 January
+            year = lunisolar_date(date.date(), 8.0)[0]
             # The cycle starts from 1984 (甲子年)
             years_since = year - self._sexagesimal_data["reference_year"]
 
@@ -510,7 +511,7 @@ class SexagesimalCycleSensor(AlternativeTimeSensorBase):
             self._load_options()
 
         try:
-            now = datetime.now()
+            now = self._now()
             self._cycle_info = self._calculate_sexagesimal_date(now)
 
             # Set state to formatted cycle
@@ -520,8 +521,3 @@ class SexagesimalCycleSensor(AlternativeTimeSensorBase):
         except Exception as e:
             _LOGGER.error(f"Error updating Sexagesimal cycle: {e}", exc_info=True)
             self._state = "错误"
-
-    async def async_update(self) -> None:
-        """Update sensor asynchronously."""
-        # Run synchronous update in executor
-        await self.hass.async_add_executor_job(self.update)

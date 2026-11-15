@@ -606,7 +606,7 @@ class RomanCalendarSensor(AlternativeTimeSensorBase):
 
     def update(self) -> None:
         """Update the sensor."""
-        now = datetime.now()
+        now = self._now()
         self._roman_date = self._calculate_roman_date(now)
 
         # Set state to formatted Roman date

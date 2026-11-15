@@ -786,7 +786,8 @@ class LunarTimeSensor(AlternativeTimeSensorBase):
         lunar_day = int(phase * 29.53) + 1
 
         # Calculate illumination percentage
-        illumination = abs(math.cos(phase * 2 * math.pi))
+        # phase 0 = new moon (dark), 0.5 = full moon (fully lit)
+        illumination = (1 - math.cos(phase * 2 * math.pi)) / 2
 
         return {
             "phase": phase,

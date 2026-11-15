@@ -457,7 +457,7 @@ class StarWarsCalendarSensor(AlternativeTimeSensorBase):
         if not self._options_loaded:
             self._load_options()
 
-        now = datetime.now()
+        now = self._now()
         self._star_wars_date = self._calculate_star_wars_date(now)
 
         # Set state to formatted Star Wars date

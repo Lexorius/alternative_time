@@ -33,7 +33,7 @@ jobs:
         # E501 (line-too-long) wird bewusst ignoriert: das Plugin enthält
         # mehrsprachige Beschreibungs-Strings in 12 Sprachen, die nicht
         # sinnvoll umgebrochen werden können.
-        run: ruff check custom_components/ --select E,F,W,I --ignore E501
+        run: ruff check custom_components/ tests/ --select E,F,W,I --ignore E501
 
       - name: Tests
         # tests/ läuft ohne Home-Assistant-Installation (HA wird in

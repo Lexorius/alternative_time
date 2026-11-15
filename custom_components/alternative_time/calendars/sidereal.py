@@ -928,8 +928,3 @@ class SiderealTimeSensor(AlternativeTimeSensorBase):
         except Exception as e:
             _LOGGER.error(f"Error updating Sidereal Time: {e}", exc_info=True)
             self._state = "Sidereal ERROR"
-
-    async def async_update(self) -> None:
-        """Update sensor asynchronously."""
-        # Run synchronous update in executor
-        await self.hass.async_add_executor_job(self.update)

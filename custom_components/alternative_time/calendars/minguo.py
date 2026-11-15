@@ -555,7 +555,7 @@ class MinguoCalendarSensor(AlternativeTimeSensorBase):
 
     def update(self) -> None:
         """Update the sensor."""
-        now = datetime.now()
+        now = self._now()
         self._minguo_date = self._calculate_minguo_date(now)
 
         # Set state to formatted date

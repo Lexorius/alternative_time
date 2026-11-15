@@ -1,15 +1,16 @@
-"""Calendar discovery: every id maps to an importable module with a sensor class.
+"""Calendar discovery and sensor setup.
 
-Regression for v2.6.0.7 #3 (three calendars whose CALENDAR_INFO['id'] differs
-from the file name were selectable but never created a sensor), #7 (test_debug
-shipped as a real calendar) and #1 (stable entity_id via suggested_object_id).
+Every calendar id maps to an importable module with a sensor class
+(v2.6.0.7: three calendars whose id differs from the file name never created
+a sensor), and setup gives every sensor the stable entity_id the recorder
+glob in the README relies on.
 """
 from __future__ import annotations
 
 import importlib
 
 import pytest
-from conftest import INTEGRATION
+from conftest import INTEGRATION, FakeConfigEntry, FakeHass, run
 
 EXPECTED_ID_TO_MODULE = {
     "suriyakati_thai": "suriyakati",
@@ -77,6 +78,48 @@ def test_no_plugin_uses_legacy_plugin_options_key(discovered):
     assert not [cid for cid, info in discovered.items() if "plugin_options" in info]
 
 
-def test_suggested_object_id_uses_calendar_id(make_sensor):
-    entity = make_sensor("suriyakati_thai", base_name="Irgendein Name")
-    assert entity.suggested_object_id == "alternative_time_suriyakati_thai"
+def test_setup_creates_every_sensor_with_stable_ids(sensor_module, discovered):
+    """async_setup_entry: one sensor per configured calendar, each with the
+    entity_id sensor.alternative_time_<calendar_id> and a per-entry unique_id."""
+    entry = FakeConfigEntry("entry-setup", {
+        "name": "Whatever The User Typed",
+        "calendars": sorted(discovered),
+        "calendar_options": {},
+    })
+    added = []
+    try:
+        run(sensor_module.async_setup_entry(FakeHass(), entry, added.extend))
+        assert len(added) == len(discovered)
+        by_calendar = {e._calendar_id: e for e in added}
+        assert set(by_calendar) == set(discovered)
+        wrong = {cid: e.entity_id for cid, e in by_calendar.items()
+                 if e.entity_id != f"sensor.alternative_time_{cid}"}
+        assert not wrong, wrong
+        unique_ids = [e.unique_id for e in added]
+        assert all(uid and uid.startswith("entry-setup_") for uid in unique_ids)
+        assert len(set(unique_ids)) == len(unique_ids)
+        assert len(sensor_module.entities_for_entry("entry-setup")) == len(discovered)
+    finally:
+        sensor_module.forget_config_entry("entry-setup")
+
+
+def test_setup_skips_calendars_that_no_longer_exist(sensor_module):
+    entry = FakeConfigEntry("entry-gone", {"name": "X", "calendars": ["test_debug", "unix"]})
+    added = []
+    try:
+        run(sensor_module.async_setup_entry(FakeHass(), entry, added.extend))
+        assert [e._calendar_id for e in added] == ["unix"]
+    finally:
+        sensor_module.forget_config_entry("entry-gone")
+
+
+def test_language_matching_is_the_same_everywhere():
+    """Sensors and config flow must resolve "zh-Hans" / "pt-BR" the same way."""
+    i18n = importlib.import_module(f"{INTEGRATION}.i18n")
+    cf = importlib.import_module(f"{INTEGRATION}.config_flow")
+    texts = {"en": "English", "zh": "中文", "pt": "Português"}
+    for lang, expected in [("zh-Hans", "中文"), ("pt-BR", "Português"), ("pt", "Português"),
+                           ("en-GB", "English"), ("xx", "English")]:
+        assert i18n.pick_language(texts, lang) == expected
+        assert cf.lcal({"label": texts}, "label", lang, "key") == expected
+    assert cf.lcal({"label": {"de": "nur deutsch"}}, "label", "fr", "key") == "key"

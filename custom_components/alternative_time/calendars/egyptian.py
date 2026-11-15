@@ -578,7 +578,7 @@ class EgyptianCalendarSensor(AlternativeTimeSensorBase):
 
     def update(self) -> None:
         """Update the sensor."""
-        now = datetime.now()
+        now = self._now()
         self._egyptian_date = self._calculate_egyptian_date(now)
 
         # Set state to full Egyptian date

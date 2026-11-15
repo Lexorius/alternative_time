@@ -4,7 +4,8 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
-from datetime import timedelta
+import sys
+from datetime import datetime, timedelta
 from importlib import import_module
 from typing import Any, Dict, List, Optional
 
@@ -14,18 +15,24 @@ from homeassistant.const import MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import DOMAIN, ENTITY_ID_PREFIX
+from .i18n import pick_language
 
 _LOGGER = logging.getLogger(__name__)
 
-# Global cache for discovered calendars
+# Discovered calendars: CALENDAR_INFO per calendar id, the module each id lives
+# in, and that module's file name (id and file name can differ: suriyakati.py
+# declares the id "suriyakati_thai"). Filled once per process; the files cannot
+# change without a restart.
 _DISCOVERED_CALENDARS_CACHE: Optional[Dict[str, Dict[str, Any]]] = None
+_CALENDAR_MODULES: Dict[str, Any] = {}
+_CALENDAR_MODULE_NAMES: Dict[str, str] = {}
 _DISCOVERY_LOCK = asyncio.Lock()
 
-# Maps CALENDAR_INFO["id"] -> module (file) name. The two can differ, e.g.
-# suriyakati.py declares id "suriyakati_thai". Setup must import by file name.
-_CALENDAR_MODULE_NAMES: Dict[str, str] = {}
+# Config entries, for the sensors to read their options from
+_CONFIG_ENTRIES: Dict[str, ConfigEntry] = {}
 
 # Live sensor objects per config entry, used by the options flow to offer an
 # entity_id migration (it needs entity_id -> calendar_id without parsing
@@ -43,8 +50,57 @@ def entities_for_entry(entry_id: str) -> List[tuple[str, str]]:
             out.append((eid, cid))
     return out
 
-# Store config entries globally for sensor access
-_CONFIG_ENTRIES: Dict[str, ConfigEntry] = {}
+
+def forget_config_entry(entry_id: str) -> None:
+    """Drop a config entry from the module-level registries (called on unload)."""
+    _CONFIG_ENTRIES.pop(entry_id, None)
+    _ENTITIES_BY_ENTRY.pop(entry_id, None)
+
+
+def discover_calendars() -> Dict[str, Dict[str, Any]]:
+    """Import every calendar module and return {calendar_id: CALENDAR_INFO}.
+
+    Blocking (lists a directory, imports modules): call it from an executor,
+    or use async_discover_all_calendars(). The result is cached.
+    """
+    global _DISCOVERED_CALENDARS_CACHE
+    if _DISCOVERED_CALENDARS_CACHE is not None:
+        return _DISCOVERED_CALENDARS_CACHE
+
+    discovered: Dict[str, Dict[str, Any]] = {}
+    calendars_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "calendars")
+    for filename in sorted(os.listdir(calendars_dir)):
+        module_name = filename[:-3]
+        if not filename.endswith(".py") or module_name.startswith(("_", "test_")):
+            continue
+        try:
+            module = import_module(f".calendars.{module_name}", package=__package__)
+        except Exception as err:  # noqa: BLE001 — one broken plugin must not hide the others
+            _LOGGER.error("Calendar %s could not be imported: %r", module_name, err)
+            continue
+        info = getattr(module, "CALENDAR_INFO", None)
+        if not isinstance(info, dict):
+            continue
+        calendar_id = info.get("id", module_name)
+        discovered[calendar_id] = info
+        _CALENDAR_MODULES[calendar_id] = module
+        _CALENDAR_MODULE_NAMES[calendar_id] = module_name
+
+    if discovered:
+        _LOGGER.debug("Discovered %d calendars", len(discovered))
+    else:
+        _LOGGER.error("No calendars found in %s", calendars_dir)
+
+    _DISCOVERED_CALENDARS_CACHE = discovered
+    return discovered
+
+
+async def async_discover_all_calendars(hass: HomeAssistant) -> Dict[str, Dict[str, Any]]:
+    """Discover the calendars without blocking the event loop."""
+    if _DISCOVERED_CALENDARS_CACHE is not None:
+        return _DISCOVERED_CALENDARS_CACHE
+    async with _DISCOVERY_LOCK:
+        return await hass.async_add_executor_job(discover_calendars)
 
 
 async def async_setup_entry(
@@ -53,320 +109,75 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Alternative Time Systems sensors from a config entry."""
-
-    # Store config entry for sensor access
     entry_id = config_entry.entry_id
     _CONFIG_ENTRIES[entry_id] = config_entry
     _ENTITIES_BY_ENTRY[entry_id] = []
 
-    # Get selected calendars from config
     selected_calendars = config_entry.data.get("calendars", [])
     name = config_entry.data.get("name", "Alternative Time")
-
-    # Plugin options are stored by the config flow under "calendar_options"
-    # (the older key "plugin_options" is kept as a fallback for legacy entries).
-    plugin_options = (
-        config_entry.data.get("calendar_options")
-        or config_entry.data.get("plugin_options", {})
-    )
-    _LOGGER.info(f"=== Setting up Alternative Time '{name}' ===")
-    _LOGGER.debug(f"Config Entry ID: {entry_id[:8]}...")
-    _LOGGER.debug(f"Selected calendars: {selected_calendars}")
-    _LOGGER.info(f"Plugin options available: {list(plugin_options.keys())}")
-    for cal_id, opts in plugin_options.items():
-        _LOGGER.debug(f"  {cal_id}: {opts}")
+    _LOGGER.debug("Setting up '%s' with calendars %s", name, selected_calendars)
 
     if not selected_calendars:
-        _LOGGER.warning("No calendars selected")
+        _LOGGER.warning("No calendars selected for '%s'", name)
         return
 
-    # Clear cache to force re-discovery
-    global _DISCOVERED_CALENDARS_CACHE
-    _DISCOVERED_CALENDARS_CACHE = None
+    await async_discover_all_calendars(hass)
 
-    # Discover all available calendars
-    discovered_calendars = await async_discover_all_calendars(hass)
-
-    if not discovered_calendars:
-        _LOGGER.error("No calendars could be discovered!")
-        return
-
-    _LOGGER.info(f"Discovered {len(discovered_calendars)} calendars: {list(discovered_calendars.keys())}")
-
-    # Create sensors for selected calendars
     sensors = []
-
     for calendar_id in selected_calendars:
-        _LOGGER.debug(f"Processing calendar: {calendar_id}")
-
-        if calendar_id not in discovered_calendars:
-            _LOGGER.error(f"Calendar '{calendar_id}' is enabled but not found in registry")
-            _LOGGER.debug(f"Available calendars: {list(discovered_calendars.keys())}")
+        module = _CALENDAR_MODULES.get(calendar_id)
+        if module is None:
+            _LOGGER.error("Calendar '%s' is configured in '%s' but does not exist (any more)", calendar_id, name)
             continue
 
-        # Debug: Check if we have options for this calendar
-        calendar_plugin_options = plugin_options.get(calendar_id, {})
-        if calendar_plugin_options:
-            _LOGGER.info(f"Calendar {calendar_id} has options: {calendar_plugin_options}")
-        else:
-            _LOGGER.debug(f"Calendar {calendar_id} has no custom options")
+        sensor_class = next(
+            (item for item in vars(module).values()
+             if isinstance(item, type)
+             and issubclass(item, AlternativeTimeSensorBase)
+             and item is not AlternativeTimeSensorBase),
+            None,
+        )
+        if sensor_class is None:
+            _LOGGER.error("No sensor class found in calendar module: %s", calendar_id)
+            continue
 
         try:
-            # Import by module (file) name — it may differ from the calendar id
-            module_name = _CALENDAR_MODULE_NAMES.get(calendar_id, calendar_id)
-            module = await async_import_calendar_module(hass, module_name)
-
-            if not module:
-                _LOGGER.error(f"Failed to import calendar module: {calendar_id}")
-                continue
-
-            # Find the sensor class
-            sensor_class = None
-            for item_name in dir(module):
-                item = getattr(module, item_name)
-                if (isinstance(item, type) and
-                    issubclass(item, AlternativeTimeSensorBase) and
-                    item != AlternativeTimeSensorBase):
-                    sensor_class = item
-                    break
-
-            if not sensor_class:
-                _LOGGER.error(f"No sensor class found in calendar module: {calendar_id}")
-                continue
-
-            # Create sensor instance - ALLE Sensoren bekommen nur (base_name, hass)
             sensor = sensor_class(name, hass)
-
-            # WICHTIG: Setze die IDs SOFORT nach der Erstellung
-            sensor._calendar_id = calendar_id  # Store for plugin options lookup
-            sensor._config_entry_id = entry_id  # Store entry ID
-            # NOTE: the stable entity_id (sensor.alternative_time_<id>) comes from
-            # AlternativeTimeSensorBase.suggested_object_id, which reads _calendar_id.
-
-            # Debug: Verify the sensor can get its options
-            _LOGGER.debug(f"Sensor {calendar_id} initialized:")
-            _LOGGER.debug(f"  - _calendar_id: {sensor._calendar_id}")
-            _LOGGER.debug(f"  - _config_entry_id: {sensor._config_entry_id}")
-
-            # Test if sensor can retrieve its options
-            test_options = sensor.get_plugin_options()
-            if test_options:
-                _LOGGER.info(f"✓ Sensor {calendar_id} successfully retrieved options: {test_options}")
-            else:
-                _LOGGER.debug(f"  Sensor {calendar_id} has no options or using defaults")
-
-            # WICHTIG: Unique ID muss entry_id enthalten um Kollisionen zu vermeiden
-            # Überschreibe die unique_id, die vom Kalender gesetzt wurde
-            if hasattr(sensor, '_attr_unique_id'):
-                # Füge die entry_id zur unique_id hinzu für Eindeutigkeit
-                base_unique_id = sensor._attr_unique_id
-                sensor._attr_unique_id = f"{entry_id}_{base_unique_id}"
-                _LOGGER.debug(f"Set unique_id for {calendar_id}: {sensor._attr_unique_id[:30]}...")
-            else:
-                # Falls keine unique_id gesetzt wurde, erstelle eine
-                sensor._attr_unique_id = f"{entry_id}_{name}_{calendar_id}"
-                _LOGGER.debug(f"Created unique_id for {calendar_id}: {sensor._attr_unique_id[:30]}...")
-
-            sensors.append(sensor)
-            _ENTITIES_BY_ENTRY[entry_id].append(sensor)
-
-            _LOGGER.info(f"✓ Created sensor for calendar: {calendar_id}")
-
-        except Exception as e:
-            _LOGGER.error(f"Failed to create sensor for calendar {calendar_id}: {e}")
-            import traceback
-            _LOGGER.debug(traceback.format_exc())
+        except Exception as err:  # noqa: BLE001 — one broken plugin must not block the others
+            _LOGGER.error("Failed to create sensor for calendar %s: %r", calendar_id, err)
+            _LOGGER.debug("Traceback:", exc_info=True)
             continue
+
+        # The sensor reads its options through these two ids
+        sensor._calendar_id = calendar_id
+        sensor._config_entry_id = entry_id
+
+        # Stable entity_id for NEW entities: sensor.alternative_time_<calendar>,
+        # whatever the entry is called, so one recorder glob matches them all.
+        # A pre-set entity_id is what Home Assistant takes as the wanted id (it
+        # adds _2, _3 on a clash); entities already in the registry keep the id
+        # they have. Only suggesting an object id is not enough: newer Home
+        # Assistant versions put the device and area name in front of it.
+        sensor.entity_id = f"sensor.{ENTITY_ID_PREFIX}{calendar_id}"
+
+        # The entry id makes the unique_id unique across entries
+        sensor._attr_unique_id = f"{entry_id}_{sensor._attr_unique_id}"
+
+        sensors.append(sensor)
+        _ENTITIES_BY_ENTRY[entry_id].append(sensor)
 
     if sensors:
         async_add_entities(sensors)
-        _LOGGER.info(f"=== Successfully added {len(sensors)} sensors to Home Assistant ===")
+        _LOGGER.info("Added %d sensors for '%s'", len(sensors), name)
     else:
-        _LOGGER.warning("No sensors were created!")
-
-
-async def async_discover_all_calendars(hass: HomeAssistant) -> Dict[str, Dict[str, Any]]:
-    """Discover all available calendar implementations asynchronously."""
-    global _DISCOVERED_CALENDARS_CACHE
-
-    async with _DISCOVERY_LOCK:
-        # Return cached result if available
-        if _DISCOVERED_CALENDARS_CACHE is not None:
-            return _DISCOVERED_CALENDARS_CACHE
-
-        discovered = {}
-
-        # Get calendars directory path
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        calendars_dir = os.path.join(current_dir, "calendars")
-
-        if not os.path.exists(calendars_dir):
-            _LOGGER.warning(f"Calendars directory not found: {calendars_dir}")
-            _DISCOVERED_CALENDARS_CACHE = discovered
-            return discovered
-
-        # List files asynchronously
-        files = await hass.async_add_executor_job(os.listdir, calendars_dir)
-        _LOGGER.debug(f"Found files in calendars directory: {files}")
-
-        for filename in files:
-            if filename.endswith(".py") and not filename.startswith("__"):
-                module_name = filename[:-3]  # Remove .py extension
-
-                # Skip template/example files and debug tooling (test_*.py)
-                lowered = module_name.lower()
-                if (lowered.startswith("test_")
-                        or "template" in lowered or "example" in lowered):
-                    continue
-
-                try:
-                    # Import module asynchronously
-                    module = await async_import_calendar_module(hass, module_name)
-
-                    if module and hasattr(module, 'CALENDAR_INFO'):
-                        cal_info = module.CALENDAR_INFO
-                        cal_id = cal_info.get('id', module_name)
-                        discovered[cal_id] = cal_info
-                        _CALENDAR_MODULE_NAMES[cal_id] = module_name
-                        _LOGGER.debug(f"Discovered calendar: {cal_id}")
-                    elif module:
-                        _LOGGER.debug(f"Module {module_name} has no CALENDAR_INFO")
-                    else:
-                        _LOGGER.debug(f"Could not import module {module_name}")
-
-                except Exception as e:
-                    _LOGGER.warning(f"Failed to discover calendar {module_name}: {e}")
-                    import traceback
-                    _LOGGER.debug(traceback.format_exc())
-                    continue
-
-        if not discovered:
-            _LOGGER.error(f"No calendars discovered! Directory contents: {files}")
-        else:
-            _LOGGER.info(f"Discovered {len(discovered)} calendars: {list(discovered.keys())}")
-
-        _DISCOVERED_CALENDARS_CACHE = discovered
-        return discovered
-
-
-async def async_import_calendar_module(hass: HomeAssistant, module_name: str):
-    """Import a calendar module asynchronously."""
-    def _import():
-        try:
-            # Add parent directory to path for imports
-            import sys
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            parent_dir = os.path.dirname(current_dir)
-            if parent_dir not in sys.path:
-                sys.path.insert(0, parent_dir)
-
-            # Try different import methods
-            try:
-                module = import_module(f'.calendars.{module_name}',
-                                   package='custom_components.alternative_time')
-                _LOGGER.debug(f"Successfully imported {module_name} via method 1")
-                return module
-            except ImportError as e1:
-                _LOGGER.debug(f"Method 1 failed for {module_name}: {e1}")
-                try:
-                    module = import_module(
-                        f'custom_components.alternative_time.calendars.{module_name}'
-                    )
-                    _LOGGER.debug(f"Successfully imported {module_name} via method 2")
-                    return module
-                except ImportError as e2:
-                    _LOGGER.debug(f"Method 2 failed for {module_name}: {e2}")
-                    try:
-                        module = import_module(module_name)
-                        _LOGGER.debug(f"Successfully imported {module_name} via method 3")
-                        return module
-                    except ImportError as e3:
-                        _LOGGER.debug(f"Method 3 failed for {module_name}: {e3}")
-                        raise e3
-        except Exception as e:
-            _LOGGER.error(f"Failed to import calendar module {module_name}: {e}")
-            import traceback
-            _LOGGER.debug(traceback.format_exc())
-            return None
-
-    return await hass.async_add_executor_job(_import)
-
-
-def export_discovered_calendars() -> Dict[str, Dict[str, Any]]:
-    """Export discovered calendars for use by config flow.
-
-    This function is synchronous for backward compatibility,
-    but should only be called from an executor.
-    """
-    global _DISCOVERED_CALENDARS_CACHE
-
-    if _DISCOVERED_CALENDARS_CACHE is not None:
-        return _DISCOVERED_CALENDARS_CACHE
-
-    # Perform synchronous discovery if cache is empty
-    discovered = {}
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    calendars_dir = os.path.join(current_dir, "calendars")
-
-    if not os.path.exists(calendars_dir):
-        _LOGGER.warning(f"Calendars directory not found in export: {calendars_dir}")
-        return discovered
-
-    files = os.listdir(calendars_dir)
-    _LOGGER.debug(f"Export discovery - found files: {files}")
-
-    for filename in files:
-        if filename.endswith(".py") and not filename.startswith("__"):
-            module_name = filename[:-3]
-
-            # Skip template/example files and debug tooling (test_*.py)
-            lowered = module_name.lower()
-            if (lowered.startswith("test_")
-                    or "template" in lowered or "example" in lowered):
-                continue
-
-            try:
-                module = import_module(f'.calendars.{module_name}',
-                                     package='custom_components.alternative_time')
-
-                if hasattr(module, 'CALENDAR_INFO'):
-                    cal_info = module.CALENDAR_INFO
-                    cal_id = cal_info.get('id', module_name)
-                    discovered[cal_id] = cal_info
-                    _CALENDAR_MODULE_NAMES[cal_id] = module_name
-                    _LOGGER.debug(f"Export discovered: {cal_id}")
-                else:
-                    _LOGGER.debug(f"Export - no CALENDAR_INFO in {module_name}")
-
-            except Exception as e:
-                _LOGGER.debug(f"Export failed for {module_name}: {e}")
-                continue
-
-    if not discovered:
-        _LOGGER.error(f"Export - no calendars discovered! Files: {files}")
-    else:
-        _LOGGER.info(f"Export discovered {len(discovered)} calendars")
-
-    _DISCOVERED_CALENDARS_CACHE = discovered
-    return discovered
-
-
-def get_config_entry(entry_id: str) -> Optional[ConfigEntry]:
-    """Get a config entry by ID."""
-    return _CONFIG_ENTRIES.get(entry_id)
-
-
-def forget_config_entry(entry_id: str) -> None:
-    """Drop a config entry from the module-level registries (called on unload)."""
-    _CONFIG_ENTRIES.pop(entry_id, None)
-    _ENTITIES_BY_ENTRY.pop(entry_id, None)
+        _LOGGER.warning("No sensors were created for '%s'", name)
 
 
 # NOTE on recorder exclusion: Home Assistant offers no API for an integration
 # to keep an entity's *state* out of the recorder — that is user configuration
 # only (recorder: exclude: entity_globs: [sensor.alternative_time_*]). What we
 # can do integration-side is (a) give every sensor a stable entity_id so that
-# one glob matches (suggested_object_id + the options-flow migration) and
+# one glob matches (see async_setup_entry and the options-flow migration) and
 # (b) not record attributes at all (_unrecorded_attributes = MATCH_ALL below).
 
 
@@ -377,25 +188,13 @@ class AlternativeTimeSensorBase(SensorEntity):
     # live in the state machine (dashboards, templates, more-info dialog are
     # unaffected) — they just don't get written to the recorder's
     # state_attributes table. For time sensors attribute *history* is never
-    # used, while e.g. solar_system carried a 23 KB SVG per state row.
-    # HA keeps friendly_name/device_class/unit/state_class even with MATCH_ALL.
+    # used. HA keeps friendly_name/device_class/unit/state_class even with
+    # MATCH_ALL.
     _unrecorded_attributes = frozenset({MATCH_ALL})
 
-    @property
-    def extra_state_attributes(self) -> Dict[str, Any]:
-        """Normalized parent attributes as a dict (never None).
-
-        HA's SensorEntity.extra_state_attributes returns None by default.
-        Returning a dict here ensures plugin code that calls
-        ``super().extra_state_attributes.update(...)`` won't crash.
-        """
-        try:
-            # If parent is a property on base class, access its value
-            parent_val = super().extra_state_attributes  # type: ignore[attr-defined]
-        except Exception:
-            parent_val = None
-        base_attrs = parent_val if isinstance(parent_val, dict) else (parent_val or {})
-        return dict(base_attrs)
+    # After this many consecutive failed updates the entity is marked
+    # unavailable instead of silently showing a stale state.
+    UNAVAILABLE_AFTER_FAILURES = 3
 
     def __init__(self, base_name: str, hass: HomeAssistant) -> None:
         """Initialize the sensor."""
@@ -406,71 +205,22 @@ class AlternativeTimeSensorBase(SensorEntity):
         # should_poll is False so HA's platform poller stays out of it.
         self._tick_running = False
         self._consecutive_failures = 0
-        self._calendar_id = None  # Will be set by async_setup_entry
-        self._config_entry_id = None  # Will be set by async_setup_entry
-
-        # Set update interval from class attribute if available
-        if hasattr(self.__class__, 'UPDATE_INTERVAL'):
-            self._update_interval = self.__class__.UPDATE_INTERVAL
-        else:
-            self._update_interval = 3600  # Default 1 hour
+        self._calendar_id = None  # set by async_setup_entry
+        self._config_entry_id = None  # set by async_setup_entry
 
     @property
-    def suggested_object_id(self) -> str | None:
-        """Stable object_id ``alternative_time_<calendar_id>``.
+    def extra_state_attributes(self) -> Dict[str, Any]:
+        """Normalized parent attributes as a dict (never None).
 
-        Independent of the instance name chosen in the config flow, so a single
-        recorder glob ``sensor.alternative_time_*`` matches every plugin sensor.
-        HA only consults this at first registration; entities that already
-        exist in the entity registry keep their current entity_id.
+        HA's SensorEntity.extra_state_attributes returns None by default.
+        Returning a dict here ensures plugin code that calls
+        ``super().extra_state_attributes.update(...)`` won't crash.
         """
-        cid = getattr(self, "_calendar_id", None)
-        if cid:
-            return f"alternative_time_{cid}"
-        return super().suggested_object_id
-
-    def get_plugin_options(self) -> Dict[str, Any]:
-        """Get plugin options for this sensor with detailed debugging."""
-        # Basis-Debug nur wenn wirklich ein Problem besteht
-        if not self._config_entry_id or not self._calendar_id:
-            _LOGGER.debug(f"get_plugin_options called for {self.__class__.__name__}")
-            _LOGGER.debug(f"  _config_entry_id: {self._config_entry_id}")
-            _LOGGER.debug(f"  _calendar_id: {self._calendar_id}")
-
-            if not self._config_entry_id:
-                _LOGGER.warning(f"{self.__class__.__name__}: No config_entry_id set - called too early?")
-            if not self._calendar_id:
-                _LOGGER.warning(f"{self.__class__.__name__}: No calendar_id set - called too early?")
-            return {}
-
-        config_entry = _CONFIG_ENTRIES.get(self._config_entry_id)
-        if not config_entry:
-            _LOGGER.error(f"Config entry {self._config_entry_id} not found in _CONFIG_ENTRIES")
-            _LOGGER.debug(f"Available entries: {list(_CONFIG_ENTRIES.keys())}")
-            return {}
-
-        plugin_options = (
-            config_entry.data.get("calendar_options")
-            or config_entry.data.get("plugin_options", {})
-        )
-        calendar_options = plugin_options.get(self._calendar_id, {})
-
-        # Nur loggen wenn tatsächlich Optionen vorhanden sind
-        if calendar_options:
-            _LOGGER.debug(f"{self.__class__.__name__} ({self._calendar_id}) loaded options: {calendar_options}")
-
-        return calendar_options
-
-    # Five plugins (chinese_lunar, mars, mass_effect, warcraft,
-    # warhammer40k_imperial) call self._get_plugin_options(); the method was
-    # never defined, so their update() raised AttributeError on every tick.
-    # Until 2.6.1 that failure was logged at DEBUG only and went unnoticed.
-    _get_plugin_options = get_plugin_options
-
-    @property
-    def update_interval(self) -> int:
-        """Return the update interval in seconds."""
-        return self._update_interval
+        try:
+            parent_val = super().extra_state_attributes  # type: ignore[attr-defined]
+        except Exception:
+            parent_val = None
+        return dict(parent_val) if isinstance(parent_val, dict) else {}
 
     @property
     def should_poll(self) -> bool:
@@ -486,91 +236,77 @@ class AlternativeTimeSensorBase(SensorEntity):
     # `available` is inherited from HA's Entity and driven by _attr_available,
     # which _async_timer_tick flips after repeated failures.
 
-    def _translate(self, key: str, default: str = "") -> str:
-        """Translate a CALENDAR_INFO text block for the user's language.
+    def _now(self) -> datetime:
+        """Wall-clock time in Home Assistant's configured time zone (naive).
 
-        - Reads the integration's CALENDAR_INFO from the concrete sensor module.
-        - Chooses hass.config.language if available; falls back to primary subtag (e.g. "de" from "de-DE"),
-          then to English ("en"), and finally to the provided default.
-        - If CALENDAR_INFO[key] is not a mapping (e.g. a plain string), that value is returned.
+        Use this instead of datetime.now(): that returns the time zone of the
+        operating system, which in a container without TZ is UTC, not the
+        zone the user set in Home Assistant.
         """
-        # Lazy-load CALENDAR_INFO from module
-        info = {}
-        try:
-            mod = __import__(self.__class__.__module__, fromlist=["CALENDAR_INFO"])
-            if hasattr(mod, "CALENDAR_INFO"):
-                info = getattr(mod, "CALENDAR_INFO") or {}
-        except Exception:
-            info = {}
+        return dt_util.now().replace(tzinfo=None)
 
-        value = info.get(key, default)
+    def _calendar_meta(self) -> Dict[str, Any]:
+        """CALENDAR_INFO of the module this sensor class is defined in."""
+        return getattr(sys.modules.get(type(self).__module__), "CALENDAR_INFO", None) or {}
+
+    def get_plugin_options(self) -> Dict[str, Any]:
+        """Options the user chose for this calendar in the config flow."""
+        if not self._config_entry_id or not self._calendar_id:
+            _LOGGER.warning("%s: options requested before the sensor was set up", type(self).__name__)
+            return {}
+
+        config_entry = _CONFIG_ENTRIES.get(self._config_entry_id)
+        if not config_entry:
+            _LOGGER.error("Config entry %s not found", self._config_entry_id)
+            return {}
+
+        # Stored by the config flow under "calendar_options" ("plugin_options"
+        # is the key very old entries used).
+        all_options = (
+            config_entry.data.get("calendar_options")
+            or config_entry.data.get("plugin_options", {})
+        )
+        return all_options.get(self._calendar_id, {})
+
+    # Five plugins call the method under this name.
+    _get_plugin_options = get_plugin_options
+
+    def _translate(self, key: str, default: str = "") -> str:
+        """Text block ``key`` of CALENDAR_INFO in the user's language.
+
+        A plain string is returned as is; a {language: text} mapping goes
+        through i18n.pick_language (exact code, base language, English, default).
+        """
+        value = self._calendar_meta().get(key, default)
         if not isinstance(value, dict):
             return str(value)
-
-        # Get user's language from Home Assistant
-        lang = getattr(self._hass.config, "language", "en")
-
-        # Try exact match first
-        if lang in value:
-            return value[lang]
-
-        # Try primary language tag (e.g., "de" from "de-DE")
-        primary = lang.split("-")[0] if "-" in lang else lang.split("_")[0] if "_" in lang else lang
-        if primary in value:
-            return value[primary]
-
-        # Fallback to English
-        if "en" in value:
-            return value["en"]
-
-        # Return default or first available value
-        return default if default else next(iter(value.values()), "")
+        return pick_language(value, getattr(self._hass.config, "language", "en"), default)
 
     @property
     def device_info(self):
         """Return device registry information for this entity."""
-        # Lazy-load CALENDAR_INFO from module
-        info = {}
-        try:
-            mod = __import__(self.__class__.__module__, fromlist=["CALENDAR_INFO"])
-            if hasattr(mod, "CALENDAR_INFO"):
-                info = getattr(mod, "CALENDAR_INFO") or {}
-        except Exception:
-            info = {}
-        category = str(info.get("category") or "uncategorized")
+        category = str(self._calendar_meta().get("category") or "uncategorized")
         if category == "religious":
             category = "religion"
-        device_name = f"Alternative Time – {category.title()}"
         return {
             "identifiers": {(DOMAIN, f"group:{category}")},
             "manufacturer": "Alternative Time Systems",
             "model": "Category Group",
-            "name": device_name,
+            "name": f"Alternative Time – {category.title()}",
         }
 
     async def async_added_to_hass(self) -> None:
         """Schedule periodic updates in a non-blocking way."""
-        # Log when entity is added
-        _LOGGER.debug(f"{self._attr_name} added to Home Assistant")
-
-        # Determine interval from CALENDAR_INFO or class constant
-        interval = None
-        try:
-            mod = __import__(self.__class__.__module__, fromlist=["CALENDAR_INFO"])
-            info = getattr(mod, "CALENDAR_INFO", {}) or {}
-            interval = info.get("update_interval")
-        except Exception:
-            interval = None
+        interval = self._calendar_meta().get("update_interval")
         if not isinstance(interval, (int, float)):
-            interval = getattr(self.__class__, "UPDATE_INTERVAL", None)
+            interval = getattr(type(self), "UPDATE_INTERVAL", None)
         try:
             seconds = max(1, int(interval)) if interval else 3600
-        except Exception:
+        except (TypeError, ValueError):
             seconds = 3600
 
-        _LOGGER.debug(f"{self._attr_name} will update every {seconds} seconds")
+        _LOGGER.debug("%s added, updates every %s seconds", self._attr_name, seconds)
 
-        # Start scheduler
         self._unsub_timer = async_track_time_interval(
             self._hass, self._async_timer_tick, timedelta(seconds=seconds)
         )
@@ -580,8 +316,6 @@ class AlternativeTimeSensorBase(SensorEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Cancel the scheduled timer when entity is removed."""
-        _LOGGER.debug(f"{self._attr_name} being removed from Home Assistant")
-
         unsub = getattr(self, "_unsub_timer", None)
         if unsub:
             try:
@@ -589,10 +323,6 @@ class AlternativeTimeSensorBase(SensorEntity):
             except Exception:
                 pass
             self._unsub_timer = None
-
-    # After this many consecutive failed updates the entity is marked
-    # unavailable instead of silently showing a stale state.
-    UNAVAILABLE_AFTER_FAILURES = 3
 
     async def _async_timer_tick(self, _now) -> None:
         """Call plugin update without blocking the event loop.

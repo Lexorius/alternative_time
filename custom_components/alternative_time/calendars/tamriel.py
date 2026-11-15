@@ -445,6 +445,11 @@ class TamrielCalendarSensor(AlternativeTimeSensorBase):
 
         _LOGGER.debug(f"Initialized Tamriel Calendar sensor: {self._attr_name}")
 
+    async def async_added_to_hass(self) -> None:
+        """Load the options chosen in the config flow, then start the timer."""
+        self.set_options(self.get_plugin_options())
+        await super().async_added_to_hass()
+
     def set_options(self, options: Dict[str, Any]) -> None:
         """Set options from config flow."""
         if options:
@@ -695,7 +700,7 @@ class TamrielCalendarSensor(AlternativeTimeSensorBase):
 
     def update(self) -> None:
         """Update the sensor."""
-        now = datetime.now()
+        now = self._now()
         self._tamriel_date = self._calculate_tamriel_date(now)
 
         # Format: Era Year, Month Day (Weekday)

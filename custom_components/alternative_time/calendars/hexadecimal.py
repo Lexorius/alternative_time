@@ -421,7 +421,7 @@ class HexadecimalTimeSensor(AlternativeTimeSensorBase):
             self._load_options()
 
         try:
-            now = datetime.now()
+            now = self._now()
             self._hex_time = self._calculate_hex_time(now)
 
             # Set state to formatted hex time or full display if options are enabled
@@ -434,8 +434,3 @@ class HexadecimalTimeSensor(AlternativeTimeSensorBase):
         except Exception as e:
             _LOGGER.error(f"Error updating Hexadecimal time: {e}", exc_info=True)
             self._state = ".ERROR"
-
-    async def async_update(self) -> None:
-        """Update sensor asynchronously."""
-        # Run synchronous update in executor
-        await self.hass.async_add_executor_job(self.update)

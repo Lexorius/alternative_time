@@ -5,6 +5,116 @@ Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1
 die Versionsnummerierung folgt grob [Semantic Versioning](https://semver.org/lang/de/)
 mit optionaler vierter Build-Komponente.
 
+## [Unreleased]
+
+Ergebnis eines vollständigen Audits in zwei Durchläufen: falsche Werte in
+mehreren Kalendern korrigiert, den Kern verschlankt und die Rechenlogik
+erstmals gegen veröffentlichte Sollwerte getestet. Noch ohne Versionsnummer.
+
+### Behoben — falsche Werte
+- **Swatch-Zeit** lag in der Sommerzeit eine Stunde (41,7 Beats) zu hoch: die
+  „Biel Mean Time" ist fest UTC+1, der Code nutzte aber `Europe/Zurich` mit
+  Sommerzeit. Beispiel aus einem echten Log: `@939` statt `@898`.
+- **Sieben Kalender ignorierten alle ihre Optionen** (31 Stück): `stardate`,
+  `discworld`, `eve`, `islamic`, `rivendell`, `shire`, `tamriel` definierten
+  `set_options()`, das nie aufgerufen wurde. Wer z. B. Stardate auf „TOS"
+  gestellt hatte, sah weiter TNG.
+- **Warcraft** stürzte an 52 Tagen im Jahr mit `IndexError` ab (Mondphasen-
+  Index lief bis 9 bei 8 Einträgen).
+- **Julianisches Datum** war immer einen halben Tag zu niedrig
+  (1.1.2000 12:00 UTC ergab 2451544,5 statt 2451545,0).
+- **Mars-Zeit**: der Mars Sol Date war 4,4 Sols zu hoch (Startwert vom
+  6.1.2000 auf den 1.1.2000 angewendet), dazu wurde eine naive UTC-Zeit als
+  Ortszeit gelesen. Die Jahreszeit (Ls) wurde linear geraten und die Tabelle
+  der Lande-Sols war bei fünf von sieben Missionen falsch.
+- **Darian-Kalender** zeigte Jahr 85 statt 221: Verhältnis Sol/Tag verkehrt
+  herum gerechnet, Zählung ab 1873 statt 1609, Monatslängen an den falschen
+  Stellen (Summe 667 statt 668), keine Schaltjahre, Wochentag falsch.
+- **Sonnensystem**: „geozentrische" Länge und Sichtbarkeit zogen zwei
+  heliozentrische Winkel voneinander ab. Saturn in Opposition galt als
+  „nicht sichtbar". Jetzt echte Geometrie; Rückläufigkeit wird berechnet
+  statt fest `False` zu sein.
+- **Islamischer Kalender**: Wochentag immer einen Tag voraus.
+- **Thai-Kalender**: falsches Tierkreiszeichen (2026 „Hund" statt „Pferd").
+- **Lunar Time**: Beleuchtung invertiert (Neumond 99,6 %).
+- **Erfundene Mondrechnung ersetzt**: Hindu Panchang (Tithi, Nakshatra, Yoga,
+  Karana, Rashi, Monat, Jahreswechsel, Kali-Jahr), japanischer Mondkalender
+  (Monat/Tag/Schaltmonat), Thai-Uposatha-Tage und der Jahreswechsel des
+  60er-Zyklus (chinesisches Neujahr statt 1. Januar) rechnen jetzt mit echten
+  Neu- und Vollmonden bzw. Sonnen- und Mondlänge.
+- **Stellar Distances** verschluckte Fehler (schrieb `Error: …` in den State,
+  loggte nichts). Fehler erreichen jetzt die Basisklasse.
+- **Zeitzone**: 25 Kalender nahmen die Uhr des Betriebssystems
+  (`datetime.now()`), in einem Container ohne `TZ` also UTC. Sie nutzen jetzt
+  die in Home Assistant eingestellte Zone. Die Option „lokale Zeitzone" von
+  Hindu-, Japan-Ära- und Japan-Mondkalender ebenso (statt `tzlocal`).
+- **Unix**: die lesbare Zeit trug „UTC", zeigte aber Ortszeit.
+- **Weltzeituhr** (`timezone`): ein unbekannter Zonenname löste beim Anlegen
+  der Entity einen `NameError` aus; jetzt fällt sie sauber auf UTC zurück.
+  Außerdem stimmt schon der erste State (die Zone wird vor dem Timer geladen).
+- **Sprache im Einrichtungs-Assistenten**: `zh-Hans` und `pt-BR` bekamen
+  Englisch, obwohl `zh`- und `pt`-Texte existieren. Assistent und Sensoren
+  nutzen jetzt dieselbe Regel. `translations/zh.json` heißt jetzt
+  `zh-Hans.json` (so nennt Home Assistant die Sprache).
+
+### Geändert
+- **Entity-IDs neuer Sensoren**: die Integration setzt jetzt selbst
+  `sensor.alternative_time_<kalender>`. Neuere Home-Assistant-Versionen
+  stellten dem bisherigen Vorschlag Geräte- und Bereichsnamen voran, womit
+  der Recorder-Glob aus dem README ins Leere laufen konnte. Bestehende
+  Entities behalten ihre ID; die Migration im Options-Dialog greift weiter.
+- **Sonnensystem-Attribute**: die Karte steckte dreifach in den Attributen
+  (SVG + zweimal PNG, ca. 90 KB pro Update an jedes offene Dashboard). Jetzt
+  nur noch die Pfade; `entity_picture` zeigt auf die SVG-Datei unter
+  `/local/`. `solar_system_map_svg`, `solar_system_map_png` und
+  `observer_location` entfallen.
+- **Kern verschlankt**: eine Kalendersuche statt drei (ohne `sys.path`-
+  Eingriffe und Import-Fallbacks; Importfehler eines Plugins stehen jetzt als
+  ERROR im Log), ein Formular-Builder für Assistent und Options-Dialog statt
+  zwei Kopien.
+- `manifest.json`: `tzlocal` und `pytz` entfernt. `dtg`, `german_rescue_dtg`,
+  `timezone` und `trackmania` nutzen jetzt Pythons eingebautes `zoneinfo`;
+  die „ohne pytz"-Ersatzzweige sind weg.
+- Build: die ZIP-Ausschlüsse für nicht mehr vorhandene Dateien entfernt;
+  CI lintet jetzt auch `tests/`.
+
+### Hinzugefügt
+- `astro.py`: gemeinsame Astronomie ohne Abhängigkeiten (Julianisches Datum,
+  Neu-/Vollmonde nach Meeus, Sonnen- und Mondlänge, Lunisolarkalender,
+  Mars Sol Date und Ls). Der Sri-Lanka-Kalender nutzt sie statt eigener Kopie.
+- `i18n.py`: eine Sprachauswahl-Funktion für Sensoren und Assistent.
+- **Tests: 175** (vorher 80). Neu: jeder Kalender an jedem Tag eines
+  Schaltjahres ohne Fehler; Sollwerte aus veröffentlichten Quellen
+  (Julianische Daten, Lande-Sols von Curiosity und Perseverance, Darian-Daten
+  von acht Mars-Missionen, Mars-Jahresanfänge, Neu-/Vollmonde, chinesisches
+  Neujahr 2023–2028 samt Schaltmonaten, Makha Bucha, Buddha Purnima, Diwali,
+  die elf Poya-Tage, Sommer-/Winterzeit der Zonen-Uhren); jede Option
+  erreicht ihren Sensor; Setup vergibt die festen Entity-IDs.
+
+### Entfernt
+- Optionen ohne Wirkung: `darian.month_names` (zeigte zwei verschiedene
+  Monate unter demselben Namen) und `german_rescue_dtg.show_timezone`.
+- Dateien: `calendars/test_debug.py`, `calendars/template.py.example`
+  (importierte ein nicht existierendes Modul), `calendars/README.md` (Kopie
+  von v2.5.0) und `README_FIX.md`. HACS installiert den Repo-Ordner, nicht
+  das Release-ZIP — die Dateien landeten also weiter bei jedem Nutzer.
+- Toter Code: 30 ungenutzte Konstanten in `const.py`, `async_setup` samt
+  `CONFIG_SCHEMA`, `hass.data`-Buchführung, `get_config_entry`,
+  `validate_input`, `groups` in den Entry-Daten, `update_interval`-Property,
+  sieben reine Durchreich-`async_update` und die `sys.path`-Zeile in `unix.py`.
+- README: zwei beworbene Kalender, die es nicht gibt (Hebräisch, Französisch-
+  Revolutionär); `LICENCE` heißt jetzt `LICENSE`, wie verlinkt.
+
+### Hinweis
+- **Angezeigte Werte ändern sich** in den oben genannten Kalendern — sie
+  waren vorher falsch. Darian, Mars, Julianisches Datum und Hindu Panchang
+  springen sichtbar.
+- Wer Templates auf `solar_system_map_svg` / `solar_system_map_png` gebaut
+  hat, nimmt stattdessen `local_svg_path` / `local_png_path` oder
+  `entity_picture`.
+- Optionen der sieben Kalender greifen jetzt erstmals; wer dort etwas
+  anderes als den Standard gewählt hatte, sieht das ab jetzt.
+
 ## [2.6.3] — 2026-09-26
 
 CI und Tests, plus ein Attribut, das der neue Churn-Test sofort gefunden hat.

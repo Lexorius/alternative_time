@@ -9,7 +9,7 @@
 [![License](https://img.shields.io/github/license/Lexorius/alternative_time.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-2.6.3-blue)](https://github.com/Lexorius/alternative_time)
 
-A comprehensive Home Assistant integration providing **30+ alternative time systems** from science, science fiction, fantasy, history, religion, and various cultures.
+A comprehensive Home Assistant integration providing **45 alternative time systems** from science, science fiction, fantasy, history, religion, and various cultures.
 
 ## 🎯 Overview
 
@@ -18,7 +18,7 @@ A comprehensive Home Assistant integration providing **30+ alternative time syst
 - 🪐 **Solar System Tracker** (Real-time planetary positions with visual maps)
 - 🚀 **Science Fiction** (Star Trek, Star Wars, EVE Online, Warhammer 40K)
 - 🧙 **Fantasy Worlds** (Tolkien, Elder Scrolls, Discworld, Warcraft)
-- 🏛️ **Historical Calendars** (Maya, Egyptian, Attic, Roman, French Revolutionary)
+- 🏛️ **Historical Calendars** (Maya, Egyptian, Attic, Roman)
 - 🔴 **Mars Colonization** (Darian Calendar, Mars Time Zones)
 - 🌏 **Cultural Calendars** (Islamic, Thai, Taiwanese, Chinese, Japanese, Hindu, Ethiopian)
 - 💻 **Technical Formats** (Unix, Hexadecimal, Julian Date, Swatch, TAI, UT1)
@@ -112,8 +112,9 @@ Real-time distances to notable stars and pulsars with measurement accuracy.
 ### 🪐 Solar System
 
 #### **Solar System Tracker**
-- **Features**: Real-time planetary positions, visual orbit maps
-- **Update**: Hourly
+- **Features**: Real-time planetary positions, visual orbit maps, visibility and retrograde motion as seen from Earth
+- **Update**: Every 5 minutes
+- **Attributes**: positions per planet plus the paths of the map files. The map itself is not copied into the attributes; `entity_picture` points at the SVG file.
 - **Map image**: The plugin writes the rendered orbit map to `config/www/alternative_time/` as both `solar_system_map.svg` and `solar_system_map.png`. To embed it in a dashboard, use the `/local/` URL with a cache-busting query parameter so updates are picked up by the browser:
 
   ```yaml
@@ -189,20 +190,11 @@ Real-time distances to notable stars and pulsars with measurement accuracy.
 - **Features**: Archon years, Olympiad counting
 - **Update**: Hourly
 
-#### **French Revolutionary Calendar**
-- **Features**: Decimal time (10 hours/day, 100 minutes/hour), Revolutionary months
-- **Update**: Every second
-
 ### ☪️ Religious Calendars
 
 #### **Islamic (Hijri) Calendar**
 - **Format**: `15 Ramadan 1447 AH`
 - **Features**: Tabular calculation, Arabic month names, Islamic holidays
-- **Update**: Hourly
-
-#### **Hebrew Calendar**
-- **Format**: `15 Tishrei 5785`
-- **Features**: Jewish holidays, Sabbath indication
 - **Update**: Hourly
 
 #### **Chinese Calendar**
@@ -239,8 +231,8 @@ Real-time distances to notable stars and pulsars with measurement accuracy.
 ### 🔴 Mars Time Systems
 
 #### **Darian Calendar**
-- **Format**: `Sol 15 Gemini 217`
-- **Features**: 24 months, 668 sols per year
+- **Format**: `13 Rishabha 214 (Sol Veneris)` (the day Curiosity landed)
+- **Features**: 24 months, 668 or 669 sols per year, years counted from 1609
 - **Update**: Hourly
 
 #### **Mars Time with Zones**
@@ -343,7 +335,7 @@ data:
     - sensor.alternative_time_*
 ```
 
-> **Entities created before v2.6.0.7** kept the entity_id they were originally given (e.g. `sensor.beats_swatch_internet_time`) and are not matched by the glob. Open the integration entry → **Configure** → **Migrate entity IDs to sensor.alternative_time_\*** — it previews every rename, applies them in the entity registry and posts a notification with the old → new list. Dashboards and automations that reference the old IDs must be updated by you (HA does not rewrite them). Opt-in and one-shot; nothing changes unless you confirm.
+> **Entities created by older versions** kept the entity_id they were originally given (e.g. `sensor.beats_swatch_internet_time`) and are not matched by the glob. Open the integration entry → **Configure** → **Migrate entity IDs to sensor.alternative_time_\*** — it previews every rename, applies them in the entity registry and posts a notification with the old → new list. Dashboards and automations that reference the old IDs must be updated by you (HA does not rewrite them). Opt-in and one-shot; nothing changes unless you confirm. The same step also fixes ids like `sensor.<area>_alternative_time_…` that newer Home Assistant versions created before this integration set the id itself.
 
 Home Assistant offers no way for an integration to exclude an entity's *state* from the recorder — that is user configuration only. Ten calendars are genuine second-resolution clocks (`unix`, `tai`, `eve`, `decimal`, `hexadecimal`, `sidereal`, `julian_date`, `timezone`, `ut1`, `mass_effect`) and will write a row per change until you set the glob above.
 
@@ -361,7 +353,7 @@ Each calendar follows the unified `CALENDAR_INFO` structure:
 
 ### Tests
 
-`tests/` runs without a Home Assistant installation — `homeassistant.*` is stubbed in `tests/conftest.py`, so the suite exercises the integration's own logic (discovery, scheduling and error paths, UT1 backoff, recorder churn, translations incl. hassfest's no-HTML rule) in a few seconds:
+`tests/` runs without a Home Assistant installation — `homeassistant.*` is stubbed in `tests/conftest.py`. The suite runs every calendar on every day of a leap year and compares the calendar maths with published values (Julian Dates, Mars landing sols, Darian dates of Mars missions, moon phases, Chinese New Year, religious holidays). It also covers discovery, setup and entity ids, scheduling and error paths, recorder churn and the translations, in a few seconds:
 
 ```bash
 pip install pytest aiohttp
@@ -369,6 +361,8 @@ python -m pytest tests -q
 ```
 
 CI runs the same suite in `python-checks.yml`; `release.yml` only builds a release when hassfest, HACS validation and the Python checks are green on the tagged commit.
+
+Shared maths lives in `astro.py` (Julian Dates, real new and full moons, Sun and Moon longitude, the lunisolar calendar, Mars Sol Date and season); calendars import it instead of carrying their own copies.
 
 ### Supported Languages
 🇬🇧 English (en) | 🇩🇪 Deutsch (de) | 🇪🇸 Español (es) | 🇫🇷 Français (fr) | 🇮🇹 Italiano (it) | 🇳🇱 Nederlands (nl) | 🇵🇱 Polski (pl) | 🇵🇹 Português (pt) | 🇷🇺 Русский (ru) | 🇯🇵 日本語 (ja) | 🇨🇳 中文 (zh) | 🇰🇷 한국어 (ko)
@@ -378,7 +372,7 @@ CI runs the same suite in `python-checks.yml`; `release.yml` only builds a relea
 - **technical**: Unix, Swatch, Hexadecimal, Decimal, TAI, UT1
 - **historical**: Egyptian, Maya, Roman, Attic
 - **cultural**: Thai, Taiwan, Chinese, Japanese, Ethiopian
-- **religious**: Islamic, Hebrew
+- **religious**: Islamic, Hindu Panchang, Ge'ez (Ethiopian)
 - **fantasy**: Middle-earth, Tamriel, Discworld
 - **scifi**: Star Trek, Star Wars, EVE, Warhammer
 
@@ -613,6 +607,3 @@ MIT License - See [LICENSE](LICENSE) file for details.
 - [HACS](https://hacs.xyz/)
 - [Home Assistant](https://www.home-assistant.io/)
 
----
-
-**Version 2.6.0.2**

@@ -466,7 +466,13 @@ class WarcraftCalendarSensor(AlternativeTimeSensorBase):
             # White Lady (28-day cycle)
             white_lady = self._warcraft_data["moons"]["white_lady"]
             days_since_epoch = (dt - datetime(2024, 1, 1)).days
-            white_lady_phase_idx = (days_since_epoch % white_lady["cycle_days"]) // (white_lady["cycle_days"] // 8)
+            # Spread the cycle evenly over the phase names. The old
+            # "// (cycle_days // 8)" produced indices 8 and 9 for an 8-item list
+            # on the last four days of every 28-day cycle (IndexError).
+            white_lady_phase_idx = (
+                (days_since_epoch % white_lady["cycle_days"]) * len(white_lady["phases"])
+                // white_lady["cycle_days"]
+            )
             moon_phases["White Lady"] = white_lady["phases"][white_lady_phase_idx]
 
             # Blue Child (35-day cycle, visible/hidden)
@@ -520,7 +526,7 @@ class WarcraftCalendarSensor(AlternativeTimeSensorBase):
         if not self._options_loaded:
             self._load_options()
 
-        now = datetime.now()
+        now = self._now()
         self._warcraft_date = self._calculate_warcraft_date(now)
 
         # Set state to formatted Warcraft date

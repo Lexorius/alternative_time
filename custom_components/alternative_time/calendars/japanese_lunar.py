@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from typing import Any, Dict, Optional, Tuple
 from zoneinfo import ZoneInfo
 
 from homeassistant.core import HomeAssistant
 
+from ..astro import julian_day, lunisolar_date, moon_age_days
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -524,29 +525,16 @@ class JapaneseLunarCalendarSensor(AlternativeTimeSensorBase):
             return ZoneInfo("Asia/Tokyo")
         elif self._timezone == "UTC":
             return ZoneInfo("UTC")
-        else:  # local
-            # Try to get system timezone, fallback to UTC
+        else:  # local = the time zone configured in Home Assistant
             try:
-                import tzlocal
-                return tzlocal.get_localzone()
+                return ZoneInfo(self._hass.config.time_zone)
             except Exception:
                 return ZoneInfo("UTC")
 
     def _calculate_moon_phase(self, japan_date: datetime) -> Tuple[float, str, str]:
         """Calculate moon phase for given date."""
-        # Simplified moon phase calculation
-        # Based on lunar synodic month of 29.53 days
-
-        # Reference new moon (January 6, 2000, 18:14 UTC)
-        ref_new_moon = datetime(2000, 1, 6, 18, 14, tzinfo=timezone.utc)
-
-        # Calculate days since reference
-        delta = japan_date.astimezone(timezone.utc) - ref_new_moon
-        days_since = delta.total_seconds() / 86400
-
-        # Calculate moon age (0-29.53)
-        synodic_month = 29.530588
-        moon_age = days_since % synodic_month
+        # Days since the last real new moon
+        moon_age = moon_age_days(julian_day(japan_date))
 
         # Determine phase name
         phase_index = int(moon_age / 2.1)
@@ -560,24 +548,9 @@ class JapaneseLunarCalendarSensor(AlternativeTimeSensorBase):
 
     def _calculate_lunar_month_day(self, japan_date: datetime) -> Tuple[int, int, bool]:
         """Calculate lunar month and day for given date."""
-        # Simplified lunar calendar calculation
-        # This is a basic approximation - actual calculation is complex
-
-        year = japan_date.year
-        month = japan_date.month
-
-        # Basic conversion (simplified)
-        # Lunar calendar is approximately 11 days behind solar
-        days_diff = 11
-        lunar_date = japan_date - timedelta(days=days_diff)
-
-        # Adjust for lunar month (29.5 days average)
-        lunar_month = lunar_date.month
-        lunar_day = lunar_date.day
-
-        # Check for leap month (simplified - occurs roughly every 3 years)
-        is_leap = (year % 3 == 0 and month == 6)
-
+        # Old Japanese calendar: months start on the day of the new moon (Japan
+        # time), numbered by the same rule as the Chinese calendar.
+        _year, lunar_month, is_leap, lunar_day = lunisolar_date(japan_date.date(), 9.0)
         return lunar_month, lunar_day, is_leap
 
     def _get_zodiac_animal(self, year: int) -> Dict[str, str]:
@@ -698,7 +671,8 @@ class JapaneseLunarCalendarSensor(AlternativeTimeSensorBase):
         moon_age, moon_phase_ja, moon_phase_en = self._calculate_moon_phase(japan_time)
 
         # Get zodiac animal
-        zodiac = self._get_zodiac_animal(japan_time.year)
+        # The animal belongs to the lunar year, which starts at the lunar New Year
+        zodiac = self._get_zodiac_animal(lunisolar_date(japan_time.date(), 9.0)[0])
 
         # Format the date
         formatted = self._format_lunar_date(

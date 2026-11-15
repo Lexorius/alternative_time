@@ -8,20 +8,15 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timedelta
+from datetime import timezone as dt_timezone
 from typing import Any, Dict
+from zoneinfo import ZoneInfo
 
 from homeassistant.core import HomeAssistant
 
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
-
-try:
-    import pytz
-    HAS_PYTZ = True
-except ImportError:
-    HAS_PYTZ = False
-    _LOGGER.warning("pytz not installed, DTG timezone support will be limited")
 
 # ============================================
 # CALENDAR METADATA
@@ -741,7 +736,6 @@ class DTGSensor(AlternativeTimeSensorBase):
         self._attr_unique_id = f"dtg_{base_name.lower().replace(' ', '_')}"
 
         # Set update interval
-        self._update_interval = timedelta(seconds=UPDATE_INTERVAL)
 
         # DTG-specific data
         self._dtg_data = CALENDAR_INFO.get("dtg_data", {})
@@ -753,16 +747,7 @@ class DTGSensor(AlternativeTimeSensorBase):
         self._use_iana = False
         self._iana_zone_str = "UTC"
         self._uppercase = True
-        self._timezone = None
-        self._timezone_initialized = False
-
-        # Try to initialize pytz timezone
-        if HAS_PYTZ:
-            try:
-                self._timezone = pytz.timezone("UTC")
-                self._timezone_initialized = True
-            except Exception as e:
-                _LOGGER.error(f"Failed to initialize default timezone: {e}")
+        self._timezone = ZoneInfo("UTC")
 
         # DTG data storage
         self._dtg_info = {}
@@ -861,13 +846,8 @@ class DTGSensor(AlternativeTimeSensorBase):
         # Calculate Julian day
         julian_day = dt.timetuple().tm_yday
 
-        # Determine if DST is active (if using IANA timezone)
-        is_dst = False
-        if self._use_iana and HAS_PYTZ and self._timezone and self._timezone_initialized:
-            try:
-                is_dst = bool(dt.dst())
-            except Exception:
-                is_dst = False
+        # DST is only ever active with an IANA zone; a fixed NATO offset has none
+        is_dst = bool(dt.dst())
 
         result = {
             "dtg": dtg_display,
@@ -927,38 +907,27 @@ class DTGSensor(AlternativeTimeSensorBase):
                 self._attr_name = f"{self._base_name} {calendar_name} ({self._nato_zone})"
 
             # Check if IANA zone changed (if enabled)
-            if self._use_iana and new_iana_zone != self._iana_zone_str and HAS_PYTZ:
+            if self._use_iana and new_iana_zone != self._iana_zone_str:
                 _LOGGER.info(f"IANA timezone changed from {self._iana_zone_str} to {new_iana_zone}")
                 self._iana_zone_str = new_iana_zone
                 try:
-                    self._timezone = pytz.timezone(self._iana_zone_str)
-                    self._timezone_initialized = True
+                    self._timezone = ZoneInfo(self._iana_zone_str)
                 except Exception as e:
                     _LOGGER.error(f"Failed to load IANA timezone {self._iana_zone_str}: {e}")
                     # Fallback to UTC
-                    self._timezone = pytz.timezone("UTC")
+                    self._timezone = ZoneInfo("UTC")
                     self._iana_zone_str = "UTC"
 
         # Calculate time based on configuration
         try:
-            if self._use_iana and HAS_PYTZ and self._timezone and self._timezone_initialized:
+            if self._use_iana:
                 # Use specific IANA timezone for accurate DST handling
                 now = datetime.now(self._timezone)
             else:
                 # Use NATO zone offset
                 zone_info = self._timezones.get(self._nato_zone, {})
                 offset_hours = zone_info.get("offset", 0)
-
-                if HAS_PYTZ:
-                    # Create fixed offset timezone
-                    from datetime import timezone as dt_timezone
-                    tz = dt_timezone(timedelta(hours=offset_hours))
-                    now = datetime.now(tz)
-                else:
-                    # Fallback to UTC with manual offset
-                    from datetime import timezone as dt_timezone
-                    now = datetime.now(dt_timezone.utc)
-                    now = now + timedelta(hours=offset_hours)
+                now = datetime.now(dt_timezone(timedelta(hours=offset_hours)))
 
             # Calculate DTG info
             self._dtg_info = self._calculate_dtg_info(now)

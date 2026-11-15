@@ -61,8 +61,7 @@ jobs:
         run: |
           cd "custom_components/${DOMAIN}"
           zip -rq "$GITHUB_WORKSPACE/${DOMAIN}.zip" . \
-            -x "__pycache__/*" "*/__pycache__/*" "*.pyc" \
-               "calendars/test_*.py" "calendars/template.py.example" "calendars/README.md"
+            -x "__pycache__/*" "*/__pycache__/*" "*.pyc"
 
       - name: Release-Notes aus CHANGELOG ziehen
         id: notes
