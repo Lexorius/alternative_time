@@ -33,7 +33,7 @@ jobs:
         # E501 (line-too-long) wird bewusst ignoriert: das Plugin enthält
         # mehrsprachige Beschreibungs-Strings in 12 Sprachen, die nicht
         # sinnvoll umgebrochen werden können.
-        run: ruff check custom_components/ tests/ --select E,F,W,I --ignore E501
+        run: ruff check custom_components/ tests/ tests_ha/ --select E,F,W,I --ignore E501
 
       - name: Tests
         # tests/ läuft ohne Home-Assistant-Installation (HA wird in
@@ -82,3 +82,22 @@ jobs:
             echo "::error::Version $V fehlt im CHANGELOG.md"; exit 1
           fi
           echo "✓ Version $V im CHANGELOG"
+
+  home-assistant:
+    name: Tests gegen Home Assistant
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      # Bringt einen echten Home-Assistant-Kern mit (keine Stubs).
+      - run: pip install pytest-homeassistant-custom-component LunarCalendar
+
+      - name: Tests in einem echten Home-Assistant-Kern
+        # tests_ha/ richtet die Integration in Home Assistant ein und prüft
+        # Entity-IDs, Einrichtungs-Assistent, Options-Dialog und ID-Migration.
+        # Getrennt von tests/, dessen conftest homeassistant durch Stubs ersetzt.
+        run: python -m pytest tests_ha -q -p no:cacheprovider

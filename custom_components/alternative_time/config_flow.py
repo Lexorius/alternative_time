@@ -155,8 +155,7 @@ def plan_entity_id_migration(pairs, generate):
 
     ``pairs``: iterable of (current_entity_id, calendar_id).
     ``generate(calendar_id, current_entity_id)``: returns a free target entity_id
-    (the caller wires this to entity_registry.async_generate_entity_id, which
-    appends _2/_3 on collisions and treats current_entity_id as available).
+    (appends _2/_3 on collisions and treats current_entity_id as available).
 
     Returns [(old_entity_id, new_entity_id)] for entities whose object_id does
     not already start with ENTITY_ID_PREFIX. Pure function, unit-tested.
@@ -512,9 +511,20 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         registry = er.async_get(self.hass)
 
         def _generate(cid: str, current: str) -> str:
-            return er.async_generate_entity_id(
-                registry, "sensor", f"{ENTITY_ID_PREFIX}{cid}", current_entity_id=current
-            )
+            """First free sensor.alternative_time_<cid>[_2, _3, ...].
+
+            Done by hand: the registry's own generator changed its signature
+            between Home Assistant versions and is deprecated in 2026.
+            """
+            base = f"sensor.{ENTITY_ID_PREFIX}{cid}"
+            candidate, number = base, 1
+            while candidate != current and (
+                registry.async_is_registered(candidate)
+                or self.hass.states.get(candidate) is not None
+            ):
+                number += 1
+                candidate = f"{base}_{number}"
+            return candidate
 
         plan = plan_entity_id_migration(entities_for_entry(self.config_entry.entry_id), _generate)
 
