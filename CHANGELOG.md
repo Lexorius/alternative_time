@@ -5,11 +5,12 @@ Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1
 die Versionsnummerierung folgt grob [Semantic Versioning](https://semver.org/lang/de/)
 mit optionaler vierter Build-Komponente.
 
-## [Unreleased]
+## [2.7.0] — 2026-11-15
 
 Ergebnis eines vollständigen Audits in zwei Durchläufen: falsche Werte in
 mehreren Kalendern korrigiert, den Kern verschlankt und die Rechenlogik
-erstmals gegen veröffentlichte Sollwerte getestet. Noch ohne Versionsnummer.
+erstmals gegen veröffentlichte Sollwerte getestet. Zusätzlich läuft die
+Integration jetzt in der CI in einem echten Home-Assistant-Kern.
 
 ### Behoben — falsche Werte
 - **Swatch-Zeit** lag in der Sommerzeit eine Stunde (41,7 Beats) zu hoch: die
@@ -49,6 +50,10 @@ erstmals gegen veröffentlichte Sollwerte getestet. Noch ohne Versionsnummer.
   die in Home Assistant eingestellte Zone. Die Option „lokale Zeitzone" von
   Hindu-, Japan-Ära- und Japan-Mondkalender ebenso (statt `tzlocal`).
 - **Unix**: die lesbare Zeit trug „UTC", zeigte aber Ortszeit.
+- **„Entity-IDs migrieren" stürzte ab** (seit v2.6.2): der Dialog rief eine
+  Funktion auf, die es in Home Assistant so nicht gibt (`AttributeError`,
+  sobald es etwas zu migrieren gab). Gefunden durch den neuen Test in einem
+  echten Home-Assistant-Kern; die freie ID wird jetzt selbst ermittelt.
 - **Weltzeituhr** (`timezone`): ein unbekannter Zonenname löste beim Anlegen
   der Entity einen `NameError` aus; jetzt fällt sie sauber auf UTC zurück.
   Außerdem stimmt schon der erste State (die Zone wird vor dem Timer geladen).
@@ -86,6 +91,13 @@ erstmals gegen veröffentlichte Sollwerte getestet. Noch ohne Versionsnummer.
   Neu-/Vollmonde nach Meeus, Sonnen- und Mondlänge, Lunisolarkalender,
   Mars Sol Date und Ls). Der Sri-Lanka-Kalender nutzt sie statt eigener Kopie.
 - `i18n.py`: eine Sprachauswahl-Funktion für Sensoren und Assistent.
+- **`tests_ha/`: Tests in einem echten Home-Assistant-Kern** (über
+  `pytest-homeassistant-custom-component`, eigener CI-Job, der auch Releases
+  absichert): alle Kalender einrichten und die vergebenen Entity-IDs prüfen,
+  der komplette Einrichtungs-Assistent in fünf Sprachen, der Options-Dialog,
+  die ID-Migration samt Kollision, ein zweiter Eintrag, Neuladen.
+- `brand/`: Icon und Logo liegen jetzt in der Integration (Home Assistant
+  2026.3 und neuer liest sie von dort) — Beitrag von frenck.
 - **Tests: 175** (vorher 80). Neu: jeder Kalender an jedem Tag eines
   Schaltjahres ohne Fehler; Sollwerte aus veröffentlichten Quellen
   (Julianische Daten, Lande-Sols von Curiosity und Perseverance, Darian-Daten

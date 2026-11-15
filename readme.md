@@ -7,7 +7,7 @@
 [![GitHub Release](https://img.shields.io/github/release/Lexorius/alternative_time.svg)](https://github.com/Lexorius/alternative_time/releases)
 [![GitHub Activity](https://img.shields.io/github/commit-activity/y/Lexorius/alternative_time.svg)](https://github.com/Lexorius/alternative_time/commits/main)
 [![License](https://img.shields.io/github/license/Lexorius/alternative_time.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.6.3-blue)](https://github.com/Lexorius/alternative_time)
+[![Version](https://img.shields.io/badge/version-2.7.0-blue)](https://github.com/Lexorius/alternative_time)
 
 A comprehensive Home Assistant integration providing **45 alternative time systems** from science, science fiction, fantasy, history, religion, and various cultures.
 
@@ -360,7 +360,16 @@ pip install pytest aiohttp
 python -m pytest tests -q
 ```
 
-CI runs the same suite in `python-checks.yml`; `release.yml` only builds a release when hassfest, HACS validation and the Python checks are green on the tagged commit.
+`tests_ha/` is the second suite: it runs the integration inside a real Home Assistant core (via `pytest-homeassistant-custom-component`, Linux or WSL). It sets up every calendar and checks the entity ids the registry hands out, clicks through the whole setup wizard in five languages, and uses the options dialog and the entity id migration:
+
+```bash
+pip install pytest-homeassistant-custom-component LunarCalendar
+python -m pytest tests_ha -q
+```
+
+Run the two directories in separate pytest calls — `tests/` replaces `homeassistant` with stubs.
+
+CI runs both suites in `python-checks.yml`; `release.yml` only builds a release when hassfest, HACS validation and the Python checks are green on the tagged commit.
 
 Shared maths lives in `astro.py` (Julian Dates, real new and full moons, Sun and Moon longitude, the lunisolar calendar, Mars Sol Date and season); calendars import it instead of carrying their own copies.
 
@@ -392,7 +401,17 @@ Shared maths lives in `astro.py` (Julian Dates, real new and full moons, Sun and
 
 ## 📈 Version History
 
-### v2.6.3 (Current)
+### v2.7.0 (Current)
+- 🐛 **Wrong values fixed in a dozen calendars**: Swatch (one hour off all summer), Julian Date (half a day low), Mars Sol Date and season, Darian (year 85 instead of 221), Islamic weekday, Thai zodiac, lunar illumination, Solar System visibility and retrograde, and real moon maths for Hindu Panchang, the Japanese lunar calendar, Thai holy days and the sexagenary year.
+- 🐛 **Seven calendars ignored all their options** (`stardate`, `discworld`, `eve`, `islamic`, `rivendell`, `shire`, `tamriel`); the Warcraft calendar crashed on 52 days a year; *Migrate entity IDs* crashed whenever there was something to migrate.
+- 🕒 25 calendars used the operating-system clock (UTC in a container); they now use Home Assistant's time zone.
+- 🆔 New sensors get `sensor.alternative_time_<calendar>` set explicitly, so newer Home Assistant versions no longer put device and area names in front. Existing entities keep their id.
+- 🗄️ Solar System: the map is no longer stored three times in the attributes. **Removed attributes:** `solar_system_map_svg`, `solar_system_map_png`, `observer_location` — use `local_svg_path`, `local_png_path` or `entity_picture`.
+- 🧹 One calendar discovery instead of three, shared astronomy in `astro.py`, dead code and stale files removed; requirements are down to `LunarCalendar` (`pytz`, `tzlocal` and `Pillow` dropped). `translations/zh.json` is now `zh-Hans.json`.
+- 🧪 Tests: 80 → 175 with published reference values, plus `tests_ha/`, which runs the integration inside a real Home Assistant core in CI.
+- 🎨 Brand assets ship with the integration (`brand/`, contributed by frenck).
+
+### v2.6.3
 - 🧪 **Test suite** (`tests/`, 80 tests, no HA install needed) wired into CI; **releases are now gated** on hassfest, HACS validation and the Python checks passing on the tagged commit.
 - 🗄️ Two more recorder-row sources found by the new tests and removed: `stellar_distances.last_calculated` (a microsecond timestamp duplicating HA's `last_updated`) and `cosmic_speedometer.fun_fact` (was `random.choice` per update; now rotates hourly).
 - 🧹 `.gitignore` added.
@@ -546,16 +565,19 @@ Four GitHub workflows guard the repository — three validation workflows that r
 
 #### `.github/workflows/python-checks.yml` — push & pull-request to `main`/`master`
 
-Six sequential steps in one job:
+Two jobs. **Python checks** (Python 3.12, no Home Assistant installed):
 
 | Step | Purpose |
 |---|---|
 | **Compile-check** | `python -m compileall -q custom_components/` — fails on any syntax error |
 | **Manifest-Check** | `bash scripts/check-manifest.sh` — required keys + hassfest-compatible key order |
-| **Ruff** | `ruff check custom_components/ --select E,F,W,I --ignore E501` — `E501` (line-too-long) is intentionally ignored because of multilingual description strings in 12 languages |
+| **Ruff** | `ruff check custom_components/ tests/ tests_ha/ --select E,F,W,I --ignore E501` — `E501` (line-too-long) is intentionally ignored because of multilingual description strings in 12 languages |
+| **Tests** | `python -m pytest tests` — the stub-based suite |
 | **JSON lint** | `json.loads()` over every `*.json` file outside `.git/` |
 | **YAML lint** | `yaml.safe_load()` over every `*.yml` / `*.yaml` file |
 | **Version-Konsistenz** | If `CHANGELOG.md` exists, `manifest.json`'s version must appear as a `## [version]` heading; missing `CHANGELOG.md` only emits a warning, a missing version entry is a hard error |
+
+**Tests gegen Home Assistant** (Python 3.13): installs `pytest-homeassistant-custom-component` and runs `python -m pytest tests_ha` — the integration inside a real Home Assistant core.
 
 #### `.github/workflows/release.yml` — push of a `v*` tag (or manual `workflow_dispatch`)
 
