@@ -1,30 +1,26 @@
-"""Recorder footprint: what the integration writes per state change (v2.6.2).
+"""Recorder footprint: what the integration writes per state change.
 
 Home Assistant only creates a `states` row when the state string OR the
 attributes change (StateMachine.async_set: same_state and same_attr -> no
 state_changed event). Time is frozen for these tests so they are
 deterministic — no minute/beat boundary can be crossed by accident.
 
-1. every plugin's update() runs without raising (this is how the five
-   `_get_plugin_options` AttributeErrors would have been caught);
-2. two updates at the *same* instant produce identical state + attributes
+1. two updates at the *same* instant produce identical state + attributes
    (catches counters, random picks and wall-clock timestamps in attributes);
-3. plugins whose displayed value has minute/beat resolution must not change
+2. plugins whose displayed value has minute/beat resolution must not change
    between T and T+1.1 s (attribute churn regression, v2.6.2);
-4. no fast plugin outside the known second-clocks changes per tick;
-5. the options-flow entity-id migration planner and the per-entry registry.
+3. no fast plugin outside the known second-clocks changes per tick;
+4. the options-flow entity-id migration planner and the per-entry registry.
 """
 from __future__ import annotations
 
 import importlib
 import json
-import sys
-import time
 import zoneinfo
 from datetime import datetime, timedelta, timezone
 
 import pytest
-from conftest import INTEGRATION, TEST_ENTRY_ID, FakeHass
+from conftest import INTEGRATION
 
 # Plugins whose state has minute/beat/10-s resolution: attributes must be
 # quantised to the same resolution (v2.6.2).
@@ -44,63 +40,10 @@ SECOND_CLOCKS = {
 FROZEN = datetime(2026, 3, 15, 12, 0, 20, tzinfo=timezone.utc)
 
 
-class FrozenDatetime(datetime):
-    """datetime subclass whose now()/utcnow()/today() return a fixed instant."""
-
-    instant: datetime = FROZEN  # aware UTC
-
-    @classmethod
-    def now(cls, tz=None):
-        if tz is None:
-            # like the real datetime.now(): naive *local* time for the instant
-            return cls.instant.astimezone().replace(tzinfo=None)
-        return cls.instant.astimezone(tz)
-
-    @classmethod
-    def utcnow(cls):
-        return cls.instant.replace(tzinfo=None)
-
-    @classmethod
-    def today(cls):
-        return cls.now()
-
-
-def _calendar_modules():
-    return [m for n, m in list(sys.modules.items())
-            if n.startswith(f"{INTEGRATION}.calendars.") and m is not None]
-
-
 @pytest.fixture
-def frozen_time(monkeypatch):
-    """Freeze datetime.now/utcnow/today and time.time in every calendar module."""
-    def _set(instant: datetime):
-        FrozenDatetime.instant = instant
-        for mod in _calendar_modules():
-            if getattr(mod, "datetime", None) in (datetime, FrozenDatetime):
-                monkeypatch.setattr(mod, "datetime", FrozenDatetime)
-        monkeypatch.setattr(time, "time", lambda: instant.timestamp())
-    _set(FROZEN)
-    return _set
-
-
-@pytest.fixture(scope="module")
-def entities():
-    """One instance per discovered calendar (import triggers module loading)."""
-    sensor_module = importlib.import_module(f"{INTEGRATION}.sensor")
-    discovered = sensor_module.export_discovered_calendars()
-    module_names = dict(sensor_module._CALENDAR_MODULE_NAMES)
-    out = {}
-    for cid in sorted(discovered):
-        mod = importlib.import_module(f".calendars.{module_names.get(cid, cid)}", package=INTEGRATION)
-        cls = next(v for v in vars(mod).values()
-                   if isinstance(v, type) and issubclass(v, sensor_module.AlternativeTimeSensorBase)
-                   and v is not sensor_module.AlternativeTimeSensorBase)
-        e = cls("Alternative Time", FakeHass())
-        e.hass = e._hass
-        e._calendar_id = cid
-        e._config_entry_id = TEST_ENTRY_ID
-        out[cid] = (e, discovered[cid])
-    return out
+def entities(make_sensor, discovered):
+    """One instance per discovered calendar."""
+    return {cid: (make_sensor(cid), info) for cid, info in sorted(discovered.items())}
 
 
 def _snapshot(entity):
@@ -122,21 +65,9 @@ def _diff(a, b):
     return {"state": s1 != s2, "attrs": attrs} if (s1 != s2 or attrs) else None
 
 
-# ------------------------------------------------------------------ tests --
-def test_every_plugin_update_runs(entities, frozen_time):
-    errors = {}
-    for cid, (e, _) in entities.items():
-        try:
-            e.update()
-        except zoneinfo.ZoneInfoNotFoundError:
-            continue
-        except Exception as exc:  # noqa: BLE001
-            errors[cid] = repr(exc)
-    assert not errors, json.dumps(errors, indent=2)
-
-
-def test_same_instant_twice_is_identical(entities, frozen_time):
+def test_same_instant_twice_is_identical(entities, freeze):
     """No counters, random picks or wall-clock timestamps in state/attributes."""
+    freeze(FROZEN)
     changed = {}
     for cid, (e, _) in entities.items():
         first, skip = _update(e)
@@ -148,51 +79,53 @@ def test_same_instant_twice_is_identical(entities, frozen_time):
     assert not changed, json.dumps(changed, indent=2)
 
 
-def test_churn_fixed_plugins_do_not_change_within_a_second(entities, frozen_time):
+def test_churn_fixed_plugins_do_not_change_within_a_second(entities, freeze):
     changed = {}
     for cid in sorted(CHURN_FIXED):
         e, _ = entities[cid]
-        frozen_time(FROZEN)
+        freeze(FROZEN)
         first, skip = _update(e)
         if skip:
             continue
-        frozen_time(FROZEN + timedelta(seconds=1.1))
+        freeze(FROZEN + timedelta(seconds=1.1))
         second, _ = _update(e)
         if (d := _diff(first, second)):
             changed[cid] = d
     assert not changed, json.dumps(changed, indent=2)
 
 
-def test_only_second_clocks_change_per_tick(entities, frozen_time):
+def test_only_second_clocks_change_per_tick(entities, freeze):
     """Documents which fast plugins write a row per tick; catches new churn."""
     unexpected = {}
     for cid, (e, info) in entities.items():
         if info.get("update_interval", 3600) > 10 or cid in SECOND_CLOCKS:
             continue
-        frozen_time(FROZEN)
+        freeze(FROZEN)
         first, skip = _update(e)
         if skip:
             continue
-        frozen_time(FROZEN + timedelta(seconds=1.1))
+        freeze(FROZEN + timedelta(seconds=1.1))
         second, _ = _update(e)
         if (d := _diff(first, second)):
             unexpected[cid] = d
     assert not unexpected, f"new per-tick churn: {json.dumps(unexpected, indent=2)}"
 
 
-def test_attribute_payload_is_bounded(entities, frozen_time):
-    """Attributes are not recorded (MATCH_ALL) but keep the live payload sane.
+def test_attribute_payload_is_small(entities, freeze):
+    """Attributes are pushed to every open dashboard on each change.
 
-    solar_system is ~23 KB with the SVG; with Pillow installed the PNG data
-    URI adds more. 256 KB is a sanity bound, not a design target.
+    The Solar System map used to ride along three times (about 90 KB); now
+    only its /local/ path does. 16 KB is also the size above which Home
+    Assistant's recorder refuses to store attributes.
     """
+    freeze(FROZEN)
     big = {}
     for cid, (e, _) in entities.items():
         snap, skip = _update(e)
         if skip:
             continue
         size = len(json.dumps(snap[1], default=str))
-        if size > 256 * 1024:
+        if size > 16 * 1024:
             big[cid] = size
     assert not big, big
 

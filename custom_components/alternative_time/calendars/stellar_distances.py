@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import logging
 import math
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, Optional, Tuple
 
 from homeassistant.core import HomeAssistant
@@ -596,28 +596,28 @@ class StellarDistancesSensor(AlternativeTimeSensorBase):
     def update(self) -> None:
         if not self._options_loaded:
             self._load_options()
-        try:
-            now = datetime.utcnow()
-            all_data = {}
-            for obj_id in self._stellar_data.keys():
-                data = self._calc_object(obj_id, now)
-                cat = data.get("category", "unknown")
-                if cat == "star" and not self._show_stars:
-                    continue
-                if cat == "pulsar" and not self._show_pulsars:
-                    continue
-                all_data[obj_id] = data
-            self._object_distances = all_data
-            primary = all_data.get(self._primary_object, {})
-            if primary:
-                parts = [f"{primary['name']}: {primary['distance_formatted']}"]
-                if self._show_motion and primary.get("radial_velocity_km_s", 0) != 0:
-                    parts.append(f"({primary['motion']})")
-                self._state = " ".join(parts)
-            else:
-                self._state = "Error: Unknown object"
-        except Exception as e:
-            self._state = f"Error: {e}"
+        # No try/except: an exception must reach the base class, which logs it
+        # and marks the sensor unavailable after repeated failures. The old
+        # handler wrote "Error: ..." into the state and logged nothing.
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+        all_data = {}
+        for obj_id in self._stellar_data.keys():
+            data = self._calc_object(obj_id, now)
+            cat = data.get("category", "unknown")
+            if cat == "star" and not self._show_stars:
+                continue
+            if cat == "pulsar" and not self._show_pulsars:
+                continue
+            all_data[obj_id] = data
+        self._object_distances = all_data
+        primary = all_data.get(self._primary_object, {})
+        if primary:
+            parts = [f"{primary['name']}: {primary['distance_formatted']}"]
+            if self._show_motion and primary.get("radial_velocity_km_s", 0) != 0:
+                parts.append(f"({primary['motion']})")
+            self._state = " ".join(parts)
+        else:
+            self._state = "Error: Unknown object"
 
     @property
     def state(self) -> Optional[str]: return self._state

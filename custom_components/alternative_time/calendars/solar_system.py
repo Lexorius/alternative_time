@@ -406,16 +406,9 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
         self._attr_name = f"{base_name} {calendar_name}"
         self._attr_unique_id = f"solar_system_{base_name.lower().replace(' ', '_')}"
 
-        self._update_interval = timedelta(seconds=UPDATE_INTERVAL)
         self._solar_data = CALENDAR_INFO.get("solar_data", {})
         self._planets = self._solar_data.get("planets", {})
         self._constellations = self._solar_data.get("constellations", [])
-
-        default_latitude = 49.14
-        default_longitude = 9.22
-        if hass and hasattr(hass, 'config'):
-            default_latitude = hass.config.latitude
-            default_longitude = hass.config.longitude
 
         # defaults
         self._display_planet = "all"
@@ -428,9 +421,6 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
         self._visualization_scale = "logarithmic"
         self._show_kuiper_belt = True
 
-        self._observer_latitude = default_latitude
-        self._observer_longitude = default_longitude
-
         self._positions_info: Dict[str, Any] = {}
         self._state = "Initializing..."
         self._first_update = True
@@ -439,6 +429,7 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
         self._cached_svg: Optional[str] = None
         self._cached_png_data_uri: Optional[str] = None
         self._cached_local_paths: Dict[str, str] = {}
+        self._map_version = 0  # cache-buster for the /local/ picture URL
 
     # -------------- helpers --------------
     def _lang(self) -> str:
@@ -569,26 +560,45 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
         }
 
     def _calculate_geocentric_position(self, planet_pos: Dict, earth_pos: Dict) -> Dict[str, Any]:
-        geo_longitude = (planet_pos["longitude"] - earth_pos["longitude"]) % 360.0
-        angle_diff = math.radians(planet_pos["longitude"] - earth_pos["longitude"])
+        """Direction and distance of a body as seen from Earth (in the ecliptic plane)."""
+        lon_p = math.radians(planet_pos["longitude"])
+        lon_e = math.radians(earth_pos["longitude"])
         r_p = float(planet_pos["distance"])
         r_e = float(earth_pos["distance"])
-        distance = math.sqrt(r_p**2 + r_e**2 - 2.0 * r_p * r_e * math.cos(angle_diff))
-        return {"longitude": geo_longitude, "distance": distance}
+        # Vector Earth -> body. The old code subtracted the two Sun-centred
+        # longitudes, which is not an angle seen from Earth.
+        x = r_p * math.cos(lon_p) - r_e * math.cos(lon_e)
+        y = r_p * math.sin(lon_p) - r_e * math.sin(lon_e)
+        return {"longitude": math.degrees(math.atan2(y, x)) % 360.0, "distance": math.hypot(x, y)}
+
+    def _is_retrograde(self, planet_id: str, dt: datetime) -> bool:
+        """True while the body moves backwards (westwards) in Earth's sky."""
+        if planet_id == "earth" or self._planets.get(planet_id, {}).get("special_type"):
+            return False
+        longitudes = []
+        for when in (dt, dt + timedelta(days=1)):
+            jd = self._datetime_to_jd(when)
+            longitudes.append(self._calculate_geocentric_position(
+                self._calculate_planet_position(planet_id, jd),
+                self._calculate_planet_position("earth", jd))["longitude"])
+        return (longitudes[1] - longitudes[0] + 180.0) % 360.0 - 180.0 < 0
 
     def _calculate_visibility(self, planet_id: str, dt: datetime) -> Dict[str, Any]:
         planet_pos = self._calculate_planet_position(planet_id, self._datetime_to_jd(dt))
         earth_pos = self._calculate_planet_position("earth", self._datetime_to_jd(dt))
         geo_pos = self._calculate_geocentric_position(planet_pos, earth_pos)
-        elong = abs(geo_pos["longitude"] - earth_pos["longitude"])
-        if elong > 180.0:
-            elong = 360.0 - elong
+        # Elongation: angle between the body and the Sun as seen from Earth.
+        # The Sun stands opposite Earth's own heliocentric position.
+        # Positive = east of the Sun (evening sky), negative = west (morning sky).
+        sun_longitude = (earth_pos["longitude"] + 180.0) % 360.0
+        signed_elong = (geo_pos["longitude"] - sun_longitude + 180.0) % 360.0 - 180.0
+        elong = abs(signed_elong)
 
         vis = {"elongation": elong, "visible": False, "rise_time": None, "set_time": None, "best_time": None, "visibility_period": None}
         if planet_id in ["mercury", "venus"]:
             if 15.0 < elong < 47.0:
                 vis["visible"] = True
-                if geo_pos["longitude"] < earth_pos["longitude"]:
+                if signed_elong < 0:
                     vis.update({"visibility_period": "Morning star", "best_time": "Before sunrise", "rise_time": "03:00", "set_time": "06:00"})
                 else:
                     vis.update({"visibility_period": "Evening star", "best_time": "After sunset", "rise_time": "18:00", "set_time": "21:00"})
@@ -904,7 +914,6 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
         result: Dict[str, Any] = {
             "julian_date": jd,
             "timestamp": dt.isoformat(),
-            "observer_location": {"latitude": self._observer_latitude, "longitude": self._observer_longitude},
             "positions": {}
         }
         earth_pos = None
@@ -933,7 +942,7 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
                 if planet_id != "earth":
                     position['visibility'] = self._calculate_visibility(planet_id, dt)
 
-            position['retrograde'] = False  # simplified placeholder
+            position['retrograde'] = self._is_retrograde(planet_id, dt)
 
             pname = self._get_planet_name(planet_id)
             result["positions"][pname] = position
@@ -1026,23 +1035,15 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
                 "visualization_scale": self._visualization_scale
             }
 
-            # Use cached visualization data (generated in update() to avoid blocking)
-            if self._enable_visualization and self._cached_svg:
-                attrs["solar_system_map_svg"] = self._cached_svg
-
-                if self._cached_png_data_uri:
-                    attrs["solar_system_map_png"] = self._cached_png_data_uri
-
-                # entity_picture: prefer PNG, fallback to SVG data URI
-                if self._cached_png_data_uri:
-                    attrs["entity_picture"] = self._cached_png_data_uri
-                else:
-                    # SVG as data-uri
-                    svg_b64 = base64.b64encode(self._cached_svg.encode("utf-8")).decode("ascii")
-                    attrs["entity_picture"] = "data:image/svg+xml;base64," + svg_b64
-
-                # Add local paths if available
+            # The map is written to /config/www and served at /local/...; the
+            # attributes only carry its paths. The picture itself (SVG plus two
+            # PNG data URIs, about 90 KB) used to ride in the attributes and was
+            # pushed to every open dashboard on each update.
+            if self._enable_visualization and self._cached_local_paths:
                 attrs.update(self._cached_local_paths)
+                svg_path = self._cached_local_paths.get("local_svg_path")
+                if svg_path:
+                    attrs["entity_picture"] = f"{svg_path}?v={self._map_version}"
 
         return attrs
 
@@ -1110,6 +1111,7 @@ class SolarSystemSensor(AlternativeTimeSensorBase):
                             self._cached_svg,
                             self._cached_png_data_uri if self._cached_png_data_uri else None
                         )
+                        self._map_version = int(now.timestamp())
                     except Exception as e:
                         _LOGGER.warning("Writing local assets failed: %s", e)
                         self._cached_local_paths = {}

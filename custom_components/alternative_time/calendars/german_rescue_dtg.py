@@ -8,21 +8,15 @@ Used by German emergency services, fire departments, and rescue organizations.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict
+from zoneinfo import ZoneInfo
 
 from homeassistant.core import HomeAssistant
 
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
-
-try:
-    import pytz
-    HAS_PYTZ = True
-except ImportError:
-    HAS_PYTZ = False
-    _LOGGER.warning("pytz not installed, German Rescue DTG timezone support will be limited")
 
 # ============================================
 # CALENDAR METADATA
@@ -413,38 +407,6 @@ CALENDAR_INFO = {
                 "zh": "在时间显示中包含秒 (HHMMSS)",
                 "ko": "시간 표시에 초 포함 (HHMMSS)"
             }
-        },
-        "show_timezone": {
-            "type": "boolean",
-            "default": True,
-            "label": {
-                "en": "Show Timezone",
-                "de": "Zeitzone anzeigen",
-                "es": "Mostrar Zona Horaria",
-                "fr": "Afficher le Fuseau Horaire",
-                "it": "Mostra Fuso Orario",
-                "nl": "Tijdzone Tonen",
-                "pl": "Pokaż Strefę Czasową",
-                "pt": "Mostrar Fuso Horário",
-                "ru": "Показывать часовой пояс",
-                "ja": "タイムゾーンを表示",
-                "zh": "显示时区",
-                "ko": "시간대 표시"
-            },
-            "description": {
-                "en": "Append timezone abbreviation (MEZ/MESZ)",
-                "de": "Zeitzonenabkürzung anhängen (MEZ/MESZ)",
-                "es": "Añadir abreviatura de zona horaria (MEZ/MESZ)",
-                "fr": "Ajouter l'abréviation du fuseau horaire (MEZ/MESZ)",
-                "it": "Aggiungi abbreviazione fuso orario (MEZ/MESZ)",
-                "nl": "Tijdzone-afkorting toevoegen (MEZ/MESZ)",
-                "pl": "Dodaj skrót strefy czasowej (MEZ/MESZ)",
-                "pt": "Adicionar abreviação de fuso horário (MEZ/MESZ)",
-                "ru": "Добавить сокращение часового пояса (MEZ/MESZ)",
-                "ja": "タイムゾーン略語を追加 (MEZ/MESZ)",
-                "zh": "添加时区缩写 (MEZ/MESZ)",
-                "ko": "시간대 약어 추가 (MEZ/MESZ)"
-            }
         }
     }
 }
@@ -466,7 +428,6 @@ class GermanRescueDTGSensor(AlternativeTimeSensorBase):
         self._attr_unique_id = f"german_rescue_dtg_{base_name.lower().replace(' ', '_')}"
 
         # Set update interval
-        self._update_interval = timedelta(seconds=UPDATE_INTERVAL)
 
         # DTG-specific data
         self._rescue_dtg_data = CALENDAR_INFO.get("rescue_dtg_data", {})
@@ -479,16 +440,7 @@ class GermanRescueDTGSensor(AlternativeTimeSensorBase):
         self._month_language = "de"
         self._uppercase = True
         self._show_seconds = False
-        self._timezone = None
-        self._timezone_initialized = False
-
-        # Try to initialize pytz timezone
-        if HAS_PYTZ:
-            try:
-                self._timezone = pytz.timezone(self._timezone_str)
-                self._timezone_initialized = True
-            except Exception as e:
-                _LOGGER.error(f"Failed to initialize default timezone: {e}")
+        self._timezone = ZoneInfo(self._timezone_str)
 
         # DTG data storage
         self._dtg_info = {}
@@ -612,12 +564,7 @@ class GermanRescueDTGSensor(AlternativeTimeSensorBase):
         week_num = dt.isocalendar()[1]
 
         # Determine if DST is active
-        is_dst = False
-        if HAS_PYTZ and self._timezone and self._timezone_initialized:
-            try:
-                is_dst = bool(dt.dst())
-            except Exception:
-                is_dst = False
+        is_dst = bool(dt.dst())
 
         result = {
             "dtg": dtg_display,
@@ -637,8 +584,8 @@ class GermanRescueDTGSensor(AlternativeTimeSensorBase):
             "unix_timestamp": int(dt.timestamp()),
             "timezone_info": {
                 "timezone": self._timezone_str,
-                "abbreviation": dt.strftime("%Z") if HAS_PYTZ and self._timezone else "N/A",
-                "offset": dt.strftime("%z") if HAS_PYTZ and self._timezone else "+0000"
+                "abbreviation": dt.strftime("%Z"),
+                "offset": dt.strftime("%z")
             }
         }
 
@@ -669,12 +616,11 @@ class GermanRescueDTGSensor(AlternativeTimeSensorBase):
             self._show_seconds = bool(options.get("show_seconds", False))
 
             # Check if timezone changed
-            if new_timezone != self._timezone_str and HAS_PYTZ:
+            if new_timezone != self._timezone_str:
                 _LOGGER.info(f"Timezone changed from {self._timezone_str} to {new_timezone}")
                 self._timezone_str = new_timezone
                 try:
-                    self._timezone = pytz.timezone(self._timezone_str)
-                    self._timezone_initialized = True
+                    self._timezone = ZoneInfo(self._timezone_str)
 
                     # Update name
                     calendar_name = self._translate('name', 'German Rescue DTG')
@@ -683,17 +629,12 @@ class GermanRescueDTGSensor(AlternativeTimeSensorBase):
                 except Exception as e:
                     _LOGGER.error(f"Failed to load timezone {self._timezone_str}: {e}")
                     # Fallback to Berlin
-                    self._timezone = pytz.timezone("Europe/Berlin")
+                    self._timezone = ZoneInfo("Europe/Berlin")
                     self._timezone_str = "Europe/Berlin"
 
         # Calculate time based on configuration
         try:
-            if HAS_PYTZ and self._timezone and self._timezone_initialized:
-                # Use configured timezone
-                now = datetime.now(self._timezone)
-            else:
-                # Fallback to system time
-                now = datetime.now()
+            now = datetime.now(self._timezone)
 
             # Calculate DTG info
             self._dtg_info = self._calculate_dtg_info(now)

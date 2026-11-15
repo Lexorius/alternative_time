@@ -2,23 +2,13 @@
 from __future__ import annotations
 
 import logging
-import os
-
-# WICHTIG: Import der Basis-Klasse direkt aus sensor.py
-import sys
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict
 
 from homeassistant.core import HomeAssistant
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-try:
-    from ..sensor import AlternativeTimeSensorBase
-except ImportError:
-    # Fallback für direkten Import
-    from sensor import AlternativeTimeSensorBase
+from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -396,7 +386,7 @@ class UnixTimestampSensor(AlternativeTimeSensorBase):
         if not self._options_loaded:
             self._load_options()
 
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         self._unix_time = self._calculate_unix_time(now)
 
         # Set state to Unix timestamp

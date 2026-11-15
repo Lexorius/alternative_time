@@ -492,7 +492,7 @@ class WarhammerImperialCalendarSensor(AlternativeTimeSensorBase):
 
         # Use day of year as seed for consistent daily thought
         import hashlib
-        dt = datetime.now()
+        dt = self._now()
         day_seed = f"{dt.year}-{dt.month}-{dt.day}"
         hash_val = int(hashlib.md5(day_seed.encode()).hexdigest(), 16)
         return thoughts[hash_val % len(thoughts)]
@@ -507,7 +507,7 @@ class WarhammerImperialCalendarSensor(AlternativeTimeSensorBase):
             self._load_options()
 
         try:
-            now = datetime.now()
+            now = self._now()
             self._imperial = self._to_imperial(now)
             self._state = self._imperial.format()
             _LOGGER.debug(f"Updated Imperial Date to {self._state}")

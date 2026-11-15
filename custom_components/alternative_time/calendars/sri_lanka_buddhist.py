@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 import logging
-import math
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional, Tuple
 
 from homeassistant.core import HomeAssistant
 
+from ..astro import from_julian_day, julian_day, lunation_index, moon_phase_jd
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -389,153 +389,8 @@ CALENDAR_INFO = {
 }
 
 
-# Mean synodic month length (days)
-_SYNODIC_MONTH = 29.530588861
-
-# JDE of the new moon nearest 2000-01-06 18:14 UTC (Meeus, ch. 49)
-_JDE_NEW_MOON_K0 = 2451550.09766
-
-
-def _datetime_to_jd(dt: datetime) -> float:
-    """Convert a UTC datetime to Julian Date."""
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
-    else:
-        dt = dt.astimezone(timezone.utc)
-    year = dt.year
-    month = dt.month
-    day = dt.day + (dt.hour + dt.minute / 60.0 + dt.second / 3600.0) / 24.0
-    if month <= 2:
-        year -= 1
-        month += 12
-    a = year // 100
-    b = 2 - a + a // 4
-    jd = int(365.25 * (year + 4716)) + int(30.6001 * (month + 1)) + day + b - 1524.5
-    return float(jd)
-
-
-def _jd_to_datetime(jd: float) -> datetime:
-    """Convert a Julian Date back to a UTC datetime."""
-    jd_plus = jd + 0.5
-    z = int(jd_plus)
-    f = jd_plus - z
-    if z < 2299161:
-        a = z
-    else:
-        alpha = int((z - 1867216.25) / 36524.25)
-        a = z + 1 + alpha - alpha // 4
-    b = a + 1524
-    c = int((b - 122.1) / 365.25)
-    d = int(365.25 * c)
-    e = int((b - d) / 30.6001)
-    day_full = b - d - int(30.6001 * e) + f
-    month = e - 1 if e < 14 else e - 13
-    year = c - 4716 if month > 2 else c - 4715
-    day_i = int(day_full)
-    frac = day_full - day_i
-    secs = int(round(frac * 86400.0))
-    hh, rem = divmod(secs, 3600)
-    mm, ss = divmod(rem, 60)
-    # Clamp seconds rollovers from rounding
-    if hh >= 24:
-        base = datetime(year, int(month), int(day_i), 0, 0, 0, tzinfo=timezone.utc)
-        return base + timedelta(seconds=hh * 3600 + mm * 60 + ss)
-    return datetime(year, int(month), int(day_i), hh, mm, ss, tzinfo=timezone.utc)
-
-
-def _full_moon_jde(k: int) -> float:
-    """Return the Julian Ephemeris Day of the k-th full moon after k=0.
-
-    Implements Meeus, "Astronomical Algorithms" (2nd ed.) chapter 49 with the
-    main periodic corrections for full moon (Table 49.B). Accurate to within
-    a few minutes — well below the day-boundary precision Poya days need.
-    """
-    k_fm = k + 0.5  # Full moon offset within the lunation cycle
-    T = k_fm / 1236.85  # Julian centuries since 2000-01-06
-
-    jde = (
-        _JDE_NEW_MOON_K0
-        + _SYNODIC_MONTH * k_fm
-        + 0.00015437 * T * T
-        - 0.000000150 * T ** 3
-        + 0.00000000073 * T ** 4
-    )
-
-    # Sun's mean anomaly
-    M = 2.5534 + 29.10535670 * k_fm - 0.0000014 * T * T - 0.00000011 * T ** 3
-    # Moon's mean anomaly
-    Mp = (
-        201.5643 + 385.81693528 * k_fm + 0.0107582 * T * T
-        + 0.00001238 * T ** 3 - 0.000000058 * T ** 4
-    )
-    # Moon's argument of latitude
-    F = (
-        160.7108 + 390.67050284 * k_fm - 0.0016118 * T * T
-        - 0.00000227 * T ** 3 + 0.000000011 * T ** 4
-    )
-    # Longitude of ascending node
-    Omega = 124.7746 - 1.56375588 * k_fm + 0.0020672 * T * T + 0.00000215 * T ** 3
-    # Earth-orbit eccentricity correction
-    E = 1.0 - 0.002516 * T - 0.0000074 * T * T
-
-    Mr = math.radians(M)
-    Mpr = math.radians(Mp)
-    Fr = math.radians(F)
-    Or = math.radians(Omega)
-
-    corr = (
-        -0.40614 * math.sin(Mpr)
-        + 0.17302 * E * math.sin(Mr)
-        + 0.01614 * math.sin(2 * Mpr)
-        + 0.01043 * math.sin(2 * Fr)
-        + 0.00734 * E * math.sin(Mpr - Mr)
-        - 0.00515 * E * math.sin(Mpr + Mr)
-        + 0.00209 * E * E * math.sin(2 * Mr)
-        - 0.00111 * math.sin(Mpr - 2 * Fr)
-        - 0.00057 * math.sin(Mpr + 2 * Fr)
-        + 0.00056 * E * math.sin(2 * Mpr + Mr)
-        - 0.00042 * math.sin(3 * Mpr)
-        + 0.00042 * E * math.sin(Mr + 2 * Fr)
-        + 0.00038 * E * math.sin(Mr - 2 * Fr)
-        - 0.00024 * E * math.sin(2 * Mpr - Mr)
-        - 0.00017 * math.sin(Or)
-        - 0.00007 * math.sin(Mpr + 2 * Mr)
-        + 0.00004 * math.sin(2 * Mpr - 2 * Fr)
-        + 0.00004 * math.sin(3 * Mr)
-        + 0.00003 * math.sin(Mpr + Mr - 2 * Fr)
-        + 0.00003 * math.sin(2 * Mpr + 2 * Fr)
-        - 0.00003 * math.sin(Mpr + Mr + 2 * Fr)
-        + 0.00003 * math.sin(Mpr - Mr + 2 * Fr)
-        - 0.00002 * math.sin(Mpr - Mr - 2 * Fr)
-        - 0.00002 * math.sin(3 * Mpr + Mr)
-        + 0.00002 * math.sin(4 * Mpr)
-    )
-    return jde + corr
-
-
 # Sri Lanka Standard Time offset (UTC+5:30, no DST)
 _SL_OFFSET = timedelta(hours=5, minutes=30)
-
-
-def _nearest_full_moon(dt: datetime) -> Tuple[datetime, float]:
-    """Return (UTC datetime of nearest full moon, signed days offset from dt)."""
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
-
-    target_jd = _datetime_to_jd(dt)
-    k_approx = round((target_jd - _JDE_NEW_MOON_K0) / _SYNODIC_MONTH)
-
-    best_dt: Optional[datetime] = None
-    best_off: Optional[float] = None
-    for k in (k_approx - 1, k_approx, k_approx + 1):
-        jde = _full_moon_jde(int(k))
-        fm_dt = _jd_to_datetime(jde)
-        off = (fm_dt - dt).total_seconds() / 86400.0
-        if best_off is None or abs(off) < abs(best_off):
-            best_off = off
-            best_dt = fm_dt
-    assert best_dt is not None and best_off is not None
-    return best_dt, best_off
 
 
 def _poya_date(full_moon_utc: datetime) -> datetime:
@@ -551,10 +406,9 @@ def _poya_date(full_moon_utc: datetime) -> datetime:
 
     This rule is equivalent to subtracting 18 hours from the SLST full moon
     time and taking the date. It reproduces the officially proclaimed Sri
-    Lankan Poya calendar exactly for the 2023–2026 test sample.
+    Lankan Poya calendar exactly for the 2023-2026 sample in the tests.
     """
-    fm_slst = full_moon_utc + _SL_OFFSET
-    shifted = fm_slst - timedelta(hours=18)
+    shifted = full_moon_utc + _SL_OFFSET - timedelta(hours=18)
     return datetime(shifted.year, shifted.month, shifted.day, tzinfo=timezone.utc)
 
 
@@ -562,23 +416,19 @@ def _next_poya_on_or_after(today_utc: datetime) -> Tuple[datetime, datetime]:
     """Find the first Poya day that is >= today_utc (returned as midnight UTC).
 
     Returns (poya_civil_date, full_moon_utc) so callers can also report the
-    underlying astronomical instant.
+    underlying astronomical instant. Full moons come from astro.moon_phase_jd.
     """
     if today_utc.tzinfo is None:
         today_utc = today_utc.replace(tzinfo=timezone.utc)
     today_day = datetime(today_utc.year, today_utc.month, today_utc.day, tzinfo=timezone.utc)
 
-    # Start from the lunation nearest today, then step forward if needed
-    target_jd = _datetime_to_jd(today_utc)
-    k_approx = round((target_jd - _JDE_NEW_MOON_K0) / _SYNODIC_MONTH)
-    for k in (k_approx - 1, k_approx, k_approx + 1, k_approx + 2):
-        fm = _jd_to_datetime(_full_moon_jde(int(k)))
-        poya = _poya_date(fm)
+    k = lunation_index(julian_day(today_utc)) - 1
+    while True:
+        full_moon = from_julian_day(moon_phase_jd(k + 0.5))
+        poya = _poya_date(full_moon)
         if poya >= today_day:
-            return poya, fm
-    # Fallback (should never hit)
-    fm = _jd_to_datetime(_full_moon_jde(int(k_approx + 3)))
-    return _poya_date(fm), fm
+            return poya, full_moon
+        k += 1
 
 
 class SriLankaBuddhistSensor(AlternativeTimeSensorBase):

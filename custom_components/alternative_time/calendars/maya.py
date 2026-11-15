@@ -595,7 +595,7 @@ class MayaCalendarSensor(AlternativeTimeSensorBase):
         if not self._options_loaded:
             self._load_options()
 
-        now = datetime.now()
+        now = self._now()
         self._maya_date = self._calculate_maya_date(now)
 
         # Set state to formatted Maya date

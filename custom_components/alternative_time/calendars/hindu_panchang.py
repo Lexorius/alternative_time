@@ -3,11 +3,19 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional
 from zoneinfo import ZoneInfo
 
 from homeassistant.core import HomeAssistant
 
+from ..astro import (
+    julian_day,
+    lahiri_ayanamsa,
+    lunation_index,
+    moon_longitude,
+    moon_phase_jd,
+    sun_longitude,
+)
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -474,7 +482,7 @@ CALENDAR_INFO = {
         "era_offsets": {
             "shalivahana": 78,  # Shalivahana Shaka (CE - 78)
             "vikram": -57,      # Vikram Samvat (CE + 57)
-            "kali": 3102        # Kali Yuga (CE - 3102)
+            "kali": -3102        # Kali Yuga (CE - 3102)
         }
     },
 
@@ -649,81 +657,71 @@ class HinduPanchangCalendarSensor(AlternativeTimeSensorBase):
             return ZoneInfo("Asia/Kolkata")
         elif self._timezone == "UTC":
             return ZoneInfo("UTC")
-        else:  # local
-            # Try to get system timezone, fallback to UTC
+        else:  # local = the time zone configured in Home Assistant
             try:
-                import tzlocal
-                return tzlocal.get_localzone()
+                return ZoneInfo(self._hass.config.time_zone)
             except Exception:
                 return ZoneInfo("UTC")
 
-    def _calculate_tithi(self, india_time: datetime) -> Tuple[int, str]:
-        """Calculate Tithi (lunar day) for given date."""
-        # Simplified calculation - actual calculation is complex
-        # Based on angular distance between Sun and Moon
-        days_since_new_moon = (india_time.day + india_time.month * 30) % 30
-        tithi_index = min(days_since_new_moon, 14)
-        paksha = "bright" if days_since_new_moon <= 15 else "dark"
-        return tithi_index, paksha
+    @staticmethod
+    def _sky(when: datetime) -> Dict[str, float]:
+        """Sun and Moon positions the panchang is built from.
 
-    def _calculate_nakshatra(self, india_time: datetime) -> int:
-        """Calculate Nakshatra (lunar mansion) for given date."""
-        # Simplified calculation - actual calculation involves Moon's longitude
-        day_of_year = india_time.timetuple().tm_yday
-        nakshatra_index = (day_of_year * 27 // 365) % 27
-        return nakshatra_index
+        Sidereal longitudes (Lahiri ayanamsa) in degrees, plus the Moon's
+        elongation from the Sun (0 = new moon, 180 = full moon).
+        """
+        jd = julian_day(when)
+        ayanamsa = lahiri_ayanamsa(jd)
+        sun = (sun_longitude(jd) - ayanamsa) % 360.0
+        moon = (moon_longitude(jd) - ayanamsa) % 360.0
+        return {"jd": jd, "sun": sun, "moon": moon, "elongation": (moon - sun) % 360.0}
 
-    def _calculate_yoga(self, india_time: datetime) -> int:
-        """Calculate Yoga for given date."""
-        # Simplified calculation - actual involves Sun and Moon longitudes
-        day_of_month = india_time.day
-        yoga_index = (day_of_month - 1) % 27
-        return yoga_index
+    @staticmethod
+    def _calculate_karana(half_tithi: int) -> int:
+        """Index into the karana table for a half-tithi (0-59, 6 degrees each).
 
-    def _calculate_karana(self, tithi_index: int) -> int:
-        """Calculate Karana (half of Tithi) for given Tithi."""
-        # There are 11 Karanas that repeat
-        karana_index = (tithi_index * 2) % 11
-        return karana_index
+        Table order: seven repeating karanas (Bava ... Vishti), then the four
+        fixed ones Shakuni, Chatushpada, Naga, Kimstughna.
+        """
+        if half_tithi == 0:
+            return 10  # Kimstughna: first half of the first bright tithi
+        if half_tithi >= 57:
+            return half_tithi - 50  # Shakuni (7), Chatushpada (8), Naga (9)
+        return (half_tithi - 1) % 7
 
-    def _calculate_rashi(self, india_time: datetime) -> int:
-        """Calculate Rashi (zodiac sign) for given date."""
-        # Simplified calculation based on Sun's position
-        month = india_time.month
-        day = india_time.day
-
-        # Approximate zodiac boundaries
-        if (month == 3 and day >= 21) or (month == 4 and day <= 19):
-            return 0  # Aries
-        elif (month == 4 and day >= 20) or (month == 5 and day <= 20):
-            return 1  # Taurus
-        # ... simplified for brevity
-        return (month - 1) % 12
-
-    def _get_hindu_year(self, india_time: datetime) -> int:
-        """Calculate Hindu year based on selected era."""
+    def _get_hindu_year(self, india_time: datetime, hindu_month: int) -> int:
+        """Hindu year in the selected era. The lunar year starts with Chaitra."""
         gregorian_year = india_time.year
         era_offset = self._hindu_data["era_offsets"][self._calendar_system]
 
-        # Adjust for Hindu New Year (typically in March/April)
-        if india_time.month < 3:
+        # Pausha, Magha and Phalguna (months 9-11) that fall in January-April
+        # still belong to the lunar year that began in the previous spring.
+        if india_time.month <= 4 and hindu_month >= 9:
             gregorian_year -= 1
 
         return gregorian_year - era_offset
 
-    def _get_hindu_month(self, india_time: datetime) -> int:
-        """Get Hindu month (simplified)."""
-        # Hindu months typically start with new moon
-        # This is a simplified approximation
-        month = (india_time.month + 1) % 12
-        return month
+    @staticmethod
+    def _get_hindu_month(jd: float) -> int:
+        """Lunar month, 0 = Chaitra (amanta: a month runs from new moon to new moon).
 
-    def _get_festival(self, month: int, tithi: int) -> Optional[Dict[str, str]]:
-        """Check if current date has a festival."""
-        date_key = f"{month}-{tithi+1}"
-        if date_key in self._hindu_data["festivals"]:
-            return self._hindu_data["festivals"][date_key]
-        return None
+        A month is named after the sidereal sign the Sun is in at the new moon
+        that starts it. A leap (adhika) month gets the same name as the month
+        after it; it is not marked separately.
+        """
+        new_moon = moon_phase_jd(lunation_index(jd))
+        sun_sign = int(((sun_longitude(new_moon) - lahiri_ayanamsa(new_moon)) % 360.0) // 30.0)
+        return (sun_sign + 1) % 12
+
+    def _get_festival(self, month: int, tithi: int, paksha: str) -> Optional[Dict[str, str]]:
+        """Festival for a lunar date.
+
+        Table keys are "month-tithi", both counted from 1, and refer to the
+        bright fortnight (tithi 15 = full moon).
+        """
+        if paksha != "bright":
+            return None
+        return self._hindu_data["festivals"].get(f"{month + 1}-{tithi + 1}")
 
     def _format_panchang_date(self, hindu_year: int, month: int, tithi: int, paksha: str,
                              nakshatra: int, yoga: int, karana: int, rashi: int,
@@ -782,16 +780,19 @@ class HinduPanchangCalendarSensor(AlternativeTimeSensorBase):
         if self._timezone == "Asia/Kolkata":
             india_time = now.astimezone(ZoneInfo("Asia/Kolkata"))
 
-        # Calculate various Panchang elements
-        tithi_index, paksha = self._calculate_tithi(india_time)
-        nakshatra_index = self._calculate_nakshatra(india_time)
-        yoga_index = self._calculate_yoga(india_time)
-        karana_index = self._calculate_karana(tithi_index)
-        rashi_index = self._calculate_rashi(india_time)
+        # Panchang elements from the real positions of Sun and Moon
+        sky = self._sky(now)
+        tithi_number = int(sky["elongation"] // 12.0)  # 0-29, one tithi = 12 degrees
+        paksha = "bright" if tithi_number < 15 else "dark"
+        tithi_index = tithi_number % 15
+        nakshatra_index = int(sky["moon"] // (360.0 / 27.0))
+        yoga_index = int(((sky["sun"] + sky["moon"]) % 360.0) // (360.0 / 27.0))
+        karana_index = self._calculate_karana(int(sky["elongation"] // 6.0))
+        rashi_index = int(sky["sun"] // 30.0)  # sidereal sign of the Sun
 
-        # Get Hindu year and month
-        hindu_year = self._get_hindu_year(india_time)
-        hindu_month = self._get_hindu_month(india_time)
+        # Get Hindu month and year
+        hindu_month = self._get_hindu_month(sky["jd"])
+        hindu_year = self._get_hindu_year(india_time, hindu_month)
 
         # Format the date
         formatted = self._format_panchang_date(
@@ -841,7 +842,7 @@ class HinduPanchangCalendarSensor(AlternativeTimeSensorBase):
 
         # Add festival if applicable
         if self._show_festivals:
-            festival = self._get_festival(hindu_month, tithi_index)
+            festival = self._get_festival(hindu_month, tithi_index, paksha)
             if festival:
                 result["festival"] = festival["english"]
                 result["festival_sanskrit"] = festival["sanskrit"]

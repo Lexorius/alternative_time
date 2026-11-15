@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict
 
 from homeassistant.core import HomeAssistant
@@ -427,6 +427,11 @@ class EveOnlineTimeSensor(AlternativeTimeSensorBase):
 
         _LOGGER.debug(f"Initialized EVE Online Time sensor: {self._attr_name}")
 
+    async def async_added_to_hass(self) -> None:
+        """Load the options chosen in the config flow, then start the timer."""
+        self.set_options(self.get_plugin_options())
+        await super().async_added_to_hass()
+
     def set_options(self, options: Dict[str, Any]) -> None:
         """Set options from config flow."""
         if options:
@@ -475,7 +480,8 @@ class EveOnlineTimeSensor(AlternativeTimeSensorBase):
         """Calculate EVE Online Time from standard time."""
 
         # EVE uses UTC
-        utc_time = datetime.utcnow()
+        # naive UTC: the code below subtracts naive datetimes from it
+        utc_time = datetime.now(timezone.utc).replace(tzinfo=None)
 
         # Calculate YC year
         years_since_launch = utc_time.year - self._eve_data["yc_epoch_year"]
@@ -563,7 +569,7 @@ class EveOnlineTimeSensor(AlternativeTimeSensorBase):
 
     def update(self) -> None:
         """Update the sensor."""
-        now = datetime.now()
+        now = self._now()
         self._eve_time = self._calculate_eve_time(now)
 
         # Set state to formatted EVE time

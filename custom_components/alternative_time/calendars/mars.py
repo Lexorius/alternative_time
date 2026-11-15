@@ -7,11 +7,12 @@ Includes mission sol counters for rover landing sites.
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
 from homeassistant.core import HomeAssistant
 
+from ..astro import mars_sol_date, mars_solar_longitude
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -67,8 +68,6 @@ CALENDAR_INFO = {
         # Physical constants
         "sol_duration_seconds": 88775.244147,  # Mars solar day in Earth seconds
         "tropical_year_sols": 668.5991,        # Mars year in sols
-        "j2000_epoch": 946727935.816,          # J2000 epoch in Unix timestamp
-        "mars_epoch_msd": 44796.0,             # MSD at J2000 epoch
 
         # Mars timezones with full descriptions for dropdown
         "timezones": {
@@ -267,11 +266,11 @@ CALENDAR_INFO = {
 
         # Mission landing dates (MSD) for sol counters
         "missions": {
-            "Viking 1": 34809,
-            "Viking 2": 34895,
-            "Pathfinder": 46236,
-            "Spirit": 49269,
-            "Opportunity": 49290,
+            "Viking 1": 36455,
+            "Viking 2": 36500,
+            "Pathfinder": 43905,
+            "Spirit": 46216,
+            "Opportunity": 46236,
             "Curiosity": 49269,
             "Perseverance": 52304,
         },
@@ -623,10 +622,9 @@ class MarsTimeSensor(AlternativeTimeSensorBase):
         timezone_offset = tz_data["longitude"] / 15.0  # Convert degrees to hours
 
         # Calculate MSD (Mars Sol Date)
-        unix_timestamp = earth_utc.timestamp()
-        seconds_since_j2000 = unix_timestamp - self._mars_data["j2000_epoch"]
-        sols_since_j2000 = seconds_since_j2000 / self._mars_data["sol_duration_seconds"]
-        msd = self._mars_data["mars_epoch_msd"] + sols_since_j2000
+        # The old code added the offset of 6 Jan 2000 (MSD 44796.0) to a count
+        # that started on 1 Jan 2000, which made every value 4.4 sols too high.
+        msd = mars_sol_date(earth_utc)
 
         # Calculate MTC (Mars Coordinated Time)
         sol_fraction = msd % 1.0
@@ -639,10 +637,8 @@ class MarsTimeSensor(AlternativeTimeSensorBase):
         local_hours = int((sol_fraction * 24 + timezone_offset) % 24)
         local_time = f"{local_hours:02d}:{mtc_minutes:02d}:{mtc_seconds:02d}"
 
-        # Calculate solar longitude (Ls) for seasons
-        # Simplified calculation
-        mars_year_fraction = (msd / self._mars_data["tropical_year_sols"]) % 1.0
-        ls = mars_year_fraction * 360.0
+        # Solar longitude Ls (0 = northern spring equinox) decides the season
+        ls = mars_solar_longitude(earth_utc)
 
         # Determine season
         season = None
@@ -712,7 +708,7 @@ class MarsTimeSensor(AlternativeTimeSensorBase):
         if not self._options_loaded:
             self._load_options()
 
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         self._mars_time_info = self._calculate_mars_time(now)
 
         # Format state based on display_format

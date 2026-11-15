@@ -555,7 +555,7 @@ class AtticCalendarSensor(AlternativeTimeSensorBase):
 
     def update(self) -> None:
         """Update the sensor."""
-        now = datetime.now()
+        now = self._now()
         self._attic_date = self._calculate_attic_date(now)
 
         # Set state to full Attic date

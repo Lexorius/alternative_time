@@ -688,7 +688,7 @@ class GeezCalendarSensor(AlternativeTimeSensorBase):
     def update(self) -> None:
         """Update the sensor state and attributes."""
         try:
-            now = datetime.now()
+            now = self._now()
             self._ethiopian_date = self._calculate_ethiopian_date(now)
             # State shown on the badge
             self._state = self._ethiopian_date.get("state_text")

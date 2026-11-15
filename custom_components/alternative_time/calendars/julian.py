@@ -7,7 +7,7 @@ Example: JD 2460636.235417 (decimal days since epoch)
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from typing import Any, Dict
 
 from homeassistant.core import HomeAssistant
@@ -279,7 +279,6 @@ class JulianDateSensor(AlternativeTimeSensorBase):
         self._attr_unique_id = f"julian_date_{base_name.lower().replace(' ', '_')}"
 
         # Set update interval
-        self._update_interval = timedelta(seconds=UPDATE_INTERVAL)
 
         # Julian Date specific data
         self._julian_data = CALENDAR_INFO.get("julian_data", {})
@@ -349,9 +348,10 @@ class JulianDateSensor(AlternativeTimeSensorBase):
         second = dt.second
         microsecond = dt.microsecond
 
-        # Calculate fractional day from noon UTC
-        # Julian Date starts at noon, so we need to adjust
-        fractional_day = (hour - 12) / 24.0 + minute / 1440.0 + second / 86400.0 + microsecond / 86400000000.0
+        # Fraction of the civil day since 00:00 UTC. The formula below gives the
+        # Julian Date of 00:00 UTC (it ends in .5), so the whole day fraction is
+        # added; noon then lands on a whole number, as a Julian Date must.
+        fractional_day = hour / 24.0 + minute / 1440.0 + second / 86400.0 + microsecond / 86400000000.0
 
         # Algorithm from Meeus
         if month <= 2:

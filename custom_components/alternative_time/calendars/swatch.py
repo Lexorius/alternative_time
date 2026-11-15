@@ -6,17 +6,16 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict
 
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
 
-try:
-    import pytz
-    HAS_PYTZ = True
-except ImportError:
-    HAS_PYTZ = False
-    _LOGGER.warning("pytz not installed, using UTC+1 approximation for Biel Mean Time")
+# Biel Mean Time (BMT) is a fixed UTC+1 all year. It has no daylight saving,
+# so a real time zone such as Europe/Zurich must not be used for it: that made
+# the beats one hour (41.7 beats) too high from March to October.
+BMT = timezone(timedelta(hours=1))
 
 # ============================================
 # CALENDAR METADATA
@@ -120,7 +119,6 @@ CALENDAR_INFO = {
 
     # Swatch-specific data
     "swatch_data": {
-        "base_timezone": "Europe/Zurich",  # BMT (Biel Mean Time)
         "beats_per_day": 1000,
         "seconds_per_beat": 86.4,  # 86400 seconds / 1000 beats
         "reference_meridian": 7.5,  # Biel/Bienne longitude
@@ -244,10 +242,6 @@ class SwatchTimeSensor(AlternativeTimeSensorBase):
         # Swatch data
         self._swatch_data = CALENDAR_INFO["swatch_data"]
 
-        # Timezone will be loaded later
-        self._bmt = None
-        self._bmt_initialized = False
-
         # Initialize state to a default value
         self._state = "@000"
         self._swatch_time = {}
@@ -284,20 +278,6 @@ class SwatchTimeSensor(AlternativeTimeSensorBase):
         # Try to load options now that IDs should be set
         self._load_options()
 
-        # Initialize Timezone async
-        if HAS_PYTZ and not self._bmt_initialized:
-            try:
-                # Execute blocking operation in executor
-                self._bmt = await self.hass.async_add_executor_job(
-                    pytz.timezone, self._swatch_data["base_timezone"]
-                )
-                self._bmt_initialized = True
-                _LOGGER.debug(f"Loaded timezone {self._swatch_data['base_timezone']}")
-            except Exception as e:
-                _LOGGER.warning(f"Could not load timezone {self._swatch_data['base_timezone']}: {e}")
-                self._bmt = None
-                self._bmt_initialized = True  # Prevent retry
-
         # Perform initial update
         self.update()
 
@@ -330,11 +310,7 @@ class SwatchTimeSensor(AlternativeTimeSensorBase):
     def _calculate_swatch_time(self, earth_time: datetime) -> Dict[str, Any]:
         """Calculate Swatch Internet Time from standard time."""
         # Get time in BMT (Biel Mean Time)
-        if HAS_PYTZ and self._bmt and self._bmt_initialized:
-            bmt_time = earth_time.astimezone(self._bmt)
-        else:
-            # Fallback: use UTC+1 as approximation
-            bmt_time = earth_time.astimezone(timezone(timedelta(hours=1)))
+        bmt_time = earth_time.astimezone(BMT)
 
         # Calculate seconds since midnight BMT
         midnight_bmt = bmt_time.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -400,7 +376,7 @@ class SwatchTimeSensor(AlternativeTimeSensorBase):
             self._load_options()
 
         try:
-            now = datetime.now().astimezone()
+            now = dt_util.now()
             self._swatch_time = self._calculate_swatch_time(now)
 
             # Set state to formatted Swatch time
@@ -410,8 +386,3 @@ class SwatchTimeSensor(AlternativeTimeSensorBase):
         except Exception as e:
             _LOGGER.error(f"Error updating Swatch time: {e}", exc_info=True)
             self._state = "@ERROR"
-
-    async def async_update(self) -> None:
-        """Update sensor asynchronously."""
-        # Run synchronous update in executor
-        await self.hass.async_add_executor_job(self.update)

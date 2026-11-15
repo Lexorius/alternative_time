@@ -4,19 +4,13 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from typing import Any, Dict
+from zoneinfo import ZoneInfo
 
 from homeassistant.core import HomeAssistant
 
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
-
-try:
-    import pytz
-    HAS_PYTZ = True
-except ImportError:
-    HAS_PYTZ = False
-    _LOGGER.warning("pytz not installed, timezone support will be limited")
 
 # ============================================
 # CALENDAR METADATA
@@ -345,9 +339,8 @@ class TimezoneSensor(AlternativeTimeSensorBase):
         self._attr_unique_id = f"{base_name}_timezone"
         self._attr_icon = CALENDAR_INFO.get("icon", "mdi:clock-time-four-outline")
 
-        # Timezone wird lazy geladen
+        # Timezone wird in async_added_to_hass geladen
         self._timezone = None
-        self._timezone_initialized = False
 
         # Timezone data
         self._timezone_data = CALENDAR_INFO["timezone_data"]
@@ -362,9 +355,7 @@ class TimezoneSensor(AlternativeTimeSensorBase):
         _LOGGER.debug(f"Initialized Timezone sensor: {self._attr_name}")
 
     async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        await super().async_added_to_hass()
-
+        """Load options and the time zone, then start the timer."""
         # Lade Optionen beim Hinzufügen
         options = self.get_plugin_options()
         if options:
@@ -382,31 +373,21 @@ class TimezoneSensor(AlternativeTimeSensorBase):
             except Exception:
                 self._timezone_str = "UTC"
 
-        # Initialisiere Timezone async
-        if HAS_PYTZ and not self._timezone_initialized:
-            try:
-                # Führe die blockierende Operation in einem Executor aus
-                self._timezone = await self._hass.async_add_executor_job(
-                    pytz.timezone, self._timezone_str
-                )
-                self._timezone_initialized = True
-                _LOGGER.info(f"Loaded timezone: {self._timezone_str}")
+        # Zeitzone im Executor laden (liest Dateien), danach erst den Timer
+        # starten — so stimmt schon der erste State.
+        try:
+            self._timezone = await self._hass.async_add_executor_job(
+                ZoneInfo, self._timezone_str
+            )
+        except Exception as e:
+            _LOGGER.warning(f"Could not load timezone {self._timezone_str}: {e}, using UTC")
+            self._timezone_str = "UTC"
+            self._timezone = await self._hass.async_add_executor_job(ZoneInfo, "UTC")
 
-                # Update Name mit Timezone
-                calendar_name = self._translate('name', 'World Timezones')
-                self._attr_name = f"{self._base_name} {calendar_name} ({self._timezone_str})"
+        calendar_name = self._translate('name', 'World Timezones')
+        self._attr_name = f"{self._base_name} {calendar_name} ({self._timezone_str})"
 
-            except Exception as e:
-                _LOGGER.warning(f"Could not load timezone {self._timezone_str}: {e}, using UTC")
-                try:
-                    self._timezone = await self._hass.async_add_executor_job(
-                        pytz.timezone, "UTC"
-                    )
-                    self._timezone_str = "UTC"
-                    self._attr_name = f"{self._base_name} {calendar_name} (UTC)"
-                except Exception:
-                    self._timezone = None
-                self._timezone_initialized = True  # Prevent retry
+        await super().async_added_to_hass()
 
     @property
     def state(self):
@@ -473,12 +454,7 @@ class TimezoneSensor(AlternativeTimeSensorBase):
             offset_display = "UTC"
 
         # Check DST status
-        is_dst = False
-        if HAS_PYTZ and self._timezone and self._timezone_initialized:
-            try:
-                is_dst = bool(now_tz.dst())
-            except Exception:
-                is_dst = False
+        is_dst = bool(now_tz.dst())
 
         # Build display string
         display_parts = []
@@ -553,27 +529,23 @@ class TimezoneSensor(AlternativeTimeSensorBase):
             self._show_date = bool(options.get("show_date", False))
 
             # Prüfe ob Timezone geändert wurde
-            if new_timezone != self._timezone_str and HAS_PYTZ:
+            if new_timezone != self._timezone_str:
                 _LOGGER.info(f"Timezone changed from {self._timezone_str} to {new_timezone}")
                 self._timezone_str = new_timezone
                 try:
-                    self._timezone = pytz.timezone(self._timezone_str)
+                    self._timezone = ZoneInfo(self._timezone_str)
                     # Update Name
                     calendar_name = self._translate('name', 'World Timezones')
                     self._attr_name = f"{self._base_name} {calendar_name} ({self._timezone_str})"
-                    self._timezone_initialized = True
                 except Exception as e:
                     _LOGGER.error(f"Failed to load timezone {self._timezone_str}: {e}")
                     # Fallback to previous or UTC
                     if not self._timezone:
-                        try:
-                            self._timezone = pytz.timezone("UTC")
-                            self._timezone_str = "UTC"
-                        except Exception:
-                            self._timezone = None
+                        self._timezone = ZoneInfo("UTC")
+                        self._timezone_str = "UTC"
 
         # Update state
-        if HAS_PYTZ and self._timezone:
+        if self._timezone:
             try:
                 now_tz = datetime.now(self._timezone)
                 self._tz_info = self._calculate_timezone_info(now_tz)
@@ -583,13 +555,13 @@ class TimezoneSensor(AlternativeTimeSensorBase):
                 self._state = f"Error: {self._timezone_str}"
                 self._tz_info = {"error": str(e)}
         else:
-            # Fallback without pytz
-            now = datetime.now()
+            # Zone not loaded yet (update() before async_added_to_hass)
+            now = self._now()
             self._state = now.strftime("%H:%M:%S") + f" {self._timezone_str}"
             self._tz_info = {
                 "time": now.strftime("%H:%M:%S"),
                 "timezone_id": self._timezone_str,
-                "error": "pytz not available or timezone not loaded"
+                "error": "timezone not loaded"
             }
 
         _LOGGER.debug(f"Updated Timezone to {self._state}")

@@ -7,8 +7,8 @@ as small real classes/functions below. ``voluptuous`` is stubbed as well.
 
 This makes the tests fast (no HA bootstrap) and independent of the HA
 version installed on the developer machine or CI runner. They exercise the
-integration's own logic — discovery, scheduling, error handling, recorder
-behaviour, translations — not HA itself.
+integration's own logic — discovery, scheduling, error handling, calendar
+maths, recorder behaviour, translations — not HA itself.
 """
 from __future__ import annotations
 
@@ -18,9 +18,12 @@ import importlib.abc
 import importlib.machinery
 import logging
 import sys
+import time
 import types
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import MagicMock
+from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -29,6 +32,13 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 INTEGRATION = "custom_components.alternative_time"
+TEST_ENTRY_ID = "test-entry"
+HA_TIME_ZONE = "Europe/Berlin"
+
+try:
+    HA_TZ = ZoneInfo(HA_TIME_ZONE)
+except Exception:  # no tz database on this machine (pip install tzdata)
+    HA_TZ = timezone(timedelta(hours=1))
 
 
 # --------------------------------------------------------------------------
@@ -42,10 +52,6 @@ class FakeEntity:
     _attr_icon = None
     _attr_available = True
     entity_id = None
-
-    @property
-    def suggested_object_id(self):
-        return getattr(self, "_attr_name", None)
 
     @property
     def extra_state_attributes(self):
@@ -86,7 +92,7 @@ class FakeConfig:
     language = "de"
     latitude = 49.14
     longitude = 9.22
-    time_zone = "Europe/Berlin"
+    time_zone = HA_TIME_ZONE
 
     def path(self, *parts):
         import tempfile
@@ -98,15 +104,30 @@ class FakeHass:
 
     config = FakeConfig()
 
+    def __init__(self):
+        self.tasks: list[asyncio.Task] = []
+
     async def async_add_executor_job(self, fn, *args):
         return fn(*args)
 
     def async_create_task(self, coro):
-        return asyncio.get_event_loop().create_task(coro)
+        task = asyncio.get_event_loop().create_task(coro)
+        self.tasks.append(task)
+        return task
+
+
+class FakeConfigEntry:
+    """Minimal stand-in for homeassistant.config_entries.ConfigEntry."""
+
+    def __init__(self, entry_id: str, data: dict | None = None):
+        self.entry_id = entry_id
+        self.title = "Alternative Time"
+        self.data = data or {"calendar_options": {}, "calendars": []}
+        self.options: dict = {}
 
 
 # --------------------------------------------------------------------------
-# Stub loader for homeassistant.* (and voluptuous)
+# Stub loader for homeassistant.*
 # --------------------------------------------------------------------------
 class _StubLoader(importlib.abc.Loader):
     def create_module(self, spec):
@@ -128,12 +149,15 @@ def _stub_attr(module, name):
 
 
 class _StubFinder(importlib.abc.MetaPathFinder):
-    PREFIXES = ("homeassistant",)
-
     def find_spec(self, fullname, path=None, target=None):
-        if fullname in self.PREFIXES or fullname.startswith(tuple(p + "." for p in self.PREFIXES)):
+        if fullname == "homeassistant" or fullname.startswith("homeassistant."):
             return importlib.machinery.ModuleSpec(fullname, _StubLoader(), is_package=True)
         return None
+
+
+def ha_now() -> datetime:
+    """Stand-in for homeassistant.util.dt.now(): aware, in the HA time zone."""
+    return datetime.now(HA_TZ)
 
 
 def install_ha_stub() -> None:
@@ -157,6 +181,11 @@ def install_ha_stub() -> None:
         "ConfigFlow", (), {"__init_subclass__": classmethod(lambda cls, **kw: None)}
     )
     config_entries.OptionsFlow = type("OptionsFlow", (), {})
+    # `from homeassistant.util import dt` must give a module with a real now()
+    util = importlib.import_module("homeassistant.util")
+    dt_mod = importlib.import_module("homeassistant.util.dt")
+    dt_mod.now = ha_now
+    util.dt = dt_mod
     sys.modules.setdefault("voluptuous", MagicMock(name="voluptuous"))
 
 
@@ -165,6 +194,58 @@ install_ha_stub()
 # Keep plugin DEBUG noise out of test output; tests that assert on logs
 # attach their own handler.
 logging.getLogger("custom_components").setLevel(logging.WARNING)
+
+
+# --------------------------------------------------------------------------
+# Frozen time
+# --------------------------------------------------------------------------
+class FrozenDatetime(datetime):
+    """datetime subclass whose now()/utcnow()/today() return a fixed instant."""
+
+    instant: datetime = datetime(2026, 3, 20, 12, 0, 0, tzinfo=timezone.utc)
+
+    @classmethod
+    def now(cls, tz=None):
+        if tz is None:
+            # like the real datetime.now(): naive local time for the instant
+            return cls.instant.astimezone().replace(tzinfo=None)
+        return cls.instant.astimezone(tz)
+
+    @classmethod
+    def utcnow(cls):
+        return cls.instant.replace(tzinfo=None)
+
+    @classmethod
+    def today(cls):
+        return cls.now()
+
+
+@pytest.fixture
+def freeze(monkeypatch, discovered):
+    """Return a function that freezes "now" for every calendar module.
+
+    Covers the three clocks the plugins use: the module-level ``datetime``
+    class, ``time.time`` and Home Assistant's ``dt_util.now()``.
+    """
+    dt_mod = importlib.import_module("homeassistant.util.dt")
+    modules = [m for n, m in list(sys.modules.items())
+               if n.startswith(f"{INTEGRATION}.calendars.") and m is not None]
+
+    patched = False
+
+    def _set(instant: datetime) -> None:
+        nonlocal patched
+        FrozenDatetime.instant = instant
+        if patched:
+            return
+        for mod in modules:
+            if getattr(mod, "datetime", None) is datetime:
+                monkeypatch.setattr(mod, "datetime", FrozenDatetime)
+        monkeypatch.setattr(time, "time", lambda: FrozenDatetime.instant.timestamp())
+        monkeypatch.setattr(dt_mod, "now", lambda: FrozenDatetime.instant.astimezone(HA_TZ))
+        patched = True
+
+    return _set
 
 
 # --------------------------------------------------------------------------
@@ -178,12 +259,21 @@ def sensor_module():
 @pytest.fixture(scope="session")
 def discovered(sensor_module):
     """All discovered calendars, keyed by CALENDAR_INFO['id']."""
-    return sensor_module.export_discovered_calendars()
+    return sensor_module.discover_calendars()
 
 
 @pytest.fixture(scope="session")
 def module_names(sensor_module, discovered):
     return dict(sensor_module._CALENDAR_MODULE_NAMES)
+
+
+@pytest.fixture(autouse=True, scope="session")
+def test_entry(sensor_module):
+    """A config entry the sensors can read their options from."""
+    entry = FakeConfigEntry(TEST_ENTRY_ID)
+    sensor_module._CONFIG_ENTRIES[TEST_ENTRY_ID] = entry
+    yield entry
+    sensor_module._CONFIG_ENTRIES.pop(TEST_ENTRY_ID, None)
 
 
 @pytest.fixture
@@ -212,27 +302,6 @@ def make_sensor(sensor_module, module_names):
         return entity
 
     return _make
-
-
-class FakeConfigEntry:
-    """Minimal stand-in for homeassistant.config_entries.ConfigEntry."""
-
-    def __init__(self, entry_id: str, data: dict | None = None):
-        self.entry_id = entry_id
-        self.title = "Alternative Time"
-        self.data = data or {"calendar_options": {}, "calendars": []}
-        self.options: dict = {}
-
-
-TEST_ENTRY_ID = "test-entry"
-
-
-@pytest.fixture(autouse=True, scope="session")
-def _register_test_entry(sensor_module):
-    """Make get_plugin_options() find the entry (else it logs an ERROR)."""
-    sensor_module._CONFIG_ENTRIES[TEST_ENTRY_ID] = FakeConfigEntry(TEST_ENTRY_ID)
-    yield
-    sensor_module._CONFIG_ENTRIES.pop(TEST_ENTRY_ID, None)
 
 
 class LogCapture(logging.Handler):

@@ -489,7 +489,7 @@ class DecimalTimeSensor(AlternativeTimeSensorBase):
             self._load_options()
 
         try:
-            now = datetime.now()
+            now = self._now()
             self._decimal_time = self._calculate_decimal_time(now)
 
             # Set state based on configuration
@@ -502,8 +502,3 @@ class DecimalTimeSensor(AlternativeTimeSensorBase):
         except Exception as e:
             _LOGGER.error(f"Error updating Decimal time: {e}", exc_info=True)
             self._state = "ERROR"
-
-    async def async_update(self) -> None:
-        """Update sensor asynchronously."""
-        # Run synchronous update in executor
-        await self.hass.async_add_executor_job(self.update)

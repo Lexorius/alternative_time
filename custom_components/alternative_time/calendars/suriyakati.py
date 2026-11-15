@@ -7,6 +7,7 @@ from typing import Any, Dict
 
 from homeassistant.core import HomeAssistant
 
+from ..astro import moon_quarter_on
 from ..sensor import AlternativeTimeSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -449,22 +450,18 @@ class SuriyakatiCalendarSensor(AlternativeTimeSensorBase):
         thai_digits = self._thai_data["thai_digits"]
         return ''.join(thai_digits[int(d)] for d in str(n))
 
-    def _get_buddhist_day(self, day: int, month: int) -> str:
-        """Calculate Buddhist holy day (simplified)."""
-        # Simplified calculation - actual dates follow lunar calendar
-        # This approximates uposatha days (Buddhist sabbath)
-        lunar_approximation = (day + month * 2) % 30
+    def _get_buddhist_day(self, earth_date: datetime) -> str:
+        """Buddhist holy day (wan phra) from the real Moon phase.
 
-        if lunar_approximation == 8:
-            return "🌓 Uposatha (First Quarter)"
-        elif lunar_approximation == 15:
-            return "🌕 Uposatha (Full Moon)"
-        elif lunar_approximation == 23:
-            return "🌗 Uposatha (Last Quarter)"
-        elif lunar_approximation in [29, 30, 0, 1]:
-            return "🌑 Uposatha (New Moon)"
-
-        return ""
+        New moon, quarters and full moon as they fall on the Thai civil day
+        (UTC+7). The official Thai lunar calendar can differ by a day.
+        """
+        return {
+            0: "🌑 Uposatha (New Moon)",
+            1: "🌓 Uposatha (First Quarter)",
+            2: "🌕 Uposatha (Full Moon)",
+            3: "🌗 Uposatha (Last Quarter)",
+        }.get(moon_quarter_on(earth_date.date(), 7.0), "")
 
     def _calculate_thai_date(self, earth_date: datetime) -> Dict[str, Any]:
         """Calculate Thai Buddhist Calendar date from standard date."""
@@ -483,15 +480,15 @@ class SuriyakatiCalendarSensor(AlternativeTimeSensorBase):
         weekday_data = self._thai_data["weekdays"][weekday_index]
 
         # Calculate zodiac animal
-        # Thai zodiac aligned so 2024 CE (2567 BE) = Year of the Dragon (index 4)
-        zodiac_index = (buddhist_year - 3) % 12
+        # 2567 BE (2024 CE) is the Year of the Dragon, index 4: (2567 - 7) % 12 == 4
+        zodiac_index = (buddhist_year - 7) % 12
         zodiac_data = self._thai_data["zodiac"][zodiac_index]
 
         # Check for holidays
         holiday_data = self._thai_data["holidays"].get((earth_date.month, earth_date.day))
 
         # Get Buddhist holy day if enabled
-        buddhist_day = self._get_buddhist_day(earth_date.day, earth_date.month) if self._show_buddhist_days else ""
+        buddhist_day = self._get_buddhist_day(earth_date) if self._show_buddhist_days else ""
 
         # Format date based on display language and format
         if self._format == "numeric":
@@ -569,7 +566,7 @@ class SuriyakatiCalendarSensor(AlternativeTimeSensorBase):
 
     def update(self) -> None:
         """Update the sensor."""
-        now = datetime.now()
+        now = self._now()
         self._thai_date = self._calculate_thai_date(now)
 
         # Set state to formatted date

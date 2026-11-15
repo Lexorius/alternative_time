@@ -510,11 +510,9 @@ class JapaneseEraCalendarSensor(AlternativeTimeSensorBase):
             return ZoneInfo("Asia/Tokyo")
         elif self._timezone == "UTC":
             return ZoneInfo("UTC")
-        else:  # local
-            # Try to get system timezone, fallback to UTC
+        else:  # local = the time zone configured in Home Assistant
             try:
-                import tzlocal
-                return tzlocal.get_localzone()
+                return ZoneInfo(self._hass.config.time_zone)
             except Exception:
                 return ZoneInfo("UTC")
 

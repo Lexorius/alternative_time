@@ -6,16 +6,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, List
-
-try:
-    from zoneinfo import ZoneInfo  # Python 3.9+
-except ImportError:
-    try:
-        import pytz
-        ZoneInfo = None
-    except ImportError:
-        ZoneInfo = None
-        pytz = None
+from zoneinfo import ZoneInfo
 
 from homeassistant.core import HomeAssistant
 
@@ -147,29 +138,13 @@ class TrackmaniaEventsSensor(AlternativeTimeSensorBase):
         return attrs
 
     # -------------------- Helpers --------------------
-    def _tz(self):
-        """Get timezone object with fallback handling."""
-        if ZoneInfo is not None:
-            try:
-                return ZoneInfo(self._tz_name)
-            except Exception:
-                _LOGGER.warning("Invalid tz %s, falling back to Europe/Berlin", self._tz_name)
-                try:
-                    return ZoneInfo("Europe/Berlin")
-                except Exception:
-                    return None
-
-        # Fallback to pytz if available
-        if 'pytz' in globals() and pytz is not None:
-            try:
-                return pytz.timezone(self._tz_name)
-            except Exception:
-                try:
-                    return pytz.timezone("Europe/Berlin")
-                except Exception:
-                    pass
-
-        return None
+    def _tz(self) -> ZoneInfo:
+        """Configured time zone; Europe/Berlin if the name is unknown."""
+        try:
+            return ZoneInfo(self._tz_name)
+        except Exception:
+            _LOGGER.warning("Invalid tz %s, falling back to Europe/Berlin", self._tz_name)
+            return ZoneInfo("Europe/Berlin")
 
     def _make_event(self, when: datetime, title: str, tag: str) -> Dict[str, Any]:
         """Create an event dictionary with timing information."""
@@ -242,13 +217,7 @@ class TrackmaniaEventsSensor(AlternativeTimeSensorBase):
             except (ValueError, TypeError):
                 self._horizon_days = 14
 
-            tz = self._tz()
-            if tz is None:
-                self._state = "Timezone error"
-                self._tm_events = {"error": "Could not initialize timezone"}
-                return
-
-            now = datetime.now(tz)
+            now = datetime.now(self._tz())
             upcoming = self._generate_upcoming(now)
 
             if upcoming:

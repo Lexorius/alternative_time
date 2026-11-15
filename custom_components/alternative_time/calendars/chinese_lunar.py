@@ -616,7 +616,7 @@ class ChineseLunarCalendarSensor(AlternativeTimeSensorBase):
             self._state = "Library Missing - Install lunarcalendar"
             return
 
-        now = datetime.now()
+        now = self._now()
         self._chinese_date = self._calculate_chinese_date(now)
 
         # Set state to formatted Chinese date
